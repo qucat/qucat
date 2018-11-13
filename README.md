@@ -6,5 +6,5 @@ An example usage can be found in the jupyter notebook "Examples.ipynb"
 
 ## Requirements:
 
-- Commonplace scientific libraries (numpy, matplotlib, ..)
+- Commonplace scientific libraries (sympy,numpy, matplotlib, ..)
 - Lcapy. The best way to obtain it is to download (or clone) the source code from github: https://github.com/mph-/lcapy, and then run "python setup.py install" from the downloaded folder.
