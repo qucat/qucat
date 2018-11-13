@@ -1,3 +1,4 @@
+from __future__ import print_function
 from lcapy import L,C,R
 import lcapy
 import sympy as sp
@@ -66,7 +67,7 @@ class Bbox(object):
 
             # Check the number of solutions
             if len(w_analytical)==0:
-                print "No analytical solutions"
+                print ("No analytical solutions")
                 return None
 
             # Compute anharmonicities
