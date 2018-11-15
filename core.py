@@ -24,6 +24,19 @@ def admittance(circuit):
     elif type(circuit) == lcapy.oneport.R:
         return 1/sp.Symbol(circuit.args[0],real=True)
 
+def remove_resistances(circuit):
+    if type(circuit) == lcapy.oneport.L:
+        return circuit
+    elif type(circuit) == lcapy.oneport.C:
+        return circuit
+    elif type(circuit.args[0])==lcapy.oneport.R:
+        return circuit.args[1]
+    elif type(circuit.args[1])==lcapy.oneport.R:
+        return circuit.args[0]
+    elif type(circuit) == lcapy.oneport.Par:
+        return lcapy.Par(remove_resistances(circuit.args[0]),remove_resistances(circuit.args[1]))
+    elif type(circuit) == lcapy.oneport.Ser:
+        return lcapy.Ser(remove_resistances(circuit.args[0]),remove_resistances(circuit.args[1]))
 
 class Bbox(object):
     '''
@@ -58,33 +71,37 @@ class Bbox(object):
         
     def analytical_solution(self):
         '''
-        Attempts to return analytical expressions for the frequency, anharmonicity and dissipation rate
-        Not working: prints very ugly expressions, need to massage the sympy
+        Attempts to return analytical expressions for the frequency and anharmonicity
+        Does not attempt to calculate the dissipation, since sympy does not simplify
+        real/imaginary parts of complex expressions well
         '''
+        self.circuit_lossless = remove_resistances(self.circuit)
+        Y_lossless = admittance(self.circuit_lossless)
+        Y_numer_lossless = sp.numer(sp.together(Y_lossless))
+        Y_poly_lossless = sp.collect(sp.expand(Y_numer_lossless),sp.Symbol('w'))
+        ImdY_lossless = sp.diff(Y_lossless,sp.Symbol('w')).subs({sp.I:1})
+
         facts = [sp.Q.positive(sp.Symbol(x)) for x in self.all_circuit_elements]
         with sp.assuming(*facts):
         
             # Try and calculate analytical eigenfrequencies
-            w_analytical = sp.solve(self.Y_poly,sp.Symbol('w'))
+            w_analytical = sp.solve(Y_poly_lossless,sp.Symbol('w'))
 
             # Check the number of solutions
             if len(w_analytical)==0:
                 print ("No analytical solutions")
                 return None
 
-            # Compute anharmonicities
             ws = []
-            ks = []
             As = []
             for w in w_analytical:
-                w_num = complex(w.evalf(subs={i:1. for i in w.free_symbols}))
-                if np.real(w_num)>0:
-                    ws.append(sp.functions.im(w))
-                    ks.append(-sp.functions.re(w))
-                    As.append(2.*e**2/h*Mul(1/sp.Symbol(self.L_J),\
-                            Mul(Pow(1/sp.functions.im(self.dY.subs({sp.Symbol('w'):sp.functions.im(w)})),2),\
-                            Pow(1/sp.functions.im(w),2))))
-            return ws,ks,As
+                w_num = w.evalf(subs={i:1. for i in w.free_symbols})
+                if w_num>0:
+                    ws.append(w)
+                    As.append(2*sp.Symbol('e')**2/sp.Symbol('h')*Mul(1/sp.Symbol(self.L_J),\
+                            Mul(Pow(1/ImdY_lossless.subs({sp.Symbol('w'):w}),2),\
+                            Pow(1/w,2))))
+            return ws,As
     
     def fkA(self,circuit_parameters):
         '''
@@ -143,26 +160,34 @@ class Bbox(object):
             "Can only iterate on one variable"
 
 if __name__ == '__main__':
+    # LC circuit
+    
+    # b = Bbox(L('L_J') | C('C'))
+    # print(b.analytical_solution())
+
+
+    # Typical cQED setup
+
     b_cQED = Bbox(L('L_J') | C('C')| R('R_J') | (C('Cc')+(C('Cr')|L('Lr')|(C('Cf')+R('R_50')))))
-    flux = np.linspace(0.,0.4,103)
-    L_J_list = 7e-9/abs(np.cos(np.pi*flux))
-    to_plot =  np.array(b_cQED.normalmodes({
-    'L_J':L_J_list,
-    'C':100e-15,
-    'Cc':10e-15,
-    'Cf':1e-15,
-    'R_50':50.,
-    'Lr':10e-9,
-    'Cr':100e-15,
-    'R_J':1e6,
-    'R_r':1e5
-    }))
-    fig,axarr = plt.subplots(3,1,figsize=(6,9),sharex=True)
-    for i,ax in enumerate(axarr):
-        for j in range(b_cQED.N_modes):
-            axarr[i].plot(flux,to_plot[j,i])
-    axarr[0].set_ylabel("Mode frequency")
-    axarr[1].set_ylabel("Mode dissipation")
-    axarr[2].set_ylabel("Mode anharmonicity")
-    axarr[2].set_xlabel("$\phi/\phi_0$")
-    plt.show()
+    # flux = np.linspace(0.,0.4,103)
+    # L_J_list = 7e-9/abs(np.cos(np.pi*flux))
+    # to_plot =  np.array(b_cQED.normalmodes({
+    # 'L_J':L_J_list,
+    # 'C':100e-15,
+    # 'Cc':10e-15,
+    # 'Cf':1e-15,
+    # 'R_50':50.,
+    # 'Lr':10e-9,
+    # 'Cr':100e-15,
+    # 'R_J':1e6,
+    # 'R_r':1e5
+    # }))
+    # fig,axarr = plt.subplots(3,1,figsize=(6,9),sharex=True)
+    # for i,ax in enumerate(axarr):
+    #     for j in range(b_cQED.N_modes):
+    #         axarr[i].plot(flux,to_plot[j,i])
+    # axarr[0].set_ylabel("Mode frequency")
+    # axarr[1].set_ylabel("Mode dissipation")
+    # axarr[2].set_ylabel("Mode anharmonicity")
+    # axarr[2].set_xlabel("$\phi/\phi_0$")
+    # plt.show()
