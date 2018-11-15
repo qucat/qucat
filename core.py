@@ -68,6 +68,7 @@ class Bbox(object):
         Draws the circuit
         '''
         self.circuit.draw()
+        plt.show()
         
     def analytical_solution(self):
         '''
