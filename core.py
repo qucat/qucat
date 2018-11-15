@@ -18,11 +18,11 @@ def admittance(circuit):
     elif type(circuit) == lcapy.oneport.Ser:
         return 1/Add(1/admittance(circuit.args[0]),1/admittance(circuit.args[1]))
     elif type(circuit) == lcapy.oneport.L:
-        return -sp.I*Mul(1/sp.Symbol('w'),1/sp.Symbol(circuit.args[0],real=True))
+        return -sp.I*Mul(1/sp.Symbol('w'),1/sp.Symbol(circuit.args[0],real=True,nonnegative = True))
     elif type(circuit) == lcapy.oneport.C:
-        return sp.I*Mul(sp.Symbol('w'),sp.Symbol(circuit.args[0],real=True))
+        return sp.I*Mul(sp.Symbol('w'),sp.Symbol(circuit.args[0],real=True,nonnegative = True))
     elif type(circuit) == lcapy.oneport.R:
-        return 1/sp.Symbol(circuit.args[0],real=True)
+        return 1/sp.Symbol(circuit.args[0],real=True,nonnegative = True)
 
 def remove_resistances(circuit):
     '''
@@ -73,7 +73,7 @@ class Bbox(object):
         self.circuit.draw()
         plt.show()
         
-    def analytical_solution(self):
+    def analytical_solution(self,simplify = False):
         '''
         Attempts to return analytical expressions for the frequency and anharmonicity
         Does not attempt to calculate the dissipation, since sympy does not simplify
@@ -101,10 +101,16 @@ class Bbox(object):
             for w in w_analytical:
                 w_num = w.evalf(subs={i:1. for i in w.free_symbols})
                 if w_num>0:
-                    ws.append(w)
-                    As.append(2*sp.Symbol('e')**2/sp.Symbol('h')*Mul(1/sp.Symbol(self.L_J),\
-                            Mul(Pow(1/ImdY_lossless.subs({sp.Symbol('w'):w}),2),\
-                            Pow(1/w,2))))
+                    if simplify:
+                        ws.append(sp.simplify(w))
+                        As.append(sp.simplify(2*sp.Symbol('e')**2/sp.Symbol('h')*Mul(1/sp.Symbol(self.L_J),\
+                                Mul(Pow(1/ImdY_lossless.subs({sp.Symbol('w'):w}),2),\
+                                Pow(1/w,2)))))
+                    else:
+                        ws.append(w)
+                        As.append(2*sp.Symbol('e')**2/sp.Symbol('h')*Mul(1/sp.Symbol(self.L_J),\
+                                Mul(Pow(1/ImdY_lossless.subs({sp.Symbol('w'):w}),2),\
+                                Pow(1/w,2))))
             return ws,As
     
     def fkA(self,circuit_parameters):
@@ -162,16 +168,19 @@ class Bbox(object):
         else:
             "Can only iterate on one variable"
 
-if __name__ == '__main__':
+# if __name__ == '__main__':
     
     # LC circuit
     
-    b = Bbox(L('L_J') | C('C'))
-    print(b.analytical_solution())
+    # b = Bbox(L('L_J') | C('C'))
+    # print(b.analytical_solution())
 
 
     # Typical cQED setup
 
+    # b_cQED = Bbox(L('L_J') | C('C')| (C('Cc')+(C('Cr')|L('Lr'))))
+    # print(b_cQED.analytical_solution())
+    
     # b_cQED = Bbox(L('L_J') | C('C')| R('R_J') | (C('Cc')+(C('Cr')|L('Lr')|(C('Cf')+R('R_50')))))
     # flux = np.linspace(0.,0.4,103)
     # L_J_list = 7e-9/abs(np.cos(np.pi*flux))
