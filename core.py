@@ -25,6 +25,9 @@ def admittance(circuit):
         return 1/sp.Symbol(circuit.args[0],real=True)
 
 def remove_resistances(circuit):
+    '''
+    Given an Lcapy circuit, returns the same circuit without resistances
+    '''
     if type(circuit) == lcapy.oneport.L:
         return circuit
     elif type(circuit) == lcapy.oneport.C:
@@ -115,9 +118,8 @@ class Bbox(object):
         ws_cpx = np.roots(self.Y_poly_num(*args))
 
         # take only roots with a positive real part (i.e. freq) 
-        # and imaginary part (i.e. dissipation)
         # and significant Q factors
-        positive_sols = np.argwhere((np.real(ws_cpx)>=0.)&(np.imag(ws_cpx)>=0.)&(np.real(ws_cpx)>self.Q_min*np.imag(ws_cpx)))
+        positive_sols = np.argwhere((np.real(ws_cpx)>=0.)&(np.real(ws_cpx)>self.Q_min*np.imag(ws_cpx)))
         ws_cpx=ws_cpx[positive_sols][:,0]
         
         ws = np.real(ws_cpx)
@@ -161,15 +163,16 @@ class Bbox(object):
             "Can only iterate on one variable"
 
 if __name__ == '__main__':
+    
     # LC circuit
     
-    # b = Bbox(L('L_J') | C('C'))
-    # print(b.analytical_solution())
+    b = Bbox(L('L_J') | C('C'))
+    print(b.analytical_solution())
 
 
     # Typical cQED setup
 
-    b_cQED = Bbox(L('L_J') | C('C')| R('R_J') | (C('Cc')+(C('Cr')|L('Lr')|(C('Cf')+R('R_50')))))
+    # b_cQED = Bbox(L('L_J') | C('C')| R('R_J') | (C('Cc')+(C('Cr')|L('Lr')|(C('Cf')+R('R_50')))))
     # flux = np.linspace(0.,0.4,103)
     # L_J_list = 7e-9/abs(np.cos(np.pi*flux))
     # to_plot =  np.array(b_cQED.normalmodes({
