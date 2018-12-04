@@ -1,5 +1,4 @@
 from __future__ import print_function
-from lcapy import L,C,R
 import lcapy
 import sympy as sp
 import numpy as np
@@ -9,6 +8,24 @@ from copy import deepcopy
 import matplotlib.pyplot as plt
 import math
 
+class L(lcapy.oneport.L):
+    def __init__(self, label):
+        super(L,self).__init__(label)
+        self.label = label
+class J(lcapy.oneport.L):
+    def __init__(self, label):
+        super(J,self).__init__(label)
+        self.label = label
+class R(lcapy.oneport.R):
+    def __init__(self, label):
+        super(R, self).__init__(label)
+        self.label = label
+class C(lcapy.oneport.C):
+    def __init__(self, label):
+        super(C, self).__init__(label)
+        self.label = label
+
+
 def admittance(circuit):
     '''
     Given an Lcapy circuit, returns the admittance.
@@ -17,29 +34,134 @@ def admittance(circuit):
         return Add(admittance(circuit.args[0]),admittance(circuit.args[1]))
     elif type(circuit) == lcapy.oneport.Ser:
         return 1/Add(1/admittance(circuit.args[0]),1/admittance(circuit.args[1]))
-    elif type(circuit) == lcapy.oneport.L:
-        return -sp.I*Mul(1/sp.Symbol('w'),1/sp.Symbol(circuit.args[0],real=True,nonnegative = True))
-    elif type(circuit) == lcapy.oneport.C:
-        return sp.I*Mul(sp.Symbol('w'),sp.Symbol(circuit.args[0],real=True,nonnegative = True))
-    elif type(circuit) == lcapy.oneport.R:
-        return 1/sp.Symbol(circuit.args[0],real=True,nonnegative = True)
+    elif type(circuit) == L or type(circuit) == J:
+        return -sp.I*Mul(1/sp.Symbol('w'),1/sp.Symbol(circuit.label,real=True,nonnegative = True))
+    elif type(circuit) == C:
+        return sp.I*Mul(sp.Symbol('w'),sp.Symbol(circuit.label,real=True,nonnegative = True))
+    elif type(circuit) == R:
+        return 1/sp.Symbol(circuit.label,real=True,nonnegative = True)
 
 def remove_resistances(circuit):
     '''
     Given an Lcapy circuit, returns the same circuit without resistances
     '''
-    if type(circuit) == lcapy.oneport.L:
+    if type(circuit) in [L,C,J]:
         return circuit
-    elif type(circuit) == lcapy.oneport.C:
-        return circuit
-    elif type(circuit.args[0])==lcapy.oneport.R:
+    elif type(circuit.args[0])==R:
         return circuit.args[1]
-    elif type(circuit.args[1])==lcapy.oneport.R:
+    elif type(circuit.args[1])==R:
         return circuit.args[0]
     elif type(circuit) == lcapy.oneport.Par:
         return lcapy.Par(remove_resistances(circuit.args[0]),remove_resistances(circuit.args[1]))
     elif type(circuit) == lcapy.oneport.Ser:
         return lcapy.Ser(remove_resistances(circuit.args[0]),remove_resistances(circuit.args[1]))
+
+def get_all_circuit_elements(circuit):
+    
+    circuit_elements = {}
+    
+    def recursive_function(circuit):
+        if type(circuit) == lcapy.oneport.Par:
+            recursive_function(circuit.args[0])
+            recursive_function(circuit.args[1])
+        elif type(circuit) == lcapy.oneport.Ser:
+            recursive_function(circuit.args[0])
+            recursive_function(circuit.args[1])
+        else:
+            circuit_elements[circuit.label] = circuit
+    
+    recursive_function(circuit)
+    return circuit_elements
+
+def get_unreduced_node_circuit(circuit):
+    # Classify the connections between nodes into 
+        # wires (to be removed), capacitances and inductances
+        wires = []
+        capacitances = []
+        inductances = []
+        resistances = []
+
+        for line in circuit.netlist().split('\n'):
+            first_split = line.split((' '))
+            
+            connection = []
+            if first_split[0]=='W':
+                connection.append(int(first_split[1]))
+                connection.append(int(first_split[2][:-1]))
+                wires.append(connection)
+            else:
+                connection.append(int(first_split[1]))
+                connection.append(int(first_split[2]))
+                
+                if '{' in line and '}' in line:
+                    start = line.index('{') + 1
+                    end = line.index( '}', start )
+                    connection.append( line[start:end])
+                else:
+                    connection.append(first_split[3][:-1])
+                
+                if first_split[0]=='C':
+                    capacitances.append(connection)
+                elif first_split[0]=='L':
+                    inductances.append(connection)
+                elif first_split[0]=='R':
+                    resistances.append(connection)
+        return capacitances,inductances,resistances,wires
+
+def get_node_circuit(circuit):
+        capacitances,inductances,resistances,wires = get_unreduced_node_circuit(circuit)
+
+        # Group nodes connected by wires into "chains" of nodes
+
+        def merge_chains(chains,i,j):
+            to_add = chains[j]
+            del chains[j]
+            chains[i] = chains[i]+to_add
+            return chains
+
+
+        chains = []
+        for el in wires:
+            added = False
+            for i,ch in enumerate(chains):
+                if (el[0] in ch) and (el[1] in ch):
+                    added = True
+                elif (el[0] in ch):
+                    for j,ch2 in enumerate(chains):
+                        if el[1] in ch2:
+                            chains = merge_chains(chains,i,j)
+                            added = True
+                    if added == False:
+                        ch.append(el[1])
+                        added = True
+                elif (el[1] in ch):
+                    for j,ch2 in enumerate(chains):
+                        if el[0] in ch2:
+                            chains = merge_chains(chains,i,j)
+                            added = True
+                    if added == False:
+                        ch.append(el[0])
+                        added = True
+            if added == False:
+                chains.append(el)
+
+        # Rewrite the capacitance and inductance 
+        # conections in terms of a minimal number of nodes
+
+        def reduce_node(node):
+            for i,ch in enumerate(chains):
+                if node in ch:
+                    return i    
+
+        for cpi in [capacitances,inductances,resistances]:
+            for el in cpi:
+                el[0] = reduce_node(el[0])
+                el[1] = reduce_node(el[1])
+
+
+        N_nodes = len(chains)
+        return capacitances,inductances,resistances,N_nodes
+
 
 class Bbox(object):
     '''
@@ -53,25 +175,269 @@ class Bbox(object):
         self.Q_min = Q_min
         
         Y = admittance(self.circuit)
-        self.all_circuit_elements = [str(x) for x in list(Y.free_symbols)]
-        self.all_circuit_elements.remove('w')
+        self.all_circuit_elements = get_all_circuit_elements(circuit)
 
         Y_numer = sp.numer(sp.together(Y))
         Y_poly = sp.collect(sp.expand(Y_numer),sp.Symbol('w'))
         self.Y_poly = Y_poly
         self.Y_poly_order = sp.polys.polytools.degree(Y_poly,gen = sp.Symbol('w'))
         Y_poly_coeffs = [Y_poly.coeff(sp.Symbol('w'),n) for n in range(self.Y_poly_order+1)[::-1]]
-        self.Y_poly_num = sp.utilities.lambdify([elt for elt in self.all_circuit_elements],Y_poly_coeffs,"numpy")
+        self.Y_poly_num = sp.utilities.lambdify([elt for elt in self.all_circuit_elements.keys()],Y_poly_coeffs,"numpy")
         self.N_modes = int(self.Y_poly_order/2)
         self.dY = sp.diff(Y,sp.Symbol('w'))
-        self.dY_num = sp.utilities.lambdify([elt for elt in self.all_circuit_elements+["w"]],self.dY,"numpy")
+        self.dY_num = sp.utilities.lambdify([elt for elt in self.all_circuit_elements.keys()+["w"]],self.dY,"numpy")
     
-    def draw(self):
+    def draw(self,
+        y_total = 0.6,
+        x_total=1.,
+        y_C = 0.3,
+        x_C = 0.2,
+        x_J = 0.2,
+        x_LR = 0.7,
+        y_LR = 0.3,
+        fontsize = 15,
+        text_position = [0.,-0.35],
+        plot = True,
+        full_output = False):
         '''
         Draws the circuit
         '''
-        self.circuit.draw()
-        plt.show()
+        line_type = []
+                
+        def draw(circuit, pos = [0.,0.], which = 'tc'):
+            if type(circuit) == lcapy.oneport.Par:
+                return draw_par(circuit.args[0],circuit.args[1],pos,which)
+            elif type(circuit) == lcapy.oneport.Ser:
+                return draw_ser(circuit.args[0],circuit.args[1],pos,which)
+            elif type(circuit) == L:
+                return draw_L(pos,which,circuit)
+            elif type(circuit) == R:
+                return draw_R(pos,which,circuit)
+            elif type(circuit) == C:
+                return draw_C(pos,which,circuit)
+            elif type(circuit) == J:
+                return draw_J(pos,which,circuit)
+
+
+        def draw_par(el1,el2,pos,which):
+            pos_x1,pos_y1,w1,h1,x1,y1,elt_names1 = draw(el1,[0.,0.],'t')
+            pos_x2,pos_y2,w2,h2,x2,y2,elt_names2 = draw(el2,[0.,-h1],'t')
+
+            w = max(w1,w2)
+            h = h1+h2
+            x = x1+x2
+            y = y1+y2
+
+            # Connect parallel elements
+
+            x+=[np.array([-w/2.,-w/2.])]
+            y+=[np.array([-h1/2.,-h1-h2/2.])]
+            line_type.append('wire')
+
+            x+=[np.array([+w/2.,+w/2.])]
+            y+=[np.array([-h1/2.,-h1-h2/2.])]
+            line_type.append('wire')
+
+            if np.argmin([w1,w2]) == 0:
+                x+=[np.array([-w/2.,-w1/2.])]
+                y+=[np.array([-h1/2.,-h1/2.])]
+                line_type.append('wire')
+                x+=[np.array([+w/2.,+w1/2.])]
+                y+=[np.array([-h1/2.,-h1/2.])]
+                line_type.append('wire')
+            if np.argmin([w1,w2]) == 1:
+                x+=[np.array([-w/2.,-w2/2.])]
+                y+=[np.array([-h1-h2/2.,-h1-h2/2.])]
+                line_type.append('wire')
+                x+=[np.array([+w/2.,+w2/2.])]
+                y+=[np.array([-h1-h2/2.,-h1-h2/2.])]
+                line_type.append('wire')
+
+            # Move into position
+
+            if which == 'l':
+                return shift(pos_x1+pos_x2,pos[0]+w/2.),shift(pos_y1+pos_y2,pos[1]+h/2.),w,h,shift(x,pos[0]+w/2.),shift(y,pos[1]+h/2.),elt_names1+elt_names2
+            else:
+                return shift(pos_x1+pos_x2,pos[0]),shift(pos_y1+pos_y2,pos[1]),w,h,shift(x,pos[0]),shift(y,pos[1]),elt_names1+elt_names2
+
+
+        def draw_ser(el1,el2,pos,which):
+            pos_x1,pos_y1,w1,h1,x1,y1,elt_names1 = draw(el1,[0.,0.],'l')
+            pos_x2,pos_y2,w2,h2,x2,y2,elt_names2 = draw(el2,[w1,0.],'l')
+            w = w1+w2
+            h = max(h1,h2)
+            x = x1+x2
+            y = y1+y2
+
+            if which == 't':
+                return shift(pos_x1+pos_x2,pos[0]-w/2.),shift(pos_y1+pos_y2,pos[1]-h/2.),w,h,shift(x,pos[0]-w/2.),shift(y,pos[1]-h/2.),elt_names1+elt_names2
+            else:
+                return shift(pos_x1+pos_x2,pos[0]),shift(pos_y1+pos_y2,pos[1]),w,h,shift(x,pos[0]),shift(y,pos[1]),elt_names1+elt_names2
+
+
+        def shift(to_shift,shift):
+            for i,_ in enumerate(to_shift):
+                to_shift[i]+= shift
+            return to_shift
+
+        def draw_L(pos,which,circuit):
+            x = np.linspace(0.5,6.,1001)
+            y = -np.sin(2.*np.pi*x)
+            x = np.cos(2.*np.pi*x)+2.*x
+            line_type.append('L')
+            return finish_drawing_LR([x],[y],pos,which,circuit)
+
+        def draw_R(pos,which,circuit):
+            x = np.linspace(-0.25,4.25,1001)
+            height = 1.
+            period = 1.
+            a = height*2.*(-1.+2.*np.mod(np.floor(2.*x/period),2.))
+            b = -height*2.*np.mod(np.floor(2.*x/period),2.)
+            y = (2.*x/period - np.floor(2.*x/period))*a+b+height
+            line_type.append('R')
+            return finish_drawing_LR([x],[y],pos,which,circuit)
+
+
+        def draw_C(pos,which,circuit):
+            
+            x = [
+                np.array([0.,(x_total-x_C)/2.]),
+                np.array([(x_total+x_C)/2.,x_total]),
+                np.array([(x_total-x_C)/2.,(x_total-x_C)/2.]),
+                np.array([(x_total+x_C)/2.,(x_total+x_C)/2.]),
+            ]
+            y = [
+                np.array([0.,0.]),
+                np.array([0.,0.]),
+                np.array([-y_C/2.,y_C/2.]),
+                np.array([-y_C/2.,y_C/2.]),
+            ]
+            line_type.append('wire')
+            line_type.append('wire')
+            line_type.append('C')
+            line_type.append('C')
+            
+            for i,_ in enumerate(x):
+                if which == 'l':
+                    x[i]+=pos[0]
+                    y[i]+=pos[1]
+                    pos_x = pos[0]+x_total/2.
+                    pos_y = pos[1]
+                elif which == 't':
+                    x[i]+=pos[0]-x_total/2.
+                    y[i]+=pos[1]-y_total/2.
+                    pos_x = pos[0]
+                    pos_y = pos[1]-y_total/2.
+
+            return [pos_x],[pos_y],x_total,y_total,x,y,[circuit.label]
+        
+        def draw_J(pos,which,circuit):
+            
+            x = [
+                np.array([0.,(x_total-x_J)/2.]),
+                np.array([(x_total+x_J)/2.,x_total]),
+                np.array([(x_total-x_J)/2.,(x_total+x_J)/2.]),
+                np.array([(x_total-x_J)/2.,(x_total+x_J)/2.]),
+                np.array([(x_total-x_J)/2.,(x_total+x_J)/2.])
+            ]
+            y = [
+                np.array([0.,0.]),
+                np.array([0.,0.]),
+                np.array([0.,0.]),
+                np.array([-1.,1.])*x_J/2.,
+                np.array([1.,-1.])*x_J/2.
+            ]
+            line_type.append('wire')
+            line_type.append('wire')
+            line_type.append('wire')
+            line_type.append('J')
+            line_type.append('J')
+            
+            for i,_ in enumerate(x):
+                if which == 'l':
+                    x[i]+=pos[0]
+                    y[i]+=pos[1]
+                    pos_x = pos[0]+x_total/2.
+                    pos_y = pos[1]
+                elif which == 't':
+                    x[i]+=pos[0]-x_total/2.
+                    y[i]+=pos[1]-y_total/2.
+                    pos_x = pos[0]
+                    pos_y = pos[1]-y_total/2.
+
+            return [pos_x],[pos_y],x_total,y_total,x,y,[circuit.label]
+
+        def finish_drawing_LR(x_list,y_list,pos,which,circuit):
+            
+            
+            x_min = min([np.amin(xx) for xx in x_list])
+            for i,_ in enumerate(x_list):
+                x_list[i] -= x_min
+
+            x_max = max([np.amax(xx) for xx in x_list])
+            for i,_ in enumerate(x_list):
+                x_list[i] *= x_LR/x_max
+                x_list[i] +=(x_total-x_LR)/2.   
+
+            x_min = min([np.amin(xx) for xx in x_list])
+            x_max = max([np.amax(xx) for xx in x_list])
+            x_list += [np.array([0.,x_min])]
+            x_list += [np.array([x_max,x_total])]
+            line_type.append('wire')
+            line_type.append('wire')
+
+            for i,x in enumerate(x_list):
+                if which == 'l':
+                    x_list[i]+=pos[0]
+                elif which == 't':
+                    x_list[i]+=pos[0]-x_total/2.
+
+
+            y_max = max([np.amax(yy) for yy in y_list])
+            for i,_ in enumerate(y_list):
+                y_list[i] *=y_LR/2./y_max
+
+            y_list += [np.array([0.,0.])]
+            y_list += [np.array([0.,0.])]
+
+            for i,y in enumerate(y_list):
+                if which == 'l':
+                    y_list[i]+=pos[1]
+                elif which == 't':
+                    y_list[i]+=pos[1]-y_total/2.
+
+            if which == 'l':
+                pos_x = pos[0]+x_total/2.
+                pos_y = pos[1]
+            elif which == 't':
+                pos_x = pos[0]
+                pos_y = pos[1]-y_total/2.
+
+            return [pos_x],[pos_y],x_total,y_total,x_list,y_list,[circuit.label]
+        
+        element_x,element_y,w,h,xs,ys,element_names = draw(self.circuit,which='l')
+        figsize_scaling = 1.5
+        fig,ax = plt.subplots(1,1,figsize = (w*figsize_scaling,h*figsize_scaling))
+        for i in range(len(xs)):
+            if line_type[i] == 'wire':
+                ax.plot(xs[i],ys[i],color = 'black',lw=1)
+            elif line_type[i] == 'L':
+                ax.plot(xs[i],ys[i],color = 'black',lw=2)
+            elif line_type[i] == 'C':
+                ax.plot(xs[i],ys[i],color = 'black',lw=8)
+            elif line_type[i] == 'J':
+                ax.plot(xs[i],ys[i],color = 'black',lw=8)
+            elif line_type[i] == 'R':
+                ax.plot(xs[i],ys[i],color = 'black',lw=2)
+        for i,el in enumerate(element_names):
+            plt.text(element_x[i]+text_position[0],element_y[i]+text_position[1],'$'+el+'$',fontsize=fontsize,ha='center')
+        ax.set_axis_off()
+        if plot:
+            plt.tight_layout()
+            plt.show()
+        if full_output:
+            return element_x,element_y,fig,ax
+
         
     def analytical_solution(self,simplify = False):
         '''
@@ -85,7 +451,7 @@ class Bbox(object):
         Y_poly_lossless = sp.collect(sp.expand(Y_numer_lossless),sp.Symbol('w'))
         ImdY_lossless = sp.diff(Y_lossless,sp.Symbol('w')).subs({sp.I:1})
 
-        facts = [sp.Q.positive(sp.Symbol(x)) for x in self.all_circuit_elements]
+        facts = [sp.Q.positive(sp.Symbol(x)) for x in self.all_circuit_elements.keys()]
         with sp.assuming(*facts):
         
             # Try and calculate analytical eigenfrequencies
@@ -120,7 +486,7 @@ class Bbox(object):
                 dissipation rates (Hz)
                 Anharmonicities (Hz)
         '''
-        args = [circuit_parameters[key] for key in self.all_circuit_elements]
+        args = [circuit_parameters[key] for key in self.all_circuit_elements.keys()]
         ws_cpx = np.roots(self.Y_poly_num(*args))
 
         # take only roots with a positive real part (i.e. freq) 
@@ -169,89 +535,17 @@ class Bbox(object):
             "Can only iterate on one variable"
 
     def get_L_and_C_matrix(self):
+
+        '''
+        Currently treats junctions as inductors
+        '''
+
         cir_no_resistance = remove_resistances(self.circuit).simplify()
-
-        # Classify the connections between nodes into 
-        # wires (to be removed), capacitances and inductances
-        wires = []
-        capacitances = []
-        inductances = []
-
-        for line in cir_no_resistance.netlist().split('\n'):
-            first_split = line.split((' '))
-            
-            connection = []
-            if first_split[0]=='W':
-                connection.append(int(first_split[1]))
-                connection.append(int(first_split[2][:-1]))
-                wires.append(connection)
-            else:
-                connection.append(int(first_split[1]))
-                connection.append(int(first_split[2]))
-                
-                if '{' in line and '}' in line:
-                    start = line.index('{') + 1
-                    end = line.index( '}', start )
-                    connection.append( line[start:end])
-                else:
-                    connection.append(first_split[3][:-1])
-                
-                if first_split[0]=='C':
-                    capacitances.append(connection)
-                elif first_split[0]=='L':
-                    inductances.append(connection)
-
-        # Group nodes connected by wires into "chains" of nodes
-
-        def merge_chains(chains,i,j):
-            to_add = chains[j]
-            del chains[j]
-            chains[i] = chains[i]+to_add
-            return chains
-
-
-        chains = []
-        for el in wires:
-            added = False
-            for i,ch in enumerate(chains):
-                if (el[0] in ch) and (el[1] in ch):
-                    added = True
-                elif (el[0] in ch):
-                    for j,ch2 in enumerate(chains):
-                        if el[1] in ch2:
-                            chains = merge_chains(chains,i,j)
-                            added = True
-                    if added == False:
-                        ch.append(el[1])
-                        added = True
-                elif (el[1] in ch):
-                    for j,ch2 in enumerate(chains):
-                        if el[0] in ch2:
-                            chains = merge_chains(chains,i,j)
-                            added = True
-                    if added == False:
-                        ch.append(el[0])
-                        added = True
-            if added == False:
-                chains.append(el)
-
-        # Rewrite the capacitance and inductance 
-        # conections in terms of a minimal number of nodes
-
-        def reduce_node(node):
-            for i,ch in enumerate(chains):
-                if node in ch:
-                    return i    
-
-        for cap_ind in [capacitances,inductances]:
-            for el in cap_ind:
-                el[0] = reduce_node(el[0])
-                el[1] = reduce_node(el[1])
+        capacitances,inductances,_,N_nodes = get_node_circuit(cir_no_resistance)
 
         # Write the upper part of the capacitance and 
         # inverse of the inductance matrix
 
-        N_nodes = len(chains)
 
         C_matrix = [[0 for col in range(N_nodes)] for row in range(N_nodes)]
         Lmin_matrix = [[0 for col in range(N_nodes)] for row in range(N_nodes)]
@@ -278,36 +572,6 @@ class Bbox(object):
 if __name__ == '__main__':
     
     ###LC circuit
-    
-    b = Bbox(L('L_J') | C('C'))
-    print(b.get_L_and_C_matrix())
-
-
-    # Typical cQED setup
-
-    # b_cQED = Bbox(L('L_J') | C('C')| (C('Cc')+(C('Cr')|L('Lr'))))
-    # print(b_cQED.analytical_solution())
-    
-    # b_cQED = Bbox(L('L_J') | C('C')| R('R_J') | (C('Cc')+(C('Cr')|L('Lr')|(C('Cf')+R('R_50')))))
-    # flux = np.linspace(0.,0.4,103)
-    # L_J_list = 7e-9/abs(np.cos(np.pi*flux))
-    # to_plot =  np.array(b_cQED.normalmodes({
-    # 'L_J':L_J_list,
-    # 'C':100e-15,
-    # 'Cc':10e-15,
-    # 'Cf':1e-15,
-    # 'R_50':50.,
-    # 'Lr':10e-9,
-    # 'Cr':100e-15,
-    # 'R_J':1e6,
-    # 'R_r':1e5
-    # }))
-    # fig,axarr = plt.subplots(3,1,figsize=(6,9),sharex=True)
-    # for i,ax in enumerate(axarr):
-    #     for j in range(b_cQED.N_modes):
-    #         axarr[i].plot(flux,to_plot[j,i])
-    # axarr[0].set_ylabel("Mode frequency")
-    # axarr[1].set_ylabel("Mode dissipation")
-    # axarr[2].set_ylabel("Mode anharmonicity")
-    # axarr[2].set_xlabel("$\phi/\phi_0$")
-    # plt.show()
+    circuit = ((L('L1')|(L('L')+C('C')+J('L_J')+R('R')))+L('L'))|C('C')|J('L_J')+C('C')
+    b = Bbox(circuit)
+    print (b.get_L_and_C_matrix())
