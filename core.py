@@ -75,95 +75,6 @@ def get_all_circuit_elements(circuit):
     recursive_function(circuit)
     return circuit_elements
 
-def get_unreduced_node_circuit(circuit):
-    # Classify the connections between nodes into 
-        # wires (to be removed), capacitances and inductances
-        wires = []
-        capacitances = []
-        inductances = []
-        resistances = []
-
-        for line in circuit.netlist().split('\n'):
-            first_split = line.split((' '))
-            
-            connection = []
-            if first_split[0]=='W':
-                connection.append(int(first_split[1]))
-                connection.append(int(first_split[2][:-1]))
-                wires.append(connection)
-            else:
-                connection.append(int(first_split[1]))
-                connection.append(int(first_split[2]))
-                
-                if '{' in line and '}' in line:
-                    start = line.index('{') + 1
-                    end = line.index( '}', start )
-                    connection.append( line[start:end])
-                else:
-                    connection.append(first_split[3][:-1])
-                
-                if first_split[0]=='C':
-                    capacitances.append(connection)
-                elif first_split[0]=='L':
-                    inductances.append(connection)
-                elif first_split[0]=='R':
-                    resistances.append(connection)
-        return capacitances,inductances,resistances,wires
-
-def get_node_circuit(circuit):
-        capacitances,inductances,resistances,wires = get_unreduced_node_circuit(circuit)
-
-        # Group nodes connected by wires into "chains" of nodes
-
-        def merge_chains(chains,i,j):
-            to_add = chains[j]
-            del chains[j]
-            chains[i] = chains[i]+to_add
-            return chains
-
-
-        chains = []
-        for el in wires:
-            added = False
-            for i,ch in enumerate(chains):
-                if (el[0] in ch) and (el[1] in ch):
-                    added = True
-                elif (el[0] in ch):
-                    for j,ch2 in enumerate(chains):
-                        if el[1] in ch2:
-                            chains = merge_chains(chains,i,j)
-                            added = True
-                    if added == False:
-                        ch.append(el[1])
-                        added = True
-                elif (el[1] in ch):
-                    for j,ch2 in enumerate(chains):
-                        if el[0] in ch2:
-                            chains = merge_chains(chains,i,j)
-                            added = True
-                    if added == False:
-                        ch.append(el[0])
-                        added = True
-            if added == False:
-                chains.append(el)
-
-        # Rewrite the capacitance and inductance 
-        # conections in terms of a minimal number of nodes
-
-        def reduce_node(node):
-            for i,ch in enumerate(chains):
-                if node in ch:
-                    return i    
-
-        for cpi in [capacitances,inductances,resistances]:
-            for el in cpi:
-                el[0] = reduce_node(el[0])
-                el[1] = reduce_node(el[1])
-
-
-        N_nodes = len(chains)
-        return capacitances,inductances,resistances,N_nodes
-
 class Bbox(object):
     '''
     Given a circuit, the Bbox allows one to draw the circuit, and compute numerically
@@ -438,8 +349,7 @@ class Bbox(object):
             plt.show()
         if full_output:
             return element_x,element_y,fig,ax
-
-        
+  
     def analytical_solution(self,simplify = False):
         '''
         Attempts to return analytical expressions for the frequency and anharmonicity
@@ -535,44 +445,9 @@ class Bbox(object):
         else:
             "Can only iterate on one variable"
 
-    def get_L_and_C_matrix(self):
-
-        '''
-        Currently treats junctions as inductors
-        '''
-
-        cir_no_resistance = remove_resistances(self.circuit).simplify()
-        capacitances,inductances,_,N_nodes = get_node_circuit(cir_no_resistance)
-
-        # Write the upper part of the capacitance and 
-        # inverse of the inductance matrix
-
-
-        C_matrix = [[0 for col in range(N_nodes)] for row in range(N_nodes)]
-        Lmin_matrix = [[0 for col in range(N_nodes)] for row in range(N_nodes)]
-
-        for el in capacitances:
-            nodes = [el[0],el[1]]
-            C_matrix[min(nodes)][max(nodes)] = '-('+el[2]+')'
-
-        for el in inductances:
-            nodes = [el[0],el[1]]
-            Lmin_matrix[min(nodes)][max(nodes)] = '-1/('+el[2]+')'
-
-        print('''
-            The diagonal elements are the opposite of sums of the row or column they belong to
-            (excluding the lower triangle of the matrices).
-            The matrices are symmetric so the upper triangle is identical to the lower triangle.
-            We hence only give the upper triangle.
-            Quantization can be performed by choosing a ground node and eliminating the row
-            and column corresponding to that given node.
-            ''')
-        return C_matrix,Lmin_matrix
-
 
 if __name__ == '__main__':
     
     ###LC circuit
     circuit = ((L('L1')|(L('L')+C('C')+J('L_J')+R('R')))+L('L'))|C('C')|J('L_J')+C('C')
     b = Bbox(circuit)
-    print (b.get_L_and_C_matrix())
