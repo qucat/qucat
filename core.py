@@ -71,7 +71,7 @@ def get_all_circuit_elements(circuit):
 class Bbox(object):
     '''
     Given a circuit, the Bbox allows one to draw the circuit, and compute numerically
-    and analytically (not yet) the frequency, dissipation rate and anharmonicity
+    the frequency, dissipation rate and anharmonicity
     of the circuits different modes.
     '''
     def __init__(self, circuit, Q_min = 1.):
@@ -371,47 +371,7 @@ class Bbox(object):
             plt.show()
         if full_output:
             return element_x,element_y,fig,ax
-  
-    def analytical_solution(self,simplify = False):
-        '''
-        Attempts to return analytical expressions for the frequency and anharmonicity
-        Does not attempt to calculate the dissipation, since sympy does not simplify
-        real/imaginary parts of complex expressions well
-        '''
-        self.circuit_lossless = remove_resistances(self.circuit)
-        Y_lossless = admittance(self.circuit_lossless)
-        Y_numer_lossless = sp.numer(sp.together(Y_lossless))
-        Y_poly_lossless = sp.collect(sp.expand(Y_numer_lossless),sp.Symbol('w'))
-        ImdY_lossless = sp.diff(Y_lossless,sp.Symbol('w')).subs({sp.I:1})
-
-        facts = [sp.Q.positive(sp.Symbol(x)) for x in self.all_circuit_elements.keys()]
-        with sp.assuming(*facts):
-        
-            # Try and calculate analytical eigenfrequencies
-            w_analytical = sp.solve(Y_poly_lossless,sp.Symbol('w'))
-
-            # Check the number of solutions
-            if len(w_analytical)==0:
-                print ("No analytical solutions")
-                return None
-
-            ws = []
-            As = []
-            for w in w_analytical:
-                w_num = w.evalf(subs={i:1. for i in w.free_symbols})
-                if w_num>0:
-                    if simplify:
-                        ws.append(sp.simplify(w))
-                        As.append(sp.simplify(2*sp.Symbol('e')**2/sp.Symbol('h')*Mul(1/sp.Symbol(self.L_J),\
-                                Mul(Pow(1/ImdY_lossless.subs({sp.Symbol('w'):w}),2),\
-                                Pow(1/w,2)))))
-                    else:
-                        ws.append(w)
-                        As.append(2*sp.Symbol('e')**2/sp.Symbol('h')*Mul(1/sp.Symbol(self.L_J),\
-                                Mul(Pow(1/ImdY_lossless.subs({sp.Symbol('w'):w}),2),\
-                                Pow(1/w,2))))
-            return ws,As
-    
+         
     def fkA(self,circuit_parameters):
         '''
         Input: dictionnary of circuit parameters
@@ -440,7 +400,45 @@ class Bbox(object):
         As = 2.*e**2/h/circuit_parameters[self.L_J]/ws**2/ImdY**2
         return np.concatenate(([ws/2./pi],[ks/2./pi],[As]))
     
+    # def analytical_solution(self,simplify = False):
+    #     '''
+    #     Attempts to return analytical expressions for the frequency and anharmonicity
+    #     Does not attempt to calculate the dissipation, since sympy does not simplify
+    #     real/imaginary parts of complex expressions well
+    #     '''
+    #     self.circuit_lossless = remove_resistances(self.circuit)
+    #     Y_lossless = admittance(self.circuit_lossless)
+    #     Y_numer_lossless = sp.numer(sp.together(Y_lossless))
+    #     Y_poly_lossless = sp.collect(sp.expand(Y_numer_lossless),sp.Symbol('w'))
+    #     ImdY_lossless = sp.diff(Y_lossless,sp.Symbol('w')).subs({sp.I:1})
 
+    #     facts = [sp.Q.positive(sp.Symbol(x)) for x in self.all_circuit_elements.keys()]
+    #     with sp.assuming(*facts):
+        
+    #         # Try and calculate analytical eigenfrequencies
+    #         w_analytical = sp.solve(Y_poly_lossless,sp.Symbol('w'))
+
+    #         # Check the number of solutions
+    #         if len(w_analytical)==0:
+    #             print ("No analytical solutions")
+    #             return None
+
+    #         ws = []
+    #         As = []
+    #         for w in w_analytical:
+    #             w_num = w.evalf(subs={i:1. for i in w.free_symbols})
+    #             if w_num>0:
+    #                 if simplify:
+    #                     ws.append(sp.simplify(w))
+    #                     As.append(sp.simplify(2*sp.Symbol('e')**2/sp.Symbol('h')*Mul(1/sp.Symbol(self.L_J),\
+    #                             Mul(Pow(1/ImdY_lossless.subs({sp.Symbol('w'):w}),2),\
+    #                             Pow(1/w,2)))))
+    #                 else:
+    #                     ws.append(w)
+    #                     As.append(2*sp.Symbol('e')**2/sp.Symbol('h')*Mul(1/sp.Symbol(self.L_J),\
+    #                             Mul(Pow(1/ImdY_lossless.subs({sp.Symbol('w'):w}),2),\
+    #                             Pow(1/w,2))))
+    #         return ws,As
 
 if __name__ == '__main__':
     
