@@ -6,25 +6,27 @@ from scipy.constants import e,pi,h
 from sympy.core.mul import Mul,Pow,Add
 from copy import deepcopy
 import matplotlib.pyplot as plt
-import math
+from rotations import rotate_circuit
 
 class L(lcapy.oneport.L):
     def __init__(self, label):
         super(L,self).__init__(label)
         self.label = label
+
 class J(lcapy.oneport.L):
     def __init__(self, label):
         super(J,self).__init__(label)
         self.label = label
+
 class R(lcapy.oneport.R):
     def __init__(self, label):
         super(R, self).__init__(label)
         self.label = label
+
 class C(lcapy.oneport.C):
     def __init__(self, label):
         super(C, self).__init__(label)
         self.label = label
-
 
 def admittance(circuit):
     '''
@@ -161,7 +163,6 @@ def get_node_circuit(circuit):
 
         N_nodes = len(chains)
         return capacitances,inductances,resistances,N_nodes
-
 
 class Bbox(object):
     '''
