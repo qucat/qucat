@@ -1,4 +1,6 @@
 from lcapy.oneport import Ser,Par
+import lcapy
+from circuit_elements import L,J,C,R
 
 class Node(object):
     def __init__(self, label):

@@ -7,26 +7,7 @@ from sympy.core.mul import Mul,Pow,Add
 from copy import deepcopy
 import matplotlib.pyplot as plt
 from rotations import rotate_circuit
-
-class L(lcapy.oneport.L):
-    def __init__(self, label):
-        super(L,self).__init__(label)
-        self.label = label
-
-class J(lcapy.oneport.L):
-    def __init__(self, label):
-        super(J,self).__init__(label)
-        self.label = label
-
-class R(lcapy.oneport.R):
-    def __init__(self, label):
-        super(R, self).__init__(label)
-        self.label = label
-
-class C(lcapy.oneport.C):
-    def __init__(self, label):
-        super(C, self).__init__(label)
-        self.label = label
+from circuit_elements import L,J,C,R
 
 def admittance(circuit):
     '''
@@ -61,6 +42,10 @@ def remove_resistances(circuit):
 def get_all_circuit_elements(circuit):
     
     circuit_elements = {}
+    capacitors = []
+    junctions = []
+    inductors = []
+    resistors = []
     
     def recursive_function(circuit):
         if type(circuit) == lcapy.oneport.Par:
@@ -71,9 +56,17 @@ def get_all_circuit_elements(circuit):
             recursive_function(circuit.args[1])
         else:
             circuit_elements[circuit.label] = circuit
+            if type(circuit) == L:
+                inductors.append(circuit)
+            if type(circuit) == J:
+                junctions.append(circuit)
+            elif type(circuit) == C:
+                capacitors.append(circuit)
+            elif type(circuit) == R:
+                resistors.append(circuit)
     
     recursive_function(circuit)
-    return circuit_elements
+    return circuit_elements,capacitors,junctions,inductors,resistors
 
 class Bbox(object):
     '''
@@ -81,24 +74,53 @@ class Bbox(object):
     and analytically (not yet) the frequency, dissipation rate and anharmonicity
     of the circuits different modes.
     '''
-    def __init__(self, circuit, L_J = "L_J", Q_min = 1.):
-        self.circuit = circuit#.simplify()
-        self.L_J = L_J
-        self.Q_min = Q_min
-        
-        Y = admittance(self.circuit)
-        self.all_circuit_elements = get_all_circuit_elements(circuit)
+    def __init__(self, circuit, Q_min = 1.):
 
-        Y_numer = sp.numer(sp.together(Y))
-        Y_poly = sp.collect(sp.expand(Y_numer),sp.Symbol('w'))
-        self.Y_poly = Y_poly
-        self.Y_poly_order = sp.polys.polytools.degree(Y_poly,gen = sp.Symbol('w'))
-        Y_poly_coeffs = [Y_poly.coeff(sp.Symbol('w'),n) for n in range(self.Y_poly_order+1)[::-1]]
-        self.Y_poly_num = sp.utilities.lambdify([elt for elt in self.all_circuit_elements.keys()],Y_poly_coeffs,"numpy")
-        self.N_modes = int(self.Y_poly_order/2)
-        self.dY = sp.diff(Y,sp.Symbol('w'))
-        self.dY_num = sp.utilities.lambdify([elt for elt in self.all_circuit_elements.keys()+["w"]],self.dY,"numpy")
+        self.circuit = circuit
+        self.Q_min = Q_min
+
+        self.all_circuit_elements,\
+        self.capacitors,\
+        self.junctions,\
+        self.inductors,\
+        self.resistors = get_all_circuit_elements(circuit)
+
+        self.get_analytical_eigenfrequencies()
+        self.set_analytical_fluxes()
     
+    def set_analytical_fluxes(self):
+        for comp in self.all_circuit_elements:
+            rotated_circuit = rotate_circuit(self.circuit,comp) # rotate the circuit
+            Y = admittance(rotated_circuit) # compute Y at the new ports
+            dY = sp.diff(Y,sp.Symbol('w')) # take the derivative
+            # Create a function which takes the circuit elements as input and returns eigenfrequencies
+            dY_num = sp.utilities.lambdify(
+                [elt for elt in self.all_circuit_elements.keys()+["w"]],
+                dY,
+                "numpy")
+            self.all_circuit_elements[comp].dY = dY_num
+
+    def get_analytical_eigenfrequencies(self):
+        # Rotate the circuit such that a junction (or inductor) is in parallel with the rest
+        if len(self.junctions)>0:
+            circuit_freq_calculation = rotate_circuit(circuit,self.junctions[0].label) 
+        else:
+            circuit_freq_calculation = rotate_circuit(circuit,self.inductors[0].label) 
+
+        Y = admittance(circuit_freq_calculation)        # Circuit admittance
+        Y = sp.together(Y)      # Write as a fraction
+        Y_numer = sp.numer(Y)       # Extract the numerator 
+        Y_poly = sp.collect(sp.expand(Y_numer),sp.Symbol('w')) # Write numerator as polynomial in omega
+        Y_poly_order = sp.polys.polytools.degree(Y_poly,gen = sp.Symbol('w')) # Order of the polynomial
+        Y_poly_coeffs = [Y_poly.coeff(sp.Symbol('w'),n) for n in range(Y_poly_order+1)[::-1]] # Get polynomial coefficients
+        self.N_modes = int(Y_poly_order/2) # Number of modes in the circuit
+
+        # Create a function which takes the circuit elements as input and returns eigenfrequencies
+        self.Y_poly_num = sp.utilities.lambdify(
+            [elt for elt in self.all_circuit_elements.keys()],
+            Y_poly_coeffs,
+            "numpy") # Function which 
+        
     def draw(self,
         y_total = 0.6,
         x_total=1.,
@@ -418,32 +440,6 @@ class Bbox(object):
         As = 2.*e**2/h/circuit_parameters[self.L_J]/ws**2/ImdY**2
         return np.concatenate(([ws/2./pi],[ks/2./pi],[As]))
     
-    def normalmodes(self,circuit_parameters):
-        '''
-        Input:  dictionnary of circuit parameters
-                one of these parameters may be given as a list or numpy array
-        Returns resonance frequencies (in Hz)
-                dissipation rates (Hz)
-                Anharmonicities (Hz)
-        '''
-        N_lists = 0
-        for key in circuit_parameters:
-            if type(circuit_parameters[key]) == np.ndarray or type(circuit_parameters[key])== list:
-                N_lists +=1
-                key_list = key
-        
-        if N_lists == 0:
-            return self.fkA(circuit_parameters)
-        elif N_lists == 1:
-            to_iterate = deepcopy(circuit_parameters[key_list])
-            circuit_parameters[key_list] = to_iterate[0]
-            ret = np.array([self.fkA(circuit_parameters)])
-            for key_value in to_iterate[1:]:
-                circuit_parameters[key_list] = key_value
-                ret = np.concatenate((ret,[self.fkA(circuit_parameters)]),axis = 0)
-            return np.transpose(ret,(2,1,0))
-        else:
-            "Can only iterate on one variable"
 
 
 if __name__ == '__main__':
