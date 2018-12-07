@@ -7,37 +7,7 @@ from sympy.core.mul import Mul,Pow,Add
 from copy import deepcopy
 import matplotlib.pyplot as plt
 from rotations import rotate_circuit
-from circuit_elements import L,J,C,R
-
-def admittance(circuit):
-    '''
-    Given an Lcapy circuit, returns the admittance.
-    '''
-    if type(circuit) == lcapy.oneport.Par:
-        return Add(admittance(circuit.args[0]),admittance(circuit.args[1]))
-    elif type(circuit) == lcapy.oneport.Ser:
-        return 1/Add(1/admittance(circuit.args[0]),1/admittance(circuit.args[1]))
-    elif type(circuit) == L or type(circuit) == J:
-        return -sp.I*Mul(1/sp.Symbol('w'),1/sp.Symbol(circuit.label,real=True,nonnegative = True))
-    elif type(circuit) == C:
-        return sp.I*Mul(sp.Symbol('w'),sp.Symbol(circuit.label,real=True,nonnegative = True))
-    elif type(circuit) == R:
-        return 1/sp.Symbol(circuit.label,real=True,nonnegative = True)
-
-def remove_resistances(circuit):
-    '''
-    Given an Lcapy circuit, returns the same circuit without resistances
-    '''
-    if type(circuit) in [L,C,J]:
-        return circuit
-    elif type(circuit.args[0])==R:
-        return circuit.args[1]
-    elif type(circuit.args[1])==R:
-        return circuit.args[0]
-    elif type(circuit) == lcapy.oneport.Par:
-        return lcapy.Par(remove_resistances(circuit.args[0]),remove_resistances(circuit.args[1]))
-    elif type(circuit) == lcapy.oneport.Ser:
-        return lcapy.Ser(remove_resistances(circuit.args[0]),remove_resistances(circuit.args[1]))
+from circuit_elements import L,J,C,R,Series,Parallel
 
 def get_all_circuit_elements(circuit):
     
@@ -48,12 +18,12 @@ def get_all_circuit_elements(circuit):
     resistors = []
     
     def recursive_function(circuit):
-        if type(circuit) == lcapy.oneport.Par:
-            recursive_function(circuit.args[0])
-            recursive_function(circuit.args[1])
-        elif type(circuit) == lcapy.oneport.Ser:
-            recursive_function(circuit.args[0])
-            recursive_function(circuit.args[1])
+        if type(circuit) == Parallel:
+            recursive_function(circuit.component_left)
+            recursive_function(circuit.component_right)
+        elif type(circuit) == Series:
+            recursive_function(circuit.component_left)
+            recursive_function(circuit.component_right)
         else:
             circuit_elements[circuit.label] = circuit
             if type(circuit) == L:
@@ -91,7 +61,7 @@ class Bbox(object):
     def set_analytical_fluxes(self):
         for comp in self.all_circuit_elements:
             rotated_circuit = rotate_circuit(self.circuit,comp) # rotate the circuit
-            Y = admittance(rotated_circuit) # compute Y at the new ports
+            Y = rotated_circuit.admittance() # compute Y at the new ports
             dY = sp.diff(Y,sp.Symbol('w')) # take the derivative
             # Create a function which takes the circuit elements as input and returns eigenfrequencies
             dY_num = sp.utilities.lambdify(
@@ -107,7 +77,7 @@ class Bbox(object):
         else:
             circuit_freq_calculation = rotate_circuit(circuit,self.inductors[0].label) 
 
-        Y = admittance(circuit_freq_calculation)        # Circuit admittance
+        Y = circuit_freq_calculation.admittance()        # Circuit admittance
         Y = sp.together(Y)      # Write as a fraction
         Y_numer = sp.numer(Y)       # Extract the numerator 
         Y_poly = sp.collect(sp.expand(Y_numer),sp.Symbol('w')) # Write numerator as polynomial in omega
@@ -139,10 +109,10 @@ class Bbox(object):
         line_type = []
                 
         def draw(circuit, pos = [0.,0.], which = 'tc'):
-            if type(circuit) == lcapy.oneport.Par:
-                return draw_par(circuit.args[0],circuit.args[1],pos,which)
-            elif type(circuit) == lcapy.oneport.Ser:
-                return draw_ser(circuit.args[0],circuit.args[1],pos,which)
+            if type(circuit) == Parallel:
+                return draw_par(circuit.component_left,circuit.component_right,pos,which)
+            elif type(circuit) == Series:
+                return draw_ser(circuit.component_left,circuit.component_right,pos,which)
             elif type(circuit) == L:
                 return draw_L(pos,which,circuit)
             elif type(circuit) == R:
@@ -406,8 +376,8 @@ class Bbox(object):
     #     Does not attempt to calculate the dissipation, since sympy does not simplify
     #     real/imaginary parts of complex expressions well
     #     '''
-    #     self.circuit_lossless = remove_resistances(self.circuit)
-    #     Y_lossless = admittance(self.circuit_lossless)
+    #     self.circuit_lossless = self.circuit.remove_resistances()
+    #     Y_lossless = self.circuit_lossless.admittance()
     #     Y_numer_lossless = sp.numer(sp.together(Y_lossless))
     #     Y_poly_lossless = sp.collect(sp.expand(Y_numer_lossless),sp.Symbol('w'))
     #     ImdY_lossless = sp.diff(Y_lossless,sp.Symbol('w')).subs({sp.I:1})
