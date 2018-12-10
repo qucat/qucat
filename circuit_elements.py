@@ -1,6 +1,7 @@
 import sympy as sp
 import numpy as np
 from sympy.core.mul import Mul,Pow,Add
+from copy import deepcopy
 id2 = sp.Matrix([[1,0],[0,1]])
 
 class Circuit(object):
@@ -78,6 +79,7 @@ class Component(Circuit):
     def set_impedence_matrix(self,ABCD = id2):
         ABCD = ABCD*sp.Matrix([[1,0],[self.admittance(),1]])
         self.flux_wr_ref = 1/ABCD[0,0]
+
 
 class L(Component):
     def __init__(self, label):

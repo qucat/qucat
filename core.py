@@ -3,6 +3,7 @@ import lcapy
 import sympy as sp
 import numpy as np
 from scipy.constants import e,pi,h,hbar
+phi_0 = hbar/2./e
 from sympy.core.mul import Mul,Pow,Add
 from copy import deepcopy
 import matplotlib.pyplot as plt
@@ -67,12 +68,36 @@ class Bbox(object):
 
         for c in self.all_circuit_elements:   
             comp = self.all_circuit_elements[c]
+            flux = comp.flux_wr_ref*sp.sqrt(hbar/sp.Symbol('w')/ImdY)
+            voltage = flux*sp.I*sp.Symbol('w')
 
             comp.flux =\
             sp.utilities.lambdify(
                 [elt for elt in self.all_circuit_elements.keys()+["w"]],
-                comp.flux_wr_ref*sp.sqrt(hbar/sp.Symbol('w')/ImdY),
+                flux,
                 "numpy")
+
+
+            comp.charge =\
+            sp.utilities.lambdify(
+                [elt for elt in self.all_circuit_elements.keys()+["w"]],
+                hbar/2/flux,
+                "numpy")
+
+
+            comp.voltage =\
+            sp.utilities.lambdify(
+                [elt for elt in self.all_circuit_elements.keys()+["w"]],
+                voltage,
+                "numpy")
+
+
+            comp.current =\
+            sp.utilities.lambdify(
+                [elt for elt in self.all_circuit_elements.keys()+["w"]],
+                voltage*comp.admittance(),
+                "numpy")
+
             if type(comp) == J:
                 comp.anharmonicity =\
                 sp.utilities.lambdify(
@@ -116,6 +141,7 @@ class Bbox(object):
         x_J = 0.2,
         x_LR = 0.7,
         y_LR = 0.3,
+        x_par = 0.25,
         fontsize = 15,
         text_position = [0.,-0.35],
         plot = True,
@@ -174,13 +200,25 @@ class Bbox(object):
                 y+=[np.array([-h1-h2/2.,-h1-h2/2.])]
                 line_type.append('wire')
 
+            if which == 'l':
+                # add side lines
+
+                x+=[np.array([-w/2.,-w/2.-x_par])]
+                y+=[np.array([-(h1+h2)/2.,-(h1+h2)/2.])]
+                line_type.append('wire')
+
+                x+=[np.array([+w/2.,+w/2.+x_par])]
+                y+=[np.array([-(h1+h2)/2.,-(h1+h2)/2.])]
+                line_type.append('wire')
+
+                w += x_par*2.
+
             # Move into position
 
             if which == 'l':
                 return shift(pos_x1+pos_x2,pos[0]+w/2.),shift(pos_y1+pos_y2,pos[1]+h/2.),w,h,shift(x,pos[0]+w/2.),shift(y,pos[1]+h/2.),elt_names1+elt_names2
             else:
                 return shift(pos_x1+pos_x2,pos[0]),shift(pos_y1+pos_y2,pos[1]),w,h,shift(x,pos[0]),shift(y,pos[1]),elt_names1+elt_names2
-
 
         def draw_ser(el1,el2,pos,which):
             pos_x1,pos_y1,w1,h1,x1,y1,elt_names1 = draw(el1,[0.,0.],'l')
@@ -194,7 +232,6 @@ class Bbox(object):
                 return shift(pos_x1+pos_x2,pos[0]-w/2.),shift(pos_y1+pos_y2,pos[1]-h/2.),w,h,shift(x,pos[0]-w/2.),shift(y,pos[1]-h/2.),elt_names1+elt_names2
             else:
                 return shift(pos_x1+pos_x2,pos[0]),shift(pos_y1+pos_y2,pos[1]),w,h,shift(x,pos[0]),shift(y,pos[1]),elt_names1+elt_names2
-
 
         def shift(to_shift,shift):
             for i,_ in enumerate(to_shift):
@@ -217,7 +254,6 @@ class Bbox(object):
             y = (2.*x/period - np.floor(2.*x/period))*a+b+height
             line_type.append('R')
             return finish_drawing_LR([x],[y],pos,which,circuit)
-
 
         def draw_C(pos,which,circuit):
             
@@ -336,9 +372,11 @@ class Bbox(object):
 
             return [pos_x],[pos_y],x_total,y_total,x_list,y_list,[circuit.label]
         
-        element_x,element_y,w,h,xs,ys,element_names = draw(self.circuit,which='l')
+        element_x,element_y,w,h,xs,ys,element_names = draw(self.circuit,which='t')
         figsize_scaling = 1.5
-        fig,ax = plt.subplots(1,1,figsize = (w*figsize_scaling,h*figsize_scaling))
+        fig = plt.figure(figsize = (w*figsize_scaling,h*figsize_scaling))
+        ax = fig.add_subplot(111)
+
         for i in range(len(xs)):
             if line_type[i] == 'wire':
                 ax.plot(xs[i],ys[i],color = 'black',lw=1)
@@ -350,15 +388,18 @@ class Bbox(object):
                 ax.plot(xs[i],ys[i],color = 'black',lw=8)
             elif line_type[i] == 'R':
                 ax.plot(xs[i],ys[i],color = 'black',lw=2)
+
+        element_positions = {}
         for i,el in enumerate(element_names):
             plt.text(element_x[i]+text_position[0],element_y[i]+text_position[1],'$'+el+'$',fontsize=fontsize,ha='center')
+            element_positions[el] = [element_x[i],element_y[i]]
         ax.set_axis_off()
         if plot:
             plt.tight_layout()
             plt.show()
         if full_output:
-            return element_x,element_y,fig,ax
-         
+            return element_positions,fig,ax
+    
     def fkA(self,circuit_parameters):
         '''
         Input: dictionnary of circuit parameters
@@ -388,51 +429,63 @@ class Bbox(object):
             As += np.absolute(j.anharmonicity(*args))
 
         return [ws/2./pi,ks/2./pi,As/h]
+
+    def draw_normal_mode(self,
+        mode,unit,
+            circuit_parameters,
+                fontsize = 15,
+                y_arrow=0.25,
+                y_arrow_text=0.37):
+
+        def string_to_function(comp,function,circuit_parameters):
+            if function == 'flux':
+                return comp.flux(**circuit_parameters)/phi_0
+            if function == 'charge':
+                return comp.charge(**circuit_parameters)/e
+            if function == 'voltage':
+                return comp.voltage(**circuit_parameters)
+            if function == 'current':
+                return comp.current(**circuit_parameters)
+
+            
+        w,k,A = self.fkA(circuit_parameters)
+        element_positions,fig,ax = self.draw(
+                plot = False,
+                full_output = True,
+                y_total = 1,
+                x_total=1.,
+                y_C = 0.3,
+                x_C = 0.2,
+                x_J = 0.2,
+                x_LR = 0.7,
+                y_LR = 0.3,
+                fontsize = fontsize,
+                text_position = [0.,-0.35])
+
+        circuit_parameters['w'] = (w[mode]+1j*k[mode])*2.*pi
     
-    def analytical_solution(self,simplify = False):
-        '''
-        Attempts to return analytical expressions for the frequency and anharmonicity
-        Does not attempt to calculate the dissipation, since sympy does not simplify
-        real/imaginary parts of complex expressions well
-        '''
-        self.circuit_lossless = self.circuit.remove_resistances()
-        Y_lossless = self.circuit_lossless.admittance()
-        Y_numer_lossless = sp.numer(sp.together(Y_lossless))
-        Y_poly_lossless = sp.collect(sp.expand(Y_numer_lossless),sp.Symbol('w'))
-        ImdY_lossless = sp.diff(Y_lossless,sp.Symbol('w')).subs({sp.I:1})
 
-        facts = [sp.Q.positive(sp.Symbol(x)) for x in self.all_circuit_elements.keys()]
-        with sp.assuming(*facts):
-        
-            # Try and calculate analytical eigenfrequencies
-            w_analytical = sp.solve(Y_poly_lossless,sp.Symbol('w'))
+        for el,xy in element_positions.items():
+            x = xy[0]
+            y = xy[1]
+            value = string_to_function(self.all_circuit_elements[el],unit,circuit_parameters)
+            value_current = string_to_function(self.all_circuit_elements[el],'current',circuit_parameters)
+            
+            arrow_kwargs = dict(lw = 3,head_width=0.1, head_length=0.1,clip_on=False)
+            if np.real(value_current)>0:
+                ax.arrow(x-0.25, y+y_arrow,0.5, 0.,fc='red', ec='red',**arrow_kwargs)
+            else:
+                ax.arrow(x+0.25, y+y_arrow,-0.5, 0.,fc='blue', ec='blue',**arrow_kwargs)
+            ax.text(x, y+y_arrow_text,r"%.1e"%np.absolute(value)
+                    ,fontsize=fontsize,ha='center')
+        plt.show()
 
-            # Check the number of solutions
-            if len(w_analytical)==0:
-                print ("No analytical solutions")
-                return None
-
-            ws = []
-            As = []
-            for w in w_analytical:
-                w_num = w.evalf(subs={i:1. for i in w.free_symbols})
-                if w_num>0:
-                    if simplify:
-                        ws.append(sp.simplify(w))
-                        As.append(sp.simplify(2*sp.Symbol('e')**2/sp.Symbol('h')*Mul(1/sp.Symbol(self.L_J),\
-                                Mul(Pow(1/ImdY_lossless.subs({sp.Symbol('w'):w}),2),\
-                                Pow(1/w,2)))))
-                    else:
-                        ws.append(w)
-                        As.append(2*sp.Symbol('e')**2/sp.Symbol('h')*Mul(1/sp.Symbol(self.L_J),\
-                                Mul(Pow(1/ImdY_lossless.subs({sp.Symbol('w'):w}),2),\
-                                Pow(1/w,2))))
-            return ws,As
 
 if __name__ == '__main__':
     
     circuit = (C('C')|J('L'))|(C('Cc')+(C('Cr')|J('Lr')|R('Rr')))
     b = Bbox(circuit)
+    # b.draw()
     kwargs = {}
     kwargs['C'] = 100e-15
     kwargs['L'] = 10e-9
@@ -440,4 +493,4 @@ if __name__ == '__main__':
     kwargs['Cr'] = 100e-15
     kwargs['Lr'] = 10e-9
     kwargs['Rr'] = 1e8
-    b.fkA(kwargs)
+    b.draw_normal_mode(0,'current',kwargs)
