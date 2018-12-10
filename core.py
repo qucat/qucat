@@ -2,7 +2,7 @@ from __future__ import print_function
 import lcapy
 import sympy as sp
 import numpy as np
-from scipy.constants import e,pi,h
+from scipy.constants import e,pi,h,hbar
 from sympy.core.mul import Mul,Pow,Add
 from copy import deepcopy
 import matplotlib.pyplot as plt
@@ -38,6 +38,7 @@ def get_all_circuit_elements(circuit):
     recursive_function(circuit)
     return circuit_elements,capacitors,junctions,inductors,resistors
 
+
 class Bbox(object):
     '''
     Given a circuit, the Bbox allows one to draw the circuit, and compute numerically
@@ -56,36 +57,52 @@ class Bbox(object):
         self.resistors = get_all_circuit_elements(circuit)
 
         self.get_analytical_eigenfrequencies()
-        self.set_analytical_fluxes()
+        self.circuit_rotated.set_impedence_matrix()
+        self.set_analytical_fluxes_anh()
     
-    def set_analytical_fluxes(self):
-        for comp in self.all_circuit_elements:
-            rotated_circuit = rotate_circuit(self.circuit,comp) # rotate the circuit
-            Y = rotated_circuit.admittance() # compute Y at the new ports
-            dY = sp.diff(Y,sp.Symbol('w')) # take the derivative
-            # Create a function which takes the circuit elements as input and returns eigenfrequencies
-            dY_num = sp.utilities.lambdify(
+    def set_analytical_fluxes_anh(self):
+        dY = sp.diff(self.Y,sp.Symbol('w')) # take the derivative
+        ImdY = sp.im(dY)
+        # Create a function which takes the circuit elements as input and returns eigenfrequencies
+
+        for c in self.all_circuit_elements:   
+            comp = self.all_circuit_elements[c]
+
+            comp.flux =\
+            sp.utilities.lambdify(
                 [elt for elt in self.all_circuit_elements.keys()+["w"]],
-                dY,
+                comp.flux_wr_ref*sp.sqrt(hbar/sp.Symbol('w')/ImdY),
                 "numpy")
-            self.all_circuit_elements[comp].dY = dY_num
+            if type(comp) == J:
+                comp.anharmonicity =\
+                sp.utilities.lambdify(
+                    [elt for elt in self.all_circuit_elements.keys()+["w"]],
+                    comp.flux_wr_ref**4*2.*e**2/sp.Symbol(c)/sp.Symbol('w')**2/ImdY**2,
+                    "numpy")
+
 
     def get_analytical_eigenfrequencies(self):
         # Rotate the circuit such that a junction (or inductor) is in parallel with the rest
         if len(self.junctions)>0:
-            circuit_freq_calculation = rotate_circuit(circuit,self.junctions[0].label) 
+            self.circuit_rotated = rotate_circuit(self.circuit,self.junctions[0].label) 
+            self.reference_LJ = self.junctions[0]
         else:
-            circuit_freq_calculation = rotate_circuit(circuit,self.inductors[0].label) 
+            self.circuit_rotated = rotate_circuit(self.circuit,self.inductors[0].label) 
+            self.reference_LJ = self.inductors[0]
 
-        Y = circuit_freq_calculation.admittance()        # Circuit admittance
+        Y = self.circuit_rotated.admittance()        # Circuit admittance
         Y = sp.together(Y)      # Write as a fraction
         Y_numer = sp.numer(Y)       # Extract the numerator 
         Y_poly = sp.collect(sp.expand(Y_numer),sp.Symbol('w')) # Write numerator as polynomial in omega
         Y_poly_order = sp.polys.polytools.degree(Y_poly,gen = sp.Symbol('w')) # Order of the polynomial
         Y_poly_coeffs = [Y_poly.coeff(sp.Symbol('w'),n) for n in range(Y_poly_order+1)[::-1]] # Get polynomial coefficients
+        
+        self.Y = Y
         self.N_modes = int(Y_poly_order/2) # Number of modes in the circuit
 
-        # Create a function which takes the circuit elements as input and returns eigenfrequencies
+        # Create a function which takes the circuit elements as input and returns
+        # polynomial coeffecients. The root of the polynomial are the 
+        # eigenfrequencies and dissipation rates
         self.Y_poly_num = sp.utilities.lambdify(
             [elt for elt in self.all_circuit_elements.keys()],
             Y_poly_coeffs,
@@ -349,6 +366,7 @@ class Bbox(object):
                 dissipation rates (Hz)
                 Anharmonicities (Hz)
         '''
+
         args = [circuit_parameters[key] for key in self.all_circuit_elements.keys()]
         ws_cpx = np.roots(self.Y_poly_num(*args))
 
@@ -364,54 +382,62 @@ class Bbox(object):
         ws = ws[increasing_frequencies]
         ks = np.imag(ws_cpx)[increasing_frequencies]
         
-        
         args.append(ws)
-        ImdY = np.imag(self.dY_num(*args))
-        As = 2.*e**2/h/circuit_parameters[self.L_J]/ws**2/ImdY**2
-        return np.concatenate(([ws/2./pi],[ks/2./pi],[As]))
+        As = np.zeros(len(ws))
+        for j in self.junctions:
+            As += np.absolute(j.anharmonicity(*args))
+
+        return [ws/2./pi,ks/2./pi,As/h]
     
-    # def analytical_solution(self,simplify = False):
-    #     '''
-    #     Attempts to return analytical expressions for the frequency and anharmonicity
-    #     Does not attempt to calculate the dissipation, since sympy does not simplify
-    #     real/imaginary parts of complex expressions well
-    #     '''
-    #     self.circuit_lossless = self.circuit.remove_resistances()
-    #     Y_lossless = self.circuit_lossless.admittance()
-    #     Y_numer_lossless = sp.numer(sp.together(Y_lossless))
-    #     Y_poly_lossless = sp.collect(sp.expand(Y_numer_lossless),sp.Symbol('w'))
-    #     ImdY_lossless = sp.diff(Y_lossless,sp.Symbol('w')).subs({sp.I:1})
+    def analytical_solution(self,simplify = False):
+        '''
+        Attempts to return analytical expressions for the frequency and anharmonicity
+        Does not attempt to calculate the dissipation, since sympy does not simplify
+        real/imaginary parts of complex expressions well
+        '''
+        self.circuit_lossless = self.circuit.remove_resistances()
+        Y_lossless = self.circuit_lossless.admittance()
+        Y_numer_lossless = sp.numer(sp.together(Y_lossless))
+        Y_poly_lossless = sp.collect(sp.expand(Y_numer_lossless),sp.Symbol('w'))
+        ImdY_lossless = sp.diff(Y_lossless,sp.Symbol('w')).subs({sp.I:1})
 
-    #     facts = [sp.Q.positive(sp.Symbol(x)) for x in self.all_circuit_elements.keys()]
-    #     with sp.assuming(*facts):
+        facts = [sp.Q.positive(sp.Symbol(x)) for x in self.all_circuit_elements.keys()]
+        with sp.assuming(*facts):
         
-    #         # Try and calculate analytical eigenfrequencies
-    #         w_analytical = sp.solve(Y_poly_lossless,sp.Symbol('w'))
+            # Try and calculate analytical eigenfrequencies
+            w_analytical = sp.solve(Y_poly_lossless,sp.Symbol('w'))
 
-    #         # Check the number of solutions
-    #         if len(w_analytical)==0:
-    #             print ("No analytical solutions")
-    #             return None
+            # Check the number of solutions
+            if len(w_analytical)==0:
+                print ("No analytical solutions")
+                return None
 
-    #         ws = []
-    #         As = []
-    #         for w in w_analytical:
-    #             w_num = w.evalf(subs={i:1. for i in w.free_symbols})
-    #             if w_num>0:
-    #                 if simplify:
-    #                     ws.append(sp.simplify(w))
-    #                     As.append(sp.simplify(2*sp.Symbol('e')**2/sp.Symbol('h')*Mul(1/sp.Symbol(self.L_J),\
-    #                             Mul(Pow(1/ImdY_lossless.subs({sp.Symbol('w'):w}),2),\
-    #                             Pow(1/w,2)))))
-    #                 else:
-    #                     ws.append(w)
-    #                     As.append(2*sp.Symbol('e')**2/sp.Symbol('h')*Mul(1/sp.Symbol(self.L_J),\
-    #                             Mul(Pow(1/ImdY_lossless.subs({sp.Symbol('w'):w}),2),\
-    #                             Pow(1/w,2))))
-    #         return ws,As
+            ws = []
+            As = []
+            for w in w_analytical:
+                w_num = w.evalf(subs={i:1. for i in w.free_symbols})
+                if w_num>0:
+                    if simplify:
+                        ws.append(sp.simplify(w))
+                        As.append(sp.simplify(2*sp.Symbol('e')**2/sp.Symbol('h')*Mul(1/sp.Symbol(self.L_J),\
+                                Mul(Pow(1/ImdY_lossless.subs({sp.Symbol('w'):w}),2),\
+                                Pow(1/w,2)))))
+                    else:
+                        ws.append(w)
+                        As.append(2*sp.Symbol('e')**2/sp.Symbol('h')*Mul(1/sp.Symbol(self.L_J),\
+                                Mul(Pow(1/ImdY_lossless.subs({sp.Symbol('w'):w}),2),\
+                                Pow(1/w,2))))
+            return ws,As
 
 if __name__ == '__main__':
     
-    ###LC circuit
-    circuit = ((L('L1')|(L('L')+C('C')+J('L_J')+R('R')))+L('L'))|C('C')|J('L_J')+C('C')
+    circuit = (C('C')|J('L'))|(C('Cc')+(C('Cr')|J('Lr')|R('Rr')))
     b = Bbox(circuit)
+    kwargs = {}
+    kwargs['C'] = 100e-15
+    kwargs['L'] = 10e-9
+    kwargs['Cc'] = 1e-15
+    kwargs['Cr'] = 100e-15
+    kwargs['Lr'] = 10e-9
+    kwargs['Rr'] = 1e8
+    b.fkA(kwargs)

@@ -1,6 +1,7 @@
 import sympy as sp
 import numpy as np
 from sympy.core.mul import Mul,Pow,Add
+id2 = sp.Matrix([[1,0],[0,1]])
 
 class Circuit(object):
     """docstring for Circuit"""
@@ -10,14 +11,14 @@ class Circuit(object):
         pass
     def remove_resistances(self):
         pass
+    def set_impedence_matrix(self,ABCD = id2):
+        pass
 
     def __add__(self, other_circuit):
         return Series(self, other_circuit)
 
     def __or__(self, other_circuit):
         return Parallel(self, other_circuit)
-
-
 
 class Connection(Circuit):
     """docstring for Connection"""
@@ -43,24 +44,40 @@ class Series(Connection):
         return 1/Add(1/self.component_left.admittance(),
             1/self.component_right.admittance())
 
+    def set_impedence_matrix(self,ABCD = id2):
+        self.component_right.set_impedence_matrix(
+            ABCD*sp.Matrix([[1,1/self.component_left.admittance()],[0,1]]))
+        self.component_left.set_impedence_matrix(
+            ABCD*sp.Matrix([[1,1/self.component_right.admittance()],[0,1]]))
+
 class Parallel(Connection):
     """docstring for Parallel"""
     def __init__(self, component_left,component_right):
         super(Parallel, self).__init__(component_left,component_right)
         
     def admittance(self):
-        return 1/Add(self.component_left.admittance(),
+        return Add(self.component_left.admittance(),
             self.component_right.admittance())
 
-
+    def set_impedence_matrix(self,ABCD = id2):
+        self.component_right.set_impedence_matrix(
+            ABCD*sp.Matrix([[1,0],[self.component_left.admittance(),1]]))
+        self.component_left.set_impedence_matrix(
+            ABCD*sp.Matrix([[1,0],[self.component_right.admittance(),1]]))
 
 class Component(Circuit):
     """docstring for Component"""
     def __init__(self, label):
         super(Component, self).__init__()
         self.label = label
+        self.flux = lambda x: 0.
+
     def remove_resistances(self):
         return self
+
+    def set_impedence_matrix(self,ABCD = id2):
+        ABCD = ABCD*sp.Matrix([[1,0],[self.admittance(),1]])
+        self.flux_wr_ref = 1/ABCD[0,0]
 
 class L(Component):
     def __init__(self, label):
