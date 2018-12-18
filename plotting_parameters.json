@@ -1,6 +1,7 @@
 {
 	"element_width":1.0,
 	"element_height":0.6,
+	"element_height_normal_modes":1.0,
 	"figsize_scaling":1.5,
 	"C":{
 		"gap":0.2,
@@ -32,7 +33,12 @@
 		"lw":1
 	},
 	"label":{
-		"fontsize":14,
+		"fontsize":10,
 		"text_position":[0.0,-0.35]
+	},
+	"normal_mode_label":{
+		"fontsize":10,
+		"y_arrow":0.25,
+		"y_text":0.37
 	}
 }

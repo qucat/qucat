@@ -1,496 +1,761 @@
-from __future__ import print_function
-import lcapy
 import sympy as sp
 import numpy as np
 from scipy.constants import e,pi,h,hbar
-phi_0 = hbar/2./e
 from sympy.core.mul import Mul,Pow,Add
 from copy import deepcopy
+from json import load
 import matplotlib.pyplot as plt
-from rotations import rotate_circuit
-from circuit_elements import L,J,C,R,Series,Parallel
+from math import floor
+id2 = sp.Matrix([[1,0],[0,1]])
+exponent_to_letter = {
+    -18:'a',
+    -15:'f',
+    -12:'p',
+    -9:'n',
+    -6:r'$\mu$',
+    -3:'m',
+    0:'',
+    3:'k',
+    6:'M',
+    9:'G',
+    12:'T'
+}
+with open("plotting_parameters.json", "r") as f:
+    pp = load(f)
 
-def get_all_circuit_elements(circuit):
-    
-    circuit_elements = {}
-    capacitors = []
-    junctions = []
-    inductors = []
-    resistors = []
-    
-    def recursive_function(circuit):
-        if type(circuit) == Parallel:
-            recursive_function(circuit.component_left)
-            recursive_function(circuit.component_right)
-        elif type(circuit) == Series:
-            recursive_function(circuit.component_left)
-            recursive_function(circuit.component_right)
-        else:
-            circuit_elements[circuit.label] = circuit
-            if type(circuit) == L:
-                inductors.append(circuit)
-            if type(circuit) == J:
-                junctions.append(circuit)
-            elif type(circuit) == C:
-                capacitors.append(circuit)
-            elif type(circuit) == R:
-                resistors.append(circuit)
-    
-    recursive_function(circuit)
-    return circuit_elements,capacitors,junctions,inductors,resistors
+class Circuit(object):
+    """docstring for Circuit"""
+    def __init__(self):
+        self._id = None 
+        self.parent = None
+        self.head = None 
 
+    def __eq__(self, other):
+        return self._id == other._id
 
-class Bbox(object):
-    '''
-    Given a circuit, the Bbox allows one to draw the circuit, and compute numerically
-    the frequency, dissipation rate and anharmonicity
-    of the circuits different modes.
-    '''
-    def __init__(self, circuit, Q_min = 1.):
+    def __add__(self, other_circuit):
+        return Series(self, other_circuit)
 
-        self.circuit = circuit
-        self.Q_min = Q_min
+    def __or__(self, other_circuit):
+        return Parallel(self, other_circuit)
 
-        self.all_circuit_elements,\
-        self.capacitors,\
-        self.junctions,\
-        self.inductors,\
-        self.resistors = get_all_circuit_elements(circuit)
-
-        self.get_analytical_eigenfrequencies()
-        self.circuit_rotated.set_impedence_matrix()
-        self.set_analytical_fluxes_anh()
-    
-    def set_analytical_fluxes_anh(self):
-        dY = sp.diff(self.Y,sp.Symbol('w')) # take the derivative
-        ImdY = sp.im(dY)
-        # Create a function which takes the circuit elements as input and returns eigenfrequencies
-
-        for c in self.all_circuit_elements:   
-            comp = self.all_circuit_elements[c]
-            flux = comp.flux_wr_ref*sp.sqrt(hbar/sp.Symbol('w')/ImdY)
-            voltage = flux*sp.I*sp.Symbol('w')
-
-            comp.flux =\
-            sp.utilities.lambdify(
-                [elt for elt in self.all_circuit_elements.keys()+["w"]],
-                flux,
-                "numpy")
-
-
-            comp.charge =\
-            sp.utilities.lambdify(
-                [elt for elt in self.all_circuit_elements.keys()+["w"]],
-                hbar/2/flux,
-                "numpy")
-
-
-            comp.voltage =\
-            sp.utilities.lambdify(
-                [elt for elt in self.all_circuit_elements.keys()+["w"]],
-                voltage,
-                "numpy")
-
-
-            comp.current =\
-            sp.utilities.lambdify(
-                [elt for elt in self.all_circuit_elements.keys()+["w"]],
-                voltage*comp.admittance(),
-                "numpy")
-
-            if type(comp) == J:
-                comp.anharmonicity =\
-                sp.utilities.lambdify(
-                    [elt for elt in self.all_circuit_elements.keys()+["w"]],
-                    comp.flux_wr_ref**4*2.*e**2/sp.Symbol(c)/sp.Symbol('w')**2/ImdY**2,
-                    "numpy")
-
-
-    def get_analytical_eigenfrequencies(self):
-        # Rotate the circuit such that a junction (or inductor) is in parallel with the rest
-        if len(self.junctions)>0:
-            self.circuit_rotated = rotate_circuit(self.circuit,self.junctions[0].label) 
-            self.reference_LJ = self.junctions[0]
-        else:
-            self.circuit_rotated = rotate_circuit(self.circuit,self.inductors[0].label) 
-            self.reference_LJ = self.inductors[0]
-
-        Y = self.circuit_rotated.admittance()        # Circuit admittance
-        Y = sp.together(Y)      # Write as a fraction
-        Y_numer = sp.numer(Y)       # Extract the numerator 
-        Y_poly = sp.collect(sp.expand(Y_numer),sp.Symbol('w')) # Write numerator as polynomial in omega
-        Y_poly_order = sp.polys.polytools.degree(Y_poly,gen = sp.Symbol('w')) # Order of the polynomial
-        Y_poly_coeffs = [Y_poly.coeff(sp.Symbol('w'),n) for n in range(Y_poly_order+1)[::-1]] # Get polynomial coefficients
-        
-        self.Y = Y
-        self.N_modes = int(Y_poly_order/2) # Number of modes in the circuit
-
-        # Create a function which takes the circuit elements as input and returns
-        # polynomial coeffecients. The root of the polynomial are the 
-        # eigenfrequencies and dissipation rates
-        self.Y_poly_num = sp.utilities.lambdify(
-            [elt for elt in self.all_circuit_elements.keys()],
-            Y_poly_coeffs,
-            "numpy") # Function which 
-        
-    def draw(self,
-        y_total = 0.6,
-        x_total=1.,
-        y_C = 0.3,
-        x_C = 0.2,
-        x_J = 0.2,
-        x_LR = 0.7,
-        y_LR = 0.3,
-        x_par = 0.25,
-        fontsize = 15,
-        text_position = [0.,-0.35],
+    def show(self,
         plot = True,
-        full_output = False):
-        '''
-        Draws the circuit
-        '''
-        line_type = []
-                
-        def draw(circuit, pos = [0.,0.], which = 'tc'):
-            if type(circuit) == Parallel:
-                return draw_par(circuit.component_left,circuit.component_right,pos,which)
-            elif type(circuit) == Series:
-                return draw_ser(circuit.component_left,circuit.component_right,pos,which)
-            elif type(circuit) == L:
-                return draw_L(pos,which,circuit)
-            elif type(circuit) == R:
-                return draw_R(pos,which,circuit)
-            elif type(circuit) == C:
-                return draw_C(pos,which,circuit)
-            elif type(circuit) == J:
-                return draw_J(pos,which,circuit)
+        full_output = False,
+        add_vertical_space = False):
+
+        if add_vertical_space:
+            element_height_regular = pp['element_height'] 
+            pp['element_height'] = pp['element_height_normal_modes']
 
 
-        def draw_par(el1,el2,pos,which):
-            pos_x1,pos_y1,w1,h1,x1,y1,elt_names1 = draw(el1,[0.,0.],'t')
-            pos_x2,pos_y2,w2,h2,x2,y2,elt_names2 = draw(el2,[0.,-h1],'t')
-
-            w = max(w1,w2)
-            h = h1+h2
-            x = x1+x2
-            y = y1+y2
-
-            # Connect parallel elements
-
-            x+=[np.array([-w/2.,-w/2.])]
-            y+=[np.array([-h1/2.,-h1-h2/2.])]
-            line_type.append('wire')
-
-            x+=[np.array([+w/2.,+w/2.])]
-            y+=[np.array([-h1/2.,-h1-h2/2.])]
-            line_type.append('wire')
-
-            if np.argmin([w1,w2]) == 0:
-                x+=[np.array([-w/2.,-w1/2.])]
-                y+=[np.array([-h1/2.,-h1/2.])]
-                line_type.append('wire')
-                x+=[np.array([+w/2.,+w1/2.])]
-                y+=[np.array([-h1/2.,-h1/2.])]
-                line_type.append('wire')
-            if np.argmin([w1,w2]) == 1:
-                x+=[np.array([-w/2.,-w2/2.])]
-                y+=[np.array([-h1-h2/2.,-h1-h2/2.])]
-                line_type.append('wire')
-                x+=[np.array([+w/2.,+w2/2.])]
-                y+=[np.array([-h1-h2/2.,-h1-h2/2.])]
-                line_type.append('wire')
-
-            if which == 'l':
-                # add side lines
-
-                x+=[np.array([-w/2.,-w/2.-x_par])]
-                y+=[np.array([-(h1+h2)/2.,-(h1+h2)/2.])]
-                line_type.append('wire')
-
-                x+=[np.array([+w/2.,+w/2.+x_par])]
-                y+=[np.array([-(h1+h2)/2.,-(h1+h2)/2.])]
-                line_type.append('wire')
-
-                w += x_par*2.
-
-            # Move into position
-
-            if which == 'l':
-                return shift(pos_x1+pos_x2,pos[0]+w/2.),shift(pos_y1+pos_y2,pos[1]+h/2.),w,h,shift(x,pos[0]+w/2.),shift(y,pos[1]+h/2.),elt_names1+elt_names2
-            else:
-                return shift(pos_x1+pos_x2,pos[0]),shift(pos_y1+pos_y2,pos[1]),w,h,shift(x,pos[0]),shift(y,pos[1]),elt_names1+elt_names2
-
-        def draw_ser(el1,el2,pos,which):
-            pos_x1,pos_y1,w1,h1,x1,y1,elt_names1 = draw(el1,[0.,0.],'l')
-            pos_x2,pos_y2,w2,h2,x2,y2,elt_names2 = draw(el2,[w1,0.],'l')
-            w = w1+w2
-            h = max(h1,h2)
-            x = x1+x2
-            y = y1+y2
-
-            if which == 't':
-                return shift(pos_x1+pos_x2,pos[0]-w/2.),shift(pos_y1+pos_y2,pos[1]-h/2.),w,h,shift(x,pos[0]-w/2.),shift(y,pos[1]-h/2.),elt_names1+elt_names2
-            else:
-                return shift(pos_x1+pos_x2,pos[0]),shift(pos_y1+pos_y2,pos[1]),w,h,shift(x,pos[0]),shift(y,pos[1]),elt_names1+elt_names2
-
-        def shift(to_shift,shift):
-            for i,_ in enumerate(to_shift):
-                to_shift[i]+= shift
-            return to_shift
-
-        def draw_L(pos,which,circuit):
-            x = np.linspace(0.5,6.,1001)
-            y = -np.sin(2.*np.pi*x)
-            x = np.cos(2.*np.pi*x)+2.*x
-            line_type.append('L')
-            return finish_drawing_LR([x],[y],pos,which,circuit)
-
-        def draw_R(pos,which,circuit):
-            x = np.linspace(-0.25,4.25,1001)
-            height = 1.
-            period = 1.
-            a = height*2.*(-1.+2.*np.mod(np.floor(2.*x/period),2.))
-            b = -height*2.*np.mod(np.floor(2.*x/period),2.)
-            y = (2.*x/period - np.floor(2.*x/period))*a+b+height
-            line_type.append('R')
-            return finish_drawing_LR([x],[y],pos,which,circuit)
-
-        def draw_C(pos,which,circuit):
-            
-            x = [
-                np.array([0.,(x_total-x_C)/2.]),
-                np.array([(x_total+x_C)/2.,x_total]),
-                np.array([(x_total-x_C)/2.,(x_total-x_C)/2.]),
-                np.array([(x_total+x_C)/2.,(x_total+x_C)/2.]),
-            ]
-            y = [
-                np.array([0.,0.]),
-                np.array([0.,0.]),
-                np.array([-y_C/2.,y_C/2.]),
-                np.array([-y_C/2.,y_C/2.]),
-            ]
-            line_type.append('wire')
-            line_type.append('wire')
-            line_type.append('C')
-            line_type.append('C')
-            
-            for i,_ in enumerate(x):
-                if which == 'l':
-                    x[i]+=pos[0]
-                    y[i]+=pos[1]
-                    pos_x = pos[0]+x_total/2.
-                    pos_y = pos[1]
-                elif which == 't':
-                    x[i]+=pos[0]-x_total/2.
-                    y[i]+=pos[1]-y_total/2.
-                    pos_x = pos[0]
-                    pos_y = pos[1]-y_total/2.
-
-            return [pos_x],[pos_y],x_total,y_total,x,y,[circuit.label]
-        
-        def draw_J(pos,which,circuit):
-            
-            x = [
-                np.array([0.,(x_total-x_J)/2.]),
-                np.array([(x_total+x_J)/2.,x_total]),
-                np.array([(x_total-x_J)/2.,(x_total+x_J)/2.]),
-                np.array([(x_total-x_J)/2.,(x_total+x_J)/2.]),
-                np.array([(x_total-x_J)/2.,(x_total+x_J)/2.])
-            ]
-            y = [
-                np.array([0.,0.]),
-                np.array([0.,0.]),
-                np.array([0.,0.]),
-                np.array([-1.,1.])*x_J/2.,
-                np.array([1.,-1.])*x_J/2.
-            ]
-            line_type.append('wire')
-            line_type.append('wire')
-            line_type.append('wire')
-            line_type.append('J')
-            line_type.append('J')
-            
-            for i,_ in enumerate(x):
-                if which == 'l':
-                    x[i]+=pos[0]
-                    y[i]+=pos[1]
-                    pos_x = pos[0]+x_total/2.
-                    pos_y = pos[1]
-                elif which == 't':
-                    x[i]+=pos[0]-x_total/2.
-                    y[i]+=pos[1]-y_total/2.
-                    pos_x = pos[0]
-                    pos_y = pos[1]-y_total/2.
-
-            return [pos_x],[pos_y],x_total,y_total,x,y,[circuit.label]
-
-        def finish_drawing_LR(x_list,y_list,pos,which,circuit):
-            
-            
-            x_min = min([np.amin(xx) for xx in x_list])
-            for i,_ in enumerate(x_list):
-                x_list[i] -= x_min
-
-            x_max = max([np.amax(xx) for xx in x_list])
-            for i,_ in enumerate(x_list):
-                x_list[i] *= x_LR/x_max
-                x_list[i] +=(x_total-x_LR)/2.   
-
-            x_min = min([np.amin(xx) for xx in x_list])
-            x_max = max([np.amax(xx) for xx in x_list])
-            x_list += [np.array([0.,x_min])]
-            x_list += [np.array([x_max,x_total])]
-            line_type.append('wire')
-            line_type.append('wire')
-
-            for i,x in enumerate(x_list):
-                if which == 'l':
-                    x_list[i]+=pos[0]
-                elif which == 't':
-                    x_list[i]+=pos[0]-x_total/2.
-
-
-            y_max = max([np.amax(yy) for yy in y_list])
-            for i,_ in enumerate(y_list):
-                y_list[i] *=y_LR/2./y_max
-
-            y_list += [np.array([0.,0.])]
-            y_list += [np.array([0.,0.])]
-
-            for i,y in enumerate(y_list):
-                if which == 'l':
-                    y_list[i]+=pos[1]
-                elif which == 't':
-                    y_list[i]+=pos[1]-y_total/2.
-
-            if which == 'l':
-                pos_x = pos[0]+x_total/2.
-                pos_y = pos[1]
-            elif which == 't':
-                pos_x = pos[0]
-                pos_y = pos[1]-y_total/2.
-
-            return [pos_x],[pos_y],x_total,y_total,x_list,y_list,[circuit.label]
-        
-        element_x,element_y,w,h,xs,ys,element_names = draw(self.circuit,which='t')
-        figsize_scaling = 1.5
-        fig = plt.figure(figsize = (w*figsize_scaling,h*figsize_scaling))
+        element_x,element_y,w,h,xs,ys,element_names,line_type = self.draw(pos = [0.,0.], which = 't')
+        fig = plt.figure(figsize = (w*pp["figsize_scaling"],h*pp["figsize_scaling"]))
         ax = fig.add_subplot(111)
 
         for i in range(len(xs)):
-            if line_type[i] == 'wire':
-                ax.plot(xs[i],ys[i],color = 'black',lw=1)
-            elif line_type[i] == 'L':
-                ax.plot(xs[i],ys[i],color = 'black',lw=2)
-            elif line_type[i] == 'C':
-                ax.plot(xs[i],ys[i],color = 'black',lw=8)
-            elif line_type[i] == 'J':
-                ax.plot(xs[i],ys[i],color = 'black',lw=8)
-            elif line_type[i] == 'R':
-                ax.plot(xs[i],ys[i],color = 'black',lw=2)
+            ax.plot(xs[i],ys[i],color = 'black',lw=pp[line_type[i]]['lw'])
 
         element_positions = {}
         for i,el in enumerate(element_names):
-            plt.text(element_x[i]+text_position[0],element_y[i]+text_position[1],'$'+el+'$',fontsize=fontsize,ha='center')
+            plt.text(
+                element_x[i]+pp['label']['text_position'][0],
+                element_y[i]+pp['label']['text_position'][1],
+                el.to_string(),
+                fontsize=pp['label']['fontsize']
+                ,ha='center')
             element_positions[el] = [element_x[i],element_y[i]]
+
+        if add_vertical_space:
+            pp['element_height'] = element_height_regular
+
         ax.set_axis_off()
         if plot:
             plt.tight_layout()
             plt.show()
         if full_output:
             return element_positions,fig,ax
+
+
+class Connection(Circuit):
+    """docstring for Connection"""
+    def __init__(self, left, right):
+        super(Connection, self).__init__()
+
+        # sets the two children circuit elements
+        self.left = left
+        self.right = right
+
+        # o = original
+        # stores the children as initially defined
+        # (for plotting purposes)
+        self.left_o = left
+        self.right_o = right
+
+    def set_parenthood(self):
+        self.left.parent = self
+        self.right.parent = self
+        self.left.set_parenthood()
+        self.right.set_parenthood()
+
+    def remove_resistances(self):
+        if type(self.left)==R:
+            return self.right
+        elif type(circuit.right)==R:
+            return self.left
+        else:
+            return Connection(self.left,self.right)
+
+    def set_head(self,head):
+        self.head = head
+        self.left.set_head(head)
+        self.right.set_head(head)
+
+    def set_ids(self):
+        self._id = self.head.id_counter
+        self.head.id_counter += 1
+        self.left.set_ids()
+        self.right.set_ids()
+
+    def set_component_lists(self):
+
+        self.left.set_component_lists()
+        self.right.set_component_lists()
+
+class Series(Connection):
+    """docstring for Series"""
+    def __init__(self, left,right):
+        super(Series, self).__init__(left,right)
+
+    def admittance(self):
+        return 1/Add(1/self.left.admittance(),
+            1/self.right.admittance())
+
+    def set_flux_transforms(self,ABCD = id2):
+        self.right.set_flux_transforms(
+            ABCD*sp.Matrix([[1,1/self.left.admittance()],[0,1]]))
+        self.left.set_flux_transforms(
+            ABCD*sp.Matrix([[1,1/self.right.admittance()],[0,1]]))
+
+    def draw(self,pos,which):
+            pos_x1,pos_y1,w1,h1,x1,y1,elt_names1,line_type1 = self.left_o.draw([0.,0.],'l')
+            pos_x2,pos_y2,w2,h2,x2,y2,elt_names2,line_type2 = self.right_o.draw([w1,0.],'l')
+            w = w1+w2
+            h = max(h1,h2)
+            x = x1+x2
+            y = y1+y2
+            line_type = line_type1+line_type2
+
+            if which == 't':
+                return shift(pos_x1+pos_x2,pos[0]-w/2.),shift(pos_y1+pos_y2,pos[1]-h/2.),w,h,shift(x,pos[0]-w/2.),shift(y,pos[1]-h/2.),elt_names1+elt_names2,line_type
+            else:
+                return shift(pos_x1+pos_x2,pos[0]),shift(pos_y1+pos_y2,pos[1]),w,h,shift(x,pos[0]),shift(y,pos[1]),elt_names1+elt_names2,line_type
+
+class Parallel(Connection):
+    """docstring for Parallel"""
+    def __init__(self, left,right):
+        super(Parallel, self).__init__(left,right)
+   
+    def admittance(self):
+        return Add(self.left.admittance(),
+            self.right.admittance())
+
+    def set_flux_transforms(self,ABCD = id2):
+        self.right.set_flux_transforms(
+            ABCD*sp.Matrix([[1,0],[self.left.admittance(),1]]))
+        self.left.set_flux_transforms(
+            ABCD*sp.Matrix([[1,0],[self.right.admittance(),1]]))
+
+    def draw(self,pos,which):
+
+            pos_x1,pos_y1,w1,h1,x1,y1,elt_names1,line_type1 = self.left_o.draw([0.,0.],'t')
+            pos_x2,pos_y2,w2,h2,x2,y2,elt_names2,line_type2 = self.right_o.draw([0.,-h1],'t')
+
+            w = max(w1,w2)
+            h = h1+h2
+            x = x1+x2
+            y = y1+y2
+            line_type = line_type1+line_type2
+
+            # Connect parallel elements
+
+            x+=[np.array([-w/2.,-w/2.])]
+            y+=[np.array([-h1/2.,-h1-h2/2.])]
+            line_type.append('W')
+
+            x+=[np.array([+w/2.,+w/2.])]
+            y+=[np.array([-h1/2.,-h1-h2/2.])]
+            line_type.append('W')
+
+            if np.argmin([w1,w2]) == 0:
+                x+=[np.array([-w/2.,-w1/2.])]
+                y+=[np.array([-h1/2.,-h1/2.])]
+                line_type.append('W')
+                x+=[np.array([+w/2.,+w1/2.])]
+                y+=[np.array([-h1/2.,-h1/2.])]
+                line_type.append('W')
+            if np.argmin([w1,w2]) == 1:
+                x+=[np.array([-w/2.,-w2/2.])]
+                y+=[np.array([-h1-h2/2.,-h1-h2/2.])]
+                line_type.append('W')
+                x+=[np.array([+w/2.,+w2/2.])]
+                y+=[np.array([-h1-h2/2.,-h1-h2/2.])]
+                line_type.append('W')
+
+            if which == 'l':
+
+                # add side lines
+
+                x+=[np.array([-w/2.,-w/2.-pp['P']["side_wire_width"]])]
+                y+=[np.array([-(h1+h2)/2.,-(h1+h2)/2.])]
+                line_type.append('W')
+
+                x+=[np.array([+w/2.,+w/2.+pp['P']["side_wire_width"]])]
+                y+=[np.array([-(h1+h2)/2.,-(h1+h2)/2.])]
+                line_type.append('W')
+
+                w += pp['P']["side_wire_width"]*2.
+
+            # Move into position
+
+            if which == 'l':
+                return shift(pos_x1+pos_x2,pos[0]+w/2.),shift(pos_y1+pos_y2,pos[1]+h/2.),w,h,shift(x,pos[0]+w/2.),shift(y,pos[1]+h/2.),elt_names1+elt_names2,line_type
+            else:
+                return shift(pos_x1+pos_x2,pos[0]),shift(pos_y1+pos_y2,pos[1]),w,h,shift(x,pos[0]),shift(y,pos[1]),elt_names1+elt_names2,line_type
+
+    #########################
+    # Head parallel connection functions
+    #########################
+
+    def set_head(self,head = None):
+        if self.head is None:
+            # The head has not been defined
+            if head is None:
+                # This component becomes the head
+                self.id_counter = None
+                self.Q_min = 1.
+                self.Y = None
+                self.Y_poly_coeffs = None
+                self.w_cpx = None
+                self.flux_transforms_set = False
+                self.dY = None
+                self.component_dict = None
+                self.inductors = None
+                self.capacitors = None
+                self.junctions = None
+                self.resistors = None
+                super(Parallel, self).set_head(head = self)
+            else:
+                super(Parallel, self).set_head(head = head)
+        else:
+            # The head has already been defined
+            pass
+
+    def set_ids(self):
+        if self == self.head:
+            # First iteration of this function
+            if self.head.id_counter is None:
+                # We havnt set the ids yet
+                self.id_counter = 0
+                super(Parallel, self).set_ids()
+        else:
+            super(Parallel, self).set_ids()
+
+    def set_component_lists(self):
+
+        if self == self.head:
+            # First iteration of this function
+            if self.component_dict is None:
+                # We havnt determined the components yet
+                self.component_dict = {}
+                self.inductors = []
+                self.capacitors = []
+                self.junctions = []
+                self.resistors = []
+                super(Parallel, self).set_component_lists()
+        else:
+            super(Parallel, self).set_component_lists()
+
+    def set_circuit_rotated(self):
+
+        self.set_parenthood()
+        self.set_head()
+        self.set_ids()
+        self.set_component_lists()
+
+        if len(self.junctions)>0:
+            self.circuit_rotated = rotate(self.junctions[0]) 
+        else:
+            self.circuit_rotated = rotate(self.inductors[0]) 
+
+    def set_Y(self):
+        if self.Y is None:
+            self.set_circuit_rotated()
+            self.Y = self.circuit_rotated.admittance() 
     
-    def fkA(self,circuit_parameters):
-        '''
-        Input: dictionnary of circuit parameters
-        Returns resonance frequencies (in Hz)
-                dissipation rates (Hz)
-                Anharmonicities (Hz)
-        '''
+    def set_Y_poly_coeffs(self):
+        if self.Y_poly_coeffs is None:
+            self.set_Y()
+            Y_numer = sp.numer(sp.together(self.Y) )       # Extract the numerator of Y(w)
+            Y_poly = sp.collect(sp.expand(Y_numer),sp.Symbol('w')) # Write numerator as polynomial in omega
+            Y_poly_order = sp.polys.polytools.degree(Y_poly,gen = sp.Symbol('w')) # Order of the polynomial
+            self.Y_poly_coeffs = [complex(Y_poly.coeff(sp.Symbol('w'),n)) for n in range(Y_poly_order+1)[::-1]] # Get polynomial coefficients
+ 
+    def set_w_cpx(self):
+        self.set_circuit_rotated()
+        if self.w_cpx is None:
+            self.set_Y_poly_coeffs()
+            ws_cpx = np.roots(self.Y_poly_coeffs)
 
-        args = [circuit_parameters[key] for key in self.all_circuit_elements.keys()]
-        ws_cpx = np.roots(self.Y_poly_num(*args))
-
-        # take only roots with a positive real part (i.e. freq) 
-        # and significant Q factors
-        positive_sols = np.argwhere((np.real(ws_cpx)>=0.)&(np.real(ws_cpx)>self.Q_min*np.imag(ws_cpx)))
-        ws_cpx=ws_cpx[positive_sols][:,0]
+            # take only roots with a positive real part (i.e. freq) 
+            # and significant Q factors
+            relevant_sols = np.argwhere((np.real(ws_cpx)>=0.)&(np.real(ws_cpx)>self.Q_min*np.imag(ws_cpx)))
+            ws_cpx=ws_cpx[relevant_sols][:,0]
         
-        ws = np.real(ws_cpx)
+            # Sort solutions with increasing frequency
+            order = np.argsort(np.real(ws_cpx))
+            self.w_cpx = ws_cpx[order]
+    
+    def set_dY(self):
+        if self.dY is None:
+            self.set_Y()
+            self.dY = sp.utilities.lambdify('w',sp.diff(self.Y,sp.Symbol('w')),'numpy')
 
-        # Sort solutions with increasing frequency
-        increasing_frequencies = np.argsort(ws)
-        ws = ws[increasing_frequencies]
-        ks = np.imag(ws_cpx)[increasing_frequencies]
-        
-        args.append(ws)
-        As = np.zeros(len(ws))
-        for j in self.junctions:
-            As += np.absolute(j.anharmonicity(*args))
+    def compute_all_flux_transformations(self):
+        if self.flux_transforms_set == False:
+            self.circuit_rotated.set_flux_transforms()
+            self.flux_transforms_set = True
 
-        return [ws/2./pi,ks/2./pi,As/h]
+    def eigenfrequencies(self):
+        self.set_w_cpx()
+        return np.real(self.w_cpx)/2./pi
 
-    def draw_normal_mode(self,
-        mode,unit,
-            circuit_parameters,
-                fontsize = 15,
-                y_arrow=0.25,
-                y_arrow_text=0.37):
+    def loss_rates(self):
+        self.set_w_cpx()
+        return np.imag(self.w_cpx)/2./pi
 
-        def string_to_function(comp,function,circuit_parameters):
+    def Qs(self):
+        self.set_w_cpx()
+        return np.real(self.w_cpx)/np.imag(self.w_cpx)
+
+    def anharmonicities(self):
+        self.set_w_cpx()
+        self.set_dY() # the junction flux will be calling dY
+
+        if len(self.junctions) == 0:
+            print "There are no junctions and hence no anharmonicity in the circuit"
+
+        elif len(self.junctions) == 1:
+            self.junctions[0].flux_wr_ref = lambda w: 1.
+            return np.absolute(self.junctions[0].anharmonicity(self.w_cpx))/h
+
+        else:
+            self.compute_all_flux_transformations()
+            return sum([np.absolute(j.anharmonicity(self.w_cpx)) for j in self.junctions])/h
+
+    def show_normal_mode(self,mode,unit='current'):
+
+        self.set_w_cpx()
+        mode_w = np.real(self.head.w_cpx[mode])
+        self.set_dY() # the fluxes will be calling dY
+        self.compute_all_flux_transformations()
+
+        def string_to_function(comp,function):
             if function == 'flux':
-                return comp.flux(**circuit_parameters)/phi_0
+                return comp.flux(mode_w)/phi_0
             if function == 'charge':
-                return comp.charge(**circuit_parameters)/e
+                return comp.charge(mode_w)/e
             if function == 'voltage':
-                return comp.voltage(**circuit_parameters)
+                return comp.voltage(mode_w)
             if function == 'current':
-                return comp.current(**circuit_parameters)
+                return comp.current(mode_w)
 
-            
-        w,k,A = self.fkA(circuit_parameters)
-        element_positions,fig,ax = self.draw(
-                plot = False,
-                full_output = True,
-                y_total = 1,
-                x_total=1.,
-                y_C = 0.3,
-                x_C = 0.2,
-                x_J = 0.2,
-                x_LR = 0.7,
-                y_LR = 0.3,
-                fontsize = fontsize,
-                text_position = [0.,-0.35])
+        def pretty(v,function):
 
-        circuit_parameters['w'] = (w[mode]+1j*k[mode])*2.*pi
-    
+            if function == 'flux':
+                return pretty_value(v)+r'$\phi_0$'
+            if function == 'charge':
+                return pretty_value(v,use_power_10 = True)+r'$e$'
+            if function == 'voltage':
+                return pretty_value(v)+'V'
+            if function == 'current':
+                return pretty_value(v)+'A'
+
+
+        element_positions,fig,ax = self.show(
+        plot = False,
+        full_output = True,
+        add_vertical_space = True)
 
         for el,xy in element_positions.items():
             x = xy[0]
             y = xy[1]
-            value = string_to_function(self.all_circuit_elements[el],unit,circuit_parameters)
-            value_current = string_to_function(self.all_circuit_elements[el],'current',circuit_parameters)
+            value = string_to_function(el,unit)
+            value_current = string_to_function(el,'current')
             
             arrow_kwargs = dict(lw = 3,head_width=0.1, head_length=0.1,clip_on=False)
             if np.real(value_current)>0:
-                ax.arrow(x-0.25, y+y_arrow,0.5, 0.,fc='red', ec='red',**arrow_kwargs)
+                ax.arrow(x-0.25, y+pp["normal_mode_label"]["y_arrow"],0.5, 0.,fc='red', ec='red',**arrow_kwargs)
             else:
-                ax.arrow(x+0.25, y+y_arrow,-0.5, 0.,fc='blue', ec='blue',**arrow_kwargs)
-            ax.text(x, y+y_arrow_text,r"%.1e"%np.absolute(value)
-                    ,fontsize=fontsize,ha='center')
+                ax.arrow(x+0.25, y+pp["normal_mode_label"]["y_arrow"],-0.5, 0.,fc='blue', ec='blue',**arrow_kwargs)
+            ax.text(x, y+pp["normal_mode_label"]["y_text"],pretty(np.absolute(value),unit)
+                    ,fontsize=pp["normal_mode_label"]["fontsize"],ha='center')
         plt.show()
 
 
-if __name__ == '__main__':
+class Component(Circuit):
+    """docstring for Component"""
+    def __init__(self, value, label = None):
+        super(Component, self).__init__()
+        self.value = value
+        self.label = label
+
+    def remove_resistances(self):
+        return self
+
+    def set_parenthood(self):
+        pass
+
+    def set_head(self,head = None):
+        self.head = head
+
+    def set_ids(self):
+        self._id = self.head.id_counter
+        self.head.id_counter += 1
+
+    def set_component_lists(self):
+        self.head.component_dict[self._id] = self
+
+    def set_flux_transforms(self,ABCD = id2):
+        ABCD = ABCD*sp.Matrix([[1,0],[self.admittance(),1]])
+        self.flux_wr_ref = sp.utilities.lambdify(['w'],1/ABCD[0,0],"numpy")
+
+    def flux(self,w):
+        ImdY = np.imag(self.head.dY(w))
+        return complex(self.flux_wr_ref(w)*sp.sqrt(hbar/w/ImdY))
+
+    def voltage(self,w):
+        return complex(self.flux(w)*1j*w)
+
+    def current(self,w):
+        Y = sp.utilities.lambdify(['w'],self.admittance(),"numpy")
+        return complex(self.voltage(w)*Y(w))
+
+    def charge(self,w):
+        return self.current(w)/w
+
+    def to_string(self):
+        if self.label is None:
+            return pretty_value(self.value)
+        else:
+            return ("$%s = $"%(self.label))+pretty_value(self.value)
+
+class L(Component):
+    def __init__(self, value, label = None):
+        super(L,self).__init__(value,label)
+    def admittance(self):
+        return -sp.I*Mul(1/sp.Symbol('w'),1/self.value)
+
+    def set_component_lists(self):
+        super(L, self).set_component_lists()
+        self.head.inductors.append(self)
+
+    def draw(self,pos,which):
+
+        x = np.linspace(0.5,float(pp['L']['N_turns']) +1. ,pp['L']['N_points'])
+        y = -np.sin(2.*np.pi*x)
+        x = np.cos(2.*np.pi*x)+2.*x
+
+        line_type = []
+        line_type.append('L')
+            
+        # reset leftmost point to 0
+        x_min = x[0]
+        x -= x_min
+
+        # set width inductor width
+        x_max = x[-1]
+        x *= pp['L']['width']/x_max
+
+        # set leftmost point to the length of 
+        # the side connection wires
+        x +=(pp['element_width']-pp['L']['width'])/2.   
+
+        # add side wire connections
+        x_min = x[0]
+        x_max = x[-1]
+        x_list = [x]
+        x_list += [np.array([0.,x_min])]
+        x_list += [np.array([x_max,pp['element_width']])]
+        line_type.append('W')
+        line_type.append('W')
+
+        # Shift into position in x 
+        for i,x in enumerate(x_list):
+            if which == 'l':
+                x_list[i]+=pos[0]
+            elif which == 't':
+                x_list[i]+=pos[0]-pp['element_width']/2.
+
+
+        # set height of inductor
+        y *=pp['L']['height']/2.
+
+        # add side wire connections
+        y_list = [y]
+        y_list += [np.array([0.,0.])]
+        y_list += [np.array([0.,0.])]
+
+        for i,y in enumerate(y_list):
+            if which == 'l':
+                y_list[i]+=pos[1]
+            elif which == 't':
+                y_list[i]+=pos[1]-pp['element_height']/2.
+
+        if which == 'l':
+            pos_x = pos[0]+pp['element_width']/2.
+            pos_y = pos[1]
+        elif which == 't':
+            pos_x = pos[0]
+            pos_y = pos[1]-pp['element_height']/2.
+
+        return [pos_x],[pos_y],pp['element_width'],pp['element_height'],x_list,y_list,[self],line_type
+
+    def to_string(self):
+        return super(L, self).to_string()+'H'
+
+class J(L):
+    def __init__(self, value, label = None):
+        super(L,self).__init__(value,label)
+
+    def set_component_lists(self):
+        super(J, self).set_component_lists()
+        self.head.junctions.append(self)
+
+    def anharmonicity(self,w):
+        ImdY = np.imag(self.head.dY(w))
+        return self.flux_wr_ref(w)**4*2.*e**2/self.value/w**2/ImdY**2
+
+    def draw(self,pos,which):
+        
+        line_type = []
+        x = [
+            np.array([0.,(pp['element_width']-pp['J']['width'])/2.]),
+            np.array([(pp['element_width']+pp['J']['width'])/2.,pp['element_width']]),
+            np.array([(pp['element_width']-pp['J']['width'])/2.,(pp['element_width']+pp['J']['width'])/2.]),
+            np.array([(pp['element_width']-pp['J']['width'])/2.,(pp['element_width']+pp['J']['width'])/2.]),
+            np.array([(pp['element_width']-pp['J']['width'])/2.,(pp['element_width']+pp['J']['width'])/2.])
+        ]
+        y = [
+            np.array([0.,0.]),
+            np.array([0.,0.]),
+            np.array([0.,0.]),
+            np.array([-1.,1.])*pp['J']['width']/2.,
+            np.array([1.,-1.])*pp['J']['width']/2.
+        ]
+        line_type.append('W')
+        line_type.append('W')
+        line_type.append('W')
+        line_type.append('J')
+        line_type.append('J')
+        
+        for i,_ in enumerate(x):
+            if which == 'l':
+                x[i]+=pos[0]
+                y[i]+=pos[1]
+                pos_x = pos[0]+pp['element_width']/2.
+                pos_y = pos[1]
+            elif which == 't':
+                x[i]+=pos[0]-pp['element_width']/2.
+                y[i]+=pos[1]-pp['element_height']/2.
+                pos_x = pos[0]
+                pos_y = pos[1]-pp['element_height']/2.
+
+        return [pos_x],[pos_y],pp['element_width'],pp['element_height'],x,y,[self],line_type
+
+class R(Component):
+    def __init__(self, value, label = None):
+        super(R, self).__init__(value,label)
+    def admittance(self):
+        return 1/self.value
+
+    def set_component_lists(self):
+        super(R, self).set_component_lists()
+        self.head.resistors.append(self)
+
+
+    def draw(self,pos,which):
+
+        x = np.linspace(-0.25,0.25+float(pp['R']['N_ridges']),pp['R']['N_points'])
+        height = 1.
+        period = 1.
+        a = height*2.*(-1.+2.*np.mod(np.floor(2.*x/period),2.))
+        b = -height*2.*np.mod(np.floor(2.*x/period),2.)
+        y = (2.*x/period - np.floor(2.*x/period))*a+b+height
+
+        line_type = []
+        line_type.append('R')
+            
+        # reset leftmost point to 0
+        x_min = x[0]
+        x -= x_min
+
+        # set width inductor width
+        x_max = x[-1]
+        x *= pp['R']['width']/x_max
+
+        # set leftmost point to the length of 
+        # the side connection wires
+        x +=(pp['element_width']-pp['R']['width'])/2.   
+
+        # add side wire connections
+        x_min = x[0]
+        x_max = x[-1]
+        x_list = [x]
+        x_list += [np.array([0.,x_min])]
+        x_list += [np.array([x_max,pp['element_width']])]
+        line_type.append('W')
+        line_type.append('W')
+
+        # Shift into position in x 
+        for i,x in enumerate(x_list):
+            if which == 'l':
+                x_list[i]+=pos[0]
+            elif which == 't':
+                x_list[i]+=pos[0]-pp['element_width']/2.
+
+
+        # set height of inductor
+        y *=pp['R']['height']/2.
+
+        # add side wire connections
+        y_list = [y]
+        y_list += [np.array([0.,0.])]
+        y_list += [np.array([0.,0.])]
+
+        for i,y in enumerate(y_list):
+            if which == 'l':
+                y_list[i]+=pos[1]
+            elif which == 't':
+                y_list[i]+=pos[1]-pp['element_height']/2.
+
+        if which == 'l':
+            pos_x = pos[0]+pp['element_width']/2.
+            pos_y = pos[1]
+        elif which == 't':
+            pos_x = pos[0]
+            pos_y = pos[1]-pp['element_height']/2.
+
+        return [pos_x],[pos_y],pp['element_width'],pp['element_height'],x_list,y_list,[self],line_type        
+
+    def to_string(self):
+        return super(R, self).to_string()+r'$\Omega$'
+
+class C(Component):
+    def __init__(self, value, label = None):
+        super(C, self).__init__(value,label)
+    def admittance(self):
+        return sp.I*Mul(sp.Symbol('w'),self.value)
+
+    def set_component_lists(self):
+        super(C, self).set_component_lists()
+        self.head.capacitors.append(self)
+
+    def draw(self,pos,which):
+        line_type = []
+        x = [
+            np.array([0.,(pp['element_width']-pp['C']['gap'])/2.]),
+            np.array([(pp['element_width']+pp['C']['gap'])/2.,pp['element_width']]),
+            np.array([(pp['element_width']-pp['C']['gap'])/2.,(pp['element_width']-pp['C']['gap'])/2.]),
+            np.array([(pp['element_width']+pp['C']['gap'])/2.,(pp['element_width']+pp['C']['gap'])/2.]),
+        ]
+        y = [
+            np.array([0.,0.]),
+            np.array([0.,0.]),
+            np.array([-pp['C']['height']/2.,pp['C']['height']/2.]),
+            np.array([-pp['C']['height']/2.,pp['C']['height']/2.]),
+        ]
+        line_type.append('W')
+        line_type.append('W')
+        line_type.append('C')
+        line_type.append('C')
+        
+        for i,_ in enumerate(x):
+            if which == 'l':
+                x[i]+=pos[0]
+                y[i]+=pos[1]
+                pos_x = pos[0]+pp['element_width']/2.
+                pos_y = pos[1]
+            elif which == 't':
+                x[i]+=pos[0]-pp['element_width']/2.
+                y[i]+=pos[1]-pp['element_height']/2.
+                pos_x = pos[0]
+                pos_y = pos[1]-pp['element_height']/2.
+
+        return [pos_x],[pos_y],pp['element_width'],pp['element_height'],x,y,[self],line_type
     
-    circuit = (C('C')|J('L'))|(C('Cc')+(C('Cr')|J('Lr')|R('Rr')))
-    b = Bbox(circuit)
-    # b.draw()
-    kwargs = {}
-    kwargs['C'] = 100e-15
-    kwargs['L'] = 10e-9
-    kwargs['Cc'] = 1e-15
-    kwargs['Cr'] = 100e-15
-    kwargs['Lr'] = 10e-9
-    kwargs['Rr'] = 1e8
-    b.draw_normal_mode(0,'current',kwargs)
+    def to_string(self):
+        return super(C, self).to_string()+r'F'
+
+
+def rotate(circuit_element):
+    
+    # Check if the tree is already correctly rotated
+    if circuit_element.parent.parent is None:
+        return circuit_element.parent
+    
+    def recursive_function(elt):
+        parent_connection = elt.parent
+        if parent_connection.parent is None:
+            if parent_connection.left==elt:
+                return parent_connection.right
+            elif parent_connection.right == elt:
+                return parent_connection.left
+        else:
+            if parent_connection.left == elt:
+                parent_connection.left = recursive_function(parent_connection)
+            elif parent_connection.right == elt:
+                parent_connection.right = recursive_function(parent_connection)
+            return parent_connection
+        
+    rotated_circuit = circuit_element|recursive_function(circuit_element)
+    rotated_circuit._id = 0
+    rotated_circuit.head = circuit_element.head
+    rotated_circuit.parent = None
+    rotated_circuit.set_parenthood()
+
+    return rotated_circuit
+
+def shift(to_shift,shift):
+    for i,_ in enumerate(to_shift):
+        to_shift[i]+= shift
+    return to_shift
+
+def pretty_value(v,use_power_10 = False):
+    exponent = floor(np.log10(v))
+    exponent_3 = exponent-(exponent%3)
+    float_part = v/(10**exponent_3)
+    if use_power_10 or v>=1e15 or v<1e-18:
+        if exponent_3 == 0:
+            exponent_part = ''
+        else:
+            exponent_part = r'$\times 10^{%d}$'%exponent_3
+    else:
+        exponent_part = ' '+exponent_to_letter[exponent_3]
+    if float_part>=10.:
+        pretty = "%.0f%s"%(float_part,exponent_part)
+    else:
+        pretty = "%.1f%s"%(float_part,exponent_part)
+    return pretty
+
+if __name__ == '__main__':
+    circuit = ((J(10e-9,'L_J')|(C(100e-15)))|(C(1e-15)+(C(100e-15)|L(10e-9)|R(1e7))))
+    circuit.show_normal_mode(0,'charge')
+    # circuit.show_normal_mode(1,'voltage')
+    # print circuit.eigenfrequencies()
+    # print circuit.anharmonicities()
+    # print circuit.loss_rates()
+    # circuit.show()
+    # print circuit.eigenfrequencies()
+    # print circuit.anharmonicities()
+    # circuit.show()
