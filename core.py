@@ -106,132 +106,16 @@ class Connection(Circuit):
         else:
             return Connection(self.left,self.right)
 
-    def set_head(self,head):
-        self.head = head
-        self.left.set_head(head)
-        self.right.set_head(head)
-
-    def set_ids(self):
-        self._id = self.head.id_counter
-        self.head.id_counter += 1
-        self.left.set_ids()
-        self.right.set_ids()
-
-    def set_component_lists(self):
-
-        self.left.set_component_lists()
-        self.right.set_component_lists()
-
-class Series(Connection):
-    """docstring for Series"""
-    def __init__(self, left,right):
-        super(Series, self).__init__(left,right)
-
-    def admittance(self):
-        return 1/Add(1/self.left.admittance(),
-            1/self.right.admittance())
-
-    def set_flux_transforms(self,ABCD = id2):
-        self.right.set_flux_transforms(
-            ABCD*sp.Matrix([[1,1/self.left.admittance()],[0,1]]))
-        self.left.set_flux_transforms(
-            ABCD*sp.Matrix([[1,1/self.right.admittance()],[0,1]]))
-
-    def draw(self,pos,which):
-            pos_x1,pos_y1,w1,h1,x1,y1,elt_names1,line_type1 = self.left_o.draw([0.,0.],'l')
-            pos_x2,pos_y2,w2,h2,x2,y2,elt_names2,line_type2 = self.right_o.draw([w1,0.],'l')
-            w = w1+w2
-            h = max(h1,h2)
-            x = x1+x2
-            y = y1+y2
-            line_type = line_type1+line_type2
-
-            if which == 't':
-                return shift(pos_x1+pos_x2,pos[0]-w/2.),shift(pos_y1+pos_y2,pos[1]-h/2.),w,h,shift(x,pos[0]-w/2.),shift(y,pos[1]-h/2.),elt_names1+elt_names2,line_type
-            else:
-                return shift(pos_x1+pos_x2,pos[0]),shift(pos_y1+pos_y2,pos[1]),w,h,shift(x,pos[0]),shift(y,pos[1]),elt_names1+elt_names2,line_type
-
-class Parallel(Connection):
-    """docstring for Parallel"""
-    def __init__(self, left,right):
-        super(Parallel, self).__init__(left,right)
-   
-    def admittance(self):
-        return Add(self.left.admittance(),
-            self.right.admittance())
-
-    def set_flux_transforms(self,ABCD = id2):
-        self.right.set_flux_transforms(
-            ABCD*sp.Matrix([[1,0],[self.left.admittance(),1]]))
-        self.left.set_flux_transforms(
-            ABCD*sp.Matrix([[1,0],[self.right.admittance(),1]]))
-
-    def draw(self,pos,which):
-
-            pos_x1,pos_y1,w1,h1,x1,y1,elt_names1,line_type1 = self.left_o.draw([0.,0.],'t')
-            pos_x2,pos_y2,w2,h2,x2,y2,elt_names2,line_type2 = self.right_o.draw([0.,-h1],'t')
-
-            w = max(w1,w2)
-            h = h1+h2
-            x = x1+x2
-            y = y1+y2
-            line_type = line_type1+line_type2
-
-            # Connect parallel elements
-
-            x+=[np.array([-w/2.,-w/2.])]
-            y+=[np.array([-h1/2.,-h1-h2/2.])]
-            line_type.append('W')
-
-            x+=[np.array([+w/2.,+w/2.])]
-            y+=[np.array([-h1/2.,-h1-h2/2.])]
-            line_type.append('W')
-
-            if np.argmin([w1,w2]) == 0:
-                x+=[np.array([-w/2.,-w1/2.])]
-                y+=[np.array([-h1/2.,-h1/2.])]
-                line_type.append('W')
-                x+=[np.array([+w/2.,+w1/2.])]
-                y+=[np.array([-h1/2.,-h1/2.])]
-                line_type.append('W')
-            if np.argmin([w1,w2]) == 1:
-                x+=[np.array([-w/2.,-w2/2.])]
-                y+=[np.array([-h1-h2/2.,-h1-h2/2.])]
-                line_type.append('W')
-                x+=[np.array([+w/2.,+w2/2.])]
-                y+=[np.array([-h1-h2/2.,-h1-h2/2.])]
-                line_type.append('W')
-
-            if which == 'l':
-
-                # add side lines
-
-                x+=[np.array([-w/2.,-w/2.-pp['P']["side_wire_width"]])]
-                y+=[np.array([-(h1+h2)/2.,-(h1+h2)/2.])]
-                line_type.append('W')
-
-                x+=[np.array([+w/2.,+w/2.+pp['P']["side_wire_width"]])]
-                y+=[np.array([-(h1+h2)/2.,-(h1+h2)/2.])]
-                line_type.append('W')
-
-                w += pp['P']["side_wire_width"]*2.
-
-            # Move into position
-
-            if which == 'l':
-                return shift(pos_x1+pos_x2,pos[0]+w/2.),shift(pos_y1+pos_y2,pos[1]+h/2.),w,h,shift(x,pos[0]+w/2.),shift(y,pos[1]+h/2.),elt_names1+elt_names2,line_type
-            else:
-                return shift(pos_x1+pos_x2,pos[0]),shift(pos_y1+pos_y2,pos[1]),w,h,shift(x,pos[0]),shift(y,pos[1]),elt_names1+elt_names2,line_type
 
     #########################
-    # Head parallel connection functions
+    # Head connection functions
     #########################
 
     def set_head(self,head = None):
         if self.head is None:
             # The head has not been defined
             if head is None:
-                # This component becomes the head
+                # This connection becomes the head
                 self.id_counter = None
                 self.Q_min = 1.
                 self.Y = None
@@ -244,27 +128,43 @@ class Parallel(Connection):
                 self.capacitors = None
                 self.junctions = None
                 self.resistors = None
-                super(Parallel, self).set_head(head = self)
+
+                self.head = self
+                self.left.set_head(self)
+                self.right.set_head(self)
+
             else:
-                super(Parallel, self).set_head(head = head)
+                
+                self.head = head
+                self.left.set_head(head)
+                self.right.set_head(head)
+
         else:
             # The head has already been defined
             pass
 
     def set_ids(self):
         if self == self.head:
-            # First iteration of this function
+            # First iteration of this recursive function
             if self.head.id_counter is None:
                 # We havnt set the ids yet
                 self.id_counter = 0
-                super(Parallel, self).set_ids()
+
+                self._id = self.head.id_counter
+                self.head.id_counter += 1
+                self.left.set_ids()
+                self.right.set_ids()
         else:
-            super(Parallel, self).set_ids()
+
+            self._id = self.head.id_counter
+            self.head.id_counter += 1
+            self.left.set_ids()
+            self.right.set_ids()
 
     def set_component_lists(self):
 
         if self == self.head:
-            # First iteration of this function
+            # First iteration of this recursive function
             if self.component_dict is None:
                 # We havnt determined the components yet
                 self.component_dict = {}
@@ -272,9 +172,12 @@ class Parallel(Connection):
                 self.capacitors = []
                 self.junctions = []
                 self.resistors = []
-                super(Parallel, self).set_component_lists()
+
+                self.left.set_component_lists()
+                self.right.set_component_lists()    
         else:
-            super(Parallel, self).set_component_lists()
+            self.left.set_component_lists()
+            self.right.set_component_lists()   
 
     def set_circuit_rotated(self):
 
@@ -401,6 +304,120 @@ class Parallel(Connection):
             ax.text(x, y+pp["normal_mode_label"]["y_text"],pretty(np.absolute(value),unit)
                     ,fontsize=pp["normal_mode_label"]["fontsize"],ha='center')
         plt.show()
+
+class Series(Connection):
+    """docstring for Series"""
+    def __init__(self, left,right):
+        super(Series, self).__init__(left,right)
+
+    def admittance(self):
+        return 1/Add(1/self.left.admittance(),
+            1/self.right.admittance())
+
+    def set_flux_transforms(self,ABCD = id2):
+        self.right.set_flux_transforms(
+            ABCD*sp.Matrix([[1,1/self.left.admittance()],[0,1]]))
+        self.left.set_flux_transforms(
+            ABCD*sp.Matrix([[1,1/self.right.admittance()],[0,1]]))
+
+    def draw(self,pos,which):
+            pos_x1,pos_y1,w1,h1,x1,y1,elt_names1,line_type1 = self.left_o.draw([0.,0.],'l')
+            pos_x2,pos_y2,w2,h2,x2,y2,elt_names2,line_type2 = self.right_o.draw([w1,0.],'l')
+            w = w1+w2
+            h = max(h1,h2)
+            x = x1+x2
+            y = y1+y2
+            line_type = line_type1+line_type2
+
+            if pos == [0.,0.] and which == 't':
+                # This is the head connection
+                # Add a wire connecting the two sides of the circuit
+                x+=[np.array([0.,0.])]
+                y+=[np.array([0.,-h/2.])]
+                line_type.append('W')
+                x+=[np.array([w,w])]
+                y+=[np.array([0.,-h/2.])]
+                line_type.append('W')
+                x+=[np.array([0.,w])]
+                y+=[np.array([-h/2.,-h/2.])]
+                line_type.append('W')
+
+            if which == 't':
+                return shift(pos_x1+pos_x2,pos[0]-w/2.),shift(pos_y1+pos_y2,pos[1]-h/2.),w,h,shift(x,pos[0]-w/2.),shift(y,pos[1]-h/2.),elt_names1+elt_names2,line_type
+            else:
+                return shift(pos_x1+pos_x2,pos[0]),shift(pos_y1+pos_y2,pos[1]),w,h,shift(x,pos[0]),shift(y,pos[1]),elt_names1+elt_names2,line_type
+
+class Parallel(Connection):
+    """docstring for Parallel"""
+    def __init__(self, left,right):
+        super(Parallel, self).__init__(left,right)
+   
+    def admittance(self):
+        return Add(self.left.admittance(),
+            self.right.admittance())
+
+    def set_flux_transforms(self,ABCD = id2):
+        self.right.set_flux_transforms(
+            ABCD*sp.Matrix([[1,0],[self.left.admittance(),1]]))
+        self.left.set_flux_transforms(
+            ABCD*sp.Matrix([[1,0],[self.right.admittance(),1]]))
+
+    def draw(self,pos,which):
+
+            pos_x1,pos_y1,w1,h1,x1,y1,elt_names1,line_type1 = self.left_o.draw([0.,0.],'t')
+            pos_x2,pos_y2,w2,h2,x2,y2,elt_names2,line_type2 = self.right_o.draw([0.,-h1],'t')
+
+            w = max(w1,w2)
+            h = h1+h2
+            x = x1+x2
+            y = y1+y2
+            line_type = line_type1+line_type2
+
+            # Connect parallel elements
+
+            x+=[np.array([-w/2.,-w/2.])]
+            y+=[np.array([-h1/2.,-h1-h2/2.])]
+            line_type.append('W')
+
+            x+=[np.array([+w/2.,+w/2.])]
+            y+=[np.array([-h1/2.,-h1-h2/2.])]
+            line_type.append('W')
+
+            if np.argmin([w1,w2]) == 0:
+                x+=[np.array([-w/2.,-w1/2.])]
+                y+=[np.array([-h1/2.,-h1/2.])]
+                line_type.append('W')
+                x+=[np.array([+w/2.,+w1/2.])]
+                y+=[np.array([-h1/2.,-h1/2.])]
+                line_type.append('W')
+            if np.argmin([w1,w2]) == 1:
+                x+=[np.array([-w/2.,-w2/2.])]
+                y+=[np.array([-h1-h2/2.,-h1-h2/2.])]
+                line_type.append('W')
+                x+=[np.array([+w/2.,+w2/2.])]
+                y+=[np.array([-h1-h2/2.,-h1-h2/2.])]
+                line_type.append('W')
+
+            if which == 'l':
+
+                # add side lines
+
+                x+=[np.array([-w/2.,-w/2.-pp['P']["side_wire_width"]])]
+                y+=[np.array([-(h1+h2)/2.,-(h1+h2)/2.])]
+                line_type.append('W')
+
+                x+=[np.array([+w/2.,+w/2.+pp['P']["side_wire_width"]])]
+                y+=[np.array([-(h1+h2)/2.,-(h1+h2)/2.])]
+                line_type.append('W')
+
+                w += pp['P']["side_wire_width"]*2.
+
+            # Move into position
+
+            if which == 'l':
+                return shift(pos_x1+pos_x2,pos[0]+w/2.),shift(pos_y1+pos_y2,pos[1]+h/2.),w,h,shift(x,pos[0]+w/2.),shift(y,pos[1]+h/2.),elt_names1+elt_names2,line_type
+            else:
+                return shift(pos_x1+pos_x2,pos[0]),shift(pos_y1+pos_y2,pos[1]),w,h,shift(x,pos[0]),shift(y,pos[1]),elt_names1+elt_names2,line_type
 
 
 class Component(Circuit):
@@ -776,7 +793,7 @@ def pretty_value(v,use_power_10 = False):
     return pretty
 
 if __name__ == '__main__':
-    circuit = ((J(10e-9,'L_J')|(C(100e-15)))|(C(1e-15)+(C(100e-15)|L(10e-9)|R(1e7))))
+    circuit = (J(10e-9,'L_J')|(C(100e-15)))+C(1e-15)+(C(100e-15)|L(10e-9)|R(1e7))
     circuit.show_normal_mode(0,'current')
     # circuit.show_normal_mode(1,'voltage')
     # print circuit.eigenfrequencies()
