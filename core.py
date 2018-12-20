@@ -6,6 +6,7 @@ from sympy.core.mul import Mul,Pow,Add
 from copy import deepcopy
 from json import load
 import matplotlib.pyplot as plt
+from numbers import Number
 from math import floor
 id2 = sp.Matrix([[1,0],[0,1]])
 exponent_to_letter = {
@@ -120,6 +121,7 @@ class Connection(Circuit):
                 self.id_counter = None
                 self.Q_min = 1.
                 self.Y = None
+                self.Y_poly_coeffs_analytical = None
                 self.Y_poly_coeffs = None
                 self.w_cpx = None
                 self.flux_transforms_set = False
@@ -173,9 +175,10 @@ class Connection(Circuit):
                 self.capacitors = []
                 self.junctions = []
                 self.resistors = []
+                self.no_value_components = []
 
                 self.left.set_component_lists()
-                self.right.set_component_lists()    
+                self.right.set_component_lists()  
         else:
             self.left.set_component_lists()
             self.right.set_component_lists()   
@@ -197,19 +200,41 @@ class Connection(Circuit):
             self.set_circuit_rotated()
             self.Y = self.circuit_rotated.admittance() 
 
-    def set_Y_poly_coeffs(self):
-        if self.Y_poly_coeffs is None:
+    def set_Y_poly_coeffs(self,**kwargs):
+        if self.Y_poly_coeffs_analytical is None:
             self.set_Y()
             Y_together = sp.together(self.Y)
             Y_numer = sp.numer(Y_together)       # Extract the numerator of Y(w)
             Y_poly = sp.collect(sp.expand(Y_numer),sp.Symbol('w')) # Write numerator as polynomial in omega
             Y_poly_order = sp.polys.polytools.degree(Y_poly,gen = sp.Symbol('w')) # Order of the polynomial
-            self.Y_poly_coeffs = [complex(Y_poly.coeff(sp.Symbol('w'),n)) for n in range(Y_poly_order+1)[::-1]] # Get polynomial coefficients
-  
-    def set_w_cpx(self):
+            self.Y_poly_coeffs_analytical = [Y_poly.coeff(sp.Symbol('w'),n) for n in range(Y_poly_order+1)[::-1]] # Get polynomial coefficients
+
+        if self.Y_poly_coeffs is None and kwargs is None:
+            self.Y_poly_coeffs = [complex(x) for x in self.Y_poly_coeffs_analytical]
+        elif kwargs is not None:
+            self.Y_poly_coeffs = [complex(x.evalf(subs=kwargs)) for x in self.Y_poly_coeffs_analytical]
+
+    def check_kwargs(self,**kwargs):
+        for key in kwargs:
+            if key in self.no_value_components:
+                pass
+            elif key in [c.label for _,c in self.component_dict.iteritems()]:
+                raise ValueError('The value of %s was already specified when constructing the circuit'%key)
+            else:
+                raise ValueError('%s is not the label of a circuit element'%key)
+
+        for label in self.no_value_components:
+            try:
+                kwargs[label]
+            except Exception as e:
+                raise ValueError('The value of %s should be specified with the keyword argument %s=... '%(label,label))
+
+
+    def set_w_cpx(self,**kwargs):
         self.set_circuit_rotated()
+        self.check_kwargs(**kwargs)
         if self.w_cpx is None:
-            self.set_Y_poly_coeffs()
+            self.set_Y_poly_coeffs(**kwargs)
             ws_cpx = np.roots(self.Y_poly_coeffs)
 
             # take only roots with a positive real part (i.e. freq) 
@@ -224,56 +249,58 @@ class Connection(Circuit):
     def set_dY(self):
         if self.dY is None:
             self.set_Y()
-            self.dY = sp.utilities.lambdify('w',sp.diff(self.Y,sp.Symbol('w')),'numpy')
+            self.dY = sp.utilities.lambdify(['w']+self.no_value_components,sp.diff(self.Y,sp.Symbol('w')),'numpy')
     
     def compute_all_flux_transformations(self):
         if self.flux_transforms_set == False:
             self.circuit_rotated.set_flux_transforms()
             self.flux_transforms_set = True
     
-    def eigenfrequencies(self):
-        self.set_w_cpx()
+    def eigenfrequencies(self,**kwargs):
+        self.set_w_cpx(**kwargs)
         return np.real(self.w_cpx)/2./pi
 
-    def loss_rates(self):
-        self.set_w_cpx()
+    def loss_rates(self,**kwargs):
+        self.set_w_cpx(**kwargs)
         return np.imag(self.w_cpx)/2./pi
 
-    def Qs(self):
-        self.set_w_cpx()
+    def Qs(self,**kwargs):
+        self.set_w_cpx(**kwargs)
         return np.real(self.w_cpx)/np.imag(self.w_cpx)
     
-    def anharmonicities(self):
-        self.set_w_cpx()
+    def anharmonicities(self,**kwargs):
+        self.set_w_cpx(**kwargs)
         self.set_dY() # the junction flux will be calling dY
 
         if len(self.junctions) == 0:
             print "There are no junctions and hence no anharmonicity in the circuit"
 
         elif len(self.junctions) == 1:
-            self.junctions[0].flux_wr_ref = lambda w: 1.
-            return np.absolute(self.junctions[0].anharmonicity(self.w_cpx))/h
+            def flux_wr_ref(w,**kwargs):
+                return 1.
+            self.junctions[0].flux_wr_ref = flux_wr_ref
+            return np.absolute(self.junctions[0].anharmonicity(self.w_cpx,**kwargs))/h
 
         else:
             self.compute_all_flux_transformations()
-            return sum([np.absolute(j.anharmonicity(self.w_cpx)) for j in self.junctions])/h
+            return sum([np.absolute(j.anharmonicity(self.w_cpx,**kwargs)) for j in self.junctions])/h
 
-    def show_normal_mode(self,mode,unit='current'):
+    def show_normal_mode(self,mode,unit='current',**kwargs):
 
-        self.set_w_cpx()
+        self.set_w_cpx(**kwargs)
         mode_w = np.real(self.head.w_cpx[mode])
         self.set_dY() # the fluxes will be calling dY
         self.compute_all_flux_transformations()
 
-        def string_to_function(comp,function):
+        def string_to_function(comp,function,**kwargs):
             if function == 'flux':
-                return comp.flux(mode_w)/phi_0
+                return comp.flux(mode_w,**kwargs)/phi_0
             if function == 'charge':
-                return comp.charge(mode_w)/e
+                return comp.charge(mode_w,**kwargs)/e
             if function == 'voltage':
-                return comp.voltage(mode_w)
+                return comp.voltage(mode_w,**kwargs)
             if function == 'current':
-                return comp.current(mode_w)
+                return comp.current(mode_w,**kwargs)
 
         def pretty(v,function):
 
@@ -295,8 +322,8 @@ class Connection(Circuit):
         for el,xy in element_positions.items():
             x = xy[0]
             y = xy[1]
-            value = string_to_function(el,unit)
-            value_current = string_to_function(el,'current')
+            value = string_to_function(el,unit,**kwargs)
+            value_current = string_to_function(el,'current',**kwargs)
             
             arrow_kwargs = dict(lw = 3,head_width=0.1, head_length=0.1,clip_on=False)
             if np.real(value_current)>0:
@@ -334,14 +361,16 @@ class Series(Connection):
             if pos == [0.,0.] and which == 't':
                 # This is the head connection
                 # Add a wire connecting the two sides of the circuit
+                y_bottom = -h/2.+pp["label"]["text_position"][1]-pp["margin"]
+
                 x+=[np.array([0.,0.])]
-                y+=[np.array([0.,-h/2.])]
+                y+=[np.array([0.,y_bottom])]
                 line_type.append('W')
                 x+=[np.array([w,w])]
-                y+=[np.array([0.,-h/2.])]
+                y+=[np.array([0.,y_bottom])]
                 line_type.append('W')
                 x+=[np.array([0.,w])]
-                y+=[np.array([-h/2.,-h/2.])]
+                y+=[np.array([y_bottom,y_bottom])]
                 line_type.append('W')
 
             if which == 't':
@@ -424,10 +453,29 @@ class Parallel(Connection):
 
 class Component(Circuit):
     """docstring for Component"""
-    def __init__(self, value, label = None):
+    def __init__(self, arg1 = None, arg2 = None):
         super(Component, self).__init__()
-        self.value = value
-        self.label = label
+        self.label = None
+        self.value = None
+
+        if arg1 is None and arg2 is None:
+            raise ValueError("Specify either a value or a label")
+        for a in [arg1,arg2]:
+            if a is None:
+                pass
+            elif type(a) is str:
+                self.label = a
+            else:
+                self.value = a
+
+    def get_value(self,**kwargs):
+        if self.value is not None:
+            return self.value
+        elif self.value is None and kwargs is not None:
+            if self.label in [k for k in kwargs]:
+                return kwargs[self.label]
+        
+        return sp.Symbol(self.label)
 
     def remove_resistances(self):
         return self
@@ -444,40 +492,47 @@ class Component(Circuit):
 
     def set_component_lists(self):
         self.head.component_dict[self._id] = self
+        if self.value is None:
+            self.head.no_value_components.append(self.label)
 
     def set_flux_transforms(self,ABCD = id2):
         ABCD = ABCD*sp.Matrix([[1,0],[self.admittance(),1]])
-        self.flux_wr_ref = sp.utilities.lambdify(['w'],1/ABCD[0,0],"numpy")
+        self.flux_wr_ref = sp.utilities.lambdify(['w']+self.head.no_value_components,1/ABCD[0,0],"numpy")
 
-    def flux(self,w):
-        ImdY = np.imag(self.head.dY(w))
-        return complex(self.flux_wr_ref(w)*sp.sqrt(hbar/w/ImdY))
+    def flux(self,w,**kwargs):
+        ImdY = np.imag(self.head.dY(w,**kwargs))
+        return complex(self.flux_wr_ref(w,**kwargs)*sp.sqrt(hbar/w/ImdY))
 
-    def voltage(self,w):
-        return complex(self.flux(w)*1j*w)
+    def voltage(self,w,**kwargs):
+        return complex(self.flux(w,**kwargs)*1j*w)
 
-    def current(self,w):
-        Y = sp.utilities.lambdify(['w'],self.admittance(),"numpy")
-        return complex(self.voltage(w)*Y(w))
+    def current(self,w,**kwargs):
+        kwargs['w']=w
+        Y = self.admittance()
+        if isinstance(Y, Number):
+            pass
+        else:
+            Y = Y.evalf(subs=kwargs)
+        return complex(self.voltage(**kwargs)*Y)
 
-    def charge(self,w):
-        return self.current(w)/w
+    def charge(self,w,**kwargs):
+        return self.current(w,**kwargs)/w
 
-    def to_string(self,value = None):
-
-        if value is None:
-            value = self.value
+    def to_string(self):
 
         if self.label is None:
-            return pretty_value(self.value)
+            return pretty_value(self.value)+self.unit
+        elif self.value is None:
+            return ("$%s$"%(self.label))
         else:
-            return ("$%s = $"%(self.label))+pretty_value(value)
+            return ("$%s = $"%(self.label))+pretty_value(self.value)+self.unit
 
 class L(Component):
-    def __init__(self, value, label = None):
-        super(L,self).__init__(value,label)
+    def __init__(self, arg1 = None, arg2 = None):
+        super(L,self).__init__(arg1,arg2)
+        self.unit = 'H'
     def admittance(self):
-        return -sp.I*Mul(1/sp.Symbol('w'),1/self.value)
+        return -sp.I*Mul(1/sp.Symbol('w'),1/self.get_value())
 
     def set_component_lists(self):
         super(L, self).set_component_lists()
@@ -544,43 +599,40 @@ class L(Component):
 
         return [pos_x],[pos_y],pp['element_width'],pp['element_height'],x_list,y_list,[self],line_type
 
-    def to_string(self):
-        return super(L, self).to_string()+'H'
 
 class J(L):
-    def __init__(self, value, label = None,use_E=False,use_I=False):
+    def __init__(self, arg1 = None, arg2 = None,use_E=False,use_I=False):
+        super(J,self).__init__(arg1,arg2)
+
         self.use_E = use_E
         self.use_I = use_I
-        if (use_E == False) and (use_I ==False):
-            super(J,self).__init__(value,label)
-        elif (use_E == True) and (use_I ==False):
+        if self.use_E:
+            self.unit = 'Hz'
+        elif self.use_I:
+            self.unit = 'A'
+        else:
+            self.unit = 'H'
+
+    def get_value(self,**kwargs):
+        value = super(J,self).get_value(**kwargs)
+        if (self.use_E == False) and (self.use_I ==False):
+            return value
+        elif (self.use_E == True) and (self.use_I ==False):
             L = (hbar/2./e)**2/(value*h) # E is assumed to be provided in Hz
-            print L
-            super(J,self).__init__(L,label)
+            return L
         elif (use_E == False) and (use_I ==True):
-            self.param_used = 'I'
             L = (hbar/2./e)/value
-            super(J,self).__init__(L,label)
+            return L
         else:
             raise ValueError("Cannot set both use_E and use_I to True")
-
-    def to_string(self):
-        if self.use_E:
-            E = (hbar/2./e)**2/(self.value*h)
-            return Component.to_string(self,value = E)+'Hz'
-        elif self.use_I:
-            I = (hbar/2./e)/self.value 
-            return Component.to_string(self,value = I)+'A'
-        else:
-            return Component.to_string(self,value = self.value)+'H'
 
     def set_component_lists(self):
         super(J, self).set_component_lists()
         self.head.junctions.append(self)
 
-    def anharmonicity(self,w):
-        ImdY = np.imag(self.head.dY(w))
-        return self.flux_wr_ref(w)**4*2.*e**2/self.value/w**2/ImdY**2
+    def anharmonicity(self,w,**kwargs):
+        ImdY = np.imag(self.head.dY(w,**kwargs))
+        return self.flux_wr_ref(w,**kwargs)**4*2.*e**2/self.get_value(**kwargs)/w**2/ImdY**2
 
     def draw(self,pos,which):
         
@@ -620,15 +672,16 @@ class J(L):
         return [pos_x],[pos_y],pp['element_width'],pp['element_height'],x,y,[self],line_type
 
 class R(Component):
-    def __init__(self, value, label = None):
-        super(R, self).__init__(value,label)
+    def __init__(self, arg1 = None, arg2 = None):
+        super(R, self).__init__(arg1,arg2)
+        self.unit = r'$\Omega$'
+
     def admittance(self):
-        return 1/self.value
+        return 1/self.get_value()
 
     def set_component_lists(self):
         super(R, self).set_component_lists()
         self.head.resistors.append(self)
-
 
     def draw(self,pos,which):
 
@@ -694,14 +747,14 @@ class R(Component):
 
         return [pos_x],[pos_y],pp['element_width'],pp['element_height'],x_list,y_list,[self],line_type        
 
-    def to_string(self):
-        return super(R, self).to_string()+r'$\Omega$'
+
 
 class C(Component):
-    def __init__(self, value, label = None):
-        super(C, self).__init__(value,label)
+    def __init__(self, arg1 = None, arg2 = None):
+        super(C, self).__init__(arg1,arg2)
+        self.unit = 'F'
     def admittance(self):
-        return sp.I*Mul(sp.Symbol('w'),self.value)
+        return sp.I*Mul(sp.Symbol('w'),self.get_value())
 
     def set_component_lists(self):
         super(C, self).set_component_lists()
@@ -740,8 +793,7 @@ class C(Component):
 
         return [pos_x],[pos_y],pp['element_width'],pp['element_height'],x,y,[self],line_type
     
-    def to_string(self):
-        return super(C, self).to_string()+r'F'
+
 
 
 def rotate(circuit_element):
@@ -795,8 +847,9 @@ def pretty_value(v,use_power_10 = False):
     return pretty
 
 if __name__ == '__main__':
-    circuit = (J(10e-9,'L_{J,1}')|(C(100e-15,'C_{J,1}')))+C(1e-15,'C_c')+(C(100e-15)|L(10e-9)|R(1e7))
-    circuit.show_normal_mode(0,'flux')
-    # circuit.eigenfrequencies()
-    # circuit.anharmonicities()
+    circuit = (J(10e-9,'L_{J,1}')|(C(100e-15,'C_J')))+C('C_c')+(C(100e-15)|J(10e-9)|R(1e7))
+    # circuit.show()
+    circuit.show_normal_mode(0,'charge',C_c = 1e-15)
+    circuit.eigenfrequencies(C_c = 1e-15)
+    circuit.anharmonicities(C_c = 1e-15)
     # circuit.loss_rates()

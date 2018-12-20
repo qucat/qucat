@@ -1,6 +1,7 @@
 {
 	"element_width":1.0,
 	"element_height":0.6,
+	"margin":0.03,
 	"element_height_normal_modes":1.0,
 	"figsize_scaling":1.5,
 	"C":{
@@ -34,7 +35,7 @@
 	},
 	"label":{
 		"fontsize":10,
-		"text_position":[0.0,-0.35]
+		"text_position":[0.0,-0.36]
 	},
 	"normal_mode_label":{
 		"fontsize":10,
