@@ -1,13 +1,13 @@
 import sympy as sp
 import numpy as np
 from scipy.constants import e,pi,h,hbar
-phi_0 = hbar/2./e
 from sympy.core.mul import Mul,Pow,Add
 from copy import deepcopy
 from json import load
 import matplotlib.pyplot as plt
 from numbers import Number
 from math import floor
+phi_0 = hbar/2./e
 id2 = sp.Matrix([[1,0],[0,1]])
 exponent_to_letter = {
     -18:'a',
@@ -22,6 +22,7 @@ exponent_to_letter = {
     9:'G',
     12:'T'
 }
+
 with open("plotting_parameters.json", "r") as f:
     pp = load(f)
 
@@ -56,7 +57,7 @@ class Circuit(object):
         ax = fig.add_subplot(111)
 
         for i in range(len(xs)):
-            ax.plot(xs[i],ys[i],color = 'black',lw=pp[line_type[i]]['lw'])
+            ax.plot(xs[i],ys[i],color = pp["color"],lw=pp[line_type[i]]['lw'])
 
         element_positions = {}
         for i,el in enumerate(element_names):
@@ -229,7 +230,6 @@ class Connection(Circuit):
             except Exception as e:
                 raise ValueError('The value of %s should be specified with the keyword argument %s=... '%(label,label))
 
-
     def set_w_cpx(self,**kwargs):
         self.set_circuit_rotated()
         self.check_kwargs(**kwargs)
@@ -245,7 +245,7 @@ class Connection(Circuit):
             # Sort solutions with increasing frequency
             order = np.argsort(np.real(ws_cpx))
             self.w_cpx = ws_cpx[order]
-        
+ 
     def set_dY(self):
         if self.dY is None:
             self.set_Y()
@@ -319,18 +319,53 @@ class Connection(Circuit):
         full_output = True,
         add_vertical_space = True)
 
-        for el,xy in element_positions.items():
-            x = xy[0]
-            y = xy[1]
-            value = string_to_function(el,unit,**kwargs)
-            value_current = string_to_function(el,'current',**kwargs)
-            
-            arrow_kwargs = dict(lw = 3,head_width=0.1, head_length=0.1,clip_on=False)
-            if np.real(value_current)>0:
-                ax.arrow(x-0.25, y+pp["normal_mode_label"]["y_arrow"],0.5, 0.,fc='red', ec='red',**arrow_kwargs)
+        # Determine arrow size
+        all_values = []
+        for el in element_positions:
+            all_values.append(string_to_function(el,unit,**kwargs))
+        all_values = np.absolute(all_values)
+        max_value = np.amax(all_values)
+        min_value = np.amin(all_values)
+
+        def value_to_01_range(value):
+            if pp['normal_mode_arrow']['logscale'] == "True":
+                return (np.log10(value)-np.log10(min_value))/(np.log10(max_value)-np.log10(min_value))
             else:
-                ax.arrow(x+0.25, y+pp["normal_mode_label"]["y_arrow"],-0.5, 0.,fc='blue', ec='blue',**arrow_kwargs)
-            ax.text(x, y+pp["normal_mode_label"]["y_text"],pretty(np.absolute(value),unit)
+                return (value-min_value)/(max_value-min_value)
+
+        def arrow_width(value):
+            value_01 = value_to_01_range(value)
+            ppnm = pp['normal_mode_arrow']
+            return ppnm['min_width']+value_01*(ppnm['max_width']-ppnm['min_width'])
+
+        def arrow_kwargs(value):
+            value_01 = value_to_01_range(value)
+            ppnm = pp['normal_mode_arrow']
+            lw = ppnm['min_lw']+value_01*(ppnm['max_lw']-ppnm['min_lw'])
+            return {'lw':lw,
+            'head_width':lw*ppnm['head_to_body_ratio'],
+            'head_length':lw*ppnm['head_to_body_ratio'],
+            'clip_on':False}
+
+        for i,(el,xy) in enumerate(element_positions.items()):
+            value = all_values[i]
+            value_current = string_to_function(el,'current',**kwargs)
+            x = xy[0]
+            x_arrow = arrow_width(value)
+            y = xy[1]
+            y_arrow = y+pp["normal_mode_label"]["y_arrow"]
+            
+            if np.real(value_current)>0:
+                ax.arrow(x-x_arrow/2.,y_arrow ,x_arrow, 0.,
+                    fc = pp['normal_mode_arrow']['color_positive'],
+                    ec = pp['normal_mode_arrow']['color_positive'],
+                    **arrow_kwargs(value))
+            else:
+                ax.arrow(x+x_arrow/2., y_arrow,-x_arrow, 0.,
+                    fc = pp['normal_mode_arrow']['color_positive'],
+                    ec = pp['normal_mode_arrow']['color_positive'],
+                    **arrow_kwargs(value))
+            ax.text(x, y+pp["normal_mode_label"]["y_text"],pretty(value,unit)
                     ,fontsize=pp["normal_mode_label"]["fontsize"],ha='center')
         plt.show()
 
@@ -599,7 +634,6 @@ class L(Component):
 
         return [pos_x],[pos_y],pp['element_width'],pp['element_height'],x_list,y_list,[self],line_type
 
-
 class J(L):
     def __init__(self, arg1 = None, arg2 = None,use_E=False,use_I=False):
         super(J,self).__init__(arg1,arg2)
@@ -747,8 +781,6 @@ class R(Component):
 
         return [pos_x],[pos_y],pp['element_width'],pp['element_height'],x_list,y_list,[self],line_type        
 
-
-
 class C(Component):
     def __init__(self, arg1 = None, arg2 = None):
         super(C, self).__init__(arg1,arg2)
@@ -847,9 +879,9 @@ def pretty_value(v,use_power_10 = False):
     return pretty
 
 if __name__ == '__main__':
-    circuit = (J(10e-9,'L_{J,1}')|(C(100e-15,'C_J')))+C('C_c')+(C(100e-15)|J(10e-9)|R(1e7))
+    circuit = (J(10e-9,'L_{J,1}')|(C(100e-15,'C_J')))+C('C_c')+(C(100e-15)|J(10e-9))
     # circuit.show()
-    circuit.show_normal_mode(0,'charge',C_c = 1e-15)
+    circuit.show_normal_mode(0,'current',C_c = 1e-15)
     circuit.eigenfrequencies(C_c = 1e-15)
     circuit.anharmonicities(C_c = 1e-15)
     # circuit.loss_rates()

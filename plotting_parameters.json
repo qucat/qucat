@@ -4,6 +4,7 @@
 	"margin":0.03,
 	"element_height_normal_modes":1.0,
 	"figsize_scaling":1.5,
+	"color":[0.15,0.15,0.15],
 	"C":{
 		"gap":0.2,
 		"height":0.3,
@@ -39,7 +40,17 @@
 	},
 	"normal_mode_label":{
 		"fontsize":10,
-		"y_arrow":0.25,
-		"y_text":0.37
+		"y_arrow":0.3,
+		"y_text":0.42
+	},
+	"normal_mode_arrow":{
+		"logscale":"True",
+		"min_width":0.1,
+		"max_width":0.5,
+		"min_lw":1,
+		"max_lw":3,
+		"color_positive":"indianred",
+		"color_negative":"indianred",
+		"head_to_body_ratio":0.05
 	}
 }
