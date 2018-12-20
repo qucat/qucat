@@ -444,11 +444,15 @@ class Component(Circuit):
     def charge(self,w):
         return self.current(w)/w
 
-    def to_string(self):
+    def to_string(self,value = None):
+
+        if value is None:
+            value = self.value
+
         if self.label is None:
             return pretty_value(self.value)
         else:
-            return ("$%s = $"%(self.label))+pretty_value(self.value)
+            return ("$%s = $"%(self.label))+pretty_value(value)
 
 class L(Component):
     def __init__(self, value, label = None):
@@ -525,8 +529,31 @@ class L(Component):
         return super(L, self).to_string()+'H'
 
 class J(L):
-    def __init__(self, value, label = None):
-        super(L,self).__init__(value,label)
+    def __init__(self, value, label = None,use_E=False,use_I=False):
+        self.use_E = use_E
+        self.use_I = use_I
+        if (use_E == False) and (use_I ==False):
+            super(J,self).__init__(value,label)
+        elif (use_E == True) and (use_I ==False):
+            L = (hbar/2./e)**2/(value*h) # E is assumed to be provided in Hz
+            print L
+            super(J,self).__init__(L,label)
+        elif (use_E == False) and (use_I ==True):
+            self.param_used = 'I'
+            L = (hbar/2./e)/value
+            super(J,self).__init__(L,label)
+        else:
+            raise ValueError("Cannot set both use_E and use_I to True")
+
+    def to_string(self):
+        if self.use_E:
+            E = (hbar/2./e)**2/(self.value*h)
+            return Component.to_string(self,value = E)+'Hz'
+        elif self.use_I:
+            I = (hbar/2./e)/self.value 
+            return Component.to_string(self,value = I)+'A'
+        else:
+            return Component.to_string(self,value = self.value)+'H'
 
     def set_component_lists(self):
         super(J, self).set_component_lists()
@@ -750,7 +777,7 @@ def pretty_value(v,use_power_10 = False):
 
 if __name__ == '__main__':
     circuit = ((J(10e-9,'L_J')|(C(100e-15)))|(C(1e-15)+(C(100e-15)|L(10e-9)|R(1e7))))
-    circuit.show_normal_mode(0,'charge')
+    circuit.show_normal_mode(0,'current')
     # circuit.show_normal_mode(1,'voltage')
     # print circuit.eigenfrequencies()
     # print circuit.anharmonicities()
