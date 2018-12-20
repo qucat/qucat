@@ -1,6 +1,7 @@
 import sympy as sp
 import numpy as np
 from scipy.constants import e,pi,h,hbar
+phi_0 = hbar/2./e
 from sympy.core.mul import Mul,Pow,Add
 from copy import deepcopy
 from json import load
@@ -178,7 +179,7 @@ class Connection(Circuit):
         else:
             self.left.set_component_lists()
             self.right.set_component_lists()   
-
+    
     def set_circuit_rotated(self):
 
         self.set_parenthood()
@@ -190,20 +191,21 @@ class Connection(Circuit):
             self.circuit_rotated = rotate(self.junctions[0]) 
         else:
             self.circuit_rotated = rotate(self.inductors[0]) 
-
+    
     def set_Y(self):
         if self.Y is None:
             self.set_circuit_rotated()
             self.Y = self.circuit_rotated.admittance() 
-    
+
     def set_Y_poly_coeffs(self):
         if self.Y_poly_coeffs is None:
             self.set_Y()
-            Y_numer = sp.numer(sp.together(self.Y) )       # Extract the numerator of Y(w)
+            Y_together = sp.together(self.Y)
+            Y_numer = sp.numer(Y_together)       # Extract the numerator of Y(w)
             Y_poly = sp.collect(sp.expand(Y_numer),sp.Symbol('w')) # Write numerator as polynomial in omega
             Y_poly_order = sp.polys.polytools.degree(Y_poly,gen = sp.Symbol('w')) # Order of the polynomial
             self.Y_poly_coeffs = [complex(Y_poly.coeff(sp.Symbol('w'),n)) for n in range(Y_poly_order+1)[::-1]] # Get polynomial coefficients
- 
+  
     def set_w_cpx(self):
         self.set_circuit_rotated()
         if self.w_cpx is None:
@@ -218,17 +220,17 @@ class Connection(Circuit):
             # Sort solutions with increasing frequency
             order = np.argsort(np.real(ws_cpx))
             self.w_cpx = ws_cpx[order]
-    
+        
     def set_dY(self):
         if self.dY is None:
             self.set_Y()
             self.dY = sp.utilities.lambdify('w',sp.diff(self.Y,sp.Symbol('w')),'numpy')
-
+    
     def compute_all_flux_transformations(self):
         if self.flux_transforms_set == False:
             self.circuit_rotated.set_flux_transforms()
             self.flux_transforms_set = True
-
+    
     def eigenfrequencies(self):
         self.set_w_cpx()
         return np.real(self.w_cpx)/2./pi
@@ -240,7 +242,7 @@ class Connection(Circuit):
     def Qs(self):
         self.set_w_cpx()
         return np.real(self.w_cpx)/np.imag(self.w_cpx)
-
+    
     def anharmonicities(self):
         self.set_w_cpx()
         self.set_dY() # the junction flux will be calling dY
@@ -793,13 +795,8 @@ def pretty_value(v,use_power_10 = False):
     return pretty
 
 if __name__ == '__main__':
-    circuit = (J(10e-9,'L_J')|(C(100e-15)))+C(1e-15)+(C(100e-15)|L(10e-9)|R(1e7))
-    circuit.show_normal_mode(0,'current')
-    # circuit.show_normal_mode(1,'voltage')
-    # print circuit.eigenfrequencies()
-    # print circuit.anharmonicities()
-    # print circuit.loss_rates()
-    # circuit.show()
-    # print circuit.eigenfrequencies()
-    # print circuit.anharmonicities()
-    # circuit.show()
+    circuit = (J(10e-9,'L_{J,1}')|(C(100e-15,'C_{J,1}')))+C(1e-15,'C_c')+(C(100e-15)|L(10e-9)|R(1e7))
+    circuit.show_normal_mode(0,'flux')
+    # circuit.eigenfrequencies()
+    # circuit.anharmonicities()
+    # circuit.loss_rates()
