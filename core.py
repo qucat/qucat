@@ -83,6 +83,293 @@ pp={
     }
 }
 
+class BBQcircuit(object):
+    """docstring for BBQcircuit"""
+    def __init__(self, netlist):
+        super(BBQcircuit, self).__init__()
+        self.netlist = netlist
+        self.circuit = netlist_to_circuit(netlist)
+
+        self.circuit.set_head(self)
+        self.circuit.set_parenthood()
+
+        self.id_counter = 0
+        self.circuit.set_ids()
+
+        self.component_dict = {}
+        self.inductors = []
+        self.capacitors = []
+        self.junctions = []
+        self.resistors = []
+        self.no_value_components = []
+        self.circuit.set_component_lists()
+
+        if len(self.junctions)>0:
+            self.circuit_rotated = rotate(self.junctions[0]) 
+        else:
+            self.circuit_rotated = rotate(self.inductors[0]) 
+
+
+        self.Q_min = 1.
+        self.Y = self.circuit_rotated.admittance() 
+        Y_together = sp.together(self.Y)
+        Y_numer = sp.numer(Y_together)       # Extract the numerator of Y(w)
+        Y_poly = sp.collect(sp.expand(Y_numer),sp.Symbol('w')) # Write numerator as polynomial in omega
+        Y_poly_order = sp.polys.polytools.degree(Y_poly,gen = sp.Symbol('w')) # Order of the polynomial
+        self.Y_poly_coeffs_analytical = [Y_poly.coeff(sp.Symbol('w'),n) for n in range(Y_poly_order+1)[::-1]] # Get polynomial coefficients
+        self.Y_poly_coeffs_analytical = [sp.utilities.lambdify(self.no_value_components,c,'numpy') for c in self.Y_poly_coeffs_analytical]
+
+        self.dY = sp.utilities.lambdify(['w']+self.no_value_components,sp.diff(self.Y,sp.Symbol('w')),'numpy')
+        self.circuit_rotated.set_flux_transforms()
+
+    def Y_poly_coeffs(self,**kwargs):
+        return [complex(coeff(**kwargs)) for coeff in self.Y_poly_coeffs_analytical]
+
+    def w_k_A_chi(self,pretty_print = False,**kwargs):
+        
+        list_element = None
+        list_values = None
+        for el,value in kwargs.items():
+            try:
+                iter(value)
+            except TypeError:
+                iterable = False
+            else:
+                iterable = True
+
+            if iterable and list_element is None:
+                list_element = el 
+                list_values = value
+            elif iterable and list_element is not None:
+                raise ValueError("You can only iterate over the value of one element.")
+
+        if pretty_print == True and list_element is not None:
+            raise ValueError("Cannot pretty print since $%s$ does not have a unique value"%list_element)
+
+        if list_element is None:
+
+            to_return =  self.eigenfrequencies(**kwargs),\
+                    self.loss_rates(**kwargs),\
+                    self.anharmonicities(**kwargs),\
+                    self.kerr(**kwargs)
+
+            if pretty_print:
+                N_modes = len(to_return[0])
+                table_line = ""
+                for i in range(4):
+                    table_line += " %7s |"
+                table_line += "\n"
+
+                to_print = table_line%("mode"," freq. "," diss. "," anha. ")
+                for i,w in enumerate(to_return[0]):
+                    to_print+=table_line%tuple([str(i)]+[pretty_value(to_return[j][i])+'Hz' for j in range(3)])
+
+                to_print += "\nKerr coefficients\n(diagonal = Kerr, off-diagonal = cross-Kerr)\n"
+
+
+                table_line = ""
+                for i in range(N_modes+1):
+                    table_line += " %7s |"
+                table_line += "\n"
+
+                to_print += table_line%tuple(['mode']+[str(i)+'   ' for i in range(N_modes)])
+
+                for i in range(N_modes):
+                    line_elements = [str(i)]
+                    for j in range(N_modes):
+                        if i>=j:
+                            line_elements.append(pretty_value(to_return[3][i][j])+'Hz')
+                        else:
+                            line_elements.append("")
+                    to_print += table_line%tuple(line_elements)
+                print(to_print)
+
+            return to_return
+
+        else:
+            w = []
+            k = []
+            A = []
+            kerr = []
+            for value in list_values:
+                kwargs_single = deepcopy(kwargs)
+                kwargs_single[list_element] = value
+                w.append(self.eigenfrequencies(**kwargs_single))
+                k.append(self.loss_rates(**kwargs_single))
+                A.append(self.anharmonicities(**kwargs_single))
+                kerr.append(self.kerr(**kwargs_single))
+            w = np.moveaxis(np.array(w),0,-1)
+            k = np.moveaxis(np.array(k),0,-1)
+            A = np.moveaxis(np.array(A),0,-1)
+            kerr = np.moveaxis(np.array(kerr),0,-1)
+            return w,k,A,kerr
+
+    def check_kwargs(self,**kwargs):
+        for key in kwargs:
+            if key in self.no_value_components:
+                pass
+            elif key in [c.label for _,c in self.component_dict.iteritems()]:
+                raise ValueError('The value of %s was already specified when constructing the circuit'%key)
+            else:
+                raise ValueError('%s is not the label of a circuit element'%key)
+
+        for label in self.no_value_components:
+            try:
+                kwargs[label]
+            except Exception as e:
+                raise ValueError('The value of %s should be specified with the keyword argument %s=... '%(label,label))
+
+    def set_w_cpx(self,**kwargs):
+        self.check_kwargs(**kwargs)
+        ws_cpx = np.roots(self.Y_poly_coeffs(**kwargs))
+
+        # take only roots with a positive real part (i.e. freq) 
+        # and significant Q factors
+        relevant_sols = np.argwhere((np.real(ws_cpx)>=0.)&(np.real(ws_cpx)>self.Q_min*np.imag(ws_cpx)))
+        ws_cpx=ws_cpx[relevant_sols][:,0]
+    
+        # Sort solutions with increasing frequency
+        order = np.argsort(np.real(ws_cpx))
+        self.w_cpx = ws_cpx[order]
+    
+    def anharmonicities_per_junction(self,pretty_print =False,**kwargs):
+        self.set_w_cpx(**kwargs)
+
+        if len(self.junctions) == 0:
+            raise UserWarning("There are no junctions and hence no anharmonicity in the circuit")
+            return []
+
+        elif len(self.junctions) == 1:
+            def flux_wr_ref(w,**kwargs):
+                return 1.
+            self.junctions[0].flux_wr_ref = flux_wr_ref
+            return [self.junctions[0].anharmonicity(self.w_cpx,**kwargs)/h]
+
+        else:
+            self.compute_all_flux_transformations()
+            return [j.anharmonicity(self.w_cpx,**kwargs)/h for j in self.junctions]
+
+    def kerr(self,**kwargs):
+        As =  self.anharmonicities_per_junction(**kwargs)
+        N_modes = len(As[0])
+        N_junctions = len(As)
+
+        Ks = np.zeros((N_modes,N_modes))
+        for i in range(N_modes):
+            line = []
+            for j in range(N_modes):
+                for k in range(N_junctions):
+                    if i==j:
+                        Ks[i,j]+=np.absolute(As[k][i])
+                    else:
+                        Ks[i,j]+=2.*np.sqrt(np.absolute(As[k][i])*np.absolute(As[k][j]))
+        return Ks
+
+    def anharmonicities(self,**kwargs):
+        Ks = self.kerr(**kwargs)
+        return [Ks[i,i] for i in range(Ks.shape[0])]
+
+    def show_normal_mode(self,mode,unit='current',
+        plot = True,save_to = None,**kwargs):
+
+        check_there_are_no_iterables_in_kwarg(**kwargs)
+        self.set_w_cpx(**kwargs)
+        mode_w = np.real(self.w_cpx[mode])
+
+        def string_to_function(comp,function,**kwargs):
+            if function == 'flux':
+                return comp.flux(mode_w,**kwargs)/phi_0
+            if function == 'charge':
+                return comp.charge(mode_w,**kwargs)/e
+            if function == 'voltage':
+                return comp.voltage(mode_w,**kwargs)
+            if function == 'current':
+                return comp.current(mode_w,**kwargs)
+
+        def pretty(v,function):
+
+            if function == 'flux':
+                return pretty_value(v)+r'$\phi_0$'
+            if function == 'charge':
+                return pretty_value(v,use_power_10 = True)+r'$e$'
+            if function == 'voltage':
+                return pretty_value(v)+'V'
+            if function == 'current':
+                return pretty_value(v)+'A'
+     
+        element_positions,fig,ax = self.circuit.show(
+        plot = False,
+        full_output = True,
+        add_vertical_space = True)
+
+        # Determine arrow size
+        all_values = []
+        for el in element_positions:
+            all_values.append(string_to_function(el,unit,**kwargs))
+        all_values = np.absolute(all_values)
+        max_value = np.amax(all_values)
+        min_value = np.amin(all_values)
+
+        def value_to_01_range(value):
+            if pp['normal_mode_arrow']['logscale'] == "True":
+                return (np.log10(value)-np.log10(min_value))/(np.log10(max_value)-np.log10(min_value))
+            else:
+                return (value-min_value)/(max_value-min_value)
+
+        def arrow_width(value):
+            value_01 = value_to_01_range(value)
+            ppnm = pp['normal_mode_arrow']
+            return ppnm['min_width']+value_01*(ppnm['max_width']-ppnm['min_width'])
+
+        def arrow_kwargs(value):
+            value_01 = value_to_01_range(value)
+            ppnm = pp['normal_mode_arrow']
+            lw = ppnm['min_lw']+value_01*(ppnm['max_lw']-ppnm['min_lw'])
+            head = ppnm['min_head']+value_01*(ppnm['max_head']-ppnm['min_head'])
+            return {'lw':lw,
+            'head_width':head,
+            'head_length':head,
+            'clip_on':False}
+
+        for i,(el,xy) in enumerate(element_positions.items()):
+            value = all_values[i]
+            value_current = string_to_function(el,'current',**kwargs)
+            x = xy[0]
+            x_arrow = arrow_width(value)
+            y = xy[1]
+            y_arrow = y+pp["normal_mode_label"]["y_arrow"]
+            
+            if np.real(value_current)>0:
+                ax.arrow(x-x_arrow/2.,y_arrow ,x_arrow, 0.,
+                    fc = pp['normal_mode_arrow']['color_positive'],
+                    ec = pp['normal_mode_arrow']['color_positive'],
+                    **arrow_kwargs(value))
+            else:
+                ax.arrow(x+x_arrow/2., y_arrow,-x_arrow, 0.,
+                    fc = pp['normal_mode_arrow']['color_negative'],
+                    ec = pp['normal_mode_arrow']['color_negative'],
+                    **arrow_kwargs(value))
+            ax.text(x, y+pp["normal_mode_label"]["y_text"],pretty(value,unit)
+                    ,fontsize=pp["normal_mode_label"]["fontsize"],
+                    ha='center',style='italic',weight = 'bold')
+
+        if plot == True:
+            plt.show()
+        if save_to is not None:
+            fig.savefig(save_to,transparent = True)
+        plt.close()
+
+    def show(*args,**kwargs):
+        return self.circuit.show(*args,**kwargs)
+
+
+def netlist_to_circuit(netlist):
+    if isinstance(netlist,Circuit):
+        return netlist    
+    
+
+
+
 class Circuit(object):
     """docstring for Circuit"""
     def __init__(self):
@@ -181,375 +468,21 @@ class Connection(Circuit):
         else:
             return Connection(self.left,self.right)
 
+    def set_head(self,head = None):   
+        self.head = head
+        self.left.set_head(head)
+        self.right.set_head(head)
 
-    #########################
-    # Head connection functions
-    #########################
-
-    def set_head(self,head = None):
-        if self.head is None:
-            # The head has not been defined
-            if head is None:
-                # This connection becomes the head
-                self.id_counter = None
-                self.Q_min = 1.
-                self.Y = None
-                self.Y_poly_coeffs_analytical = None
-                self.Y_poly_coeffs = None
-                self.w_cpx = None
-                self.flux_transforms_set = False
-                self.dY = None
-                self.component_dict = None
-                self.inductors = None
-                self.capacitors = None
-                self.junctions = None
-                self.resistors = None
-
-                self.head = self
-                self.left.set_head(self)
-                self.right.set_head(self)
-
-            else:
-                
-                self.head = head
-                self.left.set_head(head)
-                self.right.set_head(head)
-
-        else:
-            # The head has already been defined
-            pass
 
     def set_ids(self):
-        if self == self.head:
-            # First iteration of this recursive function
-            if self.head.id_counter is None:
-                # We havnt set the ids yet
-                self.id_counter = 0
-
-                self._id = self.head.id_counter
-                self.head.id_counter += 1
-                self.left.set_ids()
-                self.right.set_ids()
-        else:
-
-            self._id = self.head.id_counter
-            self.head.id_counter += 1
-            self.left.set_ids()
-            self.right.set_ids()
+        self._id = self.head.id_counter
+        self.head.id_counter += 1
+        self.left.set_ids()
+        self.right.set_ids()
 
     def set_component_lists(self):
-
-        if self == self.head:
-            # First iteration of this recursive function
-            if self.component_dict is None:
-                # We havnt determined the components yet
-                self.component_dict = {}
-                self.inductors = []
-                self.capacitors = []
-                self.junctions = []
-                self.resistors = []
-                self.no_value_components = []
-
-                self.left.set_component_lists()
-                self.right.set_component_lists()  
-        else:
-            self.left.set_component_lists()
-            self.right.set_component_lists()   
-    
-    def set_circuit_rotated(self):
-
-        self.set_parenthood()
-        self.set_head()
-        self.set_ids()
-        self.set_component_lists()
-
-        if len(self.junctions)>0:
-            self.circuit_rotated = rotate(self.junctions[0]) 
-        else:
-            self.circuit_rotated = rotate(self.inductors[0]) 
-    
-    def set_Y(self):
-        if self.Y is None:
-            self.set_circuit_rotated()
-            self.Y = self.circuit_rotated.admittance() 
-
-    def set_Y_poly_coeffs(self,**kwargs):
-        if self.Y_poly_coeffs_analytical is None:
-            self.set_Y()
-            Y_together = sp.together(self.Y)
-            Y_numer = sp.numer(Y_together)       # Extract the numerator of Y(w)
-            Y_poly = sp.collect(sp.expand(Y_numer),sp.Symbol('w')) # Write numerator as polynomial in omega
-            Y_poly_order = sp.polys.polytools.degree(Y_poly,gen = sp.Symbol('w')) # Order of the polynomial
-            self.Y_poly_coeffs_analytical = [Y_poly.coeff(sp.Symbol('w'),n) for n in range(Y_poly_order+1)[::-1]] # Get polynomial coefficients
-            self.Y_poly_coeffs_analytical = [sp.utilities.lambdify(self.no_value_components,c,'numpy') for c in self.Y_poly_coeffs_analytical]
-
-
-        self.Y_poly_coeffs = [complex(coeff(**kwargs)) for coeff in self.Y_poly_coeffs_analytical]
-
-    def check_kwargs(self,**kwargs):
-        for key in kwargs:
-            if key in self.no_value_components:
-                pass
-            elif key in [c.label for _,c in self.component_dict.iteritems()]:
-                raise ValueError('The value of %s was already specified when constructing the circuit'%key)
-            else:
-                raise ValueError('%s is not the label of a circuit element'%key)
-
-        for label in self.no_value_components:
-            try:
-                kwargs[label]
-            except Exception as e:
-                raise ValueError('The value of %s should be specified with the keyword argument %s=... '%(label,label))
-
-    def set_w_cpx(self,**kwargs):
-        self.set_circuit_rotated()
-        self.check_kwargs(**kwargs)
-        self.set_Y_poly_coeffs(**kwargs)
-        ws_cpx = np.roots(self.Y_poly_coeffs)
-
-        # take only roots with a positive real part (i.e. freq) 
-        # and significant Q factors
-        relevant_sols = np.argwhere((np.real(ws_cpx)>=0.)&(np.real(ws_cpx)>self.Q_min*np.imag(ws_cpx)))
-        ws_cpx=ws_cpx[relevant_sols][:,0]
-    
-        # Sort solutions with increasing frequency
-        order = np.argsort(np.real(ws_cpx))
-        self.w_cpx = ws_cpx[order]
- 
-    def set_dY(self):
-        if self.dY is None:
-            self.set_Y()
-            self.dY = sp.utilities.lambdify(['w']+self.no_value_components,sp.diff(self.Y,sp.Symbol('w')),'numpy')
-    
-    def compute_all_flux_transformations(self):
-        if self.flux_transforms_set == False:
-            self.circuit_rotated.set_flux_transforms()
-            self.flux_transforms_set = True
-    
-    def eigenfrequencies(self,**kwargs):
-        self.set_w_cpx(**kwargs)
-        return np.real(self.w_cpx)/2./pi
-
-    def loss_rates(self,**kwargs):
-        self.set_w_cpx(**kwargs)
-        return np.imag(self.w_cpx)/2./pi
-
-    def Qs(self,**kwargs):
-        self.set_w_cpx(**kwargs)
-        return np.real(self.w_cpx)/np.imag(self.w_cpx)
-    
-    def anharmonicities_per_junction(self,pretty_print =False,**kwargs):
-        self.set_w_cpx(**kwargs)
-        self.set_dY() # the junction flux will be calling dY
-
-        if len(self.junctions) == 0:
-            raise UserWarning("There are no junctions and hence no anharmonicity in the circuit")
-            return []
-
-        elif len(self.junctions) == 1:
-            def flux_wr_ref(w,**kwargs):
-                return 1.
-            self.junctions[0].flux_wr_ref = flux_wr_ref
-            return [self.junctions[0].anharmonicity(self.w_cpx,**kwargs)/h]
-
-        else:
-            self.compute_all_flux_transformations()
-            return [j.anharmonicity(self.w_cpx,**kwargs)/h for j in self.junctions]
-
-
-    def kerr(self,**kwargs):
-        As =  self.anharmonicities_per_junction(**kwargs)
-        N_modes = len(As[0])
-        N_junctions = len(As)
-
-        Ks = np.zeros((N_modes,N_modes))
-        for i in range(N_modes):
-            line = []
-            for j in range(N_modes):
-                for k in range(N_junctions):
-                    if i==j:
-                        Ks[i,j]+=np.absolute(As[k][i])
-                    else:
-                        Ks[i,j]+=2.*np.sqrt(np.absolute(As[k][i])*np.absolute(As[k][j]))
-        return Ks
-
-    def anharmonicities(self,**kwargs):
-        Ks = self.kerr(**kwargs)
-        return [Ks[i,i] for i in range(Ks.shape[0])]
-
-    def show_normal_mode(self,mode,unit='current',
-        plot = True,save_to = None,**kwargs):
-
-        check_there_are_no_iterables_in_kwarg(**kwargs)
-        self.set_w_cpx(**kwargs)
-        mode_w = np.real(self.head.w_cpx[mode])
-        self.set_dY() # the fluxes will be calling dY
-        self.compute_all_flux_transformations()
-
-        def string_to_function(comp,function,**kwargs):
-            if function == 'flux':
-                return comp.flux(mode_w,**kwargs)/phi_0
-            if function == 'charge':
-                return comp.charge(mode_w,**kwargs)/e
-            if function == 'voltage':
-                return comp.voltage(mode_w,**kwargs)
-            if function == 'current':
-                return comp.current(mode_w,**kwargs)
-
-        def pretty(v,function):
-
-            if function == 'flux':
-                return pretty_value(v)+r'$\phi_0$'
-            if function == 'charge':
-                return pretty_value(v,use_power_10 = True)+r'$e$'
-            if function == 'voltage':
-                return pretty_value(v)+'V'
-            if function == 'current':
-                return pretty_value(v)+'A'
-
-
-
-                
-        element_positions,fig,ax = self.show(
-        plot = False,
-        full_output = True,
-        add_vertical_space = True)
-
-        # Determine arrow size
-        all_values = []
-        for el in element_positions:
-            all_values.append(string_to_function(el,unit,**kwargs))
-        all_values = np.absolute(all_values)
-        max_value = np.amax(all_values)
-        min_value = np.amin(all_values)
-
-        def value_to_01_range(value):
-            if pp['normal_mode_arrow']['logscale'] == "True":
-                return (np.log10(value)-np.log10(min_value))/(np.log10(max_value)-np.log10(min_value))
-            else:
-                return (value-min_value)/(max_value-min_value)
-
-        def arrow_width(value):
-            value_01 = value_to_01_range(value)
-            ppnm = pp['normal_mode_arrow']
-            return ppnm['min_width']+value_01*(ppnm['max_width']-ppnm['min_width'])
-
-        def arrow_kwargs(value):
-            value_01 = value_to_01_range(value)
-            ppnm = pp['normal_mode_arrow']
-            lw = ppnm['min_lw']+value_01*(ppnm['max_lw']-ppnm['min_lw'])
-            head = ppnm['min_head']+value_01*(ppnm['max_head']-ppnm['min_head'])
-            return {'lw':lw,
-            'head_width':head,
-            'head_length':head,
-            'clip_on':False}
-
-        for i,(el,xy) in enumerate(element_positions.items()):
-            value = all_values[i]
-            value_current = string_to_function(el,'current',**kwargs)
-            x = xy[0]
-            x_arrow = arrow_width(value)
-            y = xy[1]
-            y_arrow = y+pp["normal_mode_label"]["y_arrow"]
-            
-            if np.real(value_current)>0:
-                ax.arrow(x-x_arrow/2.,y_arrow ,x_arrow, 0.,
-                    fc = pp['normal_mode_arrow']['color_positive'],
-                    ec = pp['normal_mode_arrow']['color_positive'],
-                    **arrow_kwargs(value))
-            else:
-                ax.arrow(x+x_arrow/2., y_arrow,-x_arrow, 0.,
-                    fc = pp['normal_mode_arrow']['color_negative'],
-                    ec = pp['normal_mode_arrow']['color_negative'],
-                    **arrow_kwargs(value))
-            ax.text(x, y+pp["normal_mode_label"]["y_text"],pretty(value,unit)
-                    ,fontsize=pp["normal_mode_label"]["fontsize"],
-                    ha='center',style='italic',weight = 'bold')
-
-        if plot == True:
-            plt.show()
-        if save_to is not None:
-            fig.savefig(save_to,transparent = True)
-        plt.close()
-
-    def w_k_A_chi(self,pretty_print = False,**kwargs):
-
-        list_element = None
-        list_values = None
-        for el,value in kwargs.items():
-            try:
-                iter(value)
-            except TypeError:
-                iterable = False
-            else:
-                iterable = True
-
-            if iterable and list_element is None:
-                list_element = el 
-                list_values = value
-            elif iterable and list_element is not None:
-                raise ValueError("You can only iterate over the value of one element.")
-
-        if pretty_print == True and list_element is not None:
-            raise ValueError("Cannot pretty print since $%s$ does not have a unique value"%list_element)
-
-        if list_element is None:
-
-            to_return =  self.eigenfrequencies(**kwargs),\
-                    self.loss_rates(**kwargs),\
-                    self.anharmonicities(**kwargs),\
-                    self.kerr(**kwargs)
-
-            if pretty_print:
-                N_modes = len(to_return[0])
-                table_line = ""
-                for i in range(4):
-                    table_line += " %7s |"
-                table_line += "\n"
-
-                to_print = table_line%("mode"," freq. "," diss. "," anha. ")
-                for i,w in enumerate(to_return[0]):
-                    to_print+=table_line%tuple([str(i)]+[pretty_value(to_return[j][i])+'Hz' for j in range(3)])
-
-                to_print += "\nKerr coefficients\n(diagonal = Kerr, off-diagonal = cross-Kerr)\n"
-
-
-                table_line = ""
-                for i in range(N_modes+1):
-                    table_line += " %7s |"
-                table_line += "\n"
-
-                to_print += table_line%tuple(['mode']+[str(i)+'   ' for i in range(N_modes)])
-
-                for i in range(N_modes):
-                    line_elements = [str(i)]
-                    for j in range(N_modes):
-                        if i>=j:
-                            line_elements.append(pretty_value(to_return[3][i][j])+'Hz')
-                        else:
-                            line_elements.append("")
-                    to_print += table_line%tuple(line_elements)
-                print(to_print)
-
-            return to_return
-
-        else:
-            w = []
-            k = []
-            A = []
-            kerr = []
-            for value in list_values:
-                kwargs_single = deepcopy(kwargs)
-                kwargs_single[list_element] = value
-                w.append(self.eigenfrequencies(**kwargs_single))
-                k.append(self.loss_rates(**kwargs_single))
-                A.append(self.anharmonicities(**kwargs_single))
-                kerr.append(self.kerr(**kwargs_single))
-            w = np.moveaxis(np.array(w),0,-1)
-            k = np.moveaxis(np.array(k),0,-1)
-            A = np.moveaxis(np.array(A),0,-1)
-            kerr = np.moveaxis(np.array(kerr),0,-1)
-            return w,k,A,kerr
+        self.left.set_component_lists()
+        self.right.set_component_lists()   
 
 class Series(Connection):
     """docstring for Series"""
@@ -1077,6 +1010,5 @@ def check_there_are_no_iterables_in_kwarg(**kwargs):
 
 if __name__ == '__main__':
     qubit = C(100e-15)|J(1e-9)
-
-    cQED_circuit = qubit + C(1e-15) + (C(100e-15)|L(10e-9)|R(1e6))
+    cQED_circuit = BBQcircuit(qubit + C(1e-15) + (C(100e-15)|L(10e-9)|R(1e6)))
     cQED_circuit.show_normal_mode(0)
