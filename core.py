@@ -23,8 +23,65 @@ exponent_to_letter = {
     12:'T'
 }
 
-with open("plotting_parameters.json", "r") as f:
-    pp = load(f)
+pp={
+    "element_width":1.2,
+    "element_height":0.6,
+    "margin":0.1,
+    "element_height_normal_modes":1.0,
+    "figsize_scaling":1.,
+    "color":[0.15,0.15,0.15],
+    "x_fig_margin":0.2,
+    "y_fig_margin":0.3,
+    "C":{
+        "gap":0.2,
+        "height":0.27,
+        "lw":6
+    },
+    "J":{
+        "width":0.2,
+        "lw":6
+    },
+    "L":{
+        "width":0.7,
+        "height":0.3,
+        "N_points":150,
+        "N_turns":5,
+        "lw":2
+    },
+    "R":{
+        "width":0.6,
+        "height":0.35,
+        "N_points":150,
+        "N_ridges":4,
+        "lw":2
+    },
+    "P":{
+        "side_wire_width":0.25
+    },
+    "W":{
+        "lw":1
+    },
+    "label":{
+        "fontsize":10,
+        "text_position":[0.0,-0.35]
+    },
+    "normal_mode_label":{
+        "fontsize":10,
+        "y_arrow":0.26,
+        "y_text":0.37
+    },
+    "normal_mode_arrow":{
+        "logscale":"False",
+        "min_width":0.1,
+        "max_width":0.5,
+        "min_lw":1,
+        "max_lw":3,
+        "min_head":0.07,
+        "max_head":0.071,
+        "color_positive":[0.483, 0.622, 0.974],
+        "color_negative":[0.931, 0.519, 0.406]
+    }
+}
 
 class Circuit(object):
     """docstring for Circuit"""
@@ -45,15 +102,25 @@ class Circuit(object):
     def show(self,
         plot = True,
         full_output = False,
-        add_vertical_space = False):
+        add_vertical_space = False,
+        save_to = None):
 
         if add_vertical_space:
-            element_height_regular = pp['element_height'] 
-            pp['element_height'] = pp['element_height_normal_modes']
+            pp['elt_height'] = pp['element_height_normal_modes']
+        else:
+            pp['elt_height'] = pp['element_height']
 
 
-        element_x,element_y,w,h,xs,ys,element_names,line_type = self.draw(pos = [0.,0.], which = 't')
-        fig = plt.figure(figsize = (w*pp["figsize_scaling"],h*pp["figsize_scaling"]))
+
+        element_x,element_y,w,h,xs,ys,element_names,line_type = self.draw(pos = [0.,0.], which = 't',is_first_element_to_plot = True)
+        x_min = min([np.amin(x) for x in xs])
+        x_max = max([np.amax(x) for x in xs])
+        y_min = min([np.amin(x) for x in ys])
+        y_max = max([np.amax(x) for x in ys])
+
+        x_margin = pp['x_fig_margin']
+        y_margin = pp['y_fig_margin'] # ensures that any text labels are not cutoff
+        fig = plt.figure(figsize = ((w+2.*x_margin)*pp["figsize_scaling"],(h+2.*y_margin)*pp["figsize_scaling"]))
         ax = fig.add_subplot(111)
 
         for i in range(len(xs)):
@@ -69,15 +136,20 @@ class Circuit(object):
                 ,ha='center')
             element_positions[el] = [element_x[i],element_y[i]]
 
-        if add_vertical_space:
-            pp['element_height'] = element_height_regular
-
         ax.set_axis_off()
-        if plot:
-            plt.tight_layout()
-            plt.show()
+        ax.set_xlim(x_min-x_margin,x_max+x_margin)
+        ax.set_ylim(y_min-y_margin,y_max+y_margin)
+        plt.margins(x=0.,y=0.)
+
         if full_output:
             return element_positions,fig,ax
+
+        if save_to is not None:
+            fig.savefig(save_to,transparent = True)
+        if plot:
+            plt.show()
+        plt.close()
+
 
 
 class Connection(Circuit):
@@ -104,7 +176,7 @@ class Connection(Circuit):
     def remove_resistances(self):
         if type(self.left)==R:
             return self.right
-        elif type(circuit.right)==R:
+        elif type(self.right)==R:
             return self.left
         else:
             return Connection(self.left,self.right)
@@ -209,11 +281,10 @@ class Connection(Circuit):
             Y_poly = sp.collect(sp.expand(Y_numer),sp.Symbol('w')) # Write numerator as polynomial in omega
             Y_poly_order = sp.polys.polytools.degree(Y_poly,gen = sp.Symbol('w')) # Order of the polynomial
             self.Y_poly_coeffs_analytical = [Y_poly.coeff(sp.Symbol('w'),n) for n in range(Y_poly_order+1)[::-1]] # Get polynomial coefficients
+            self.Y_poly_coeffs_analytical = [sp.utilities.lambdify(self.no_value_components,c,'numpy') for c in self.Y_poly_coeffs_analytical]
 
-        if self.Y_poly_coeffs is None and kwargs is None:
-            self.Y_poly_coeffs = [complex(x) for x in self.Y_poly_coeffs_analytical]
-        elif kwargs is not None:
-            self.Y_poly_coeffs = [complex(x.evalf(subs=kwargs)) for x in self.Y_poly_coeffs_analytical]
+
+        self.Y_poly_coeffs = [complex(coeff(**kwargs)) for coeff in self.Y_poly_coeffs_analytical]
 
     def check_kwargs(self,**kwargs):
         for key in kwargs:
@@ -233,18 +304,17 @@ class Connection(Circuit):
     def set_w_cpx(self,**kwargs):
         self.set_circuit_rotated()
         self.check_kwargs(**kwargs)
-        if self.w_cpx is None:
-            self.set_Y_poly_coeffs(**kwargs)
-            ws_cpx = np.roots(self.Y_poly_coeffs)
+        self.set_Y_poly_coeffs(**kwargs)
+        ws_cpx = np.roots(self.Y_poly_coeffs)
 
-            # take only roots with a positive real part (i.e. freq) 
-            # and significant Q factors
-            relevant_sols = np.argwhere((np.real(ws_cpx)>=0.)&(np.real(ws_cpx)>self.Q_min*np.imag(ws_cpx)))
-            ws_cpx=ws_cpx[relevant_sols][:,0]
-        
-            # Sort solutions with increasing frequency
-            order = np.argsort(np.real(ws_cpx))
-            self.w_cpx = ws_cpx[order]
+        # take only roots with a positive real part (i.e. freq) 
+        # and significant Q factors
+        relevant_sols = np.argwhere((np.real(ws_cpx)>=0.)&(np.real(ws_cpx)>self.Q_min*np.imag(ws_cpx)))
+        ws_cpx=ws_cpx[relevant_sols][:,0]
+    
+        # Sort solutions with increasing frequency
+        order = np.argsort(np.real(ws_cpx))
+        self.w_cpx = ws_cpx[order]
  
     def set_dY(self):
         if self.dY is None:
@@ -268,25 +338,49 @@ class Connection(Circuit):
         self.set_w_cpx(**kwargs)
         return np.real(self.w_cpx)/np.imag(self.w_cpx)
     
-    def anharmonicities(self,**kwargs):
+    def anharmonicities_per_junction(self,pretty_print =False,**kwargs):
         self.set_w_cpx(**kwargs)
         self.set_dY() # the junction flux will be calling dY
 
         if len(self.junctions) == 0:
-            print "There are no junctions and hence no anharmonicity in the circuit"
+            raise UserWarning("There are no junctions and hence no anharmonicity in the circuit")
+            return []
 
         elif len(self.junctions) == 1:
             def flux_wr_ref(w,**kwargs):
                 return 1.
             self.junctions[0].flux_wr_ref = flux_wr_ref
-            return np.absolute(self.junctions[0].anharmonicity(self.w_cpx,**kwargs))/h
+            return [self.junctions[0].anharmonicity(self.w_cpx,**kwargs)/h]
 
         else:
             self.compute_all_flux_transformations()
-            return sum([np.absolute(j.anharmonicity(self.w_cpx,**kwargs)) for j in self.junctions])/h
+            return [j.anharmonicity(self.w_cpx,**kwargs)/h for j in self.junctions]
 
-    def show_normal_mode(self,mode,unit='current',**kwargs):
 
+    def kerr(self,**kwargs):
+        As =  self.anharmonicities_per_junction(**kwargs)
+        N_modes = len(As[0])
+        N_junctions = len(As)
+
+        Ks = np.zeros((N_modes,N_modes))
+        for i in range(N_modes):
+            line = []
+            for j in range(N_modes):
+                for k in range(N_junctions):
+                    if i==j:
+                        Ks[i,j]+=np.absolute(As[k][i])
+                    else:
+                        Ks[i,j]+=2.*np.sqrt(np.absolute(As[k][i])*np.absolute(As[k][j]))
+        return Ks
+
+    def anharmonicities(self,**kwargs):
+        Ks = self.kerr(**kwargs)
+        return [Ks[i,i] for i in range(Ks.shape[0])]
+
+    def show_normal_mode(self,mode,unit='current',
+        plot = True,save_to = None,**kwargs):
+
+        check_there_are_no_iterables_in_kwarg(**kwargs)
         self.set_w_cpx(**kwargs)
         mode_w = np.real(self.head.w_cpx[mode])
         self.set_dY() # the fluxes will be calling dY
@@ -314,6 +408,8 @@ class Connection(Circuit):
                 return pretty_value(v)+'A'
 
 
+
+                
         element_positions,fig,ax = self.show(
         plot = False,
         full_output = True,
@@ -342,9 +438,10 @@ class Connection(Circuit):
             value_01 = value_to_01_range(value)
             ppnm = pp['normal_mode_arrow']
             lw = ppnm['min_lw']+value_01*(ppnm['max_lw']-ppnm['min_lw'])
+            head = ppnm['min_head']+value_01*(ppnm['max_head']-ppnm['min_head'])
             return {'lw':lw,
-            'head_width':lw*ppnm['head_to_body_ratio'],
-            'head_length':lw*ppnm['head_to_body_ratio'],
+            'head_width':head,
+            'head_length':head,
             'clip_on':False}
 
         for i,(el,xy) in enumerate(element_positions.items()):
@@ -362,12 +459,97 @@ class Connection(Circuit):
                     **arrow_kwargs(value))
             else:
                 ax.arrow(x+x_arrow/2., y_arrow,-x_arrow, 0.,
-                    fc = pp['normal_mode_arrow']['color_positive'],
-                    ec = pp['normal_mode_arrow']['color_positive'],
+                    fc = pp['normal_mode_arrow']['color_negative'],
+                    ec = pp['normal_mode_arrow']['color_negative'],
                     **arrow_kwargs(value))
             ax.text(x, y+pp["normal_mode_label"]["y_text"],pretty(value,unit)
-                    ,fontsize=pp["normal_mode_label"]["fontsize"],ha='center')
-        plt.show()
+                    ,fontsize=pp["normal_mode_label"]["fontsize"],
+                    ha='center',style='italic',weight = 'bold')
+
+        if plot == True:
+            plt.show()
+        if save_to is not None:
+            fig.savefig(save_to,transparent = True)
+        plt.close()
+
+    def w_k_A_chi(self,pretty_print = False,**kwargs):
+
+        list_element = None
+        list_values = None
+        for el,value in kwargs.items():
+            try:
+                iter(value)
+            except TypeError:
+                iterable = False
+            else:
+                iterable = True
+
+            if iterable and list_element is None:
+                list_element = el 
+                list_values = value
+            elif iterable and list_element is not None:
+                raise ValueError("You can only iterate over the value of one element.")
+
+        if pretty_print == True and list_element is not None:
+            raise ValueError("Cannot pretty print since $%s$ does not have a unique value"%list_element)
+
+        if list_element is None:
+
+            to_return =  self.eigenfrequencies(**kwargs),\
+                    self.loss_rates(**kwargs),\
+                    self.anharmonicities(**kwargs),\
+                    self.kerr(**kwargs)
+
+            if pretty_print:
+                N_modes = len(to_return[0])
+                table_line = ""
+                for i in range(4):
+                    table_line += " %7s |"
+                table_line += "\n"
+
+                to_print = table_line%("mode"," freq. "," diss. "," anha. ")
+                for i,w in enumerate(to_return[0]):
+                    to_print+=table_line%tuple([str(i)]+[pretty_value(to_return[j][i])+'Hz' for j in range(3)])
+
+                to_print += "\nKerr coefficients\n(diagonal = Kerr, off-diagonal = cross-Kerr)\n"
+
+
+                table_line = ""
+                for i in range(N_modes+1):
+                    table_line += " %7s |"
+                table_line += "\n"
+
+                to_print += table_line%tuple(['mode']+[str(i)+'   ' for i in range(N_modes)])
+
+                for i in range(N_modes):
+                    line_elements = [str(i)]
+                    for j in range(N_modes):
+                        if i>=j:
+                            line_elements.append(pretty_value(to_return[3][i][j])+'Hz')
+                        else:
+                            line_elements.append("")
+                    to_print += table_line%tuple(line_elements)
+                print(to_print)
+
+            return to_return
+
+        else:
+            w = []
+            k = []
+            A = []
+            kerr = []
+            for value in list_values:
+                kwargs_single = deepcopy(kwargs)
+                kwargs_single[list_element] = value
+                w.append(self.eigenfrequencies(**kwargs_single))
+                k.append(self.loss_rates(**kwargs_single))
+                A.append(self.anharmonicities(**kwargs_single))
+                kerr.append(self.kerr(**kwargs_single))
+            w = np.moveaxis(np.array(w),0,-1)
+            k = np.moveaxis(np.array(k),0,-1)
+            A = np.moveaxis(np.array(A),0,-1)
+            kerr = np.moveaxis(np.array(kerr),0,-1)
+            return w,k,A,kerr
 
 class Series(Connection):
     """docstring for Series"""
@@ -384,7 +566,7 @@ class Series(Connection):
         self.left.set_flux_transforms(
             ABCD*sp.Matrix([[1,1/self.right.admittance()],[0,1]]))
 
-    def draw(self,pos,which):
+    def draw(self,pos,which,is_first_element_to_plot = False):
             pos_x1,pos_y1,w1,h1,x1,y1,elt_names1,line_type1 = self.left_o.draw([0.,0.],'l')
             pos_x2,pos_y2,w2,h2,x2,y2,elt_names2,line_type2 = self.right_o.draw([w1,0.],'l')
             w = w1+w2
@@ -393,10 +575,11 @@ class Series(Connection):
             y = y1+y2
             line_type = line_type1+line_type2
 
-            if pos == [0.,0.] and which == 't':
-                # This is the head connection
+            if is_first_element_to_plot:
                 # Add a wire connecting the two sides of the circuit
-                y_bottom = -h/2.+pp["label"]["text_position"][1]-pp["margin"]
+                y_extra = (-pp["label"]["text_position"][1]-pp['elt_height']/2.)+pp["margin"]
+                y_bottom = -h/2.-y_extra
+                h+=y_extra 
 
                 x+=[np.array([0.,0.])]
                 y+=[np.array([0.,y_bottom])]
@@ -428,7 +611,7 @@ class Parallel(Connection):
         self.left.set_flux_transforms(
             ABCD*sp.Matrix([[1,0],[self.right.admittance(),1]]))
 
-    def draw(self,pos,which):
+    def draw(self,pos,which,is_first_element_to_plot = False):
 
             pos_x1,pos_y1,w1,h1,x1,y1,elt_names1,line_type1 = self.left_o.draw([0.,0.],'t')
             pos_x2,pos_y2,w2,h2,x2,y2,elt_names2,line_type2 = self.right_o.draw([0.,-h1],'t')
@@ -501,7 +684,7 @@ class Component(Circuit):
             elif type(a) is str:
                 self.label = a
             else:
-                self.value = a
+                self.value = float(a)
 
     def get_value(self,**kwargs):
         if self.value is not None:
@@ -528,7 +711,10 @@ class Component(Circuit):
     def set_component_lists(self):
         self.head.component_dict[self._id] = self
         if self.value is None:
-            self.head.no_value_components.append(self.label)
+            if self.label in self.head.no_value_components:
+                raise ValueError("Two components may not have the same name %s"%self.label)
+            else:
+                self.head.no_value_components.append(self.label)
 
     def set_flux_transforms(self,ABCD = id2):
         ABCD = ABCD*sp.Matrix([[1,0],[self.admittance(),1]])
@@ -573,7 +759,7 @@ class L(Component):
         super(L, self).set_component_lists()
         self.head.inductors.append(self)
 
-    def draw(self,pos,which):
+    def draw(self,pos,which,is_first_element_to_plot = False):
 
         x = np.linspace(0.5,float(pp['L']['N_turns']) +1. ,pp['L']['N_points'])
         y = -np.sin(2.*np.pi*x)
@@ -623,16 +809,18 @@ class L(Component):
             if which == 'l':
                 y_list[i]+=pos[1]
             elif which == 't':
-                y_list[i]+=pos[1]-pp['element_height']/2.
+                y_list[i]+=pos[1]-pp['elt_height']/2.
 
         if which == 'l':
             pos_x = pos[0]+pp['element_width']/2.
             pos_y = pos[1]
+            height = pp['L']['height']
         elif which == 't':
             pos_x = pos[0]
-            pos_y = pos[1]-pp['element_height']/2.
+            pos_y = pos[1]-pp['elt_height']/2.
+            height = pp['elt_height']
 
-        return [pos_x],[pos_y],pp['element_width'],pp['element_height'],x_list,y_list,[self],line_type
+        return [pos_x],[pos_y],pp['element_width'],height,x_list,y_list,[self],line_type
 
 class J(L):
     def __init__(self, arg1 = None, arg2 = None,use_E=False,use_I=False):
@@ -668,25 +856,19 @@ class J(L):
         ImdY = np.imag(self.head.dY(w,**kwargs))
         return self.flux_wr_ref(w,**kwargs)**4*2.*e**2/self.get_value(**kwargs)/w**2/ImdY**2
 
-    def draw(self,pos,which):
+    def draw(self,pos,which,is_first_element_to_plot = False):
         
         line_type = []
         x = [
-            np.array([0.,(pp['element_width']-pp['J']['width'])/2.]),
-            np.array([(pp['element_width']+pp['J']['width'])/2.,pp['element_width']]),
-            np.array([(pp['element_width']-pp['J']['width'])/2.,(pp['element_width']+pp['J']['width'])/2.]),
+            np.array([0.,pp['element_width']]),
             np.array([(pp['element_width']-pp['J']['width'])/2.,(pp['element_width']+pp['J']['width'])/2.]),
             np.array([(pp['element_width']-pp['J']['width'])/2.,(pp['element_width']+pp['J']['width'])/2.])
         ]
         y = [
             np.array([0.,0.]),
-            np.array([0.,0.]),
-            np.array([0.,0.]),
             np.array([-1.,1.])*pp['J']['width']/2.,
             np.array([1.,-1.])*pp['J']['width']/2.
         ]
-        line_type.append('W')
-        line_type.append('W')
         line_type.append('W')
         line_type.append('J')
         line_type.append('J')
@@ -697,13 +879,15 @@ class J(L):
                 y[i]+=pos[1]
                 pos_x = pos[0]+pp['element_width']/2.
                 pos_y = pos[1]
+                height = pp['J']['width']
             elif which == 't':
                 x[i]+=pos[0]-pp['element_width']/2.
-                y[i]+=pos[1]-pp['element_height']/2.
+                y[i]+=pos[1]-pp['elt_height']/2.
                 pos_x = pos[0]
-                pos_y = pos[1]-pp['element_height']/2.
+                pos_y = pos[1]-pp['elt_height']/2.
+                height = pp['elt_height']
 
-        return [pos_x],[pos_y],pp['element_width'],pp['element_height'],x,y,[self],line_type
+        return [pos_x],[pos_y],pp['element_width'],height,x,y,[self],line_type
 
 class R(Component):
     def __init__(self, arg1 = None, arg2 = None):
@@ -717,7 +901,7 @@ class R(Component):
         super(R, self).set_component_lists()
         self.head.resistors.append(self)
 
-    def draw(self,pos,which):
+    def draw(self,pos,which,is_first_element_to_plot = False):
 
         x = np.linspace(-0.25,0.25+float(pp['R']['N_ridges']),pp['R']['N_points'])
         height = 1.
@@ -770,16 +954,18 @@ class R(Component):
             if which == 'l':
                 y_list[i]+=pos[1]
             elif which == 't':
-                y_list[i]+=pos[1]-pp['element_height']/2.
+                y_list[i]+=pos[1]-pp['elt_height']/2.
 
         if which == 'l':
             pos_x = pos[0]+pp['element_width']/2.
             pos_y = pos[1]
+            height = pp['R']['height']
         elif which == 't':
             pos_x = pos[0]
-            pos_y = pos[1]-pp['element_height']/2.
+            pos_y = pos[1]-pp['elt_height']/2.
+            height = pp['elt_height']
 
-        return [pos_x],[pos_y],pp['element_width'],pp['element_height'],x_list,y_list,[self],line_type        
+        return [pos_x],[pos_y],pp['element_width'],height,x_list,y_list,[self],line_type        
 
 class C(Component):
     def __init__(self, arg1 = None, arg2 = None):
@@ -792,7 +978,7 @@ class C(Component):
         super(C, self).set_component_lists()
         self.head.capacitors.append(self)
 
-    def draw(self,pos,which):
+    def draw(self,pos,which,is_first_element_to_plot = False):
         line_type = []
         x = [
             np.array([0.,(pp['element_width']-pp['C']['gap'])/2.]),
@@ -817,15 +1003,17 @@ class C(Component):
                 y[i]+=pos[1]
                 pos_x = pos[0]+pp['element_width']/2.
                 pos_y = pos[1]
+                height = pp['C']['height']
             elif which == 't':
                 x[i]+=pos[0]-pp['element_width']/2.
-                y[i]+=pos[1]-pp['element_height']/2.
+                y[i]+=pos[1]-pp['elt_height']/2.
                 pos_x = pos[0]
-                pos_y = pos[1]-pp['element_height']/2.
+                pos_y = pos[1]-pp['elt_height']/2.
+                height = pp['elt_height']
 
-        return [pos_x],[pos_y],pp['element_width'],pp['element_height'],x,y,[self],line_type
+        return [pos_x],[pos_y],pp['element_width'],height,x,y,[self],line_type
+
     
-
 
 
 def rotate(circuit_element):
@@ -878,10 +1066,17 @@ def pretty_value(v,use_power_10 = False):
         pretty = "%.1f%s"%(float_part,exponent_part)
     return pretty
 
+def check_there_are_no_iterables_in_kwarg(**kwargs):
+    for el,value in kwargs.items():
+        try:
+            iter(value)
+        except TypeError:
+            pass
+        else:
+            raise ValueError("This function accepts no lists or iterables as input.")
+
 if __name__ == '__main__':
-    circuit = (J(10e-9,'L_{J,1}')|(C(100e-15,'C_J')))+C('C_c')+(C(100e-15)|J(10e-9))
-    # circuit.show()
-    circuit.show_normal_mode(0,'current',C_c = 1e-15)
-    circuit.eigenfrequencies(C_c = 1e-15)
-    circuit.anharmonicities(C_c = 1e-15)
-    # circuit.loss_rates()
+    qubit = C(100e-15)|J(1e-9)
+
+    cQED_circuit = qubit + C(1e-15) + (C(100e-15)|L(10e-9)|R(1e6))
+    cQED_circuit.show_normal_mode(0)
