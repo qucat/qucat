@@ -362,12 +362,32 @@ class BBQcircuit(object):
     def show(*args,**kwargs):
         return self.circuit.show(*args,**kwargs)
 
-
 def netlist_to_circuit(netlist):
     if isinstance(netlist,Circuit):
-        return netlist    
-    
+        return netlist
+    else:
+        # construct node_names
+        node_names = []
+        for branch in netlist:
+            nodes = [branch[1],branch[2]]
+            for node in nodes:
+                if node not in node_names:
+                    node_names.append(node)
 
+        # initialize netlist_dict
+        netlist_dict = {}
+        for node in node_names:
+            netlist_dict[node] = []
+
+        # construct netlist_dict
+        for branch in netlist:
+            element = branch[0]
+            nodes = [branch[1],branch[2]]
+            for i,node in enumerate(nodes):
+                other_node = nodes[(i+1)%2]
+                netlist_dict[node].append([other_node,element])
+
+        # Transform to circuit...
 
 
 class Circuit(object):
@@ -436,8 +456,6 @@ class Circuit(object):
         if plot:
             plt.show()
         plt.close()
-
-
 
 class Connection(Circuit):
     """docstring for Connection"""
@@ -971,7 +989,6 @@ def rotate(circuit_element):
         
     rotated_circuit = circuit_element|recursive_function(circuit_element)
     rotated_circuit._id = 0
-    rotated_circuit.head = circuit_element.head
     rotated_circuit.parent = None
     rotated_circuit.set_parenthood()
 
