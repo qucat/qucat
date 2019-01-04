@@ -7,6 +7,7 @@ from json import load
 import matplotlib.pyplot as plt
 from numbers import Number
 from math import floor
+from time import sleep
 phi_0 = hbar/2./e
 id2 = sp.Matrix([[1,0],[0,1]])
 exponent_to_letter = {
@@ -29,7 +30,6 @@ class BBQcircuit(object):
         super(BBQcircuit, self).__init__()
         self.elements = elements
         self.network = Network(elements)
-
 
         self.inductors = []
         self.capacitors = []
@@ -55,9 +55,9 @@ class BBQcircuit(object):
         self.Y_poly_coeffs_analytical = [sp.utilities.lambdify(self.no_value_components,c,'numpy') for c in self.Y_poly_coeffs_analytical]
 
         self.dY = sp.utilities.lambdify(['w']+self.no_value_components,sp.diff(self.Y,sp.Symbol('w')),'numpy')
-        for elt in elements:
-            tr = self.network.transfer(self.ref_elt.node_minus,self.ref_elt.node_plus,elt.node_minus,elt.node_plus)
-            elt.flux_wr_ref = sp.utilities.lambdify(['w']+self.no_value_components,tr,"numpy")
+        self.flux_transformation_dict = {}
+        for node in self.network.nodes:
+            self.flux_transformation_dict[node] = {}
 
     def Y_poly_coeffs(self,**kwargs):
         return [complex(coeff(**kwargs)) for coeff in self.Y_poly_coeffs_analytical]
@@ -168,13 +168,14 @@ class BBQcircuit(object):
         # Sort solutions with increasing frequency
         order = np.argsort(np.real(ws_cpx))
         self.w_cpx = ws_cpx[order]
-        
+
     def eigenfrequencies(self,**kwargs):
         self.set_w_cpx(**kwargs)
-        return np.real(self.w_cpx)
+        return np.real(self.w_cpx)/2./pi
+
     def loss_rates(self,**kwargs):
         self.set_w_cpx(**kwargs)
-        return np.imag(self.w_cpx)
+        return np.imag(self.w_cpx)/2./pi
     
     def anharmonicities_per_junction(self,pretty_print =False,**kwargs):
         self.set_w_cpx(**kwargs)
@@ -190,7 +191,8 @@ class BBQcircuit(object):
             return [self.junctions[0].anharmonicity(self.w_cpx,**kwargs)/h]
 
         else:
-            self.compute_all_flux_transformations()
+            for j in self.junctions:
+                j.set_flux_wr_ref()
             return [j.anharmonicity(self.w_cpx,**kwargs)/h for j in self.junctions]
 
     def kerr(self,**kwargs):
@@ -251,23 +253,36 @@ class Network(object):
         # Compute sum of admittances
         sum_Y = sum([elt.admittance() for _,elt in connections])
 
-        # Add mesh
+        # Prepare mesh
+        mesh_to_add = []
         for i,(node_A,elt_A) in enumerate(connections):
-            for node_B,elt_B in connections[i:]:
+            for node_B,elt_B in connections[i+1:]:
                 Y = sum_Y/elt_A.admittance()/elt_B.admittance()
-                self.connect(Admittance(Y),node_A,node_B)
+                mesh_to_add.append([Admittance(Y),node_A,node_B])
 
         # Remove star
         for other_node in self.net_dict[node]:
-            del self.net_dict[other_node]
+            del self.net_dict[other_node][node]
         del self.net_dict[node]
+
+        # Add mesh
+        for mesh_branch in mesh_to_add:
+            self.connect(mesh_branch[0],mesh_branch[1],mesh_branch[2])
 
     def admittance(self,node_minus,node_plus):
         network_to_reduce = deepcopy(self)
         for node in self.nodes:
             if node not in [node_minus,node_plus]:
                 network_to_reduce.remove_node(node)
-        return network_to_reduce.net_dict[node_minus][node_plus].admittance()
+
+        Y = network_to_reduce.net_dict[node_minus][node_plus].admittance()
+        return Y
+
+    def branch_impedance(self,node_1, node_2):
+        try:
+            return 1./self.net_dict[node_1][node_2].admittance()
+        except KeyError:
+            return 0.
 
     def transfer(self,node_left_minus,node_left_plus,node_right_minus,node_right_plus):
 
@@ -284,32 +299,27 @@ class Network(object):
 
         if (node_left_minus in [node_right_plus,node_right_minus]) or (node_left_plus in [node_right_plus,node_right_minus]):
             if node_left_minus == node_right_minus:
-                Y = network_to_reduce.net_dict[node_left_minus][node_right_minus].admittance()
+                Z = network_to_reduce.branch_impedance(node_left_minus,node_right_minus)
             elif node_left_plus == node_right_plus:
-                Y = network_to_reduce.net_dict[node_left_plus][node_right_plus].admittance()
+                Z = network_to_reduce.branch_impedance(node_left_plus,node_right_plus)
 
             elif node_left_minus == node_right_plus:
-                Y = network_to_reduce.net_dict[node_left_minus][node_right_plus].admittance()
+                Z = -network_to_reduce.branch_impedance(node_left_minus,node_right_plus)
             elif node_left_plus == node_right_minus:
-                Y = network_to_reduce.net_dict[node_left_plus][node_right_minus].admittance()
+                Z = -network_to_reduce.branch_impedance(node_left_plus,node_right_minus)
 
             # see Pozar
-            ABCD = sp.Matrix([[
-                1,
-                1/Y],[
-                0,
-                1
-                ]])
+            ABCD = sp.Matrix([[1,Z],[0,1]])
 
 
         else:
             # Compute ABCD of lattice network
             # see https://www.globalspec.com/reference/71734/203279/10-11-lattice-networks
             # Network Analysis & Circuit (By M. Arshad )section 10.11: LATTICE NETWORKS
-            Za = 1/network_to_reduce.net_dict[node_left_plus][node_right_plus].admittance()
-            Zb = 1/network_to_reduce.net_dict[node_left_minus][node_right_plus].admittance()
-            Zc = 1/network_to_reduce.net_dict[node_left_plus][node_right_minus].admittance()
-            Zd = 1/network_to_reduce.net_dict[node_left_minus][node_right_minus].admittance()
+            Za = network_to_reduce.branch_impedance(node_left_plus,node_right_plus)
+            Zb = network_to_reduce.branch_impedance(node_left_minus,node_right_plus)
+            Zc = network_to_reduce.branch_impedance(node_left_plus,node_right_minus)
+            Zd = network_to_reduce.branch_impedance(node_left_minus,node_right_minus)
             sum_Z = sum([Za,Zb,Zc,Zd])
             Z11 = (Za+Zb)*(Zd+Zc)/sum_Z
             Z21 = (Zb*Zc-Za*Zd)/sum_Z
@@ -324,13 +334,14 @@ class Network(object):
                 ]])
 
         # Connect missing two elements
-        Y_L = network_to_reduce.net_dict[node_left_plus][node_left_minus].admittance()
-        Y_R = network_to_reduce.net_dict[node_right_plus][node_right_minus].admittance()
+        Y_L = network_to_reduce.branch_impedance(node_left_plus,node_left_minus)
+        Y_R = network_to_reduce.branch_impedance(node_right_plus,node_right_minus)
         ABCD_L = sp.Matrix([[1,0],[Y_L,1]])
         ABCD_R = sp.Matrix([[1,0],[Y_R,1]])
         ABCD = ABCD_L*ABCD*ABCD_R
 
-        return 1/ABCD[0,0]
+        tr = 1/ABCD[0,0]
+        return tr
 
 
 
@@ -366,6 +377,7 @@ class Component(Circuit):
         super(Component, self).__init__(node_minus, node_plus)
         self.label = None
         self.value = None
+        self.flux_wr_ref = None
 
         if arg1 is None and arg2 is None:
             raise ValueError("Specify either a value or a label")
@@ -388,6 +400,17 @@ class Component(Circuit):
 
     def set_component_lists(self):
         pass
+
+    def set_flux_wr_ref(self):
+        if self.flux_wr_ref is None:
+            try:
+                tr = self.head.flux_transformation_dict[self.node_minus,self.node_plus]
+            except KeyError:
+                tr = self.head.network.transfer(self.head.ref_elt.node_minus,self.head.ref_elt.node_plus,self.node_minus,self.node_plus)
+                self.head.flux_transformation_dict[self.node_minus,self.node_plus] = tr
+                self.head.flux_transformation_dict[self.node_plus,self.node_minus] = -tr
+            
+            self.flux_wr_ref = sp.utilities.lambdify(['w']+self.head.no_value_components,tr,"numpy")
 
 
     def flux(self,w,**kwargs):
@@ -491,7 +514,6 @@ class C(Component):
 
 class Admittance(Component):
     def __init__(self, Y):
-        super(Admittance, self).__init__(node_minus = None, node_plus = None)
         self.Y = Y
 
     def admittance(self):
@@ -499,6 +521,8 @@ class Admittance(Component):
 
 
 def pretty_value(v,use_power_10 = False):
+    if v == 0:
+        return '0'
     exponent = floor(np.log10(v))
     exponent_3 = exponent-(exponent%3)
     float_part = v/(10**exponent_3)
@@ -525,7 +549,25 @@ def check_there_are_no_iterables_in_kwarg(**kwargs):
             raise ValueError("This function accepts no lists or iterables as input.")
 
 if __name__ == '__main__':
-    cQED_circuit = BBQcircuit([
-        C(0,1,100e-15),
-        J(0,1,1e-9)])
-    cQED_circuit.w_k_A_chi(pretty_print = True)
+
+    n = Network([
+        R(0,1,1.),
+        R(1,2,1.),
+        R(0,2,1.),
+        ])
+    nl = n.net_dict
+    print nl
+    n.remove_node(1)
+    print nl
+    print nl[0][2].admittance()
+
+
+    # cQED_circuit = BBQcircuit([
+    #     C(0,1,100e-15),
+    #     J(0,1,10e-9),
+    #     C(1,2,1e-15),
+    #     C(2,0,100e-15),
+    #     J(2,0,10e-9),
+    #     R(2,0,1e6),
+    #     ])
+    # cQED_circuit.w_k_A_chi(pretty_print = True)

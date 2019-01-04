@@ -234,11 +234,11 @@ class BBQcircuit(object):
         self.w_cpx = ws_cpx[order]
 
     def eigenfrequencies(self,**kwargs):
-        self.set_w_cpx(**kwargs)
+        self.set_w_cpx(**kwargs)/2./pi
         return np.real(self.w_cpx)
     def loss_rates(self,**kwargs):
         self.set_w_cpx(**kwargs)
-        return np.imag(self.w_cpx)
+        return np.imag(self.w_cpx)/2./pi
     
     def anharmonicities_per_junction(self,pretty_print =False,**kwargs):
         self.set_w_cpx(**kwargs)
@@ -980,6 +980,8 @@ def shift(to_shift,shift):
     return to_shift
 
 def pretty_value(v,use_power_10 = False):
+    if v == 0:
+        return '0'
     exponent = floor(np.log10(v))
     exponent_3 = exponent-(exponent%3)
     float_part = v/(10**exponent_3)
@@ -1006,8 +1008,8 @@ def check_there_are_no_iterables_in_kwarg(**kwargs):
             raise ValueError("This function accepts no lists or iterables as input.")
 
 if __name__ == '__main__':
-    qubit = C(100e-15)|J(1e-9)
+    qubit = C(100e-15)|J(10e-9)
     resonator = C(100e-15)|L(10e-9)|R(1e6)
-    cQED_circuit = BBQcircuit(qubit + C(1e-15) + resonator)
-    cQED_circuit.show_normal_mode(0)
-    cQED_circuit.w_k_A_chi()
+    cQED_circuit = BBQcircuit(qubit)
+    # cQED_circuit.show_normal_mode(0)
+    cQED_circuit.w_k_A_chi(pretty_print=True)
