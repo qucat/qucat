@@ -234,8 +234,9 @@ class BBQcircuit(object):
         self.w_cpx = ws_cpx[order]
 
     def eigenfrequencies(self,**kwargs):
-        self.set_w_cpx(**kwargs)/2./pi
-        return np.real(self.w_cpx)
+        self.set_w_cpx(**kwargs)
+        return np.real(self.w_cpx)/2./pi
+
     def loss_rates(self,**kwargs):
         self.set_w_cpx(**kwargs)
         return np.imag(self.w_cpx)/2./pi
@@ -1010,6 +1011,7 @@ def check_there_are_no_iterables_in_kwarg(**kwargs):
 if __name__ == '__main__':
     qubit = C(100e-15)|J(10e-9)
     resonator = C(100e-15)|L(10e-9)|R(1e6)
-    cQED_circuit = BBQcircuit(qubit)
+    # cQED_circuit = BBQcircuit(qubit)
+    cQED_circuit = BBQcircuit(qubit+C(10e-15)+resonator)
     # cQED_circuit.show_normal_mode(0)
     cQED_circuit.w_k_A_chi(pretty_print=True)

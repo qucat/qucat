@@ -250,16 +250,15 @@ class Network(object):
 
         connections = [x for x in self.net_dict[node].items()]
 
-        # Compute sum of admittances
+        # Sum of admittances
         sum_Y = sum([elt.admittance() for _,elt in connections])
 
         # Prepare mesh
         mesh_to_add = []
         for i,(node_A,elt_A) in enumerate(connections):
             for node_B,elt_B in connections[i+1:]:
-                Y = sum_Y/elt_A.admittance()/elt_B.admittance()
+                Y = elt_A.admittance()*elt_B.admittance()/sum_Y
                 mesh_to_add.append([Admittance(Y),node_A,node_B])
-
         # Remove star
         for other_node in self.net_dict[node]:
             del self.net_dict[other_node][node]
@@ -550,24 +549,24 @@ def check_there_are_no_iterables_in_kwarg(**kwargs):
 
 if __name__ == '__main__':
 
-    n = Network([
-        R(0,1,1.),
-        R(1,2,1.),
-        R(0,2,1.),
-        ])
-    nl = n.net_dict
-    print nl
-    n.remove_node(1)
-    print nl
-    print nl[0][2].admittance()
-
-
-    # cQED_circuit = BBQcircuit([
-    #     C(0,1,100e-15),
-    #     J(0,1,10e-9),
-    #     C(1,2,1e-15),
-    #     C(2,0,100e-15),
-    #     J(2,0,10e-9),
-    #     R(2,0,1e6),
+    # n = Network([
+    #     R(0,1,1.),
+    #     R(1,2,1.),
+    #     R(0,2,1.),
     #     ])
-    # cQED_circuit.w_k_A_chi(pretty_print = True)
+    # nl = n.net_dict
+    # print nl
+    # n.remove_node(1)
+    # print nl
+    # print nl[0][2].admittance()
+
+
+    cQED_circuit = BBQcircuit([
+        C(0,1,100e-15),
+        J(0,1,10e-9),
+        C(1,2,10e-15),
+        C(2,0,100e-15),
+        L(2,0,10e-9),
+        R(2,0,1e6),
+        ])
+    cQED_circuit.w_k_A_chi(pretty_print = True)
