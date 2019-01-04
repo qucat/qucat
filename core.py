@@ -55,10 +55,9 @@ class BBQcircuit(object):
         self.Y_poly_coeffs_analytical = [sp.utilities.lambdify(self.no_value_components,c,'numpy') for c in self.Y_poly_coeffs_analytical]
 
         self.dY = sp.utilities.lambdify(['w']+self.no_value_components,sp.diff(self.Y,sp.Symbol('w')),'numpy')
-
         for elt in elements:
             tr = self.network.transfer(self.ref_elt.node_minus,self.ref_elt.node_plus,elt.node_minus,elt.node_plus)
-            elt.flux_wr_ref = sp.utilities.lambdify(['w']+self.head.no_value_components,tr,"numpy")
+            elt.flux_wr_ref = sp.utilities.lambdify(['w']+self.no_value_components,tr,"numpy")
 
     def Y_poly_coeffs(self,**kwargs):
         return [complex(coeff(**kwargs)) for coeff in self.Y_poly_coeffs_analytical]
@@ -169,6 +168,13 @@ class BBQcircuit(object):
         # Sort solutions with increasing frequency
         order = np.argsort(np.real(ws_cpx))
         self.w_cpx = ws_cpx[order]
+        
+    def eigenfrequencies(self,**kwargs):
+        self.set_w_cpx(**kwargs)
+        return np.real(self.w_cpx)
+    def loss_rates(self,**kwargs):
+        self.set_w_cpx(**kwargs)
+        return np.imag(self.w_cpx)
     
     def anharmonicities_per_junction(self,pretty_print =False,**kwargs):
         self.set_w_cpx(**kwargs)
@@ -263,37 +269,63 @@ class Network(object):
                 network_to_reduce.remove_node(node)
         return network_to_reduce.net_dict[node_minus][node_plus].admittance()
 
-    def transfer(self,node_minus_minus,node_minus_plus,node_plus_minus,node_plus_plus):
+    def transfer(self,node_left_minus,node_left_plus,node_right_minus,node_right_plus):
+
+
+        if (node_left_minus in [node_right_plus,node_right_minus]) and (node_left_plus in [node_right_plus,node_right_minus]):
+            return 1.
 
         # Reduce network
         network_to_reduce = deepcopy(self)
         for node in self.nodes:
-            if node not in [node_minus_minus,node_minus_plus,node_plus_minus,node_plus_plus]:
+            if node not in [node_left_minus,node_left_plus,node_right_minus,node_right_plus]:
                 network_to_reduce.remove_node(node)
 
-        # Compute ABCD of lattice network
-        # see https://www.globalspec.com/reference/71734/203279/10-11-lattice-networks
-        # Network Analysis & Circuit (By M. Arshad )section 10.11: LATTICE NETWORKS
-        Za = 1/network_to_reduce.net_dict[node_minus_plus][node_plus_plus].admittance()
-        Zb = 1/network_to_reduce.net_dict[node_minus_minus][node_plus_plus].admittance()
-        Zc = 1/network_to_reduce.net_dict[node_minus_plus][node_plus_minus].admittance()
-        Zd = 1/network_to_reduce.net_dict[node_minus_minus][node_plus_minus].admittance()
-        sum_Z = sum([Za,Zb,Zc,Zd])
-        Z11 = (Za+Zb)*(Zd+Zc)/sum_Z
-        Z21 = (Zb*Zc-Za*Zd)/sum_Z
-        Z22 = (Za+Zc)*(Zd+Zb)/sum_Z
 
-        # see Pozar
-        ABCD = sp.Matrix([[
-            Z11/Z21,
-            Z11*Z22/Z21-Z21],[
-            1/Z21,
-            Z22/Z21
-            ]])
+        if (node_left_minus in [node_right_plus,node_right_minus]) or (node_left_plus in [node_right_plus,node_right_minus]):
+            if node_left_minus == node_right_minus:
+                Y = network_to_reduce.net_dict[node_left_minus][node_right_minus].admittance()
+            elif node_left_plus == node_right_plus:
+                Y = network_to_reduce.net_dict[node_left_plus][node_right_plus].admittance()
+
+            elif node_left_minus == node_right_plus:
+                Y = network_to_reduce.net_dict[node_left_minus][node_right_plus].admittance()
+            elif node_left_plus == node_right_minus:
+                Y = network_to_reduce.net_dict[node_left_plus][node_right_minus].admittance()
+
+            # see Pozar
+            ABCD = sp.Matrix([[
+                1,
+                1/Y],[
+                0,
+                1
+                ]])
+
+
+        else:
+            # Compute ABCD of lattice network
+            # see https://www.globalspec.com/reference/71734/203279/10-11-lattice-networks
+            # Network Analysis & Circuit (By M. Arshad )section 10.11: LATTICE NETWORKS
+            Za = 1/network_to_reduce.net_dict[node_left_plus][node_right_plus].admittance()
+            Zb = 1/network_to_reduce.net_dict[node_left_minus][node_right_plus].admittance()
+            Zc = 1/network_to_reduce.net_dict[node_left_plus][node_right_minus].admittance()
+            Zd = 1/network_to_reduce.net_dict[node_left_minus][node_right_minus].admittance()
+            sum_Z = sum([Za,Zb,Zc,Zd])
+            Z11 = (Za+Zb)*(Zd+Zc)/sum_Z
+            Z21 = (Zb*Zc-Za*Zd)/sum_Z
+            Z22 = (Za+Zc)*(Zd+Zb)/sum_Z
+
+            # see Pozar
+            ABCD = sp.Matrix([[
+                Z11/Z21,
+                Z11*Z22/Z21-Z21],[
+                1/Z21,
+                Z22/Z21
+                ]])
 
         # Connect missing two elements
-        Y_L = network_to_reduce.net_dict[node_minus_plus][node_minus_minus].admittance()
-        Y_R = network_to_reduce.net_dict[node_plus_plus][node_plus_minus].admittance()
+        Y_L = network_to_reduce.net_dict[node_left_plus][node_left_minus].admittance()
+        Y_R = network_to_reduce.net_dict[node_right_plus][node_right_minus].admittance()
         ABCD_L = sp.Matrix([[1,0],[Y_L,1]])
         ABCD_R = sp.Matrix([[1,0],[Y_R,1]])
         ABCD = ABCD_L*ABCD*ABCD_R
@@ -496,4 +528,4 @@ if __name__ == '__main__':
     cQED_circuit = BBQcircuit([
         C(0,1,100e-15),
         J(0,1,1e-9)])
-    cQED_circuit
+    cQED_circuit.w_k_A_chi(pretty_print = True)
