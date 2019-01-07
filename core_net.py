@@ -15,6 +15,19 @@ exponent_to_letter = {
     -15:'f',
     -12:'p',
     -9:'n',
+    -6:'u',
+    -3:'m',
+    0:'',
+    3:'k',
+    6:'M',
+    9:'G',
+    12:'T'
+}
+exponent_to_letter_math = {
+    -18:'a',
+    -15:'f',
+    -12:'p',
+    -9:'n',
     -6:r'$\mu$',
     -3:'m',
     0:'',
@@ -24,10 +37,10 @@ exponent_to_letter = {
     12:'T'
 }
 
-class BBQcircuit(object):
+class Qcircuit(object):
     """docstring for BBQcircuit"""
     def __init__(self, elements):
-        super(BBQcircuit, self).__init__()
+        super(Qcircuit, self).__init__()
         self.elements = elements
         self.network = Network(elements)
 
@@ -46,21 +59,39 @@ class BBQcircuit(object):
             self.ref_elt = self.inductors[0]
 
         self.Q_min = 1.
-        self.Y = self.network.admittance(self.ref_elt.node_minus,self.ref_elt.node_plus) 
+        self.Y = self.network.admittance(self.ref_elt.node_minus,self.ref_elt.node_plus)         
         Y_together = sp.together(self.Y)
         Y_numer = sp.numer(Y_together)       # Extract the numerator of Y(w)
-        Y_poly = sp.collect(sp.expand(Y_numer),sp.Symbol('w')) # Write numerator as polynomial in omega
-        Y_poly_order = sp.polys.polytools.degree(Y_poly,gen = sp.Symbol('w')) # Order of the polynomial
-        self.Y_poly_coeffs_analytical = [Y_poly.coeff(sp.Symbol('w'),n) for n in range(Y_poly_order+1)[::-1]] # Get polynomial coefficients
-        self.Y_poly_coeffs_analytical = [sp.utilities.lambdify(self.no_value_components,c,'numpy') for c in self.Y_poly_coeffs_analytical]
+        Y_denom = sp.denom(Y_together)       # Extract the numerator of Y(w)
+        Y_numer_poly = sp.collect(sp.expand(Y_numer),sp.Symbol('w')) # Write numerator as polynomial in omega
+        Y_denom_poly = sp.collect(sp.expand(Y_denom),sp.Symbol('w')) # Write numerator as polynomial in omega
+        self.Y_numer_poly_order = sp.polys.polytools.degree(Y_numer_poly,gen = sp.Symbol('w')) # Order of the polynomial
+        self.Y_denom_poly_order = sp.polys.polytools.degree(Y_denom_poly,gen = sp.Symbol('w')) # Order of the polynomial
 
-        self.dY = sp.utilities.lambdify(['w']+self.no_value_components,sp.diff(self.Y,sp.Symbol('w')),'numpy')
+        self.Y_numer_poly_coeffs_analytical = [Y_numer_poly.coeff(sp.Symbol('w'),n) for n in range(self.Y_numer_poly_order+1)[::-1]] # Get polynomial coefficients
+        self.Y_numer_poly_coeffs_analytical = [sp.utilities.lambdify(self.no_value_components,c,'numpy') for c in self.Y_numer_poly_coeffs_analytical]
+
+        self.Y_denom_poly_coeffs_analytical = [Y_denom_poly.coeff(sp.Symbol('w'),n) for n in range(self.Y_denom_poly_order+1)[::-1]] # Get polynomial coefficients
+        self.Y_denom_poly_coeffs_analytical = [sp.utilities.lambdify(self.no_value_components,c,'numpy') for c in self.Y_denom_poly_coeffs_analytical]
+
         self.flux_transformation_dict = {}
         for node in self.network.nodes:
             self.flux_transformation_dict[node] = {}
 
-    def Y_poly_coeffs(self,**kwargs):
-        return [complex(coeff(**kwargs)) for coeff in self.Y_poly_coeffs_analytical]
+
+    def dY(self,w,**kwargs):
+        # derivative of u/v is (du*v-dv*u)/v^2
+        u = sum([np.array([complex(a*_w**(self.Y_numer_poly_order-n)) for _w in w]) for n,a in enumerate(self.Y_numer_poly_coeffs(**kwargs))])
+        v = sum([np.array([complex(a*_w**(self.Y_denom_poly_order-n)) for _w in w]) for n,a in enumerate(self.Y_denom_poly_coeffs(**kwargs))])
+        du = sum([np.array([complex((self.Y_numer_poly_order-n)*a*_w**(self.Y_numer_poly_order-n-1)) for _w in w]) for n,a in enumerate(self.Y_numer_poly_coeffs(**kwargs))])
+        dv = sum([np.array([complex((self.Y_denom_poly_order-n)*a*_w**(self.Y_denom_poly_order-n-1)) for _w in w]) for n,a in enumerate(self.Y_denom_poly_coeffs(**kwargs))])
+
+        return (du*v-dv*u)/v**2
+
+    def Y_numer_poly_coeffs(self,**kwargs):
+        return [complex(coeff(**kwargs)) for coeff in self.Y_numer_poly_coeffs_analytical]
+    def Y_denom_poly_coeffs(self,**kwargs):
+        return [complex(coeff(**kwargs)) for coeff in self.Y_denom_poly_coeffs_analytical]
 
     def w_k_A_chi(self,pretty_print = False,**kwargs):
         
@@ -99,7 +130,7 @@ class BBQcircuit(object):
 
                 to_print = table_line%("mode"," freq. "," diss. "," anha. ")
                 for i,w in enumerate(to_return[0]):
-                    to_print+=table_line%tuple([str(i)]+[pretty_value(to_return[j][i])+'Hz' for j in range(3)])
+                    to_print+=table_line%tuple([str(i)]+[pretty_value(to_return[j][i],use_math = False)+'Hz' for j in range(3)])
 
                 to_print += "\nKerr coefficients\n(diagonal = Kerr, off-diagonal = cross-Kerr)\n"
 
@@ -115,7 +146,7 @@ class BBQcircuit(object):
                     line_elements = [str(i)]
                     for j in range(N_modes):
                         if i>=j:
-                            line_elements.append(pretty_value(to_return[3][i][j])+'Hz')
+                            line_elements.append(pretty_value(to_return[3][i][j],use_math = False)+'Hz')
                         else:
                             line_elements.append("")
                     to_print += table_line%tuple(line_elements)
@@ -158,11 +189,11 @@ class BBQcircuit(object):
 
     def set_w_cpx(self,**kwargs):
         self.check_kwargs(**kwargs)
-        ws_cpx = np.roots(self.Y_poly_coeffs(**kwargs))
+        ws_cpx = np.roots(self.Y_numer_poly_coeffs(**kwargs))
 
         # take only roots with a positive real part (i.e. freq) 
         # and significant Q factors
-        relevant_sols = np.argwhere((np.real(ws_cpx)>=0.)&(np.real(ws_cpx)>self.Q_min*np.imag(ws_cpx)))
+        relevant_sols = np.argwhere((np.real(ws_cpx)>=0.)&(np.imag(ws_cpx)>=0.)&(np.real(ws_cpx)>self.Q_min*np.imag(ws_cpx)))
         ws_cpx=ws_cpx[relevant_sols][:,0]
     
         # Sort solutions with increasing frequency
@@ -214,6 +245,7 @@ class BBQcircuit(object):
     def anharmonicities(self,**kwargs):
         Ks = self.kerr(**kwargs)
         return [Ks[i,i] for i in range(Ks.shape[0])]
+
 
 
 class Network(object):
@@ -398,7 +430,11 @@ class Component(Circuit):
         return sp.Symbol(self.label)
 
     def set_component_lists(self):
-        pass
+        if self.value is None:
+            if self.label in self.head.no_value_components:
+                raise ValueError("Two components may not have the same name %s"%self.label)
+            else:
+                self.head.no_value_components.append(self.label)
 
     def set_flux_wr_ref(self):
         if self.flux_wr_ref is None:
@@ -519,7 +555,7 @@ class Admittance(Component):
         return self.Y
 
 
-def pretty_value(v,use_power_10 = False):
+def pretty_value(v,use_power_10 = False,use_math = True):
     if v == 0:
         return '0'
     exponent = floor(np.log10(v))
@@ -529,9 +565,15 @@ def pretty_value(v,use_power_10 = False):
         if exponent_3 == 0:
             exponent_part = ''
         else:
-            exponent_part = r'$\times 10^{%d}$'%exponent_3
+            if use_math:
+                exponent_part = r'$\times 10^{%d}$'%exponent_3
+            else:
+                exponent_part = r'e%d'%exponent_3
     else:
-        exponent_part = ' '+exponent_to_letter[exponent_3]
+        if use_math:
+            exponent_part = ' '+exponent_to_letter_math[exponent_3]
+        else:
+            exponent_part = ' '+exponent_to_letter[exponent_3]
     if float_part>=10.:
         pretty = "%.0f%s"%(float_part,exponent_part)
     else:
@@ -561,12 +603,21 @@ if __name__ == '__main__':
     # print nl[0][2].admittance()
 
 
-    cQED_circuit = BBQcircuit([
+    cQED_circuit = Qcircuit([
         C(0,1,100e-15),
         J(0,1,10e-9),
         C(1,2,10e-15),
-        C(2,0,100e-15),
-        L(2,0,10e-9),
-        R(2,0,1e6),
+        C(2,0,64e-15),
+        L(2,0,22e-9),
+        C(2,0,33e-15),
+        L(2,3,45e-9),
+        C(0,3,63e-15),
+        L(2,3,45e-9),
+        C(1,3,63e-15),
+        C(0,2,34e-15),
+        L(4,3,45e-15),
+        L(2,4,67e-9),
         ])
+    # print cQED_circuit.eigenfrequencies()
+    # print cQED_circuit.loss_rates()
     cQED_circuit.w_k_A_chi(pretty_print = True)

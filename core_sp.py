@@ -6,7 +6,7 @@ from copy import deepcopy
 from json import load
 import matplotlib.pyplot as plt
 from numbers import Number
-from math import floor
+from math import floor,factorial
 phi_0 = hbar/2./e
 id2 = sp.Matrix([[1,0],[0,1]])
 exponent_to_letter = {
@@ -83,10 +83,10 @@ pp={
     }
 }
 
-class BBQcircuit(object):
+class Qcircuit(object):
     """docstring for BBQcircuit"""
     def __init__(self, circuit):
-        super(BBQcircuit, self).__init__()
+        super(Qcircuit, self).__init__()
         self.circuit = deepcopy(circuit)
 
         self.circuit.set_head(self)
@@ -123,8 +123,6 @@ class BBQcircuit(object):
 
     def Y_poly_coeffs(self,**kwargs):
         return [complex(coeff(**kwargs)) for coeff in self.Y_poly_coeffs_analytical]
-
-
 
     def w_k_A_chi(self,pretty_print = False,**kwargs):
         
@@ -257,6 +255,40 @@ class BBQcircuit(object):
         else:
             self.compute_all_flux_transformations()
             return [j.anharmonicity(self.w_cpx,**kwargs)/h for j in self.junctions]
+
+    def hamiltonian(self,modes = 'all', junction_expansion = 4, photons = 6,**kwargs):
+
+        from qutip import destroy,qeye,tensor
+
+        fs = self.eigenfrequencies(**kwargs)
+        N_modes = len(fs)
+        N_junctions = len(self.junctions)
+
+        if modes=='all':
+            modes = range(N_modes)
+        if photons is not list:
+            photons = [int(photons) for i in modes]
+
+        H = 0
+        phi = [0 for junction in self.junctions]
+        qeye_list = [qeye(n) for n in photons]
+
+        for i,f in enumerate(fs):
+            a_list = deepcopy(qeye_list)
+            a_list[i] = destroy(photons[i])
+            a = tensor(a_list)
+            H+= f*a.dag()*a
+            for j,junction in enumerate(self.junctions):
+                phi[j]+=junction.flux(w=f*2.*pi,**kwargs)/phi_0*(a+a.dag())
+
+        for j,junction in enumerate(self.junctions):
+            n = 2
+            EJ = (hbar/2./e)**2/(junction.get_value(**kwargs)*h)
+            while 2*n<=junction_expansion:
+                H += (-1)**(n+1)*EJ/factorial(2*n)*phi[j]**(2*n)
+                n+=1
+
+        return H
 
     def kerr(self,**kwargs):
         As =  self.anharmonicities_per_junction(**kwargs)
@@ -1009,9 +1041,15 @@ def check_there_are_no_iterables_in_kwarg(**kwargs):
             raise ValueError("This function accepts no lists or iterables as input.")
 
 if __name__ == '__main__':
-    qubit = C(100e-15)|J(10e-9)
+    qubit = C(300e-15)|J(1e-9)
     resonator = C(100e-15)|L(10e-9)|R(1e6)
     # cQED_circuit = BBQcircuit(qubit)
-    cQED_circuit = BBQcircuit(qubit+C(10e-15)+resonator)
-    # cQED_circuit.show_normal_mode(0)
-    cQED_circuit.w_k_A_chi(pretty_print=True)
+    cQED_circuit = Qcircuit(qubit+C(10e-15)+resonator)
+    # cQED_circuit.hamiltonian()
+    # cQED_circuit.show_normal_mode(1)
+    # cQED_circuit.w_k_A_chi(pretty_print=True)
+    H = Qcircuit(qubit).hamiltonian(modes = 'all', junction_expansion = 4, photons = 6)
+    eigenvals, eigenstates = H.eigenstates()
+    print (eigenvals[1]-eigenvals[0])/1e9
+    print ((eigenvals[1]-eigenvals[0])-(eigenvals[2]-eigenvals[1]))/1e6
+    print Qcircuit(qubit).anharmonicities()
