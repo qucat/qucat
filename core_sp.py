@@ -423,14 +423,13 @@ class Circuit(object):
         plot = True,
         full_output = False,
         add_vertical_space = False,
-        save_to = None):
+        save_to = None,
+        **savefig_kwargs):
 
         if add_vertical_space:
             pp['elt_height'] = pp['element_height_normal_modes']
         else:
             pp['elt_height'] = pp['element_height']
-
-
 
         element_x,element_y,w,h,xs,ys,element_names,line_type = self.draw(pos = [0.,0.], which = 't',is_first_element_to_plot = True)
         x_min = min([np.amin(x) for x in xs])
@@ -442,6 +441,7 @@ class Circuit(object):
         y_margin = pp['y_fig_margin'] # ensures that any text labels are not cutoff
         fig = plt.figure(figsize = ((w+2.*x_margin)*pp["figsize_scaling"],(h+2.*y_margin)*pp["figsize_scaling"]))
         ax = fig.add_subplot(111)
+        plt.subplots_adjust(left=0., right=1., top=1., bottom=0.)
 
         for i in range(len(xs)):
             ax.plot(xs[i],ys[i],color = pp["color"],lw=pp[line_type[i]]['lw'])
@@ -465,7 +465,7 @@ class Circuit(object):
             return element_positions,fig,ax
 
         if save_to is not None:
-            fig.savefig(save_to,transparent = True)
+            fig.savefig(save_to,transparent = True,**savefig_kwargs)
         if plot:
             plt.show()
         plt.close()
@@ -650,6 +650,15 @@ class Component(Circuit):
             else:
                 self.value = float(a)
 
+    def __hash__(self):
+        if self.label is None:
+            return hash(str(self.value)+self.unit)
+        else:
+            if self.value is None:
+                return hash(self.label+self.unit)
+            else:
+                return hash(str(self.value)+self.label+self.unit)
+
     def get_value(self,**kwargs):
         if self.value is not None:
             return self.value
@@ -707,8 +716,12 @@ class Component(Circuit):
 
         if self.label is None:
             return pretty_value(self.value)+self.unit
+        elif self.label == '' and self.value is None:
+            return ''
         elif self.value is None:
             return ("$%s$"%(self.label))
+        elif self.label == '' and self.value is not None:
+            return pretty_value(self.value)+self.unit
         else:
             return ("$%s = $"%(self.label))+pretty_value(self.value)+self.unit
 
@@ -1050,6 +1063,6 @@ if __name__ == '__main__':
     # cQED_circuit.w_k_A_chi(pretty_print=True)
     H = Qcircuit(qubit).hamiltonian(modes = 'all', junction_expansion = 4, photons = 6)
     eigenvals, eigenstates = H.eigenstates()
-    print (eigenvals[1]-eigenvals[0])/1e9
-    print ((eigenvals[1]-eigenvals[0])-(eigenvals[2]-eigenvals[1]))/1e6
-    print Qcircuit(qubit).anharmonicities()
+    print ((eigenvals[1]-eigenvals[0])/1e9)
+    print (((eigenvals[1]-eigenvals[0])-(eigenvals[2]-eigenvals[1]))/1e6)
+    print (Qcircuit(qubit).anharmonicities())
