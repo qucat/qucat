@@ -14,7 +14,33 @@ exponent_to_letter = {
     -15:'f',
     -12:'p',
     -9:'n',
+    -6:'u',
+    -3:'m',
+    0:'',
+    3:'k',
+    6:'M',
+    9:'G',
+    12:'T'
+}
+exponent_to_letter_math = {
+    -18:'a',
+    -15:'f',
+    -12:'p',
+    -9:'n',
     -6:r'$\mu$',
+    -3:'m',
+    0:'',
+    3:'k',
+    6:'M',
+    9:'G',
+    12:'T'
+}
+exponent_to_letter_unicode = {
+    -18:'a',
+    -15:'f',
+    -12:'p',
+    -9:'n',
+    -6:u'\u03bc',
     -3:'m',
     0:'',
     3:'k',
@@ -712,18 +738,31 @@ class Component(Circuit):
     def charge(self,w,**kwargs):
         return self.current(w,**kwargs)/w
 
-    def to_string(self):
+    def to_string(self,use_math = True,use_unicode = False):
+
+        unit = self.unit
+        if use_unicode:
+            unit = unit.replace(r'$\Omega$',u"\u03A9")
+        if use_math == False:
+            unit = unit.replace(r'$\Omega$','Ohm')
+
+        label = self.label
+        if use_math:
+            label = "$%s$"%(label)
+
+        if self.value is not None:
+            pvalue = pretty_value(self.value,use_math = use_math,use_unicode = use_unicode)
 
         if self.label is None:
-            return pretty_value(self.value)+self.unit
+            return pvalue+unit
         elif self.label == '' and self.value is None:
             return ''
         elif self.value is None:
-            return ("$%s$"%(self.label))
+            return label
         elif self.label == '' and self.value is not None:
-            return pretty_value(self.value)+self.unit
+            return pvalue+unit
         else:
-            return ("$%s = $"%(self.label))+pretty_value(self.value)+self.unit
+            return label+pvalue+unit
 
 class L(Component):
     def __init__(self, arg1 = None, arg2 = None):
@@ -1025,7 +1064,7 @@ def shift(to_shift,shift):
         to_shift[i]+= shift
     return to_shift
 
-def pretty_value(v,use_power_10 = False):
+def pretty_value(v,use_power_10 = False,use_math = True,use_unicode = False):
     if v == 0:
         return '0'
     exponent = floor(np.log10(v))
@@ -1035,9 +1074,17 @@ def pretty_value(v,use_power_10 = False):
         if exponent_3 == 0:
             exponent_part = ''
         else:
-            exponent_part = r'$\times 10^{%d}$'%exponent_3
+            if use_math:
+                exponent_part = r'$\times 10^{%d}$'%exponent_3
+            else:
+                exponent_part = r'e%d'%exponent_3
     else:
-        exponent_part = ' '+exponent_to_letter[exponent_3]
+        if use_unicode:
+            exponent_part = ' '+exponent_to_letter_unicode[exponent_3]
+        elif use_math:
+            exponent_part = ' '+exponent_to_letter_math[exponent_3]
+        else:
+            exponent_part = ' '+exponent_to_letter[exponent_3]
     if float_part>=10.:
         pretty = "%.0f%s"%(float_part,exponent_part)
     else:

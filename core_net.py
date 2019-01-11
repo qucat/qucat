@@ -36,6 +36,80 @@ exponent_to_letter_math = {
     9:'G',
     12:'T'
 }
+exponent_to_letter_unicode = {
+    -18:'a',
+    -15:'f',
+    -12:'p',
+    -9:'n',
+    -6:u'\u03bc',
+    -3:'m',
+    0:'',
+    3:'k',
+    6:'M',
+    9:'G',
+    12:'T'
+}
+
+pp={
+    "element_width":1.2,
+    "element_height":0.6,
+    "margin":0.1,
+    "element_height_normal_modes":1.0,
+    "figsize_scaling":1.,
+    "color":[0.15,0.15,0.15],
+    "x_fig_margin":0.2,
+    "y_fig_margin":0.3,
+    "C":{
+        "gap":0.2,
+        "height":0.27,
+        "lw":6
+    },
+    "J":{
+        "width":0.2,
+        "lw":6
+    },
+    "L":{
+        "width":0.7,
+        "height":0.3,
+        "N_points":150,
+        "N_turns":5,
+        "lw":2
+    },
+    "R":{
+        "width":0.6,
+        "height":0.35,
+        "N_points":150,
+        "N_ridges":4,
+        "lw":2
+    },
+    "P":{
+        "side_wire_width":0.25
+    },
+    "W":{
+        "lw":1
+    },
+    "label":{
+        "fontsize":10,
+        "text_position":[0.0,-0.35]
+    },
+    "normal_mode_label":{
+        "fontsize":10,
+        "y_arrow":0.26,
+        "y_text":0.37
+    },
+    "normal_mode_arrow":{
+        "logscale":"False",
+        "min_width":0.1,
+        "max_width":0.5,
+        "min_lw":1,
+        "max_lw":3,
+        "min_head":0.07,
+        "max_head":0.071,
+        "color_positive":[0.483, 0.622, 0.974],
+        "color_negative":[0.931, 0.519, 0.406]
+    }
+}
+
 
 class Qcircuit(object):
     """docstring for BBQcircuit"""
@@ -386,6 +460,56 @@ class Circuit(object):
     def __or__(self, other_circuit):
         return Parallel(self, other_circuit)
 
+    def show(self,
+        plot = True,
+        full_output = False,
+        add_vertical_space = False,
+        save_to = None,
+        **savefig_kwargs):
+
+        if add_vertical_space:
+            pp['elt_height'] = pp['element_height_normal_modes']
+        else:
+            pp['elt_height'] = pp['element_height']
+
+        element_x,element_y,w,h,xs,ys,element_names,line_type = self.draw(pos = [0.,0.], which = 't',is_first_element_to_plot = True)
+        x_min = min([np.amin(x) for x in xs])
+        x_max = max([np.amax(x) for x in xs])
+        y_min = min([np.amin(x) for x in ys])
+        y_max = max([np.amax(x) for x in ys])
+
+        x_margin = pp['x_fig_margin']
+        y_margin = pp['y_fig_margin'] # ensures that any text labels are not cutoff
+        fig = plt.figure(figsize = ((w+2.*x_margin)*pp["figsize_scaling"],(h+2.*y_margin)*pp["figsize_scaling"]))
+        ax = fig.add_subplot(111)
+        plt.subplots_adjust(left=0., right=1., top=1., bottom=0.)
+
+        for i in range(len(xs)):
+            ax.plot(xs[i],ys[i],color = pp["color"],lw=pp[line_type[i]]['lw'])
+
+        element_positions = {}
+        for i,el in enumerate(element_names):
+            plt.text(
+                element_x[i]+pp['label']['text_position'][0],
+                element_y[i]+pp['label']['text_position'][1],
+                el.to_string(),
+                fontsize=pp['label']['fontsize']
+                ,ha='center')
+            element_positions[el] = [element_x[i],element_y[i]]
+
+        ax.set_axis_off()
+        ax.set_xlim(x_min-x_margin,x_max+x_margin)
+        ax.set_ylim(y_min-y_margin,y_max+y_margin)
+        plt.margins(x=0.,y=0.)
+
+        if full_output:
+            return element_positions,fig,ax
+
+        if save_to is not None:
+            fig.savefig(save_to,transparent = True,**savefig_kwargs)
+        if plot:
+            plt.show()
+        plt.close()
 
 class Parallel(Circuit):
     """docstring for Connection"""
@@ -401,6 +525,15 @@ class Parallel(Circuit):
             self.left.admittance(),
             self.right.admittance())
 
+class W(object):
+    """docstring for Wire"""
+    def __init__(self, node_minus,node_plus):
+        self.node_minus = node_minus
+        self.node_plus = node_plus
+
+    def to_string(*args,**kwargs):
+        return 'W'
+        
 
 class Component(Circuit):
     """docstring for Component"""
@@ -419,6 +552,15 @@ class Component(Circuit):
                 self.label = a
             else:
                 self.value = float(a)
+
+    def __hash__(self):
+        if self.label is None:
+            return hash(str(self.value)+self.unit)
+        else:
+            if self.value is None:
+                return hash(self.label+self.unit)
+            else:
+                return hash(str(self.value)+self.label+self.unit)
 
     def get_value(self,**kwargs):
         if self.value is not None:
@@ -467,14 +609,31 @@ class Component(Circuit):
     def charge(self,w,**kwargs):
         return self.current(w,**kwargs)/w
 
-    def to_string(self):
+    def to_string(self,use_math = True,use_unicode = False):
+
+        unit = self.unit
+        if use_unicode:
+            unit = unit.replace(r'$\Omega$',u"\u03A9")
+        if use_math == False:
+            unit = unit.replace(r'$\Omega$','Ohm')
+
+        label = self.label
+        if use_math:
+            label = "$%s$"%(label)
+
+        if self.value is not None:
+            pvalue = pretty_value(self.value,use_math = use_math,use_unicode = use_unicode)
 
         if self.label is None:
-            return pretty_value(self.value)+self.unit
+            return pvalue+unit
+        elif self.label == '' and self.value is None:
+            return ''
         elif self.value is None:
-            return ("$%s$"%(self.label))
+            return label
+        elif self.label == '' and self.value is not None:
+            return pvalue+unit
         else:
-            return ("$%s = $"%(self.label))+pretty_value(self.value)+self.unit
+            return label+pvalue+unit
 
 class L(Component):
     def __init__(self,node_minus, node_plus, arg1 = None, arg2 = None):
@@ -486,7 +645,68 @@ class L(Component):
     def set_component_lists(self):
         super(L, self).set_component_lists()
         self.head.inductors.append(self)
+    def draw(self,pos,which,is_first_element_to_plot = False):
 
+        x = np.linspace(0.5,float(pp['L']['N_turns']) +1. ,pp['L']['N_points'])
+        y = -np.sin(2.*np.pi*x)
+        x = np.cos(2.*np.pi*x)+2.*x
+
+        line_type = []
+        line_type.append('L')
+            
+        # reset leftmost point to 0
+        x_min = x[0]
+        x -= x_min
+
+        # set width inductor width
+        x_max = x[-1]
+        x *= pp['L']['width']/x_max
+
+        # set leftmost point to the length of 
+        # the side connection wires
+        x +=(pp['element_width']-pp['L']['width'])/2.   
+
+        # add side wire connections
+        x_min = x[0]
+        x_max = x[-1]
+        x_list = [x]
+        x_list += [np.array([0.,x_min])]
+        x_list += [np.array([x_max,pp['element_width']])]
+        line_type.append('W')
+        line_type.append('W')
+
+        # Shift into position in x 
+        for i,x in enumerate(x_list):
+            if which == 'l':
+                x_list[i]+=pos[0]
+            elif which == 't':
+                x_list[i]+=pos[0]-pp['element_width']/2.
+
+
+        # set height of inductor
+        y *=pp['L']['height']/2.
+
+        # add side wire connections
+        y_list = [y]
+        y_list += [np.array([0.,0.])]
+        y_list += [np.array([0.,0.])]
+
+        for i,y in enumerate(y_list):
+            if which == 'l':
+                y_list[i]+=pos[1]
+            elif which == 't':
+                y_list[i]+=pos[1]-pp['elt_height']/2.
+
+        if which == 'l':
+            pos_x = pos[0]+pp['element_width']/2.
+            pos_y = pos[1]
+            height = pp['L']['height']
+        elif which == 't':
+            pos_x = pos[0]
+            pos_y = pos[1]-pp['elt_height']/2.
+            height = pp['elt_height']
+
+        return [pos_x],[pos_y],pp['element_width'],height,x_list,y_list,[self],line_type
 
 class J(L):
     def __init__(self, node_minus, node_plus,arg1 = None, arg2 = None,use_E=False,use_I=False):
@@ -521,7 +741,38 @@ class J(L):
     def anharmonicity(self,w,**kwargs):
         ImdY = np.imag(self.head.dY(w,**kwargs))
         return self.flux_wr_ref(w,**kwargs)**4*2.*e**2/self.get_value(**kwargs)/w**2/ImdY**2
+    def draw(self,pos,which,is_first_element_to_plot = False):
+        
+        line_type = []
+        x = [
+            np.array([0.,pp['element_width']]),
+            np.array([(pp['element_width']-pp['J']['width'])/2.,(pp['element_width']+pp['J']['width'])/2.]),
+            np.array([(pp['element_width']-pp['J']['width'])/2.,(pp['element_width']+pp['J']['width'])/2.])
+        ]
+        y = [
+            np.array([0.,0.]),
+            np.array([-1.,1.])*pp['J']['width']/2.,
+            np.array([1.,-1.])*pp['J']['width']/2.
+        ]
+        line_type.append('W')
+        line_type.append('J')
+        line_type.append('J')
+        
+        for i,_ in enumerate(x):
+            if which == 'l':
+                x[i]+=pos[0]
+                y[i]+=pos[1]
+                pos_x = pos[0]+pp['element_width']/2.
+                pos_y = pos[1]
+                height = pp['J']['width']
+            elif which == 't':
+                x[i]+=pos[0]-pp['element_width']/2.
+                y[i]+=pos[1]-pp['elt_height']/2.
+                pos_x = pos[0]
+                pos_y = pos[1]-pp['elt_height']/2.
+                height = pp['elt_height']
 
+        return [pos_x],[pos_y],pp['element_width'],height,x,y,[self],line_type
 
 class R(Component):
     def __init__(self,node_minus, node_plus, arg1 = None, arg2 = None):
@@ -534,7 +785,71 @@ class R(Component):
     def set_component_lists(self):
         super(R, self).set_component_lists()
         self.head.resistors.append(self)
+    def draw(self,pos,which,is_first_element_to_plot = False):
 
+        x = np.linspace(-0.25,0.25+float(pp['R']['N_ridges']),pp['R']['N_points'])
+        height = 1.
+        period = 1.
+        a = height*2.*(-1.+2.*np.mod(np.floor(2.*x/period),2.))
+        b = -height*2.*np.mod(np.floor(2.*x/period),2.)
+        y = (2.*x/period - np.floor(2.*x/period))*a+b+height
+
+        line_type = []
+        line_type.append('R')
+            
+        # reset leftmost point to 0
+        x_min = x[0]
+        x -= x_min
+
+        # set width inductor width
+        x_max = x[-1]
+        x *= pp['R']['width']/x_max
+
+        # set leftmost point to the length of 
+        # the side connection wires
+        x +=(pp['element_width']-pp['R']['width'])/2.   
+
+        # add side wire connections
+        x_min = x[0]
+        x_max = x[-1]
+        x_list = [x]
+        x_list += [np.array([0.,x_min])]
+        x_list += [np.array([x_max,pp['element_width']])]
+        line_type.append('W')
+        line_type.append('W')
+
+        # Shift into position in x 
+        for i,x in enumerate(x_list):
+            if which == 'l':
+                x_list[i]+=pos[0]
+            elif which == 't':
+                x_list[i]+=pos[0]-pp['element_width']/2.
+
+
+        # set height of inductor
+        y *=pp['R']['height']/2.
+
+        # add side wire connections
+        y_list = [y]
+        y_list += [np.array([0.,0.])]
+        y_list += [np.array([0.,0.])]
+
+        for i,y in enumerate(y_list):
+            if which == 'l':
+                y_list[i]+=pos[1]
+            elif which == 't':
+                y_list[i]+=pos[1]-pp['elt_height']/2.
+
+        if which == 'l':
+            pos_x = pos[0]+pp['element_width']/2.
+            pos_y = pos[1]
+            height = pp['R']['height']
+        elif which == 't':
+            pos_x = pos[0]
+            pos_y = pos[1]-pp['elt_height']/2.
+            height = pp['elt_height']
+
+        return [pos_x],[pos_y],pp['element_width'],height,x_list,y_list,[self],line_type        
 
 class C(Component):
     def __init__(self, node_minus, node_plus,arg1 = None, arg2 = None):
@@ -546,16 +861,82 @@ class C(Component):
     def set_component_lists(self):
         super(C, self).set_component_lists()
         self.head.capacitors.append(self)
+    def draw(self,pos,which,is_first_element_to_plot = False):
+        line_type = []
+        x = [
+            np.array([0.,(pp['element_width']-pp['C']['gap'])/2.]),
+            np.array([(pp['element_width']+pp['C']['gap'])/2.,pp['element_width']]),
+            np.array([(pp['element_width']-pp['C']['gap'])/2.,(pp['element_width']-pp['C']['gap'])/2.]),
+            np.array([(pp['element_width']+pp['C']['gap'])/2.,(pp['element_width']+pp['C']['gap'])/2.]),
+        ]
+        y = [
+            np.array([0.,0.]),
+            np.array([0.,0.]),
+            np.array([-pp['C']['height']/2.,pp['C']['height']/2.]),
+            np.array([-pp['C']['height']/2.,pp['C']['height']/2.]),
+        ]
+        line_type.append('W')
+        line_type.append('W')
+        line_type.append('C')
+        line_type.append('C')
+        
+        for i,_ in enumerate(x):
+            if which == 'l':
+                x[i]+=pos[0]
+                y[i]+=pos[1]
+                pos_x = pos[0]+pp['element_width']/2.
+                pos_y = pos[1]
+                height = pp['C']['height']
+            elif which == 't':
+                x[i]+=pos[0]-pp['element_width']/2.
+                y[i]+=pos[1]-pp['elt_height']/2.
+                pos_x = pos[0]
+                pos_y = pos[1]-pp['elt_height']/2.
+                height = pp['elt_height']
 
+        return [pos_x],[pos_y],pp['element_width'],height,x,y,[self],line_type
 class Admittance(Component):
     def __init__(self, Y):
         self.Y = Y
 
     def admittance(self):
         return self.Y
+    def draw(self,pos,which,is_first_element_to_plot = False):
+        line_type = []
+        x = [
+            np.array([0.,(pp['element_width']-pp['C']['gap'])/2.]),
+            np.array([(pp['element_width']+pp['C']['gap'])/2.,pp['element_width']]),
+            np.array([(pp['element_width']-pp['C']['gap'])/2.,(pp['element_width']-pp['C']['gap'])/2.]),
+            np.array([(pp['element_width']+pp['C']['gap'])/2.,(pp['element_width']+pp['C']['gap'])/2.]),
+        ]
+        y = [
+            np.array([0.,0.]),
+            np.array([0.,0.]),
+            np.array([-pp['C']['height']/2.,pp['C']['height']/2.]),
+            np.array([-pp['C']['height']/2.,pp['C']['height']/2.]),
+        ]
+        line_type.append('W')
+        line_type.append('W')
+        line_type.append('C')
+        line_type.append('C')
+        
+        for i,_ in enumerate(x):
+            if which == 'l':
+                x[i]+=pos[0]
+                y[i]+=pos[1]
+                pos_x = pos[0]+pp['element_width']/2.
+                pos_y = pos[1]
+                height = pp['C']['height']
+            elif which == 't':
+                x[i]+=pos[0]-pp['element_width']/2.
+                y[i]+=pos[1]-pp['elt_height']/2.
+                pos_x = pos[0]
+                pos_y = pos[1]-pp['elt_height']/2.
+                height = pp['elt_height']
 
+        return [pos_x],[pos_y],pp['element_width'],height,x,y,[self],line_type
 
-def pretty_value(v,use_power_10 = False,use_math = True):
+def pretty_value(v,use_power_10 = False,use_math = True,use_unicode = False):
     if v == 0:
         return '0'
     exponent = floor(np.log10(v))
@@ -570,7 +951,9 @@ def pretty_value(v,use_power_10 = False,use_math = True):
             else:
                 exponent_part = r'e%d'%exponent_3
     else:
-        if use_math:
+        if use_unicode:
+            exponent_part = ' '+exponent_to_letter_unicode[exponent_3]
+        elif use_math:
             exponent_part = ' '+exponent_to_letter_math[exponent_3]
         else:
             exponent_part = ' '+exponent_to_letter[exponent_3]
