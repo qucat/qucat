@@ -525,14 +525,6 @@ class Parallel(Circuit):
             self.left.admittance(),
             self.right.admittance())
 
-class W(object):
-    """docstring for Wire"""
-    def __init__(self, node_minus,node_plus):
-        self.node_minus = node_minus
-        self.node_plus = node_plus
-
-    def to_string(*args,**kwargs):
-        return 'W'
         
 
 class Component(Circuit):
@@ -635,10 +627,21 @@ class Component(Circuit):
         else:
             return label+pvalue+unit
 
+
+class W(Component):
+    """docstring for Wire"""
+    def __init__(self, node_minus,node_plus,arg1 = '',arg2 = None):
+        super(W,self).__init__(node_minus, node_plus,arg1,arg2)
+        self.type = 'W'
+
+    def to_string(*args,**kwargs):
+        return 'W'
+
 class L(Component):
     def __init__(self,node_minus, node_plus, arg1 = None, arg2 = None):
         super(L,self).__init__(node_minus, node_plus,arg1,arg2)
         self.unit = 'H'
+        self.type = 'L'
     def admittance(self):
         return -sp.I*Mul(1/sp.Symbol('w'),1/self.get_value())
 
@@ -711,6 +714,7 @@ class L(Component):
 class J(L):
     def __init__(self, node_minus, node_plus,arg1 = None, arg2 = None,use_E=False,use_I=False):
         super(J,self).__init__(node_minus, node_plus,arg1,arg2)
+        self.type = 'J'
 
         self.use_E = use_E
         self.use_I = use_I
@@ -778,6 +782,7 @@ class R(Component):
     def __init__(self,node_minus, node_plus, arg1 = None, arg2 = None):
         super(R, self).__init__(node_minus, node_plus,arg1,arg2)
         self.unit = r'$\Omega$'
+        self.type = R
 
     def admittance(self):
         return 1/self.get_value()
@@ -855,6 +860,7 @@ class C(Component):
     def __init__(self, node_minus, node_plus,arg1 = None, arg2 = None):
         super(C, self).__init__(node_minus, node_plus,arg1,arg2)
         self.unit = 'F'
+        self.type = 'C'
     def admittance(self):
         return sp.I*Mul(sp.Symbol('w'),self.get_value())
 
