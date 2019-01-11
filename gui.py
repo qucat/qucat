@@ -88,16 +88,16 @@ class Component(object):
         # TODO inform that filling two fields is optional
         fields = 'Value', 'Label'
 
-        def fetch(self,request_root,entries):
+        def fetch(self,entries):
             self.value  = entries[0][1].get()
             self.label  = entries[1][1].get() 
             # TODO deal with no entry case
-            request_root.quit()
+            window.destroy()
 
-        def makeform(request_root, fields):
+        def makeform(window, fields):
            entries = []
            for field in fields:
-              row = tk.Frame(request_root)
+              row = tk.Frame(window)
               lab = tk.Label(row, width=7, text=field, anchor='w')
               ent = tk.Entry(row, width=7)
               row.pack(side=tk.TOP, fill=tk.X, padx=5, pady=5)
@@ -106,19 +106,19 @@ class Component(object):
               entries.append((field, ent))
            return entries
 
-        def cancel(request_root):
+        def cancel():
             # TODO cancel creation of component
-            request_root.quit()
+            window.destroy()
 
         
-        request_root = tk.Toplevel(root)
-        entries = makeform(request_root, fields)
-        request_root.bind('<Return>', (lambda event, e=entries: fetch(self,request_root,e)))   
-        ok_button = tk.Button(request_root, text='OK', command=(lambda e=entries: fetch(self,request_root,e)))
+        window = tk.Toplevel(root)
+        entries = makeform(window, fields)
+        window.bind('<Return>', (lambda event, e=entries: fetch(self,e)))   
+        ok_button = tk.Button(window, text='OK', command=(lambda e=entries: fetch(self,e)))
         ok_button.pack(side=tk.LEFT, padx=5, pady=5)
-        cancel_button = tk.Button(request_root, text='Cancel', command=cancel(request_root))
-        cancel_button.pack(side=tk.LEFT, padx=5, pady=5)
-        request_root.mainloop()
+        # cancel_button = tk.Button(window, text='Cancel', command=cancel())
+        # cancel_button.pack(side=tk.LEFT, padx=5, pady=5)
+        window.mainloop()
 
     def create_component(self,event,angle = 0.):
         self.angle = angle
@@ -145,7 +145,7 @@ class Component(object):
         self.canvas.bind('<Up>', lambda event: None)
         self.canvas.bind('<Down>', lambda event: None)
 
-        self.request_value_label()
+        # self.request_value_label()
         self.on_release(event)
 
         self.canvas.tag_bind(self.image, "<Button-1>", self.on_click)
