@@ -625,7 +625,7 @@ class Component(Circuit):
         elif self.label == '' and self.value is not None:
             return pvalue+unit
         else:
-            return label+pvalue+unit
+            return label+'='+pvalue+unit
 
 
 class W(Component):

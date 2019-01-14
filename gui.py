@@ -9,7 +9,7 @@ except ImportError:
 from PIL import Image, ImageTk
 import bbq.core_net
 import numpy as np
-bbq.core_net.pp={
+pp={
     "element_width":1.,
     "element_height":1.,
     "margin":0.,
@@ -67,7 +67,7 @@ bbq.core_net.pp={
         "color_negative":[0.931, 0.519, 0.406]
     }
 }
-
+bbq.core_net.pp = pp
 bbq.core_net.R(None,None,'').show(save_to = 'R.png',plot = False)
 bbq.core_net.C(None,None,'').show(save_to = 'C.png',plot = False)
 bbq.core_net.J(None,None,'').show(save_to = 'J.png',plot = False)
@@ -104,8 +104,11 @@ class SnappingCanvas(tk.Canvas):
         try:
             with open(netlist_file,'r') as f:
                 for el in f:
+                    el = el.replace('\n','')
                     el = el.split(";")
-                self.elements.append(string_to_component(el[2],el))
+                    if el[0] in ['C','L','R','J','W']:
+                        self.elements.append(
+                            string_to_component(el[0],self,auto_place = el))
                     
         except FileNotFoundError:
             with open(netlist_file,'w') as f:
@@ -127,67 +130,69 @@ class SnappingCanvas(tk.Canvas):
         # TODO auto save every x seconds
         with open(self.netlist_file,'w') as f:
             for el in self.elements:
-                f.write("%s;%s;%s;%e;%s\n"%(
-                    el.node_minus,
-                    el.node_plus,
-                    el.type,
-                    el.value,
-                    el.label))
+                if el.value is None:
+                    v = ''
+                else:
+                    v = "%e"%el.value
+                if el.label is None:
+                    l = ''
+                else:
+                    l = el.label
+                f.write("%s;%s;%s;%s;%s\n"%(
+                    type(el).__name__,
+                    el.comp.node_minus,
+                    el.comp.node_plus,
+                    v,l))
 
     def pretty_print_netlist(self,remove_wires = False):
         for el in self.elements:
             # TODO: make sure %7s is enough space to write the node
-            print("%-7s %-7s %s"%(el.node_minus,el.node_plus,el.comp.to_string(use_math = False)))
+            print("%-7s %-7s %s"%(el.comp.node_minus,el.comp.node_plus,el.comp.to_string(use_math = False)))
         print("\n")
 
 class TwoNodeElement(object):
     def __init__(self, canvas, event = None, auto_place = None):
         self.canvas = canvas
         self.grid_unit = canvas.grid_unit
-        self.canvas.elements.append(self)
 
         if auto_place is None and event is not None:
+            self.canvas.elements.append(self)
             self.x = event.x
             self.y = event.y
             self.manual_place(event)
         else:
-            self.comp = self.component(auto_place_info[0],auto_place_info[1],
-                auto_place_info[3],auto_place_info[4])
-            self.x_start,self.y_start = self.node_minus
-            self.x_end,self.y_end = self.node_plus
+            self.value = auto_place[3]
+            self.label = auto_place[4]
+            if self.label == '':
+                self.label == None
+            if self.value == '':
+                self.value == None
+            else:
+                self.value = float(self.value)
+
+            self.comp = self.component(
+                auto_place[1],auto_place[2],
+                self.value,self.label)
+            self.x_start,self.y_start = self.node_string_to_coords(self.comp.node_minus)
+            self.x_end,self.y_end = self.node_string_to_coords(self.comp.node_plus)
             self.auto_place(auto_place)
 
-    def to_node(self,x,y):
+    def coords_to_node_string(self,x,y):
         gu = self.grid_unit
         return "%d,%d"%(round(x/gu),round(y/gu))
 
-    def to_coords(self,node):
+    def node_string_to_coords(self,node):
         xy = node.split(',')
-        x = xy[0]*self.grid_unit
-        y = xy[1]*self.grid_unit
-
-    @property
-    def type(self):
-        return self.comp.type
-
-    @property
-    def node_minus(self):
-        return self.to_coords(self.comp.node_minus)
-
-    @node_minus.setter
-    def node_minus(self,x,y):
-        self.comp.node_minus = self.to_node(x,y)
-
-    @property
-    def node_plus(self):
-        return self.to_coords(self.comp.node_plus)
-
-    @node_plus.setter
-    def node_plus(self,node):
-        self.comp.node_plus = self.to_node(x,y)
+        x = int(xy[0])*self.grid_unit
+        y = int(xy[1])*self.grid_unit
+        return x,y
+    
 
 class W(TwoNodeElement):
-    def __init__(self, canvas, event, auto_place = None):
+    def __init__(self, canvas, event = None, auto_place = None):
+        self.value = None
+        self.label = None
+        self.component = bbq.core_net.W
         super(W, self).__init__(canvas, event, auto_place)
 
     def manual_place(self,event):
@@ -208,8 +213,8 @@ class W(TwoNodeElement):
 
         self.x_end,self.y_end = self.snap_to_grid(event)
         self.line = self.canvas.create_line(self.x_start, self.y_start,self.x_end,self.y_end)
-        self.comp = bbq.core_net.W(self.to_node(self.x_start, self.y_start),
-            self.to_node(self.x_end,self.y_end))
+        self.comp = bbq.core_net.W(self.coords_to_node_string(self.x_start, self.y_start),
+            self.coords_to_node_string(self.x_end,self.y_end))
 
     def show_line(self,event):
         self.canvas.delete("temp")
@@ -221,11 +226,11 @@ class W(TwoNodeElement):
                 int(gu * round(float(event.y)/gu))
         
 class Component(TwoNodeElement):
-    def __init__(self, canvas, event):
+    def __init__(self, canvas, event,auto_place):
         self.image= None
         self.value = None
         self.label = None
-        super(Component, self).__init__(canvas, event)
+        super(Component, self).__init__(canvas, event,auto_place)
 
     def manual_place(self,event):
         self.init_create_component(event)
@@ -233,11 +238,11 @@ class Component(TwoNodeElement):
     def auto_place(self,auto_place_info):
 
         if self.x_start == self.x_end:
-            self.angle = 0.
-            create_component(self.x_start,(self.y_start+self.y_end)/2,self.angle)
+            self.angle = -90.
+            self.create_component(self.x_start,(self.y_start+self.y_end)/2,self.angle)
         elif self.y_start == self.y_end:
-            self.angle = -90
-            create_component((self.x_start+self.x_end)/2,self.y_start,self.angle)
+            self.angle = 0
+            self.create_component((self.x_start+self.x_end)/2,self.y_start,self.angle)
         self.add_label()
 
     def request_value_label(self):
@@ -250,7 +255,7 @@ class Component(TwoNodeElement):
             (self.grid_unit, self.grid_unit)).rotate(angle))
         if self.image is not None:
             self.canvas.delete(self.image)
-        self.image= canvas.create_image(
+        self.image= self.canvas.create_image(
             x,y, image=self.tk_image)
 
 
@@ -275,8 +280,8 @@ class Component(TwoNodeElement):
         x1,y1,x2,y2 = self.snap_to_grid(event)
         self.request_value_label()
         self.comp = self.component(
-            self.to_node(x1,y1),
-            self.to_node(x2,y2),
+            self.coords_to_node_string(x1,y1),
+            self.coords_to_node_string(x2,y2),
             self.value,self.label)
         self.add_label()
 
@@ -301,11 +306,13 @@ class Component(TwoNodeElement):
         x,y = self.canvas.coords(self.image)
         text = self.comp.to_string(use_math = False,use_unicode = True)
         font = Font(family='Helvetica',size=9, weight='normal')
-        text_position = (0.5-bbq.core_net.pp["y_fig_margin"])*self.grid_unit
+        text_position = (0.5-pp["y_fig_margin"])*self.grid_unit
         if self.angle == -90.:
-            self.text = self.canvas.create_text(x+text_position,y,text = text,anchor = tk.W, font = font)
+            self.text = self.canvas.create_text(
+                x+text_position,y,text = text,anchor = tk.W, font = font)
         if self.angle == 0.:
-            self.text = self.canvas.create_text(x,y+text_position,text = text,anchor = tk.N, font = font)
+            self.text = self.canvas.create_text(
+                x,y+text_position,text = text,anchor = tk.N, font = font)
 
     def snap_to_grid(self, event):
         x,y = self.canvas.coords(self.image)
@@ -323,28 +330,28 @@ class Component(TwoNodeElement):
 
 class R(Component):
     """docstring for R"""
-    def __init__(self, canvas, event):
+    def __init__(self, canvas, event = None,auto_place = None):
         self.png = 'R.png'
         self.component =bbq.core_net.R
-        super(R, self).__init__(canvas, event)
+        super(R, self).__init__(canvas, event,auto_place)
 class L(Component):
     """docstring for L"""
-    def __init__(self, canvas, event):
+    def __init__(self, canvas, event = None,auto_place = None):
         self.png = 'L.png'
         self.component =bbq.core_net.L
-        super(L, self).__init__(canvas, event)
+        super(L, self).__init__(canvas, event,auto_place)
 class C(Component):
     """docstring for C"""
-    def __init__(self, canvas, event):
+    def __init__(self, canvas, event = None,auto_place = None):
         self.png = 'C.png'
         self.component =bbq.core_net.C
-        super(C, self).__init__(canvas, event)
+        super(C, self).__init__(canvas, event,auto_place)
 class J(Component):
     """docstring for J"""
-    def __init__(self, canvas, event):
+    def __init__(self, canvas, event = None,auto_place = None):
         self.png = 'J.png'
         self.component =bbq.core_net.J
-        super(J, self).__init__(canvas, event)
+        super(J, self).__init__(canvas, event,auto_place)
 
 class RequestValueLabelWindow(tk.Toplevel):
     def __init__(self,master,component):
@@ -388,11 +395,14 @@ class RequestValueLabelWindow(tk.Toplevel):
     def cancel(self):
         self.destroy()
 
+def open_canvas(netlist_file):
+    root = tk.Tk()
+    canvas = SnappingCanvas(root,
+        netlist_file = netlist_file, 
+        width=500, height=500,grid_unit = 60, bg="white")
+    root.focus_force()
+    root.mainloop()
 
-
+open_canvas("net_file_test.txt")
         
 
-root = tk.Tk()
-canvas = SnappingCanvas(root,netlist_file = "net_file_test.txt", width=500, height=500,grid_unit = 60, bg="white")
-root.focus_force()
-root.mainloop()
