@@ -9,6 +9,9 @@ except ImportError:
 from PIL import Image, ImageTk
 import bbq.core_net
 import numpy as np
+
+
+
 pp={
     "element_width":1.,
     "element_height":1.,
@@ -106,13 +109,19 @@ class SnappingCanvas(tk.Canvas):
                     el = el.replace('\n','')
                     el = el.split(";")
                     if el[0] in ['C','L','R','J','W']:
-                        self.elements.append(
-                            string_to_component(el[0],self,auto_place = el))
+                        string_to_component(el[0],self,auto_place = el)
                     
         except FileNotFoundError:
             with open(netlist_file,'w') as f:
                 pass
         
+    def create_circle(self,x, y, r):
+        x0 = x - r
+        y0 = y - r
+        x1 = x + r
+        y1 = y + r
+        return self.create_oval(x0, y0, x1, y1,fill='black')
+
 
     def draw_grid(self,event):
         self.delete("grid")
@@ -156,7 +165,6 @@ class TwoNodeElement(object):
         self.grid_unit = canvas.grid_unit
 
         if auto_place is None and event is not None:
-            self.canvas.elements.append(self)
             self.x = event.x
             self.y = event.y
             self.manual_place(event)
@@ -200,7 +208,7 @@ class W(TwoNodeElement):
         self.canvas.bind("<Button-1>", self.start_line)
 
     def auto_place(self,auto_place_info):
-        self.line = self.canvas.create_line(self.x_start, self.y_start,self.x_end,self.y_end)
+        self.create_component()
 
     def start_line(self,event):
         self.x_start,self.y_start = self.snap_to_grid(event)
@@ -213,9 +221,15 @@ class W(TwoNodeElement):
         self.canvas.bind('<Motion>', lambda event: None)
 
         self.x_end,self.y_end = self.snap_to_grid(event)
-        self.line = self.canvas.create_line(self.x_start, self.y_start,self.x_end,self.y_end)
         self.comp = bbq.core_net.W(self.coords_to_node_string(self.x_start, self.y_start),
-            self.coords_to_node_string(self.x_end,self.y_end))
+        self.coords_to_node_string(self.x_end,self.y_end))
+        self.create_component()
+    
+    def create_component(self):
+        self.line = self.canvas.create_line(self.x_start, self.y_start,self.x_end,self.y_end)
+        self.dot_minus = self.canvas.create_circle(self.x_start, self.y_start, self.grid_unit/20.)
+        self.dot_plus = self.canvas.create_circle(self.x_end, self.y_end, self.grid_unit/20.)
+        self.canvas.elements.append(self)
 
     def show_line(self,event):
         self.canvas.delete("temp")
@@ -258,6 +272,7 @@ class Component(TwoNodeElement):
             self.canvas.delete(self.image)
         self.image= self.canvas.create_image(
             x,y, image=self.tk_image)
+        self.canvas.elements.append(self)
 
 
     def init_create_component(self,event,angle = 0.):

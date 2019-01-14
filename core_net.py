@@ -278,7 +278,9 @@ class _Qcircuit(object):
 
         # take only roots with a positive real part (i.e. freq) 
         # and significant Q factors
-        relevant_sols = np.argwhere((np.real(ws_cpx)>=0.)&(np.imag(ws_cpx)>=0.)&(np.real(ws_cpx)>self.Q_min*np.imag(ws_cpx)))
+        # Keep solutions with negative imaginary parts, since if there is no resistors in the circuit,
+        # there is no garanties on the sign of the resistor...
+        relevant_sols = np.argwhere((np.real(ws_cpx)>=0.)&(np.real(ws_cpx)>self.Q_min*np.imag(ws_cpx)))
         ws_cpx=ws_cpx[relevant_sols][:,0]
     
         # Sort solutions with increasing frequency
@@ -1035,6 +1037,11 @@ class Admittance(Component):
 def pretty_value(v,use_power_10 = False,use_math = True,use_unicode = False):
     if v == 0:
         return '0'
+    elif v<0:
+        sign = '-'
+        v*=-1
+    elif v>0:
+        sign = ''
     exponent = floor(np.log10(v))
     exponent_3 = exponent-(exponent%3)
     float_part = v/(10**exponent_3)
@@ -1057,7 +1064,7 @@ def pretty_value(v,use_power_10 = False,use_math = True,use_unicode = False):
         pretty = "%.0f%s"%(float_part,exponent_part)
     else:
         pretty = "%.1f%s"%(float_part,exponent_part)
-    return pretty
+    return sign+pretty
 
 def check_there_are_no_iterables_in_kwarg(**kwargs):
     for el,value in kwargs.items():
@@ -1081,7 +1088,7 @@ if __name__ == '__main__':
     # print nl
     # print nl[0][2].admittance()
 
-    cQED_circuit = Qcircuit_GUI("test.txt")
+    cQED_circuit = Qcircuit_GUI("test.txt", edit = False)
 
     # cQED_circuit = Qcircuit([
     #     C(0,1,100e-15),
