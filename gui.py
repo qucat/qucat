@@ -129,8 +129,6 @@ class SnappingCanvas(tk.Canvas):
         # TODO auto save every x seconds
         with open(self.netlist_file,'w') as f:
             for el in self.elements:
-                el.value = None
-
                 if el.value is None:
                     v = ''
                 else:
@@ -166,9 +164,10 @@ class TwoNodeElement(object):
             self.value = auto_place[3]
             self.label = auto_place[4]
             if self.label == '':
-                self.label == None
+                self.label = None
+            
             if self.value == '':
-                self.value == None
+                self.value = None
             else:
                 self.value = float(self.value)
 

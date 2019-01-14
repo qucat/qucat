@@ -8,8 +8,10 @@
             "name": "Python: Current File (Integrated Terminal)",
             "type": "python",
             "request": "launch",
-            "program": "${file}",
-            "console": "integratedTerminal"
+            "program": "C:\\ProgramData\\Anaconda3\\Lib\\site-packages\\bbq\\core_net.py",//"${file}",
+            "console": "integratedTerminal",
+            "debugStdLib": true,
+            "cwd": "${workspaceFolder}",
         },
         {
             "name": "Python: Attach",
