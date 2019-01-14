@@ -67,12 +67,6 @@ pp={
         "color_negative":[0.931, 0.519, 0.406]
     }
 }
-bbq.core_net.pp = pp
-bbq.core_net.R(None,None,'').show(save_to = 'R.png',plot = False)
-bbq.core_net.C(None,None,'').show(save_to = 'C.png',plot = False)
-bbq.core_net.J(None,None,'').show(save_to = 'J.png',plot = False)
-bbq.core_net.L(None,None,'').show(save_to = 'L.png',plot = False)
-
 def string_to_component(s,*arg,**kwarg):
     if s == 'W':
         return W(*arg,**kwarg)
@@ -84,6 +78,11 @@ def string_to_component(s,*arg,**kwarg):
         return J(*arg,**kwarg)
     elif s == 'C':
         return C(*arg,**kwarg)
+bbq.core_net.pp = pp
+bbq.core_net.R(None,None,'').show(save_to = 'R.png',plot = False)
+bbq.core_net.C(None,None,'').show(save_to = 'C.png',plot = False)
+bbq.core_net.J(None,None,'').show(save_to = 'J.png',plot = False)
+bbq.core_net.L(None,None,'').show(save_to = 'L.png',plot = False)
 
 class SnappingCanvas(tk.Canvas):
     def __init__(self, master, grid_unit, netlist_file , **kw):
@@ -130,10 +129,13 @@ class SnappingCanvas(tk.Canvas):
         # TODO auto save every x seconds
         with open(self.netlist_file,'w') as f:
             for el in self.elements:
+                el.value = None
+
                 if el.value is None:
                     v = ''
                 else:
                     v = "%e"%el.value
+
                 if el.label is None:
                     l = ''
                 else:
@@ -403,6 +405,5 @@ def open_canvas(netlist_file):
     root.focus_force()
     root.mainloop()
 
-open_canvas("net_file_test.txt")
-        
-
+if __name__ == '__main__':
+    open_canvas("net_file_test.txt")

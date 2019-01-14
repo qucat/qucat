@@ -3,11 +3,11 @@ import numpy as np
 from scipy.constants import e,pi,h,hbar
 from sympy.core.mul import Mul,Pow,Add
 from copy import deepcopy
-from json import load
 import matplotlib.pyplot as plt
 from numbers import Number
 from math import floor
-from time import sleep
+import gui
+
 phi_0 = hbar/2./e
 id2 = sp.Matrix([[1,0],[0,1]])
 exponent_to_letter = {
@@ -49,6 +49,18 @@ exponent_to_letter_unicode = {
     9:'G',
     12:'T'
 }
+
+def string_to_component(s,*arg,**kwarg):
+    if s == 'W':
+        return W(*arg,**kwarg)
+    elif s == 'R':
+        return R(*arg,**kwarg)
+    elif s == 'L':
+        return L(*arg,**kwarg)
+    elif s == 'J':
+        return J(*arg,**kwarg)
+    elif s == 'C':
+        return C(*arg,**kwarg)
 
 pp={
     "element_width":1.2,
@@ -110,27 +122,26 @@ pp={
     }
 }
 
-
-class Qcircuit(object):
+class _Qcircuit(object):
     """docstring for BBQcircuit"""
-    def __init__(self, elements):
-        super(Qcircuit, self).__init__()
-        self.elements = elements
-        self.network = Network(elements)
-
+    def __init__(self, netlist):
+        self.network = Network(netlist)
         self.inductors = []
         self.capacitors = []
         self.junctions = []
         self.resistors = []
+        self.wires = []
         self.no_value_components = []
-        for elt in elements:
+        for elt in netlist:
             elt.head = self
             elt.set_component_lists()
 
-        if len(self.junctions)>1:
+        if len(self.junctions)>0:
             self.ref_elt = self.junctions[0]
-        else:
+        elif  len(self.inductors)>0:
             self.ref_elt = self.inductors[0]
+        else:
+            raise ValueError("There should be at least one junction or inductor in the circuit")
 
         self.Q_min = 1.
         self.Y = self.network.admittance(self.ref_elt.node_minus,self.ref_elt.node_plus)         
@@ -320,26 +331,103 @@ class Qcircuit(object):
         Ks = self.kerr(**kwargs)
         return [Ks[i,i] for i in range(Ks.shape[0])]
 
+class Qcircuit(_Qcircuit):
+    """docstring for Qcircuit"""
+    def __init__(self, netlist):
+        super(Qcircuit, self).__init__(netlist)
+
+class Qcircuit_GUI(_Qcircuit):
+    """docstring for Qcircuit"""
+    def __init__(self, filename, edit = True, plot = True, print = True):
+        if edit:
+            gui.open_canvas(filename)
+
+        netlist = []
+        with open(filename,'r') as f:
+            for el in f:
+                el = el.replace('\n','')
+                el = el.split(";")
+                if el[0] in ['C','L','R','J','W']:
+                    if el[3]=='':
+                        v = None
+                    else:
+                        v = float(el[3])
+                    if el[4]=='':
+                        l = None
+                    else:
+                        l = el[4]
+                    netlist.append(
+                        string_to_component(el[0], el[1],el[2],v,l))
+      
+        super(Qcircuit_GUI, self).__init__(netlist)
 
 
 class Network(object):
     """docstring for Network"""
     def __init__(self, netlist):
 
-        # construct node_names
-        self.nodes = []
-        for elt in netlist:
-            nodes = [elt.node_minus,elt.node_plus]
-            for node in nodes:
-                if node not in self.nodes:
-                    self.nodes.append(node)
+        # Group nodes which are connected by wires into chains of nodes
+        # indexed by a integer which is to become the new node names
+        # for future calculations
+        def merge_chains(chains,i,j):
+            to_add = chains[j]
+            del chains[j]
+            chains[i] = chains[i]+to_add
+            return chains
 
-        # initialize netlist_dict
+        chains = []
+        for el in netlist:
+            if type(el) is W:
+
+                added = False
+                for i,ch in enumerate(chains):
+                    if (el.node_minus in ch) and (el.node_plus in ch):
+                        added = True
+                    elif (el.node_minus in ch):
+                        for j,ch2 in enumerate(chains):
+                            if el.node_plus in ch2:
+                                chains = merge_chains(chains,i,j)
+                                added = True
+                        if added == False:
+                            ch.append(el.node_plus)
+                            added = True
+                    elif (el.node_plus in ch):
+                        for j,ch2 in enumerate(chains):
+                            if el.node_minus in ch2:
+                                chains = merge_chains(chains,i,j)
+                                added = True
+                        if added == False:
+                            ch.append(el.node_minus)
+                            added = True
+                if added == False:
+                    chains.append([el.node_minus,el.node_plus])
+
+        def plot_node_to_new_node(node):
+            for i,ch in enumerate(chains):
+                if node in ch:
+                    return i
+            return node
+
+        # replace plotting nodes with new nodes
+        # and make a list of all nodes
+        self.nodes = []
+        for el in netlist:
+            el.node_minus_plot = el.node_minus
+            el.node_plus_plot = el.node_plus
+            el.node_minus = plot_node_to_new_node(el.node_minus)
+            el.node_plus = plot_node_to_new_node(el.node_plus)
+            for n in [el.node_minus,el.node_plus]:
+                if n not in self.nodes:
+                    self.nodes.append(n)
+
+        # build netlist_dict
         self.net_dict = {}
-        for node in self.nodes:
-            self.net_dict[node] = {}
-        for elt in netlist:
-            self.connect(elt,elt.node_minus,elt.node_plus)
+        for n in self.nodes:
+            self.net_dict[n] = {}
+
+        for el in netlist:
+            if type(el) is not W:
+                self.connect(el,el.node_minus,el.node_plus)
 
     def connect(self,element,node_minus,node_plus):
         try:
@@ -447,8 +535,6 @@ class Network(object):
 
         tr = 1/ABCD[0,0]
         return tr
-
-
 
 class Circuit(object):
     """docstring for Circuit"""
@@ -564,7 +650,7 @@ class Component(Circuit):
         return sp.Symbol(self.label)
 
     def set_component_lists(self):
-        if self.value is None:
+        if self.value is None and self.label not in ['',' ','None']:
             if self.label in self.head.no_value_components:
                 raise ValueError("Two components may not have the same name %s"%self.label)
             else:
@@ -631,11 +717,15 @@ class Component(Circuit):
 class W(Component):
     """docstring for Wire"""
     def __init__(self, node_minus,node_plus,arg1 = '',arg2 = None):
-        super(W,self).__init__(node_minus, node_plus,arg1,arg2)
+        super(W,self).__init__(node_minus, node_plus,arg1 = '',arg2 = None)
         self.type = 'W'
 
     def to_string(*args,**kwargs):
         return 'W'
+
+    def set_component_lists(self):
+        super(W, self).set_component_lists()
+        self.head.wires.append(self)
 
 class L(Component):
     def __init__(self,node_minus, node_plus, arg1 = None, arg2 = None):
@@ -991,22 +1081,23 @@ if __name__ == '__main__':
     # print nl
     # print nl[0][2].admittance()
 
+    cQED_circuit = Qcircuit_GUI("test.txt")
 
-    cQED_circuit = Qcircuit([
-        C(0,1,100e-15),
-        J(0,1,10e-9),
-        C(1,2,10e-15),
-        C(2,0,64e-15),
-        L(2,0,22e-9),
-        C(2,0,33e-15),
-        L(2,3,45e-9),
-        C(0,3,63e-15),
-        L(2,3,45e-9),
-        C(1,3,63e-15),
-        C(0,2,34e-15),
-        L(4,3,45e-15),
-        L(2,4,67e-9),
-        ])
+    # cQED_circuit = Qcircuit([
+    #     C(0,1,100e-15),
+    #     J(0,1,10e-9),
+        # C(1,2,10e-15),
+        # C(2,0,64e-15),
+        # L(2,0,22e-9),
+        # C(2,0,33e-15),
+        # L(2,3,45e-9),
+        # C(0,3,63e-15),
+        # L(2,3,45e-9),
+        # C(1,3,63e-15),
+        # C(0,2,34e-15),
+        # L(4,3,45e-15),
+        # L(2,4,67e-9),
+        # ])
     # print cQED_circuit.eigenfrequencies()
     # print cQED_circuit.loss_rates()
     cQED_circuit.w_k_A_chi(pretty_print = True)
