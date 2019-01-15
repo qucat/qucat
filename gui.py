@@ -9,6 +9,7 @@ except ImportError:
 from PIL import Image, ImageTk
 import bbq.core_net
 import numpy as np
+import os
 
 
 
@@ -70,7 +71,7 @@ pp={
         "color_negative":[0.931, 0.519, 0.406]
     }
 }
-def string_to_component(s,*arg,**kwarg):
+def string_to_gui_component(s,*arg,**kwarg):
     if s == 'W':
         return W(*arg,**kwarg)
     elif s == 'R':
@@ -81,11 +82,22 @@ def string_to_component(s,*arg,**kwarg):
         return J(*arg,**kwarg)
     elif s == 'C':
         return C(*arg,**kwarg)
+
+def string_to_net_component(s,*arg,**kwarg):
+    if s == 'W':
+        return bbq.core_net.W(*arg,**kwarg)
+    elif s == 'R':
+        return bbq.core_net.R(*arg,**kwarg)
+    elif s == 'L':
+        return bbq.core_net.L(*arg,**kwarg)
+    elif s == 'J':
+        return bbq.core_net.J(*arg,**kwarg)
+    elif s == 'C':
+        return bbq.core_net.C(*arg,**kwarg)
 bbq.core_net.pp = pp
-bbq.core_net.R(None,None,'').show(save_to = 'R.png',plot = False)
-bbq.core_net.C(None,None,'').show(save_to = 'C.png',plot = False)
-bbq.core_net.J(None,None,'').show(save_to = 'J.png',plot = False)
-bbq.core_net.L(None,None,'').show(save_to = 'L.png',plot = False)
+
+for el in ['R','C','L','J']:
+    string_to_net_component(el,None,None,'').show(save_to = '%s.png'%el,plot = False)
 
 class SnappingCanvas(tk.Canvas):
     def __init__(self, master, grid_unit, netlist_file , **kw):
@@ -109,7 +121,7 @@ class SnappingCanvas(tk.Canvas):
                     el = el.replace('\n','')
                     el = el.split(";")
                     if el[0] in ['C','L','R','J','W']:
-                        string_to_component(el[0],self,auto_place = el)
+                        string_to_gui_component(el[0],self,auto_place = el)
                     
         except FileNotFoundError:
             with open(netlist_file,'w') as f:
