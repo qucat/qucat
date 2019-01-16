@@ -90,27 +90,27 @@ def shift(to_shift,shift):
 
 def to_string(unit,label,value, use_math=True, use_unicode=False):
 
-    unit = unit
-    if use_unicode:
-        unit = unit.replace(r'$\Omega$', u"\u03A9")
-    if use_math == False:
-        unit = unit.replace(r'$\Omega$', 'Ohm')
-
-    label = label
-    if use_math:
-        label = "$%s$" % (label)
-
-    if value is not None:
-        pvalue = pretty_value(
-            value, use_math=use_math, use_unicode=use_unicode)
+    if unit is not None:
+        if use_unicode:
+            unit = unit.replace(r'$\Omega$', u"\u03A9")
+        if use_math == False:
+            unit = unit.replace(r'$\Omega$', 'Ohm')
 
     if label is None:
-        return pvalue+unit
-    elif label == '' and value is None:
-        return ''
-    elif value is None:
-        return label
-    elif label == '' and value is not None:
-        return pvalue+unit
+        s = ''
     else:
-        return label+'='+pvalue+unit
+        if use_math:
+            s = "$%s$" % (label)
+        else:
+            s = label
+
+        if value is not None:
+            s+='='
+
+    if value is not None:
+        s+= pretty_value(
+            value, use_math=use_math, use_unicode=use_unicode)
+
+        if unit is not None:
+            s+=unit
+    return s

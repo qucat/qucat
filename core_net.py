@@ -7,11 +7,13 @@ import matplotlib.pyplot as plt
 from numbers import Number
 from math import floor
 from bbq import gui
+import os
 from bbq.utility import pretty_value,\
     check_there_are_no_iterables_in_kwarg,shift,to_string
 
 phi_0 = hbar/2./e
 id2 = sp.Matrix([[1, 0], [0, 1]])
+png_directory = os.path.join(os.path.dirname(__file__),".graphics")
 
 def string_to_component(s, *arg, **kwarg):
     if s == 'W':
@@ -712,7 +714,7 @@ class Component(Circuit):
         return sp.Symbol(self.label)
 
     def set_component_lists(self):
-        if self.value is None and self.label not in ['', ' ', 'None']:
+        if self.value is None and self.label not in ['', ' ', 'None',None]:
             if self.label in self.head.no_value_components:
                 raise ValueError(
                     "Two components may not have the same name %s" % self.label)
@@ -763,6 +765,9 @@ class W(Component):
     def __init__(self, node_minus, node_plus, arg1='', arg2=None):
         super(W, self).__init__(node_minus, node_plus, arg1='', arg2=None)
         self.type = 'W'
+        self.unit = None
+        self.label = None
+        self.value = None
 
     def to_string(*args, **kwargs):
         return ' '
@@ -1083,8 +1088,13 @@ class Admittance(Component):
         return self.Y
 
 # Generate pngs of the different components
-for el in ['R','C','L','J']:
-    string_to_component(el,None,None,'').show(save_to = '%s.png'%el,plot = False)
+try:
+    for el in ['R','C','L','J']:
+        string_to_component(el,None,None,'').show(save_to = os.path.join(png_directory,'%s.png'%el),plot = False)
+except FileNotFoundError:
+    os.mkdir(png_directory)
+    for el in ['R','C','L','J']:
+        string_to_component(el,None,None,'').show(save_to = os.path.join(png_directory,'%s.png'%el),plot = False)
 
 if __name__ == '__main__':
 
@@ -1099,7 +1109,7 @@ if __name__ == '__main__':
     # print nl
     # print nl[0][2].admittance()
 
-    cQED_circuit = Qcircuit_GUI("test.txt", edit=True,plot = True)
+    cQED_circuit = Qcircuit_GUI("test.txt", edit=False,plot = True)
 
     # cQED_circuit = Qcircuit([
     #     C(0,1,100e-15),

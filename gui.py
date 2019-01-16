@@ -11,6 +11,7 @@ import numpy as np
 import os
 from bbq.utility import to_string
 
+png_directory = os.path.join(os.path.dirname(__file__),".graphics")
 pp={
     "element_width":1.,
     "element_height":1.,
@@ -244,13 +245,14 @@ class Component(TwoNodeElement):
             self.angle = 0
             self.create_component((self.x_minus+self.x_plus)/2,self.y_minus,self.angle)
         self.add_label()
+        self.canvas.elements.append(self)
 
     def request_value_label(self):
         window=RequestValueLabelWindow(self.canvas.master,self)
         self.canvas.master.wait_window(window)      
 
     def create_component(self,x,y,angle):
-        img = Image.open(self.png)
+        img = Image.open(os.path.join(png_directory,self.png))
         self.tk_image = ImageTk.PhotoImage(img.resize(
             (self.grid_unit, self.grid_unit)).rotate(angle))
             
@@ -258,7 +260,6 @@ class Component(TwoNodeElement):
             self.canvas.delete(self.image)
         self.image= self.canvas.create_image(
             x,y, image=self.tk_image)
-        self.canvas.elements.append(self)
 
 
     def init_create_component(self,event,angle = 0.):
@@ -282,6 +283,7 @@ class Component(TwoNodeElement):
         self.x_minus,self.y_minus,self.x_plus,self.y_plus = self.snap_to_grid(event)
         self.request_value_label()
         self.add_label()
+        self.canvas.elements.append(self)
 
         self.canvas.tag_bind(self.image, "<Button-1>", self.on_click)
         self.canvas.tag_bind(self.image, "<B1-Motion>", self.on_motion)
