@@ -371,11 +371,11 @@ class _Qcircuit(object):
 
         return H
 
-class Qcircuit(_Qcircuit):
+class Qcircuit_NET(_Qcircuit):
     """docstring for Qcircuit"""
 
     def __init__(self, netlist):
-        super(Qcircuit, self).__init__(netlist)
+        super(Qcircuit_NET, self).__init__(netlist)
 
 
 class Qcircuit_GUI(_Qcircuit):
