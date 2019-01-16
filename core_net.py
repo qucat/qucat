@@ -142,15 +142,35 @@ class _Qcircuit(object):
             self.flux_transformation_dict[node] = {}
 
     def dY(self, w, **kwargs):
-        # derivative of u/v is (du*v-dv*u)/v^2
-        u = sum([np.array([complex(a*_w**(self.Y_numer_poly_order-n)) for _w in w])
-                 for n, a in enumerate(self.Y_numer_poly_coeffs(**kwargs))])
-        v = sum([np.array([complex(a*_w**(self.Y_denom_poly_order-n)) for _w in w])
-                 for n, a in enumerate(self.Y_denom_poly_coeffs(**kwargs))])
-        du = sum([np.array([complex((self.Y_numer_poly_order-n)*a*_w**(self.Y_numer_poly_order-n-1))
-                            for _w in w]) for n, a in enumerate(self.Y_numer_poly_coeffs(**kwargs))])
-        dv = sum([np.array([complex((self.Y_denom_poly_order-n)*a*_w**(self.Y_denom_poly_order-n-1))
-                            for _w in w]) for n, a in enumerate(self.Y_denom_poly_coeffs(**kwargs))])
+
+        # test if w is an iterable
+        try:
+            iter(w)
+        except TypeError:
+            # iterable = False
+            
+            # derivative of u/v is (du*v-dv*u)/v^2
+            u = sum([complex(a*w**(self.Y_numer_poly_order-n))
+                    for n, a in enumerate(self.Y_numer_poly_coeffs(**kwargs))])
+            v = sum([complex(a*w**(self.Y_denom_poly_order-n))
+                    for n, a in enumerate(self.Y_denom_poly_coeffs(**kwargs))])
+            du = sum([complex((self.Y_numer_poly_order-n)*a*w**(self.Y_numer_poly_order-n-1))
+                    for n, a in enumerate(self.Y_numer_poly_coeffs(**kwargs))])
+            dv = sum([complex((self.Y_denom_poly_order-n)*a*w**(self.Y_denom_poly_order-n-1))
+                    for n, a in enumerate(self.Y_denom_poly_coeffs(**kwargs))])
+
+        else:
+            # iterable = True
+
+            # derivative of u/v is (du*v-dv*u)/v^2
+            u = sum([np.array([complex(a*_w**(self.Y_numer_poly_order-n)) for _w in w])
+                    for n, a in enumerate(self.Y_numer_poly_coeffs(**kwargs))])
+            v = sum([np.array([complex(a*_w**(self.Y_denom_poly_order-n)) for _w in w])
+                    for n, a in enumerate(self.Y_denom_poly_coeffs(**kwargs))])
+            du = sum([np.array([complex((self.Y_numer_poly_order-n)*a*_w**(self.Y_numer_poly_order-n-1))
+                                for _w in w]) for n, a in enumerate(self.Y_numer_poly_coeffs(**kwargs))])
+            dv = sum([np.array([complex((self.Y_denom_poly_order-n)*a*_w**(self.Y_denom_poly_order-n-1))
+                                for _w in w]) for n, a in enumerate(self.Y_denom_poly_coeffs(**kwargs))])
 
         return (du*v-dv*u)/v**2
 
@@ -292,17 +312,7 @@ class _Qcircuit(object):
         if len(self.junctions) == 0:
             raise UserWarning(
                 "There are no junctions and hence no anharmonicity in the circuit")
-            return []
-
-        elif len(self.junctions) == 1:
-            def flux_wr_ref(w, **kwargs):
-                return 1.
-            self.junctions[0].flux_wr_ref = flux_wr_ref
-            return [self.junctions[0].anharmonicity(self.w_cpx, **kwargs)/h]
-
         else:
-            for j in self.junctions:
-                j.set_flux_wr_ref()
             return [j.anharmonicity(self.w_cpx, **kwargs)/h for j in self.junctions]
 
     def kerr(self, **kwargs):
@@ -366,8 +376,17 @@ class Qcircuit_GUI(_Qcircuit):
         if plot:
             self.show()
 
-    def show(self):
-        
+    def show(self,
+        plot = True,
+        full_output = False,
+        add_vertical_space = False,
+        save_to = None,
+        **savefig_kwargs):
+
+        if add_vertical_space:
+            normal_element_height = pp['element_height']
+            pp['element_height'] = pp['element_height_normal_modes']
+
         xs = []
         ys = []
         line_type = []
@@ -401,8 +420,142 @@ class Qcircuit_GUI(_Qcircuit):
         ax.set_xlim(x_min-x_margin,x_max+x_margin)
         ax.set_ylim(y_min-y_margin,y_max+y_margin)
         plt.margins(x=0.,y=0.)
+        
+        if add_vertical_space:
+            pp['element_height'] = normal_element_height
 
-        plt.show()
+        if full_output:
+            return fig,ax
+
+        if save_to is not None:
+            fig.savefig(save_to,transparent = True,**savefig_kwargs)
+
+        if plot:
+            plt.show()
+
+        plt.close()
+
+
+    def show_normal_mode(self,mode,unit='current',
+        plot = True,save_to = None,**kwargs):
+
+        check_there_are_no_iterables_in_kwarg(**kwargs)
+        self.set_w_cpx(**kwargs)
+        mode_w = np.real(self.w_cpx[mode])
+
+        def string_to_function(comp,function,**kwargs):
+            if function == 'flux':
+                return comp.flux(mode_w,**kwargs)/phi_0
+            if function == 'charge':
+                return comp.charge(mode_w,**kwargs)/e
+            if function == 'voltage':
+                return comp.voltage(mode_w,**kwargs)
+            if function == 'current':
+                return comp.current(mode_w,**kwargs)
+
+        def pretty(v,function):
+            if function == 'flux':
+                return pretty_value(v)+r'$\phi_0$'
+            elif function == 'charge':
+                return pretty_value(v,use_power_10 = True)+r'$e$'
+            elif function == 'voltage':
+                return pretty_value(v)+'V'
+            elif function == 'current':
+                return pretty_value(v)+'A'
+     
+        fig,ax = self.show(
+        plot = False,
+        full_output = True,
+        add_vertical_space = True)
+
+        # Determine arrow size
+        all_values = []
+        for el in self.netlist:
+            if type(el) is not W:
+                all_values.append(string_to_function(el,unit,**kwargs))
+        all_values = np.absolute(all_values)
+        max_value = np.amax(all_values)
+        min_value = np.amin(all_values)
+
+        def value_to_01_range(value):
+            try:
+                if pp['normal_mode_arrow']['logscale'] == "True":
+                    return np.absolute((np.log10(value)-np.log10(min_value))/(np.log10(max_value)-np.log10(min_value)))
+                else:
+                    return np.absolute((value-min_value)/(max_value-min_value))
+            except ZeroDivisionError:
+                return 1.
+
+        def arrow_width(value):
+            value_01 = value_to_01_range(value)
+            ppnm = pp['normal_mode_arrow']
+            return np.absolute(ppnm['min_width']+value_01*(ppnm['max_width']-ppnm['min_width']))
+
+        def arrow_kwargs(value):
+            value_01 = value_to_01_range(value)
+            ppnm = pp['normal_mode_arrow']
+            lw = ppnm['min_lw']+value_01*(ppnm['max_lw']-ppnm['min_lw'])
+            head = ppnm['min_head']+value_01*(ppnm['max_head']-ppnm['min_head'])
+            return {'lw':lw,
+            'head_width':head,
+            'head_length':head,
+            'clip_on':False}
+
+        for el in self.netlist:
+            if type(el) is not W:
+                value = string_to_function(el,unit,**kwargs)
+                value_current = string_to_function(el,'current',**kwargs)
+
+                x = el.x_plot_center
+                y = el.y_plot_center
+                
+                if el.angle == 0.:
+                    # Defined for positive arrows
+                    x_arrow = x-arrow_width(value)/2.
+                    y_arrow = y+pp["normal_mode_label"]["y_arrow"]
+                    dx_arrow = arrow_width(value)
+                    dy_arrow = 0.
+
+                    x_text = x
+                    y_text = y+pp["normal_mode_label"]["y_text"]
+
+                    ha = 'center'
+                    va = 'top'
+
+                else:
+                    # Defined for positive arrows
+                    x_arrow = x-pp["normal_mode_label"]["y_arrow"]
+                    y_arrow = y-arrow_width(value)/2.
+                    dx_arrow = 0.
+                    dy_arrow = arrow_width(value)
+                    
+                    x_text = x-pp["normal_mode_label"]["y_text"]
+                    y_text = y
+
+                    ha = 'left'
+                    va = 'center'
+
+                
+                if np.real(value_current)>0:
+                    ax.arrow(x_arrow,y_arrow ,dx_arrow, dy_arrow,
+                        fc = pp['normal_mode_arrow']['color_positive'],
+                        ec = pp['normal_mode_arrow']['color_positive'],
+                        **arrow_kwargs(value))
+                else:
+                    ax.arrow(x_arrow+dx_arrow,y_arrow+dy_arrow,-dx_arrow, -dy_arrow,
+                        fc = pp['normal_mode_arrow']['color_negative'],
+                        ec = pp['normal_mode_arrow']['color_negative'],
+                        **arrow_kwargs(value))
+
+                ax.text(x_text,y_text,
+                        pretty(np.absolute(value),unit),
+                        fontsize=pp["normal_mode_label"]["fontsize"],
+                        ha=ha,va=va,style='italic',weight = 'bold')
+
+        if plot == True:
+            plt.show()
+        if save_to is not None:
+            fig.savefig(save_to,transparent = True)
         plt.close()
 
 
@@ -683,7 +836,7 @@ class Component(Circuit):
         super(Component, self).__init__(node_minus, node_plus)
         self.label = None
         self.value = None
-        self.flux_wr_ref = None
+        self._flux_wr_ref = None
 
         if arg1 is None and arg2 is None:
             raise ValueError("Specify either a value or a label")
@@ -721,8 +874,9 @@ class Component(Circuit):
             else:
                 self.head.no_value_components.append(self.label)
 
-    def set_flux_wr_ref(self):
-        if self.flux_wr_ref is None:
+    @property
+    def flux_wr_ref(self):
+        if self._flux_wr_ref is None:
             try:
                 tr = self.head.flux_transformation_dict[self.node_minus,
                                                         self.node_plus]
@@ -734,8 +888,9 @@ class Component(Circuit):
                 self.head.flux_transformation_dict[self.node_plus,
                                                    self.node_minus] = -tr
 
-            self.flux_wr_ref = sp.utilities.lambdify(
+            self._flux_wr_ref = sp.utilities.lambdify(
                 ['w']+self.head.no_value_components, tr, "numpy")
+        return self._flux_wr_ref
 
     def flux(self, w, **kwargs):
         ImdY = np.imag(self.head.dY(w, **kwargs))
@@ -1109,7 +1264,7 @@ if __name__ == '__main__':
     # print nl
     # print nl[0][2].admittance()
 
-    cQED_circuit = Qcircuit_GUI("test.txt", edit=False,plot = True)
+    cQED_circuit = Qcircuit_GUI("test.txt", edit=False,plot = False)
 
     # cQED_circuit = Qcircuit([
     #     C(0,1,100e-15),
@@ -1128,4 +1283,5 @@ if __name__ == '__main__':
     # ])
     # print cQED_circuit.eigenfrequencies()
     # print cQED_circuit.loss_rates()
-    cQED_circuit.w_k_A_chi(pretty_print=True)
+    # cQED_circuit.w_k_A_chi(pretty_print=True)
+    cQED_circuit.show_normal_mode(mode=0,L_J=10e-9)
