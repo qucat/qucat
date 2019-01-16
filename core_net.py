@@ -5,7 +5,7 @@ from sympy.core.mul import Mul, Pow, Add
 from copy import deepcopy
 import matplotlib.pyplot as plt
 from numbers import Number
-from math import floor
+from math import floor,factorial
 from bbq import gui
 import os
 from bbq.utility import pretty_value,\
@@ -337,6 +337,39 @@ class _Qcircuit(object):
         Ks = self.kerr(**kwargs)
         return [Ks[i, i] for i in range(Ks.shape[0])]
 
+    def hamiltonian(self,modes = 'all', junction_expansion = 4, photons = 6,**kwargs):
+
+        from qutip import destroy,qeye,tensor
+
+        fs = self.eigenfrequencies(**kwargs)
+        N_modes = len(fs)
+        N_junctions = len(self.junctions)
+
+        if modes=='all':
+            modes = range(N_modes)
+        if photons is not list:
+            photons = [int(photons) for i in modes]
+
+        H = 0
+        phi = [0 for junction in self.junctions]
+        qeye_list = [qeye(n) for n in photons]
+
+        for i,f in enumerate(fs):
+            a_list = deepcopy(qeye_list)
+            a_list[i] = destroy(photons[i])
+            a = tensor(a_list)
+            H+= f*a.dag()*a
+            for j,junction in enumerate(self.junctions):
+                phi[j]+=junction.flux(w=f*2.*pi,**kwargs)/phi_0*(a+a.dag())
+
+        for j,junction in enumerate(self.junctions):
+            n = 2
+            EJ = (hbar/2./e)**2/(junction.get_value(**kwargs)*h)
+            while 2*n<=junction_expansion:
+                H += (-1)**(n+1)*EJ/factorial(2*n)*phi[j]**(2*n)
+                n+=1
+
+        return H
 
 class Qcircuit(_Qcircuit):
     """docstring for Qcircuit"""
@@ -1284,4 +1317,5 @@ if __name__ == '__main__':
     # print cQED_circuit.eigenfrequencies()
     # print cQED_circuit.loss_rates()
     # cQED_circuit.w_k_A_chi(pretty_print=True)
-    cQED_circuit.show_normal_mode(mode=0,L_J=10e-9)
+    # cQED_circuit.show_normal_mode(mode=0,L_J=10e-9)
+    cQED_circuit.hamiltonian(L_J=10e-9)
