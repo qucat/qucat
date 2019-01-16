@@ -11,7 +11,7 @@ import os
 from bbq.utility import pretty_value,\
     check_there_are_no_iterables_in_kwarg,shift,to_string
 
-#test
+# test
 phi_0 = hbar/2./e
 id2 = sp.Matrix([[1, 0], [0, 1]])
 png_directory = os.path.join(os.path.dirname(__file__),".graphics")
