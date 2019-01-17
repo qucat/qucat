@@ -1273,16 +1273,6 @@ pp = {
     }
 }
 # Generate pngs of the different components in their HOVER state
-pp['color']=[0.483, 0.622, 0.974]
-try:
-    for el in ['R','C','L','J']:
-        string_to_component(el,None,None,'').show(save_to = os.path.join(png_directory,'%s_hover.png'%el),plot = False)
-except FileNotFoundError:
-    os.mkdir(png_directory)
-    for el in ['R','C','L','J']:
-        string_to_component(el,None,None,'').show(save_to = os.path.join(png_directory,'%s_hover.png'%el),plot = False)
-
-# hover active state
 increment = 1
 pp['W']['lw']+=increment
 pp['C']['lw']+=increment
@@ -1291,28 +1281,38 @@ pp['R']['lw']+=increment
 pp['J']['lw']+=increment
 try:
     for el in ['R','C','L','J']:
-        string_to_component(el,None,None,'').show(save_to = os.path.join(png_directory,'%s_hover_active.png'%el),plot = False)
+        string_to_component(el,None,None,'').show(save_to = os.path.join(png_directory,'%s_hover.png'%el),plot = False)
 except FileNotFoundError:
     os.mkdir(png_directory)
     for el in ['R','C','L','J']:
-        string_to_component(el,None,None,'').show(save_to = os.path.join(png_directory,'%s_hover_active.png'%el),plot = False)
-# active state
-pp['color']=[0.15, 0.15, 0.15]
+        string_to_component(el,None,None,'').show(save_to = os.path.join(png_directory,'%s_hover.png'%el),plot = False)
+
+# hover selected state
+pp['color']=[0.483, 0.622, 0.974]
 try:
     for el in ['R','C','L','J']:
-        string_to_component(el,None,None,'').show(save_to = os.path.join(png_directory,'%s_active.png'%el),plot = False)
+        string_to_component(el,None,None,'').show(save_to = os.path.join(png_directory,'%s_hover_selected.png'%el),plot = False)
 except FileNotFoundError:
     os.mkdir(png_directory)
     for el in ['R','C','L','J']:
-        string_to_component(el,None,None,'').show(save_to = os.path.join(png_directory,'%s_active.png'%el),plot = False)
-
-# rest state
+        string_to_component(el,None,None,'').show(save_to = os.path.join(png_directory,'%s_hover_selected.png'%el),plot = False)
+# selected state
 increment = -1
 pp['W']['lw']+=increment
 pp['C']['lw']+=increment
 pp['L']['lw']+=increment
 pp['R']['lw']+=increment
 pp['J']['lw']+=increment
+try:
+    for el in ['R','C','L','J']:
+        string_to_component(el,None,None,'').show(save_to = os.path.join(png_directory,'%s_selected.png'%el),plot = False)
+except FileNotFoundError:
+    os.mkdir(png_directory)
+    for el in ['R','C','L','J']:
+        string_to_component(el,None,None,'').show(save_to = os.path.join(png_directory,'%s_selected.png'%el),plot = False)
+
+# rest state
+pp['color']=[0.15, 0.15, 0.15]
 try:
     for el in ['R','C','L','J']:
         string_to_component(el,None,None,'').show(save_to = os.path.join(png_directory,'%s.png'%el),plot = False)

@@ -12,64 +12,6 @@ import os
 from bbq.utility import to_string
 
 png_directory = os.path.join(os.path.dirname(__file__),".graphics")
-pp={
-    "element_width":1.,
-    "element_height":1.,
-    "margin":0.,
-    "figsize_scaling":1.,
-    "color":[0.15,0.15,0.15],
-    "x_fig_margin":0.,
-    "y_fig_margin":0.2,
-    "C":{
-        "gap":0.2,
-        "height":0.27,
-        "lw":6
-    },
-    "J":{
-        "width":0.2,
-        "lw":6
-    },
-    "L":{
-        "width":0.7,
-        "height":0.3,
-        "N_points":150,
-        "N_turns":5,
-        "lw":2
-    },
-    "R":{
-        "width":0.6,
-        "height":0.35,
-        "N_points":150,
-        "N_ridges":4,
-        "lw":2
-    },
-    "P":{
-        "side_wire_width":0.25
-    },
-    "W":{
-        "lw":2
-    },
-    "label":{
-        "fontsize":10,
-        "text_position":[0.0,-0.35]
-    },
-    "normal_mode_label":{
-        "fontsize":10,
-        "y_arrow":0.26,
-        "y_text":0.37
-    },
-    "normal_mode_arrow":{
-        "logscale":"False",
-        "min_width":0.1,
-        "max_width":0.5,
-        "min_lw":1,
-        "max_lw":3,
-        "min_head":0.07,
-        "max_head":0.071,
-        "color_positive":[0.483, 0.622, 0.974],
-        "color_negative":[0.931, 0.519, 0.406]
-    }
-}
 
 def string_to_component(s,*arg,**kwarg):
     if s == 'W':
@@ -98,6 +40,8 @@ class SnappingCanvas(tk.Canvas):
         self.bind('w', lambda event: W(self,event))
         self.bind('s', lambda event: self.save())
         self.bind("<Configure>", self.draw_grid)
+        self.bind('<Delete>', self.delete_selection)
+        self.bind('<Control-a>', self.select_all)
 
         self.elements = []
         try:
@@ -121,15 +65,31 @@ class SnappingCanvas(tk.Canvas):
 
 
     def draw_grid(self,event):
+        print('drawing grid')
         self.delete("grid")
         dx = 1
         dy = 1
         w, h = event.width, event.height
+        self.background = self.create_rectangle(0, 0, w, h, fill='white', tags='grid')
         for x in np.arange(self.grid_unit,w,self.grid_unit): 
             for y in np.arange(self.grid_unit,h,self.grid_unit):
                 self.create_line(x-dx,y, x+dx,y, tags='grid')
                 self.create_line(x,y-dy, x,y+dy, tags='grid')
         self.tag_lower('grid')
+        self.tag_bind('grid', '<ButtonPress-1>', self.deselect_all)
+
+    def deselect_all(self,event=None):
+        for el in self.elements:
+            el.deselect()
+
+    def select_all(self,event=None):
+        for el in self.elements:
+            el.force_select()
+
+    def delete_selection(self,event=None):
+        for el in self.elements:
+            if el.selected:
+                el.delete()
 
     def save(self):
         # TODO auto save every x seconds
@@ -184,11 +144,19 @@ class TwoNodeElement(object):
         x = int(xy[0])*self.grid_unit
         y = int(xy[1])*self.grid_unit
         return x,y
+    
+    def deselect(self):
+        pass
+    def force_select(self):
+        pass
+
 
 class W(TwoNodeElement):
     def __init__(self, canvas, event = None, auto_place = None):
         self.value = None
         self.label = None
+        self.hover = False
+        self.selected = False
         super(W, self).__init__(canvas, event, auto_place)
 
     def manual_place(self,event):
@@ -232,7 +200,7 @@ class Component(TwoNodeElement):
         self.value = None
         self.label = None
         self.hover = False
-        self.active = False
+        self.selected = False
         self.text = None
         super(Component, self).__init__(canvas, event,auto_place)
     
@@ -259,8 +227,8 @@ class Component(TwoNodeElement):
         png = type(self).__name__
         if self.hover:
             png+='_hover'
-        if self.active:
-            png+='_active'
+        if self.selected:
+            png+='_selected'
         png+='.png'
         
         img = Image.open(os.path.join(png_directory,png))
@@ -284,18 +252,18 @@ class Component(TwoNodeElement):
         if self.text is not None:
             self.add_label()
 
-    def handle_enter(self,event):
+    def hover_enter(self,event):
         self.hover = True
         self.create_component(self.x_center,self.y_center,self.angle)
-        self.canvas.tag_bind(self.image,"<Leave>", self.handle_leave)
         self.canvas.tag_bind(self.image, "<Button-1>", self.on_click)
         self.canvas.tag_bind(self.image, "<B1-Motion>", self.on_motion)
         self.canvas.tag_bind(self.image, "<ButtonRelease-1>",self.release_motion)
+        self.canvas.tag_bind(self.image, "<Shift-ButtonRelease-1>",lambda event: self.release_motion(event,shift_control = True))
+        self.canvas.tag_bind(self.image, "<Control-ButtonRelease-1>",lambda event: self.release_motion(event,shift_control = True))
     
-    def handle_leave(self,event):
+    def hover_leave(self,event):
         self.hover = False
         self.create_component(self.x_center,self.y_center,self.angle)
-        self.canvas.tag_bind(self.image,"<Enter>", self.handle_enter)
 
     def init_create_component(self,event,angle = 0.):
         self.create_component(event.x,event.y,angle)
@@ -321,11 +289,17 @@ class Component(TwoNodeElement):
         self.set_allstate_bindings()
 
     def set_allstate_bindings(self):
-        self.canvas.tag_bind(self.image,"<Enter>", self.handle_enter)
+        self.canvas.tag_bind(self.image,"<Enter>", self.hover_enter)
+        self.canvas.tag_bind(self.image,"<Leave>", self.hover_leave)
+
 
     def on_click(self, event):
+        self.x_center_click = self.x_center
+        self.y_center_click = self.y_center
+        self.angle_click = self.angle
         self.x_center = event.x
         self.y_center = event.y
+
         self.canvas.bind('<Left>', lambda event: self.create_component(self.x_center,self.y_center))
         self.canvas.bind('<Right>', lambda event: self.create_component(self.x_center,self.y_center))
         self.canvas.bind('<Up>', lambda event: self.create_component(self.x_center,self.y_center, angle = -90.))
@@ -340,13 +314,53 @@ class Component(TwoNodeElement):
         self.x_center +=dx
         self.y_center +=dy
     
-    def release_motion(self,event):
+    def release_motion(self,event,shift_control = False):
         self.snap_to_grid(event)
         self.add_label()
         self.canvas.bind('<Left>', lambda event: None)
         self.canvas.bind('<Right>', lambda event: None)
         self.canvas.bind('<Up>', lambda event: None)
         self.canvas.bind('<Down>', lambda event: None)
+        
+        # if clicked without dragging or rotating
+        if self.x_center_click == self.x_center \
+            and self.y_center_click == self.y_center \
+            and self.angle_click == self.angle:
+
+            if shift_control:
+                self.ctrl_shift_select()
+            else:
+                self.select()
+    
+    def select(self):
+        self.canvas.deselect_all()
+        if self.selected is False:
+            self.selected = True
+            self.create_component(self.x_center,self.y_center,self.angle)
+
+    def ctrl_shift_select(self):
+        if self.selected is False:
+            self.selected = True
+            self.create_component(self.x_center,self.y_center,self.angle)
+        elif self.selected is True:
+            self.deselect()
+    
+    def force_select(self):
+        self.selected = True
+        self.create_component(self.x_center,self.y_center,self.angle)
+
+
+    def deselect(self):
+            self.selected = False
+            self.create_component(self.x_center,self.y_center,self.angle)
+            
+    def delete(self,event = None):
+        self.canvas.elements.remove(self)
+        self.canvas.delete(self.image)
+        if self.text is not None:
+            self.canvas.delete(self.text)
+        del self
+
 
     def add_label(self):
         
@@ -357,7 +371,7 @@ class Component(TwoNodeElement):
         text = to_string(self.unit,self.label,self.value,
             use_math = False,use_unicode = True)
         font = Font(family='Helvetica',size=9, weight='normal')
-        text_position = (0.5-pp["y_fig_margin"])*self.grid_unit
+        text_position = (0.3)*self.grid_unit
         if self.angle == -90.:
             self.text = self.canvas.create_text(
                 x+text_position,y,text = text,anchor = tk.W, font = font)
