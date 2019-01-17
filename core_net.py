@@ -11,11 +11,6 @@ import os
 from bbq.utility import pretty_value,\
     check_there_are_no_iterables_in_kwarg,shift,to_string
 
-# test
-phi_0 = hbar/2./e
-id2 = sp.Matrix([[1, 0], [0, 1]])
-png_directory = os.path.join(os.path.dirname(__file__),".graphics")
-
 def string_to_component(s, *arg, **kwarg):
     if s == 'W':
         return W(*arg, **kwarg)
@@ -27,67 +22,6 @@ def string_to_component(s, *arg, **kwarg):
         return J(*arg, **kwarg)
     elif s == 'C':
         return C(*arg, **kwarg)
-
-pp = {
-    "element_width": 1.,
-    "element_height": 1.,
-    "margin": 0.1,
-    "element_height_normal_modes": 1.5,
-    "figsize_scaling": 0.5,
-    "color": [0.15, 0.15, 0.15],
-    "x_fig_margin": 0.2,
-    "y_fig_margin": 0.5,
-    "C": {
-        "gap": 0.2,
-        "height": 0.27,
-        "lw": 6
-    },
-    "J": {
-        "width": 0.2,
-        "lw": 6
-    },
-    "L": {
-        "width": 0.7,
-        "height": 0.3,
-        "N_points": 150,
-        "N_turns": 5,
-        "lw": 2
-    },
-    "R": {
-        "width": 0.6,
-        "height": 0.35,
-        "N_points": 150,
-        "N_ridges": 4,
-        "lw": 2
-    },
-    "P": {
-        "side_wire_width": 0.25
-    },
-    "W": {
-        "lw": 1
-    },
-    "label": {
-        "fontsize": 10,
-        "text_position": 0.35
-    },
-    "normal_mode_label": {
-        "fontsize": 10,
-        "y_arrow": 0.26,
-        "y_text": 0.37
-    },
-    "normal_mode_arrow": {
-        "logscale": "False",
-        "min_width": 0.1,
-        "max_width": 0.5,
-        "min_lw": 1,
-        "max_lw": 3,
-        "min_head": 0.07,
-        "max_head": 0.071,
-        "color_positive": [0.483, 0.622, 0.974],
-        "color_negative": [0.931, 0.519, 0.406]
-    }
-}
-
 
 class _Qcircuit(object):
     """docstring for BBQcircuit"""
@@ -360,6 +294,7 @@ class _Qcircuit(object):
             a_list[i] = destroy(photons[i])
             a = tensor(a_list)
             H+= f*a.dag()*a
+            phi_0 = hbar/2./e
             for j,junction in enumerate(self.junctions):
                 phi[j]+=junction.flux(w=f*2.*pi,**kwargs)/phi_0*(a+a.dag())
 
@@ -479,6 +414,7 @@ class Qcircuit_GUI(_Qcircuit):
 
         def string_to_function(comp,function,**kwargs):
             if function == 'flux':
+                phi_0 = hbar/2./e
                 return comp.flux(mode_w,**kwargs)/phi_0
             if function == 'charge':
                 return comp.charge(mode_w,**kwargs)/e
@@ -1276,7 +1212,107 @@ class Admittance(Component):
     def admittance(self):
         return self.Y
 
-# Generate pngs of the different components
+png_directory = os.path.join(os.path.dirname(__file__),".graphics")
+pp = {
+    "element_width": 1.,
+    "element_height": 1.,
+    "margin": 0.1,
+    "element_height_normal_modes": 1.5,
+    "figsize_scaling": 0.5,
+    "color": [0.15, 0.15, 0.15],
+    "x_fig_margin": 0.2,
+    "y_fig_margin": 0.5,
+    "C": {
+        "gap": 0.2,
+        "height": 0.27,
+        "lw": 6
+    },
+    "J": {
+        "width": 0.2,
+        "lw": 6
+    },
+    "L": {
+        "width": 0.7,
+        "height": 0.3,
+        "N_points": 150,
+        "N_turns": 5,
+        "lw": 2
+    },
+    "R": {
+        "width": 0.6,
+        "height": 0.35,
+        "N_points": 150,
+        "N_ridges": 4,
+        "lw": 2
+    },
+    "P": {
+        "side_wire_width": 0.25
+    },
+    "W": {
+        "lw": 1
+    },
+    "label": {
+        "fontsize": 10,
+        "text_position": 0.35
+    },
+    "normal_mode_label": {
+        "fontsize": 10,
+        "y_arrow": 0.26,
+        "y_text": 0.37
+    },
+    "normal_mode_arrow": {
+        "logscale": "False",
+        "min_width": 0.1,
+        "max_width": 0.5,
+        "min_lw": 1,
+        "max_lw": 3,
+        "min_head": 0.07,
+        "max_head": 0.071,
+        "color_positive": [0.483, 0.622, 0.974],
+        "color_negative": [0.931, 0.519, 0.406]
+    }
+}
+# Generate pngs of the different components in their HOVER state
+pp['color']=[0.483, 0.622, 0.974]
+try:
+    for el in ['R','C','L','J']:
+        string_to_component(el,None,None,'').show(save_to = os.path.join(png_directory,'%s_hover.png'%el),plot = False)
+except FileNotFoundError:
+    os.mkdir(png_directory)
+    for el in ['R','C','L','J']:
+        string_to_component(el,None,None,'').show(save_to = os.path.join(png_directory,'%s_hover.png'%el),plot = False)
+
+# hover active state
+increment = 1
+pp['W']['lw']+=increment
+pp['C']['lw']+=increment
+pp['L']['lw']+=increment
+pp['R']['lw']+=increment
+pp['J']['lw']+=increment
+try:
+    for el in ['R','C','L','J']:
+        string_to_component(el,None,None,'').show(save_to = os.path.join(png_directory,'%s_hover_active.png'%el),plot = False)
+except FileNotFoundError:
+    os.mkdir(png_directory)
+    for el in ['R','C','L','J']:
+        string_to_component(el,None,None,'').show(save_to = os.path.join(png_directory,'%s_hover_active.png'%el),plot = False)
+# active state
+pp['color']=[0.15, 0.15, 0.15]
+try:
+    for el in ['R','C','L','J']:
+        string_to_component(el,None,None,'').show(save_to = os.path.join(png_directory,'%s_active.png'%el),plot = False)
+except FileNotFoundError:
+    os.mkdir(png_directory)
+    for el in ['R','C','L','J']:
+        string_to_component(el,None,None,'').show(save_to = os.path.join(png_directory,'%s_active.png'%el),plot = False)
+
+# rest state
+increment = -1
+pp['W']['lw']+=increment
+pp['C']['lw']+=increment
+pp['L']['lw']+=increment
+pp['R']['lw']+=increment
+pp['J']['lw']+=increment
 try:
     for el in ['R','C','L','J']:
         string_to_component(el,None,None,'').show(save_to = os.path.join(png_directory,'%s.png'%el),plot = False)
@@ -1298,7 +1334,7 @@ if __name__ == '__main__':
     # print nl
     # print nl[0][2].admittance()
 
-    cQED_circuit = Qcircuit_GUI("test.txt", edit=False,plot = False)
+    cQED_circuit = Qcircuit_GUI("test.txt", edit=True,plot = False)
 
     # cQED_circuit = Qcircuit([
     #     C(0,1,100e-15),
@@ -1319,4 +1355,4 @@ if __name__ == '__main__':
     # print cQED_circuit.loss_rates()
     # cQED_circuit.w_k_A_chi(pretty_print=True)
     # cQED_circuit.show_normal_mode(mode=0,L_J=10e-9)
-    cQED_circuit.hamiltonian(L_J=10e-9)
+    # cQED_circuit.hamiltonian(L_J=10e-9)

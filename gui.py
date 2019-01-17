@@ -157,8 +157,8 @@ class TwoNodeElement(object):
         self.grid_unit = canvas.grid_unit
 
         if auto_place is None and event is not None:
-            self.x = event.x
-            self.y = event.y
+            self.x_center = event.x
+            self.y_center = event.y
             self.manual_place(event)
         else:
             self.value = auto_place[3]
@@ -171,8 +171,8 @@ class TwoNodeElement(object):
             else:
                 self.value = float(self.value)
 
-            self.x_minus,self.y_minus = self.node_string_to_coords(auto_place[1])
-            self.x_plus,self.y_plus = self.node_string_to_coords(auto_place[2])
+            self.x_center_minus,self.y_center_minus = self.node_string_to_coords(auto_place[1])
+            self.x_center_plus,self.y_center_plus = self.node_string_to_coords(auto_place[2])
             self.auto_place(auto_place)
 
     def coords_to_node_string(self,x,y):
@@ -198,7 +198,7 @@ class W(TwoNodeElement):
         self.create_component()
 
     def start_line(self,event):
-        self.x_minus,self.y_minus = self.snap_to_grid(event)
+        self.x_center_minus,self.y_center_minus = self.snap_to_grid(event)
         self.canvas.bind("<Motion>", self.show_line)
         self.canvas.bind("<Button-1>", self.end_line)
         
@@ -207,19 +207,19 @@ class W(TwoNodeElement):
         self.canvas.bind("<Button-1>", lambda event: None)
         self.canvas.bind('<Motion>', lambda event: None)
 
-        self.x_plus,self.y_plus = self.snap_to_grid(event)
-        self.coords_to_node_string(self.x_plus,self.y_plus)
+        self.x_center_plus,self.y_center_plus = self.snap_to_grid(event)
+        self.coords_to_node_string(self.x_center_plus,self.y_center_plus)
         self.create_component()
     
     def create_component(self):
-        self.line = self.canvas.create_line(self.x_minus, self.y_minus,self.x_plus,self.y_plus)
-        self.dot_minus = self.canvas.create_circle(self.x_minus, self.y_minus, self.grid_unit/20.)
-        self.dot_plus = self.canvas.create_circle(self.x_plus, self.y_plus, self.grid_unit/20.)
+        self.line = self.canvas.create_line(self.x_center_minus, self.y_center_minus,self.x_center_plus,self.y_center_plus)
+        self.dot_minus = self.canvas.create_circle(self.x_center_minus, self.y_center_minus, self.grid_unit/20.)
+        self.dot_plus = self.canvas.create_circle(self.x_center_plus, self.y_center_plus, self.grid_unit/20.)
         self.canvas.elements.append(self)
 
     def show_line(self,event):
         self.canvas.delete("temp")
-        self.canvas.create_line(self.x_minus, self.y_minus,event.x,event.y,tags = 'temp')
+        self.canvas.create_line(self.x_center_minus, self.y_center_minus,event.x,event.y,tags = 'temp')
 
     def snap_to_grid(self, event):
         gu = float(self.grid_unit)
@@ -231,6 +231,9 @@ class Component(TwoNodeElement):
         self.image= None
         self.value = None
         self.label = None
+        self.hover = False
+        self.active = False
+        self.text = None
         super(Component, self).__init__(canvas, event,auto_place)
     
     def manual_place(self,event):
@@ -238,32 +241,63 @@ class Component(TwoNodeElement):
 
     def auto_place(self,auto_place_info):
 
-        if self.x_minus == self.x_plus:
+        if self.x_center_minus == self.x_center_plus:
             self.angle = -90.
-            self.create_component(self.x_minus,(self.y_minus+self.y_plus)/2,self.angle)
-        elif self.y_minus == self.y_plus:
+            self.create_component(self.x_center_minus,(self.y_center_minus+self.y_center_plus)/2,self.angle)
+        elif self.y_center_minus == self.y_center_plus:
             self.angle = 0
-            self.create_component((self.x_minus+self.x_plus)/2,self.y_minus,self.angle)
+            self.create_component((self.x_center_minus+self.x_center_plus)/2,self.y_center_minus,self.angle)
         self.add_label()
         self.canvas.elements.append(self)
+        self.set_allstate_bindings()
 
     def request_value_label(self):
         window=RequestValueLabelWindow(self.canvas.master,self)
         self.canvas.master.wait_window(window)      
 
-    def create_component(self,x,y,angle):
-        img = Image.open(os.path.join(png_directory,self.png))
+    def import_tk_image(self,angle):
+        png = type(self).__name__
+        if self.hover:
+            png+='_hover'
+        if self.active:
+            png+='_active'
+        png+='.png'
+        
+        img = Image.open(os.path.join(png_directory,png))
         self.tk_image = ImageTk.PhotoImage(img.resize(
             (self.grid_unit, self.grid_unit)).rotate(angle))
+
+    def create_component(self,x,y,angle = 0.):
+        self.x_center_center = x
+        self.y_center_center = y
+        self.angle = angle
+        self.import_tk_image(angle)
             
         if self.image is not None:
-            self.canvas.delete(self.image)
-        self.image= self.canvas.create_image(
-            x,y, image=self.tk_image)
+            # Just replace tkimage
+            self.canvas.itemconfig(self.image, image = self.tk_image)
+        else:
+            # Actually create image
+            self.image= self.canvas.create_image(
+                x,y, image=self.tk_image)
 
+        if self.text is not None:
+            self.add_label()
+
+    def handle_enter(self,event):
+        self.hover = True
+        self.create_component(self.x_center_center,self.y_center_center,self.angle)
+        self.canvas.tag_bind(self.image,"<Leave>", self.handle_leave)
+        self.canvas.tag_bind(self.image, "<Button-1>", self.on_click)
+        self.canvas.tag_bind(self.image, "<B1-Motion>", self.on_motion)
+        self.canvas.tag_bind(self.image, "<ButtonRelease-1>",self.release_motion)
+    
+    def handle_leave(self,event):
+        self.hover = False
+        self.create_component(self.x_center_center,self.y_center_center,self.angle)
+        self.canvas.tag_bind(self.image,"<Enter>", self.handle_enter)
 
     def init_create_component(self,event,angle = 0.):
-        self.angle = angle
         self.create_component(event.x,event.y,angle)
         self.canvas.bind("<Button-1>", self.init_release)
         self.canvas.bind('<Motion>', self.on_motion)
@@ -280,29 +314,44 @@ class Component(TwoNodeElement):
         self.canvas.bind('<Up>', lambda event: None)
         self.canvas.bind('<Down>', lambda event: None)
 
-        self.x_minus,self.y_minus,self.x_plus,self.y_plus = self.snap_to_grid(event)
+        self.x_center_minus,self.y_center_minus,self.x_center_plus,self.y_center_plus = self.snap_to_grid(event)
         self.request_value_label()
         self.add_label()
         self.canvas.elements.append(self)
+        self.set_allstate_bindings()
 
-        self.canvas.tag_bind(self.image, "<Button-1>", self.on_click)
-        self.canvas.tag_bind(self.image, "<B1-Motion>", self.on_motion)
-        self.canvas.tag_bind(self.image, "<ButtonRelease-1>",self.snap_to_grid)
-
-    
+    def set_allstate_bindings(self):
+        self.canvas.tag_bind(self.image,"<Enter>", self.handle_enter)
 
     def on_click(self, event):
-        self.x = event.x
-        self.y = event.y
+        self.x_center = event.x
+        self.y_center = event.y
+        self.canvas.bind('<Left>', lambda event: self.create_component(self.x_center,self.y_center))
+        self.canvas.bind('<Right>', lambda event: self.create_component(self.x_center,self.y_center))
+        self.canvas.bind('<Up>', lambda event: self.create_component(self.x_center,self.y_center, angle = -90.))
+        self.canvas.bind('<Down>', lambda event: self.create_component(self.x_center,self.y_center, angle = -90.))
         
     def on_motion(self, event):
-        dx = event.x - self.x
-        dy = event.y - self.y
+        dx = event.x - self.x_center
+        dy = event.y - self.y_center
         self.canvas.move(self.image,dx ,dy)
-        self.x +=dx
-        self.y +=dy
+        self.canvas.move(self.text,dx ,dy)
+        self.x_center +=dx
+        self.y_center +=dy
+    
+    def release_motion(self,event):
+        self.snap_to_grid(event)
+        self.add_label()
+        self.canvas.bind('<Left>', lambda event: None)
+        self.canvas.bind('<Right>', lambda event: None)
+        self.canvas.bind('<Up>', lambda event: None)
+        self.canvas.bind('<Down>', lambda event: None)
 
     def add_label(self):
+        
+        if self.text is not None:
+            self.canvas.delete(self.text)
+
         x,y = self.canvas.coords(self.image)
         text = to_string(self.unit,self.label,self.value,
             use_math = False,use_unicode = True)
@@ -319,37 +368,34 @@ class Component(TwoNodeElement):
         x,y = self.canvas.coords(self.image)
         gu = float(self.grid_unit)
         if self.angle == -90:
-            x_snap = int(gu * round(float(x)/gu))
-            y_snap = gu/2.+int(gu * round(float(y-gu/2.)/gu))
-            self.canvas.coords(self.image,x_snap,y_snap)
-            return x_snap, y_snap-gu/2.,x_snap, y_snap+gu/2.
+            self.x_center_center = int(gu * round(float(x)/gu))
+            self.y_center_center = gu/2.+int(gu * round(float(y-gu/2.)/gu))
+            self.canvas.coords(self.image,self.x_center_center,self.y_center_center)
+            return self.x_center_center, self.y_center_center-gu/2.,self.x_center_center, self.y_center_center+gu/2.
         elif self.angle == 0.:
-            x_snap = gu/2.+int(gu * round(float(x-gu/2.)/gu))
-            y_snap = int(gu * round(float(y)/gu))
-            self.canvas.coords(self.image,x_snap,y_snap)
-            return x_snap-gu/2., y_snap,x_snap+gu/2., y_snap
+            self.x_center_center = gu/2.+int(gu * round(float(x-gu/2.)/gu))
+            self.y_center_center = int(gu * round(float(y)/gu))
+            self.canvas.coords(self.image,self.x_center_center,self.y_center_center)
+            return self.x_center_center-gu/2., self.y_center_center,self.x_center_center+gu/2., self.y_center_center
+
 class R(Component):
     """docstring for R"""
     def __init__(self, canvas, event = None,auto_place = None):
-        self.png = 'R.png'
         self.unit = r'$\Omega$'
         super(R, self).__init__(canvas, event,auto_place)
 class L(Component):
     """docstring for L"""
     def __init__(self, canvas, event = None,auto_place = None):
-        self.png = 'L.png'
         self.unit = 'H'
         super(L, self).__init__(canvas, event,auto_place)
 class C(Component):
     """docstring for C"""
     def __init__(self, canvas, event = None,auto_place = None):
-        self.png = 'C.png'
         self.unit = 'F'
         super(C, self).__init__(canvas, event,auto_place)
 class J(Component):
     """docstring for J"""
     def __init__(self, canvas, event = None,auto_place = None):
-        self.png = 'J.png'
         self.unit = 'H'
         super(J, self).__init__(canvas, event,auto_place)
 
@@ -404,4 +450,4 @@ def open_canvas(netlist_file):
     root.mainloop()
 
 if __name__ == '__main__':
-    open_canvas("net_file_test.txt")
+    open_canvas("test.txt")
