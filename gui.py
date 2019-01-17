@@ -287,6 +287,10 @@ class Component(TwoNodeElement):
         self.hover = True
         self.create_component(self.x_center, self.y_center, self.angle)
         self.canvas.tag_bind(self.image, "<Button-1>", self.on_click)
+        self.canvas.tag_bind(self.image, "<Shift-Button-1>", 
+            lambda event: self.on_click(event, shift_control=True))
+        self.canvas.tag_bind(self.image, "<Control-Button-1>", 
+            lambda event: self.on_click(event, shift_control=True))
         self.canvas.tag_bind(self.image, "<B1-Motion>", self.on_motion)
         self.canvas.tag_bind(
             self.image, "<ButtonRelease-1>", self.release_motion)
@@ -336,10 +340,10 @@ class Component(TwoNodeElement):
         self.canvas.tag_bind(self.image, "<Enter>", self.hover_enter)
         self.canvas.tag_bind(self.image, "<Leave>", self.hover_leave)
 
-    def on_click(self, event):
-        self.x_center_click = self.x_center
-        self.y_center_click = self.y_center
-        self.angle_click = self.angle
+    def on_click(self, event,shift_control = False):
+        if self.selected is False and shift_control is False:
+            self.canvas.deselect_all()
+
         self.x_center = event.x
         self.y_center = event.y
 
@@ -369,15 +373,10 @@ class Component(TwoNodeElement):
         self.canvas.bind('<Up>', lambda event: None)
         self.canvas.bind('<Down>', lambda event: None)
 
-        # if clicked without dragging or rotating
-        if self.x_center_click == self.x_center \
-                and self.y_center_click == self.y_center \
-                and self.angle_click == self.angle:
-
-            if shift_control:
-                self.ctrl_shift_select()
-            else:
-                self.select()
+        if shift_control:
+            self.ctrl_shift_select()
+        else:
+            self.select()
 
     def select(self):
         self.canvas.deselect_all()
