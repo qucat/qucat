@@ -171,8 +171,8 @@ class TwoNodeElement(object):
             else:
                 self.value = float(self.value)
 
-            self.x_center_minus,self.y_center_minus = self.node_string_to_coords(auto_place[1])
-            self.x_center_plus,self.y_center_plus = self.node_string_to_coords(auto_place[2])
+            self.x_minus,self.y_minus = self.node_string_to_coords(auto_place[1])
+            self.x_plus,self.y_plus = self.node_string_to_coords(auto_place[2])
             self.auto_place(auto_place)
 
     def coords_to_node_string(self,x,y):
@@ -198,7 +198,7 @@ class W(TwoNodeElement):
         self.create_component()
 
     def start_line(self,event):
-        self.x_center_minus,self.y_center_minus = self.snap_to_grid(event)
+        self.x_minus,self.y_minus = self.snap_to_grid(event)
         self.canvas.bind("<Motion>", self.show_line)
         self.canvas.bind("<Button-1>", self.end_line)
         
@@ -207,19 +207,19 @@ class W(TwoNodeElement):
         self.canvas.bind("<Button-1>", lambda event: None)
         self.canvas.bind('<Motion>', lambda event: None)
 
-        self.x_center_plus,self.y_center_plus = self.snap_to_grid(event)
-        self.coords_to_node_string(self.x_center_plus,self.y_center_plus)
+        self.x_plus,self.y_plus = self.snap_to_grid(event)
+        self.coords_to_node_string(self.x_plus,self.y_plus)
         self.create_component()
     
     def create_component(self):
-        self.line = self.canvas.create_line(self.x_center_minus, self.y_center_minus,self.x_center_plus,self.y_center_plus)
-        self.dot_minus = self.canvas.create_circle(self.x_center_minus, self.y_center_minus, self.grid_unit/20.)
-        self.dot_plus = self.canvas.create_circle(self.x_center_plus, self.y_center_plus, self.grid_unit/20.)
+        self.line = self.canvas.create_line(self.x_minus, self.y_minus,self.x_plus,self.y_plus)
+        self.dot_minus = self.canvas.create_circle(self.x_minus, self.y_minus, self.grid_unit/20.)
+        self.dot_plus = self.canvas.create_circle(self.x_plus, self.y_plus, self.grid_unit/20.)
         self.canvas.elements.append(self)
 
     def show_line(self,event):
         self.canvas.delete("temp")
-        self.canvas.create_line(self.x_center_minus, self.y_center_minus,event.x,event.y,tags = 'temp')
+        self.canvas.create_line(self.x_minus, self.y_minus,event.x,event.y,tags = 'temp')
 
     def snap_to_grid(self, event):
         gu = float(self.grid_unit)
@@ -241,12 +241,12 @@ class Component(TwoNodeElement):
 
     def auto_place(self,auto_place_info):
 
-        if self.x_center_minus == self.x_center_plus:
+        if self.x_minus == self.x_plus:
             self.angle = -90.
-            self.create_component(self.x_center_minus,(self.y_center_minus+self.y_center_plus)/2,self.angle)
-        elif self.y_center_minus == self.y_center_plus:
+            self.create_component(self.x_minus,(self.y_minus+self.y_plus)/2,self.angle)
+        elif self.y_minus == self.y_plus:
             self.angle = 0
-            self.create_component((self.x_center_minus+self.x_center_plus)/2,self.y_center_minus,self.angle)
+            self.create_component((self.x_minus+self.x_plus)/2,self.y_minus,self.angle)
         self.add_label()
         self.canvas.elements.append(self)
         self.set_allstate_bindings()
@@ -268,8 +268,8 @@ class Component(TwoNodeElement):
             (self.grid_unit, self.grid_unit)).rotate(angle))
 
     def create_component(self,x,y,angle = 0.):
-        self.x_center_center = x
-        self.y_center_center = y
+        self.x_center = x
+        self.y_center = y
         self.angle = angle
         self.import_tk_image(angle)
             
@@ -286,7 +286,7 @@ class Component(TwoNodeElement):
 
     def handle_enter(self,event):
         self.hover = True
-        self.create_component(self.x_center_center,self.y_center_center,self.angle)
+        self.create_component(self.x_center,self.y_center,self.angle)
         self.canvas.tag_bind(self.image,"<Leave>", self.handle_leave)
         self.canvas.tag_bind(self.image, "<Button-1>", self.on_click)
         self.canvas.tag_bind(self.image, "<B1-Motion>", self.on_motion)
@@ -294,7 +294,7 @@ class Component(TwoNodeElement):
     
     def handle_leave(self,event):
         self.hover = False
-        self.create_component(self.x_center_center,self.y_center_center,self.angle)
+        self.create_component(self.x_center,self.y_center,self.angle)
         self.canvas.tag_bind(self.image,"<Enter>", self.handle_enter)
 
     def init_create_component(self,event,angle = 0.):
@@ -314,7 +314,7 @@ class Component(TwoNodeElement):
         self.canvas.bind('<Up>', lambda event: None)
         self.canvas.bind('<Down>', lambda event: None)
 
-        self.x_center_minus,self.y_center_minus,self.x_center_plus,self.y_center_plus = self.snap_to_grid(event)
+        self.snap_to_grid(event)
         self.request_value_label()
         self.add_label()
         self.canvas.elements.append(self)
@@ -335,7 +335,8 @@ class Component(TwoNodeElement):
         dx = event.x - self.x_center
         dy = event.y - self.y_center
         self.canvas.move(self.image,dx ,dy)
-        self.canvas.move(self.text,dx ,dy)
+        if self.text is not None:
+            self.canvas.move(self.text,dx ,dy)
         self.x_center +=dx
         self.y_center +=dy
     
@@ -368,15 +369,23 @@ class Component(TwoNodeElement):
         x,y = self.canvas.coords(self.image)
         gu = float(self.grid_unit)
         if self.angle == -90:
-            self.x_center_center = int(gu * round(float(x)/gu))
-            self.y_center_center = gu/2.+int(gu * round(float(y-gu/2.)/gu))
-            self.canvas.coords(self.image,self.x_center_center,self.y_center_center)
-            return self.x_center_center, self.y_center_center-gu/2.,self.x_center_center, self.y_center_center+gu/2.
+            self.x_center = int(gu * round(float(x)/gu))
+            self.y_center = gu/2.+int(gu * round(float(y-gu/2.)/gu))
+            self.canvas.coords(self.image,self.x_center,self.y_center)
+
+            self.x_minus = self.x_center
+            self.y_minus = self.y_center-gu/2.
+            self.x_plus = self.x_center
+            self.y_plus = self.y_center+gu/2.
         elif self.angle == 0.:
-            self.x_center_center = gu/2.+int(gu * round(float(x-gu/2.)/gu))
-            self.y_center_center = int(gu * round(float(y)/gu))
-            self.canvas.coords(self.image,self.x_center_center,self.y_center_center)
-            return self.x_center_center-gu/2., self.y_center_center,self.x_center_center+gu/2., self.y_center_center
+            self.x_center = gu/2.+int(gu * round(float(x-gu/2.)/gu))
+            self.y_center = int(gu * round(float(y)/gu))
+            self.canvas.coords(self.image,self.x_center,self.y_center)
+
+            self.x_minus = self.x_center-gu/2.
+            self.y_minus = self.y_center
+            self.x_plus = self.x_center+gu/2.
+            self.y_plus = self.y_center
 
 class R(Component):
     """docstring for R"""
