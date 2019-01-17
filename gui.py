@@ -65,7 +65,6 @@ class SnappingCanvas(tk.Canvas):
 
 
     def draw_grid(self,event):
-        print('drawing grid')
         self.delete("grid")
         dx = 1
         dy = 1
@@ -76,7 +75,23 @@ class SnappingCanvas(tk.Canvas):
                 self.create_line(x-dx,y, x+dx,y, tags='grid')
                 self.create_line(x,y-dy, x,y+dy, tags='grid')
         self.tag_lower('grid')
-        self.tag_bind('grid', '<ButtonPress-1>', self.deselect_all)
+        self.tag_bind('grid', '<ButtonPress-1>', self.start_selection_field)
+        self.tag_bind('grid', "<B1-Motion>", self.expand_selection_field)
+        self.tag_bind('grid', "<ButtonRelease-1>",self.end_selection_field)
+
+    def start_selection_field(self,event):
+        self.deselect_all()
+        self.selection_rectangle = self.create_rectangle(event.x,event.y,event.x,event.y,dash=(3,5))
+
+    def expand_selection_field(self,event):
+        self.deselect_all()
+        x0, y0, x1, y1 = self.coords(self.selection_rectangle)
+        self.coords(self.selection_rectangle,x0, y0,event.x,event.y)
+        for el in self.elements:
+            el.box_select(*self.coords(self.selection_rectangle))
+
+    def end_selection_field(self,event):
+        self.delete(self.selection_rectangle)
 
     def deselect_all(self,event=None):
         for el in self.elements:
@@ -148,6 +163,8 @@ class TwoNodeElement(object):
     def deselect(self):
         pass
     def force_select(self):
+        pass
+    def box_select(self,x0,y0,x1,y1):
         pass
 
 
@@ -337,6 +354,12 @@ class Component(TwoNodeElement):
         if self.selected is False:
             self.selected = True
             self.create_component(self.x_center,self.y_center,self.angle)
+    
+    def box_select(self,x0,y0,x1,y1):
+        xs = [x0,x1]
+        ys = [y0,y1]
+        if min(xs)<=self.x_center<=max(xs) and min(ys)<=self.y_center<=max(ys):
+            self.force_select()
 
     def ctrl_shift_select(self):
         if self.selected is False:
