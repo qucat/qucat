@@ -2,10 +2,12 @@ try:
     # Tkinter for Python 2.xx
     import Tkinter as tk
     from tkFont import Font
+    from Tkinter import tkMessageBox as messagebox
 except ImportError:
     # Tkinter for Python 3.xx
     import tkinter as tk
     from tkinter.font import Font
+    from tkinter import messagebox
 from PIL import Image, ImageTk
 import numpy as np
 import os
@@ -313,6 +315,7 @@ class Component(TwoNodeElement):
         self.create_component(event.x, event.y, angle)
         self.canvas.bind("<Button-1>", self.init_release)
         self.canvas.bind('<Motion>', self.on_motion)
+        self.canvas.bind('<Escape>',self.abort_creation)
         self.canvas.bind(
             '<Left>', lambda event: self.init_create_component(event))
         self.canvas.bind(
@@ -322,14 +325,22 @@ class Component(TwoNodeElement):
         self.canvas.bind(
             '<Down>', lambda event: self.init_create_component(event, angle=-90.))
 
-    def init_release(self, event):
+    def unset_initialization_bindings(self):
         self.canvas.bind("<Button-1>", lambda event: None)
         self.canvas.bind('<Motion>', lambda event: None)
         self.canvas.bind('<Left>', lambda event: None)
         self.canvas.bind('<Right>', lambda event: None)
         self.canvas.bind('<Up>', lambda event: None)
         self.canvas.bind('<Down>', lambda event: None)
+        self.canvas.bind('<Escape>', lambda event: None)
 
+    def abort_creation(self,event = None):
+        self.unset_initialization_bindings()
+        self.canvas.delete(self.image)
+        del self
+
+    def init_release(self, event):
+        self.unset_initialization_bindings()
         self.snap_to_grid(event)
         self.request_value_label()
         self.add_label()
@@ -525,16 +536,25 @@ class RequestValueLabelWindow(tk.Toplevel):
     def ok(self):
         value = self.entries[0][1].get()
         label = self.entries[1][1].get()
-        if value == "":
-            self.component.value = None
+        if value.replace(' ','') == "":
+            v = None
         else:
-            self.component.value = float(value)
+            try:
+                v = float(value)
+            except ValueError:
+                messagebox.showinfo("Incorrect value", "Enter a python style float, for example: 1e-2 or 0.01")
 
-        if label == "":
-            self.component.label = None
+        if label.replace(' ','') == "":
+            l = None
         else:
-            self.component.label = str(label)
-        self.destroy()
+            l = str(label)
+
+        if l is None and v is None:
+                messagebox.showinfo("No inputs", "Enter a value or a label or both")
+        else:
+            self.component.value = v 
+            self.component.label = l
+            self.destroy()
 
     def cancel(self):
         self.destroy()
