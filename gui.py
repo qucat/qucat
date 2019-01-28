@@ -42,23 +42,47 @@ class SnappingCanvas(tk.Canvas):
         self.bind('c', lambda event: C(self, event))
         self.bind('j', lambda event: J(self, event))
         self.bind('w', lambda event: W(self, event))
-        self.bind('s', lambda event: self.save())
+        self.bind('s', self.save)
         self.bind("<Configure>", self.draw_grid)
         self.bind('<Delete>', self.delete_selection)
         self.bind('<Control-a>', self.select_all)
+        self.bind('<Control-y>', self.ctrl_y)
+        self.bind('<Control-z>', self.ctrl_z)
 
         self.elements = []
+        self.history = []
+        self.history_location = -1
+        self.track_changes = False 
         try:
             with open(netlist_file, 'r') as f:
-                for el in f:
-                    el = el.replace('\n', '')
-                    el = el.split(";")
-                    if el[0] in ['C', 'L', 'R', 'J', 'W']:
-                        string_to_component(el[0], self, auto_place=el)
-
+                self.load_netlist(f)
         except FileNotFoundError:
             with open(netlist_file, 'w') as f:
                 pass
+        self.track_changes = True 
+        self.save()
+
+    def ctrl_z(self,event):
+        if self.history_location > 0:
+            self.track_changes = False 
+            self.history_location -= 1
+            self.load_netlist(self.history[self.history_location].split('\n'))
+            self.track_changes = True 
+
+    def ctrl_y(self,event):
+        if 0 < self.history_location < len(self.history)-1:
+            self.track_changes = False 
+            self.history_location += 1
+            self.load_netlist(self.history[self.history_location].split('\n'))
+            self.track_changes = True 
+
+    def load_netlist(self,lines):
+        self.delete_all()
+        for el in lines:
+            el = el.replace('\n', '')
+            el = el.split(";")
+            if el[0] in ['C', 'L', 'R', 'J', 'W']:
+                string_to_component(el[0], self, auto_place=el)
 
     def create_circle(self, x, y, r):
         x0 = x - r
@@ -85,13 +109,18 @@ class SnappingCanvas(tk.Canvas):
 
     def start_selection_field(self, event):
         self.deselect_all()
+        self.selection_rectangle_x_start = event.x
+        self.selection_rectangle_y_start = event.y
         self.selection_rectangle = self.create_rectangle(
             event.x, event.y, event.x, event.y, dash=(3, 5))
 
     def expand_selection_field(self, event):
         self.deselect_all()
-        x0, y0, x1, y1 = self.coords(self.selection_rectangle)
-        self.coords(self.selection_rectangle, x0, y0, event.x, event.y)
+        self.coords(self.selection_rectangle,
+        min(event.x,self.selection_rectangle_x_start), 
+        min(event.y,self.selection_rectangle_y_start), 
+        max(event.x,self.selection_rectangle_x_start), 
+        max(event.y,self.selection_rectangle_y_start))
         for el in self.elements:
             el.box_select(*self.coords(self.selection_rectangle))
 
@@ -107,13 +136,21 @@ class SnappingCanvas(tk.Canvas):
             el.force_select()
 
     def delete_selection(self, event=None):
-        for el in self.elements:
+        self.track_changes = False
+        for i,el in enumerate(self.elements[::-1]):
             if el.selected:
                 el.delete()
+                del self.elements[::-1][i]
+        self.track_changes = True
+        self.save()
 
-    def save(self):
-        # TODO auto save every x seconds
-        with open(self.netlist_file, 'w') as f:
+    def delete_all(self, event=None):
+        for el in self.elements:
+            el.delete()
+
+    def save(self,event = None):
+        if self.track_changes:
+            netlist_string = ""
             for el in self.elements:
                 if el.value is None:
                     v = ''
@@ -124,12 +161,18 @@ class SnappingCanvas(tk.Canvas):
                     l = ''
                 else:
                     l = el.label
-                f.write("%s;%s;%s;%s;%s\n" % (
+                netlist_string+=("%s;%s;%s;%s;%s\n" % (
                     type(el).__name__,
                     el.coords_to_node_string(el.x_minus, el.y_minus),
                     el.coords_to_node_string(el.x_plus, el.y_plus),
                     v, l))
 
+            with open(self.netlist_file, 'w') as f:
+                f.write(netlist_string)
+
+            del self.history[self.history_location+1:]
+            self.history.append(netlist_string)
+            self.history_location+=1
 
 class TwoNodeElement(object):
     def __init__(self, canvas, event=None, auto_place=None):
@@ -137,8 +180,6 @@ class TwoNodeElement(object):
         self.grid_unit = canvas.grid_unit
 
         if auto_place is None and event is not None:
-            self.x_center = event.x
-            self.y_center = event.y
             self.manual_place(event)
         else:
             self.value = auto_place[3]
@@ -196,6 +237,14 @@ class W(TwoNodeElement):
         self.canvas.bind("<Motion>", self.show_line)
         self.canvas.bind("<Button-1>", self.end_line)
 
+    def delete(self, event=None):
+        self.canvas.elements.remove(self)
+        self.canvas.delete(self.line)
+        self.canvas.delete(self.dot_minus)
+        self.canvas.delete(self.dot_plus)
+        self.canvas.save()
+        del self
+
     def end_line(self, event):
         self.canvas.delete("temp")
         self.canvas.bind("<Button-1>", lambda event: None)
@@ -233,7 +282,22 @@ class Component(TwoNodeElement):
         self.hover = False
         self.selected = False
         self.text = None
+        self._x_center = None
+        self._y_center = None
+        self._angle = None
         super(Component, self).__init__(canvas, event, auto_place)
+
+    @property
+    def pos(self):
+        return [self._x_center,self._y_center,self._angle]
+
+    @pos.setter
+    def pos(self,pos):
+        if pos != self.pos:
+            self._x_center = pos[0]
+            self._y_center = pos[1]
+            self._angle = pos[2]
+            self.canvas.save()
 
     def manual_place(self, event):
         self.init_create_component(event)
@@ -241,13 +305,11 @@ class Component(TwoNodeElement):
     def auto_place(self, auto_place_info):
 
         if self.x_minus == self.x_plus:
-            self.angle = -90.
             self.create_component(
-                self.x_minus, (self.y_minus+self.y_plus)/2, self.angle)
+                self.x_minus, (self.y_minus+self.y_plus)/2, -90.)
         elif self.y_minus == self.y_plus:
-            self.angle = 0
             self.create_component(
-                (self.x_minus+self.x_plus)/2, self.y_minus, self.angle)
+                (self.x_minus+self.x_plus)/2, self.y_minus, 0.)
         self.add_label()
         self.canvas.elements.append(self)
         self.set_allstate_bindings()
@@ -269,9 +331,7 @@ class Component(TwoNodeElement):
             (self.grid_unit, self.grid_unit)).rotate(angle))
 
     def create_component(self, x, y, angle=0.):
-        self.x_center = x
-        self.y_center = y
-        self.angle = angle
+        self.pos = [x,y,angle]
         self.import_tk_image(angle)
 
         if self.image is not None:
@@ -285,9 +345,10 @@ class Component(TwoNodeElement):
         if self.text is not None:
             self.add_label()
 
+
     def hover_enter(self, event):
         self.hover = True
-        self.create_component(self.x_center, self.y_center, self.angle)
+        self.create_component(*self.pos)
         self.canvas.tag_bind(self.image, "<Button-1>", self.on_click)
         self.canvas.tag_bind(self.image, "<Shift-Button-1>", 
             lambda event: self.on_click(event, shift_control=True))
@@ -297,22 +358,37 @@ class Component(TwoNodeElement):
         self.canvas.tag_bind(
             self.image, "<ButtonRelease-1>", self.release_motion)
         self.canvas.tag_bind(
-            self.image, '<Double-Button-1>', self.modify_values)
+            self.image, '<Double-Button-1>', self.double_click)
         self.canvas.tag_bind(self.image, "<Shift-ButtonRelease-1>",
                              lambda event: self.release_motion(event, shift_control=True))
         self.canvas.tag_bind(self.image, "<Control-ButtonRelease-1>",
                              lambda event: self.release_motion(event, shift_control=True))
 
-    def modify_values(self, event):
+    def double_click(self,event):
+        self.modify_values(self)
+
+    def modify_values(self, event = None):
         self.request_value_label()
         self.add_label()
 
     def hover_leave(self, event):
         self.hover = False
-        self.create_component(self.x_center, self.y_center, self.angle)
+        self.create_component(*self.pos)
 
     def init_create_component(self, event, angle=0.):
-        self.create_component(event.x, event.y, angle)
+        self.canvas.track_changes = False
+        self.init_angle = angle
+        # this is written explicitely
+        # since we do not want to save all positions to history
+        self.import_tk_image(angle)
+        if self.image is not None:
+            # Replace tkimage
+            self.canvas.itemconfig(self.image, image=self.tk_image)
+        else:
+            # Actually create image
+            self.image = self.canvas.create_image(
+                event.x, event.y, image=self.tk_image)
+
         self.canvas.bind("<Button-1>", self.init_release)
         self.canvas.bind('<Motion>', self.on_motion)
         self.canvas.bind('<Escape>',self.abort_creation)
@@ -346,35 +422,52 @@ class Component(TwoNodeElement):
         self.add_label()
         self.canvas.elements.append(self)
         self.set_allstate_bindings()
+        self.canvas.track_changes = True
+        self.canvas.save()
 
     def set_allstate_bindings(self):
         self.canvas.tag_bind(self.image, "<Enter>", self.hover_enter)
         self.canvas.tag_bind(self.image, "<Leave>", self.hover_leave)
+        self.canvas.tag_bind(self.image, "<Button-3>", self.right_click)
+
+    def right_click(self,event):
+        self.canvas.bind("<ButtonRelease-3>", self.open_right_click_menu)
+
+    def open_right_click_menu(self,event):
+        menu = tk.Menu(self.canvas, tearoff=0)
+        menu.add_command(label="Edit",command = self.modify_values)
+        menu.add_command(label="Rotate",command = self.rotate)
+        menu.add_command(label="Delete",command = self.delete)
+        menu.add_separator()
+        menu.add_command(label="Copy")
+        menu.add_command(label="Cut")
+        menu.tk_popup(event.x_root, event.y_root, 0)
+        self.canvas.bind("<ButtonRelease-3>", lambda event: None)
+
+    def rotate(self):
+        if self.pos[2] == 0.:
+            self.create_component(
+            self.pos[0], self.pos[1], angle=-90.)
+        elif self.pos[2] == -90.:
+            self.create_component(
+            self.pos[0], self.pos[1], angle=0.)
 
     def on_click(self, event,shift_control = False):
         if self.selected is False and shift_control is False:
             self.canvas.deselect_all()
 
-        self.x_center = event.x
-        self.y_center = event.y
-
-        self.canvas.bind('<Left>', lambda event: self.create_component(
-            self.x_center, self.y_center))
-        self.canvas.bind('<Right>', lambda event: self.create_component(
-            self.x_center, self.y_center))
-        self.canvas.bind('<Up>', lambda event: self.create_component(
-            self.x_center, self.y_center, angle=-90.))
-        self.canvas.bind('<Down>', lambda event: self.create_component(
-            self.x_center, self.y_center, angle=-90.))
+        self.canvas.bind('<Left>', lambda event: self.create_component(*self.pos))
+        self.canvas.bind('<Right>', lambda event: self.create_component(*self.pos))
+        self.canvas.bind('<Up>', lambda event: self.create_component(self.pos[0], self.pos[1], angle=-90.))
+        self.canvas.bind('<Down>', lambda event: self.create_component(self.pos[0], self.pos[1], angle=-90.))
 
     def on_motion(self, event):
-        dx = event.x - self.x_center
-        dy = event.y - self.y_center
+        x, y = self.canvas.coords(self.image)
+        dx = event.x - x
+        dy = event.y - y
         self.canvas.move(self.image, dx, dy)
         if self.text is not None:
             self.canvas.move(self.text, dx, dy)
-        self.x_center += dx
-        self.y_center += dy
 
     def release_motion(self, event, shift_control=False):
         self.snap_to_grid(event)
@@ -393,35 +486,34 @@ class Component(TwoNodeElement):
         self.canvas.deselect_all()
         if self.selected is False:
             self.selected = True
-            self.create_component(self.x_center, self.y_center, self.angle)
+            self.create_component(*self.pos)
 
     def box_select(self, x0, y0, x1, y1):
         xs = [x0, x1]
         ys = [y0, y1]
-        if min(xs) <= self.x_center <= max(xs) and min(ys) <= self.y_center <= max(ys):
+        if min(xs) <= self.pos[0] <= max(xs) and min(ys) <=  self.pos[1] <= max(ys):
             self.force_select()
 
     def ctrl_shift_select(self):
         if self.selected is False:
             self.selected = True
-            self.create_component(self.x_center, self.y_center, self.angle)
+            self.create_component(*self.pos)
         elif self.selected is True:
             self.deselect()
 
     def force_select(self):
         self.selected = True
-        self.create_component(self.x_center, self.y_center, self.angle)
+        self.create_component(*self.pos)
 
     def deselect(self):
         self.selected = False
-        self.create_component(self.x_center, self.y_center, self.angle)
+        self.create_component(*self.pos)
 
     def delete(self, event=None):
-        self.canvas.elements.remove(self)
         self.canvas.delete(self.image)
         if self.text is not None:
             self.canvas.delete(self.text)
-        del self
+        self.canvas.save()
 
     def add_label(self):
 
@@ -433,34 +525,49 @@ class Component(TwoNodeElement):
                          use_math=False, use_unicode=True)
         font = Font(family='Helvetica', size=9, weight='normal')
         text_position = (0.3)*self.grid_unit
-        if self.angle == -90.:
+        if self.pos[2] == -90.:
             self.text = self.canvas.create_text(
                 x+text_position, y, text=text, anchor=tk.W, font=font)
-        if self.angle == 0.:
+        if self.pos[2] == 0.:
             self.text = self.canvas.create_text(
                 x, y+text_position, text=text, anchor=tk.N, font=font)
 
     def snap_to_grid(self, event):
         x, y = self.canvas.coords(self.image)
+        if x<self.grid_unit:
+            x = self.grid_unit
+        if y<self.grid_unit:
+            y = self.grid_unit
+
         gu = float(self.grid_unit)
-        if self.angle == -90:
-            self.x_center = int(gu * round(float(x)/gu))
-            self.y_center = gu/2.+int(gu * round(float(y-gu/2.)/gu))
-            self.canvas.coords(self.image, self.x_center, self.y_center)
 
-            self.x_minus = self.x_center
-            self.y_minus = self.y_center-gu/2.
-            self.x_plus = self.x_center
-            self.y_plus = self.y_center+gu/2.
-        elif self.angle == 0.:
-            self.x_center = gu/2.+int(gu * round(float(x-gu/2.)/gu))
-            self.y_center = int(gu * round(float(y)/gu))
-            self.canvas.coords(self.image, self.x_center, self.y_center)
+        if self.pos[2] is None:
+            angle = self.init_angle
+        else:
+            angle = self.pos[2]
 
-            self.x_minus = self.x_center-gu/2.
-            self.y_minus = self.y_center
-            self.x_plus = self.x_center+gu/2.
-            self.y_plus = self.y_center
+        if angle == -90:
+            self.pos = [
+                int(gu * round(float(x)/gu)),
+                gu/2.+int(gu * round(float(y-gu/2.)/gu)),
+                -90.]
+            self.canvas.coords(self.image, self.pos[0],self.pos[1])
+
+            self.x_minus = self.pos[0]
+            self.y_minus = self.pos[1]-gu/2.
+            self.x_plus = self.pos[0]
+            self.y_plus = self.pos[1]+gu/2.
+        elif angle == 0.:
+            self.pos = [
+                gu/2.+int(gu * round(float(x-gu/2.)/gu)),
+                int(gu * round(float(y)/gu)),
+                0.]
+            self.canvas.coords(self.image, self.pos[0], self.pos[1])
+
+            self.x_minus = self.pos[0]-gu/2.
+            self.y_minus = self.pos[1]
+            self.x_plus = self.pos[0]+gu/2.
+            self.y_plus = self.pos[1]
 
 
 class R(Component):
@@ -543,14 +650,19 @@ class RequestValueLabelWindow(tk.Toplevel):
                 v = float(value)
             except ValueError:
                 messagebox.showinfo("Incorrect value", "Enter a python style float, for example: 1e-2 or 0.01")
+                self.focus_force()
+                return None
+                
 
         if label.replace(' ','') == "":
             l = None
         else:
-            l = str(label)
+            l = label
 
         if l is None and v is None:
-                messagebox.showinfo("No inputs", "Enter a value or a label or both")
+            messagebox.showinfo("No inputs", "Enter a value or a label or both")
+            self.focus_force()
+            return None
         else:
             self.component.value = v 
             self.component.label = l
