@@ -85,13 +85,18 @@ class SnappingCanvas(tk.Canvas):
 
     def start_selection_field(self, event):
         self.deselect_all()
+        self.selection_rectangle_x_start = event.x
+        self.selection_rectangle_y_start = event.y
         self.selection_rectangle = self.create_rectangle(
             event.x, event.y, event.x, event.y, dash=(3, 5))
 
     def expand_selection_field(self, event):
         self.deselect_all()
-        x0, y0, x1, y1 = self.coords(self.selection_rectangle)
-        self.coords(self.selection_rectangle, x0, y0, event.x, event.y)
+        self.coords(self.selection_rectangle,
+        min(event.x,self.selection_rectangle_x_start), 
+        min(event.y,self.selection_rectangle_y_start), 
+        max(event.x,self.selection_rectangle_x_start), 
+        max(event.y,self.selection_rectangle_y_start))
         for el in self.elements:
             el.box_select(*self.coords(self.selection_rectangle))
 
