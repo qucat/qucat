@@ -32,13 +32,15 @@ def string_to_component(s, *arg, **kwarg):
 
 
 class AutoScrollbar(ttk.Scrollbar):
+    # TODO: actually make it hide itself...
     """ A scrollbar that hides itself if it's not needed. """
     def set(self, lo, hi):
         if float(lo) <= 0.0 and float(hi) >= 1.0:
-            self.grid_remove()
+            self.pack_forget()
         else:
             self.grid()
             ttk.Scrollbar.set(self, lo, hi)
+        ttk.Scrollbar.set(self, lo, hi)
 
     def pack(self, **kw):
         raise tk.TclError('Cannot use pack with the widget ' + self.__class__.__name__)
@@ -75,6 +77,7 @@ class SnappingCanvas(tk.Canvas):
 
         self.netlist_file = netlist_file
         self.grid_unit = int(grid_unit)
+        # self.pack(fill=tk.BOTH, expand=1)
         self.focus_set()
         self.bind('r', lambda event: R(self, event))
         self.bind('l', lambda event: L(self, event))
@@ -87,6 +90,13 @@ class SnappingCanvas(tk.Canvas):
         self.bind('<Control-a>', self.select_all)
         self.bind('<Control-y>', self.ctrl_y)
         self.bind('<Control-z>', self.ctrl_z)
+        # self.bind('<MouseWheel>', self.wheel)  # zoom for Windows and MacOS, but not Linux
+        # self.bind('<Button-5>',   self.wheel)  # zoom for Linux, wheel scroll down
+        # self.bind('<Button-4>',   self.wheel)  # zoom for Linux, wheel scroll up
+
+        # Handle keystrokes in idle mode, because program slows down on a weak computers,
+        # when too many key stroke events in the same time
+        # self.bind('<Key>', lambda event: self.after_idle(self.__keystroke, event))
 
         self.elements = []
         self.history = []
@@ -100,6 +110,51 @@ class SnappingCanvas(tk.Canvas):
                 pass
         self.track_changes = True 
         self.save()
+
+
+    # def __keystroke(self, event):
+    #     """ Scrolling with the keyboard.
+    #         Independent from the language of the keyboard, CapsLock, <Ctrl>+<key>, etc. """
+    #     if event.state - self.__previous_state == 4:  # means that the Control key is pressed
+    #         pass  # do nothing if Control key is pressed
+    #     else:
+    #         self.__previous_state = event.state  # remember the last keystroke state
+    #         # Up, Down, Left, Right keystrokes
+    #         if event.keycode in [68, 39, 102]:  # scroll right, keys 'd' or 'Right'
+    #             self.__scroll_x('scroll',  1, 'unit', event=event)
+    #         elif event.keycode in [65, 37, 100]:  # scroll left, keys 'a' or 'Left'
+    #             self.__scroll_x('scroll', -1, 'unit', event=event)
+    #         elif event.keycode in [87, 38, 104]:  # scroll up, keys 'w' or 'Up'
+    #             self.__scroll_y('scroll', -1, 'unit', event=event)
+    #         elif event.keycode in [83, 40, 98]:  # scroll down, keys 's' or 'Down'
+    #             self.__scroll_y('scroll',  1, 'unit', event=event)
+
+
+    # def wheel(self, event):
+    #     """ Zoom with mouse wheel """
+    #     x = self.canvas.canvasx(event.x)
+    #     y = self.canvas.canvasy(event.y)
+
+    #     scale = 1.0
+    #     # Respond to Linux (event.num) or Windows (event.delta) wheel event
+    #     if event.num == 5 or event.delta == -120:  # scroll down, smaller
+    #         if round(self.__min_side * self.imscale) < 30: return  # image is less than 30 pixels
+    #         self.imscale /= self.__delta
+    #         scale        /= self.__delta
+    #     if event.num == 4 or event.delta == 120:  # scroll up, bigger
+    #         i = min(self.canvas.winfo_width(), self.canvas.winfo_height()) >> 1
+    #         if i < self.imscale: return  # 1 pixel is bigger than the visible area
+    #         self.imscale *= self.__delta
+    #         scale        *= self.__delta
+    #     # Take appropriate image from the pyramid
+    #     k = self.imscale * self.__ratio  # temporary coefficient
+    #     self.__curr_img = min((-1) * int(math.log(k, self.__reduction)), len(self.__pyramid) - 1)
+    #     self.__scale = k * math.pow(self.__reduction, max(0, self.__curr_img))
+    #     #
+    #     self.canvas.scale('all', x, y, scale, scale)  # rescale all objects
+    #     # Redraw some figures before showing image on the screen
+    #     self.redraw_figures()  # method for child classes
+    #     self.__show_image()
 
     def __scroll_x(self, *args, **kwargs):
         """ Scroll canvas horizontally and redraw the image """
@@ -144,7 +199,8 @@ class SnappingCanvas(tk.Canvas):
 
     def on_resize(self,event):
         self.draw_grid(event)
-        self.configure(scrollregion = self.bbox("all"))
+        bbox = [max(xy,0) for xy in self.bbox("all")]
+        self.configure(scrollregion = bbox)
 
 
     def draw_grid(self, event = None):
@@ -361,6 +417,19 @@ class Component(TwoNodeElement):
             self._x_center = pos[0]
             self._y_center = pos[1]
             self._angle = pos[2]
+
+            if self._angle == -90.:
+                self.x_minus = self.pos[0]
+                self.y_minus = self.pos[1]-self.grid_unit/2.
+                self.x_plus = self.pos[0]
+                self.y_plus = self.pos[1]+self.grid_unit/2.
+
+            if self._angle == 0.:
+                self.x_minus = self.pos[0]-self.grid_unit/2.
+                self.y_minus = self.pos[1]
+                self.x_plus = self.pos[0]+self.grid_unit/2.
+                self.y_plus = self.pos[1]
+
             self.canvas.save()
 
     @property
@@ -413,6 +482,7 @@ class Component(TwoNodeElement):
         if self.image is not None:
             # Just replace tkimage
             self.canvas.itemconfig(self.image, image=self.tk_image)
+            self.snap_to_grid()
         else:
             # Actually create image
             self.image = self.canvas.create_image(
@@ -610,7 +680,7 @@ class Component(TwoNodeElement):
             self.text = self.canvas.create_text(
                 x, y+text_position, text=text, anchor=tk.N, font=font)
 
-    def snap_to_grid(self, event):
+    def snap_to_grid(self, event = None):
         x, y = self.canvas.coords(self.image)
         if x<self.grid_unit:
             x = self.grid_unit
@@ -631,10 +701,6 @@ class Component(TwoNodeElement):
                 -90.]
             self.canvas.coords(self.image, self.pos[0],self.pos[1])
 
-            self.x_minus = self.pos[0]
-            self.y_minus = self.pos[1]-gu/2.
-            self.x_plus = self.pos[0]
-            self.y_plus = self.pos[1]+gu/2.
         elif angle == 0.:
             self.pos = [
                 gu/2.+int(gu * round(float(x-gu/2.)/gu)),
@@ -642,10 +708,6 @@ class Component(TwoNodeElement):
                 0.]
             self.canvas.coords(self.image, self.pos[0], self.pos[1])
 
-            self.x_minus = self.pos[0]-gu/2.
-            self.y_minus = self.pos[1]
-            self.x_plus = self.pos[0]+gu/2.
-            self.y_plus = self.pos[1]
 
 
 class R(Component):
