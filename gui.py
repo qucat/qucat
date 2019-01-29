@@ -151,15 +151,15 @@ class SnappingCanvas(tk.Canvas):
     def save(self,event = None):
         netlist_string = ""
         for el in self.elements:
-            if el.value is None:
+            v,l  = el.prop
+            if v is None:
                 v = ''
             else:
-                v = "%e" % el.value
+                v = "%e" % v
 
-            if el.label is None:
+            if l is None:
                 l = ''
-            else:
-                l = el.label
+                
             netlist_string+=("%s;%s;%s;%s;%s\n" % (
                 type(el).__name__,
                 el.coords_to_node_string(el.x_minus, el.y_minus),
@@ -182,15 +182,17 @@ class TwoNodeElement(object):
         if auto_place is None and event is not None:
             self.manual_place(event)
         else:
-            self.value = auto_place[3]
-            self.label = auto_place[4]
-            if self.label == '':
-                self.label = None
+            v = auto_place[3]
+            l = auto_place[4]
+            if l == '':
+                l = None
 
-            if self.value == '':
-                self.value = None
+            if v == '':
+                v = None
             else:
-                self.value = float(self.value)
+                v = float(v)
+            
+            self.prop = [v,l]
 
             self.x_minus, self.y_minus = self.node_string_to_coords(
                 auto_place[1])
@@ -220,8 +222,7 @@ class TwoNodeElement(object):
 
 class W(TwoNodeElement):
     def __init__(self, canvas, event=None, auto_place=None):
-        self.value = None
-        self.label = None
+        self.prop = [None,None]
         self.hover = False
         self.selected = False
         super(W, self).__init__(canvas, event, auto_place)
@@ -277,8 +278,8 @@ class W(TwoNodeElement):
 class Component(TwoNodeElement):
     def __init__(self, canvas, event, auto_place):
         self.image = None
-        self.value = None
-        self.label = None
+        self._value = None
+        self._label = None
         self.hover = False
         self.selected = False
         self.text = None
@@ -298,6 +299,18 @@ class Component(TwoNodeElement):
             self._y_center = pos[1]
             self._angle = pos[2]
             self.canvas.save()
+
+    @property
+    def prop(self):
+        return [self._value,self._label]
+
+    @prop.setter
+    def prop(self,prop):
+        if prop != self.prop:
+            self._value = prop[0]
+            self._label = prop[1]
+            self.canvas.save()
+
 
     def manual_place(self, event):
         self.init_create_component(event)
@@ -522,15 +535,16 @@ class Component(TwoNodeElement):
         if self.text is not None:
             self.canvas.delete(self.text)
 
-        x, y = self.canvas.coords(self.image)
-        text = to_string(self.unit, self.label, self.value,
+        x, y, angle = self.pos
+        value,label = self.prop
+        text = to_string(self.unit, label, value,
                          use_math=False, use_unicode=True)
         font = Font(family='Helvetica', size=9, weight='normal')
         text_position = (0.3)*self.grid_unit
-        if self.pos[2] == -90.:
+        if angle == -90.:
             self.text = self.canvas.create_text(
                 x+text_position, y, text=text, anchor=tk.W, font=font)
-        if self.pos[2] == 0.:
+        if angle == 0.:
             self.text = self.canvas.create_text(
                 x, y+text_position, text=text, anchor=tk.N, font=font)
 
@@ -614,14 +628,15 @@ class RequestValueLabelWindow(tk.Toplevel):
         fields = 'Value', 'Label'
 
         # Determine values of the fields
-        if component.value is None:
+        v,l = self.component.prop
+        if v is None:
             v = ''
         else:
-            v = "%e"%component.value
-        if component.label is None:
+            v = "%e"%v
+
+        if l is None:
             l = ''
-        else:
-            l = component.label
+            
         field_values = [v, l]
 
         self.entries = []
@@ -666,8 +681,7 @@ class RequestValueLabelWindow(tk.Toplevel):
             self.focus_force()
             return None
         else:
-            self.component.value = v 
-            self.component.label = l
+            self.component.prop = [v,l] 
             self.destroy()
 
     def cancel(self):
