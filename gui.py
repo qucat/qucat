@@ -112,9 +112,9 @@ class SnappingCanvas(tk.Canvas):
             el.force_select()
 
     def delete_selection(self, event=None):
-        for el in self.elements:
-            if el.selected:
-                el.delete()
+        to_delete = [el for el in self.elements if el.selected]
+        for el in to_delete:
+            el.delete()
 
     def save(self):
         # TODO auto save every x seconds
