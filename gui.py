@@ -9,6 +9,7 @@ except ImportError:
     from tkinter.font import Font
     from tkinter import messagebox
 from PIL import Image, ImageTk
+from tkinter import ttk
 import numpy as np
 import os
 from bbq.utility import to_string
@@ -30,12 +31,50 @@ def string_to_component(s, *arg, **kwarg):
         return C(*arg, **kwarg)
 
 
+class AutoScrollbar(ttk.Scrollbar):
+    """ A scrollbar that hides itself if it's not needed. """
+    def set(self, lo, hi):
+        if float(lo) <= 0.0 and float(hi) >= 1.0:
+            self.grid_remove()
+        else:
+            self.grid()
+            ttk.Scrollbar.set(self, lo, hi)
+
+    def pack(self, **kw):
+        raise tk.TclError('Cannot use pack with the widget ' + self.__class__.__name__)
+
+    def place(self, **kw):
+        raise tk.TclError('Cannot use place with the widget ' + self.__class__.__name__)
+
+
 class SnappingCanvas(tk.Canvas):
     def __init__(self, master, grid_unit, netlist_file, **kw):
-        tk.Canvas.__init__(self, master, bd=0, highlightthickness=0, **kw)
+        
+        """ Initialize the ImageFrame """
+
+        self.frame = ttk.Frame()
+        self.frame.grid()  # place Canvas widget on the grid
+        self.frame.grid(sticky='nswe')  # make frame container sticky
+        self.frame.rowconfigure(0, weight=1)  # make canvas expandable
+        self.frame.columnconfigure(0, weight=1)
+
+        # Vertical and horizontal scrollbars for canvas
+        hbar = AutoScrollbar(self.frame, orient='horizontal')
+        vbar = AutoScrollbar(self.frame, orient='vertical')
+        hbar.grid(row=1, column=0, sticky='we')
+        vbar.grid(row=0, column=1, sticky='ns')
+
+        tk.Canvas.__init__(self, self.frame, bd=0, highlightthickness=0,
+            xscrollcommand=hbar.set, yscrollcommand=vbar.set, bg="white")
+
+        self.grid(row=0, column=0, sticky='nswe')
+        
+        hbar.configure(command=self.__scroll_x)  # bind scrollbars to the canvas
+        vbar.configure(command=self.__scroll_y)
+
+
         self.netlist_file = netlist_file
         self.grid_unit = int(grid_unit)
-        self.pack(fill=tk.BOTH, expand=1)
         self.focus_set()
         self.bind('r', lambda event: R(self, event))
         self.bind('l', lambda event: L(self, event))
@@ -43,7 +82,7 @@ class SnappingCanvas(tk.Canvas):
         self.bind('j', lambda event: J(self, event))
         self.bind('w', lambda event: W(self, event))
         self.bind('s', self.save)
-        self.bind("<Configure>", self.draw_grid)
+        self.bind("<Configure>", self.on_resize)
         self.bind('<Delete>', self.delete_selection)
         self.bind('<Control-a>', self.select_all)
         self.bind('<Control-y>', self.ctrl_y)
@@ -61,6 +100,17 @@ class SnappingCanvas(tk.Canvas):
                 pass
         self.track_changes = True 
         self.save()
+
+    def __scroll_x(self, *args, **kwargs):
+        """ Scroll canvas horizontally and redraw the image """
+        self.xview(*args)  # scroll horizontally
+        self.draw_grid()
+
+    def __scroll_y(self, *args, **kwargs):
+        """ Scroll canvas vertically and redraw the image """
+        self.yview(*args)  # scroll vertically
+        self.draw_grid()
+
 
     def ctrl_z(self,event):
         if self.history_location > 0:
@@ -91,21 +141,34 @@ class SnappingCanvas(tk.Canvas):
         y1 = y + r
         return self.create_oval(x0, y0, x1, y1, fill='black')
 
-    def draw_grid(self, event):
+
+    def on_resize(self,event):
+        self.draw_grid(event)
+        self.configure(scrollregion = self.bbox("all"))
+
+
+    def draw_grid(self, event = None):
+
+        # Draw the grid
         self.delete("grid")
         dx = 1
         dy = 1
-        w, h = event.width, event.height
+        box_canvas = (self.canvasx(0),  # get visible area of the canvas
+                      self.canvasy(0),
+                      self.canvasx(self.winfo_width()),
+                      self.canvasy(self.winfo_height()))
+
         self.background = self.create_rectangle(
-            0, 0, w, h, fill='white', tags='grid')
-        for x in np.arange(self.grid_unit, w, self.grid_unit):
-            for y in np.arange(self.grid_unit, h, self.grid_unit):
-                self.create_line(x-dx, y, x+dx, y, tags='grid')
-                self.create_line(x, y-dy, x, y+dy, tags='grid')
+            *box_canvas, fill='white', tags='grid')
+        for x in np.arange(int(box_canvas[0]/self.grid_unit)*self.grid_unit, box_canvas[2], self.grid_unit):
+            for y in np.arange(int(box_canvas[1]/self.grid_unit)*self.grid_unit, box_canvas[3], self.grid_unit):
+                self.create_line(x-dx, y, x+2*dx, y, tags='grid')
+                self.create_line(x, y-dy, x, y+2*dy, tags='grid')
         self.tag_lower('grid')
         self.tag_bind('grid', '<ButtonPress-1>', self.start_selection_field)
         self.tag_bind('grid', "<B1-Motion>", self.expand_selection_field)
         self.tag_bind('grid', "<ButtonRelease-1>", self.end_selection_field)
+        
 
     def start_selection_field(self, event):
         self.deselect_all()
@@ -357,7 +420,6 @@ class Component(TwoNodeElement):
 
         if self.text is not None:
             self.add_label()
-
 
     def hover_enter(self, event):
         self.hover = True
@@ -689,13 +751,25 @@ class RequestValueLabelWindow(tk.Toplevel):
 
 
 def open_canvas(netlist_file):
-    root = tk.Tk()
-    canvas = SnappingCanvas(root,
-                            netlist_file=netlist_file,
-                            width=500, height=500, grid_unit=60, bg="white")
-    root.focus_force()
-    root.mainloop()
+    # root = tk.Tk()
+    # canvas = SnappingCanvas(root,
+    #                         netlist_file=netlist_file, grid_unit=60, bg="white")
+    # root.focus_force()
+    # root.mainloop()
+    app = MainWindow(tk.Tk(), netlist_file)
+    app.mainloop()
 
+
+class MainWindow(ttk.Frame):
+    """ Main window class """
+    def __init__(self, mainframe, netlist_file):
+        """ Initialize the main Frame """
+        ttk.Frame.__init__(self, master=mainframe)
+        self.master.title('Circuit Editor')
+        self.master.geometry('800x600')  # size of the main window
+        self.master.rowconfigure(0, weight=1)  # make canvas expandable
+        self.master.columnconfigure(0, weight=1)
+        self.canvas = SnappingCanvas(self.master, netlist_file=netlist_file, grid_unit=60)
 
 if __name__ == '__main__':
     open_canvas("test.txt")
