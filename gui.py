@@ -119,7 +119,7 @@ class SnappingCanvas(tk.Canvas):
             el.create(*el.pos)
             el.adapt_to_grid_unit()
             el.force_select()
-            el.move(1,-1)
+            el.move(self.grid_unit,-self.grid_unit)
 
     def copy_selection(self,event):
         self.copied_elements = [deepcopy(el) for el in self.elements if el.selected]
@@ -389,10 +389,10 @@ class W(TwoNodeElement):
     @pos.setter
     def pos(self,pos):
         if pos != self.pos:
-            self.x_minus = pos[0]
-            self.y_minus = pos[1]
-            self.x_plus = pos[2]
-            self.y_plus = pos[3]
+            self.x_minus = int(abs(pos[0]))
+            self.y_minus = int(abs(pos[1]))
+            self.x_plus = int(abs(pos[2]))
+            self.y_plus = int(abs(pos[3]))
             self.canvas.save()
 
     @property
@@ -467,6 +467,7 @@ class Component(TwoNodeElement):
         self._x_center = None
         self._y_center = None
         self._angle = None
+        self.was_moved = False
         super(Component, self).__init__(canvas, event, auto_place)
 
     @property
@@ -475,10 +476,10 @@ class Component(TwoNodeElement):
 
     @pos.setter
     def pos(self,pos):
-        # Defined in grid units
+        # Defined in grid units, _x/y_center should be n+(0. or 0.5) with n a positive integer
         if pos != self.pos:
-            self._x_center = pos[0]
-            self._y_center = pos[1]
+            self._x_center = abs(pos[0])
+            self._y_center = abs(pos[1])
             self._angle = pos[2]
 
             if self._angle == -90.:
@@ -595,7 +596,7 @@ class Component(TwoNodeElement):
                 event.x, event.y, image=self.tk_image)
 
         self.canvas.bind("<Button-1>", self.init_release)
-        self.canvas.bind('<Motion>', self.on_motion)
+        self.canvas.bind('<Motion>', self.init_on_motion)
         self.canvas.bind('<Escape>',self.abort_creation)
         self.canvas.bind(
             '<Left>', lambda event: self.init_create_component(event))
@@ -661,6 +662,7 @@ class Component(TwoNodeElement):
         self.add_or_replace_label()
 
     def on_click(self, event,shift_control = False):
+
         if self.selected is False and shift_control is False:
             self.canvas.deselect_all()
 
@@ -669,33 +671,46 @@ class Component(TwoNodeElement):
         self.canvas.bind('<Up>', self.on_updown)
         self.canvas.bind('<Down>', self.on_updown)
 
-    def on_motion(self, event):
+    def init_on_motion(self, event):
         x, y = self.canvas.coords(self.image)
         dx = event.x - x
         dy = event.y - y
         self.canvas.move(self.image, dx, dy)
-        if self.text is not None:
-            self.canvas.move(self.text, dx, dy)
+
+    def on_motion(self, event):
+        x, y = self.canvas.coords(self.image)
+        dx = event.x - x
+        dy = event.y - y
+        for el in self.canvas.elements:
+            if el.selected or el==self:
+                el.move(dx,dy)
+        self.was_moved = True
    
     def move(self,dx,dy):
         '''
-        Input given in grid units
+        Input given in canvas units
         '''
         gu = self.canvas.grid_unit
         x, y, angle = self.pos
-        self.pos = [x+dx,y+dy,angle]
-        self.canvas.move(self.image, dx*gu, dy*gu)
+        self.canvas.move(self.image, dx, dy)
         self.add_or_replace_label()
 
     def release_motion(self, event, shift_control=False):
-        self.snap_to_grid(event)
-        self.add_or_replace_label()
+        N_selected = 0
+        for el in self.canvas.elements:
+            if el.selected or el==self:
+                N_selected += 1
+                el.snap_to_grid(event)
+                el.add_or_replace_label()
         self.canvas.bind('<Left>', lambda event: None)
         self.canvas.bind('<Right>', lambda event: None)
         self.canvas.bind('<Up>', lambda event: None)
         self.canvas.bind('<Down>', lambda event: None)
 
-        if shift_control:
+
+        if self.was_moved:
+            self.force_select()
+        elif shift_control:
             self.ctrl_shift_select()
         else:
             self.select()
@@ -756,9 +771,8 @@ class Component(TwoNodeElement):
 
     def add_or_replace_label(self):
         gu = self.canvas.grid_unit
-        x, y, angle = self.pos
-        x*=gu
-        y*=gu
+        _,_, angle = self.pos
+        x, y = self.canvas.coords(self.image)
         value,label = self.prop
         text = to_string(self.unit, label, value,
                          use_math=False, use_unicode=True)
