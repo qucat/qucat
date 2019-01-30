@@ -118,7 +118,7 @@ class SnappingCanvas(tk.Canvas):
         for el in self.copied_elements:
             el.create(*el.pos)
             el.adapt_to_grid_unit()
-            el.select()
+            el.force_select()
             el.move(1,-1)
 
     def copy_selection(self,event):
@@ -192,7 +192,7 @@ class SnappingCanvas(tk.Canvas):
         if len(self.elements)>0:
             xs = [el.x_minus for el in self.elements]+[el.x_plus for el in self.elements]
             ys = [el.y_minus for el in self.elements]+[el.y_plus for el in self.elements]
-            self.configure(scrollregion = [0,0,max(xs),max(ys)])
+            self.configure(scrollregion = [0,0,max(xs)*self.grid_unit,max(ys)*self.grid_unit])
 
     def draw_grid(self, event = None):
 
