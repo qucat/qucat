@@ -109,15 +109,15 @@ class SnappingCanvas(tk.Canvas):
         
         hbar.configure(command=self.scroll_x)  # bind scrollbars to the canvas
         vbar.configure(command=self.scroll_y)
+        self.update() # Waits for the canvas to pop up before asking for its window size below
 
 
+        self.canvas_center = [
+                     self.canvasx(self.winfo_width()/2.),
+                      self.canvasy(self.winfo_height()/2.)]
         self.netlist_file = netlist_file
         self.grid_unit = int(grid_unit)
-        self.canvas_center = [
-                      self.canvasx(self.winfo_width()/2.),
-                      self.canvasy(self.winfo_height()/2.)]
 
-        # self.pack(fill=tk.BOTH, expand=1)
         self.focus_set()
         self.bind('r', lambda event: R(self, event))
         self.bind('l', lambda event: L(self, event))
@@ -150,6 +150,7 @@ class SnappingCanvas(tk.Canvas):
                 pass
         self.track_changes = True 
         self.save()
+        self.draw_grid()
 
     def cut_selection(self,event = None):
         self.copied_elements = [deepcopy(el) for el in self.elements if el.selected]
@@ -168,6 +169,7 @@ class SnappingCanvas(tk.Canvas):
 
     def wheel(self, event):
         old_grid_unit = self.grid_unit
+
         scaling = 1.04
         try:
             if abs(event.delta)>120:
@@ -189,7 +191,12 @@ class SnappingCanvas(tk.Canvas):
                 new_grid_unit += 1
     
         if smallest_grid_unit <= new_grid_unit <= largest_grid_unit:
+            grid_pos_old = self.canvas_to_grid([event.x,event.y])
             self.grid_unit = new_grid_unit
+            canvas_pos_old = self.grid_to_canvas(grid_pos_old)
+            canvas_center_shift = [event.x-canvas_pos_old[0],event.y-canvas_pos_old[1]]
+            self.canvas_center = [self.canvas_center[0]+canvas_center_shift[0],
+                        self.canvas_center[1]+canvas_center_shift[1]]
             for el in self.elements:
                 el.adapt_to_grid_unit()
             self.on_resize()
@@ -236,7 +243,7 @@ class SnappingCanvas(tk.Canvas):
         if len(self.elements)>0:
             xs = [el.x_minus for el in self.elements]+[el.x_plus for el in self.elements]
             ys = [el.y_minus for el in self.elements]+[el.y_plus for el in self.elements]
-            self.configure(scrollregion = self.coords_to_canvas([min(xs),min(ys)])+self.coords_to_canvas([max(xs),max(ys)]))
+            self.configure(scrollregion = self.grid_to_canvas([min(xs),min(ys)])+self.grid_to_canvas([max(xs),max(ys)]))
 
     def draw_grid(self, event = None):
 
@@ -252,8 +259,13 @@ class SnappingCanvas(tk.Canvas):
         self.background = self.create_rectangle(
             *box_canvas, fill='white', tags='grid')
 
-        for x in np.arange(int(box_canvas[0]/self.grid_unit)*self.grid_unit, box_canvas[2], self.grid_unit):
-            for y in np.arange(int(box_canvas[1]/self.grid_unit)*self.grid_unit, box_canvas[3], self.grid_unit):
+        grid_x = np.arange(self.canvas_center[0], box_canvas[2], self.grid_unit).tolist()
+        grid_x += np.arange(self.canvas_center[0]-self.grid_unit, box_canvas[0], -self.grid_unit).tolist()
+        grid_y = np.arange(self.canvas_center[1], box_canvas[3], self.grid_unit).tolist()
+        grid_y += np.arange(self.canvas_center[1]-self.grid_unit, box_canvas[1], -self.grid_unit).tolist()
+
+        for x in grid_x:
+            for y in grid_y:
                 self.create_line(x-dx, y, x+2*dx, y, tags='grid')
                 self.create_line(x, y-dy, x, y+2*dy, tags='grid')
         self.tag_lower('grid')
@@ -319,8 +331,8 @@ class SnappingCanvas(tk.Canvas):
                 
             netlist_string+=("%s;%s;%s;%s;%s\n" % (
                 type(el).__name__,
-                el.coords_to_node_string(el.x_minus, el.y_minus),
-                el.coords_to_node_string(el.x_plus, el.y_plus),
+                el.grid_to_node_string(el.x_minus, el.y_minus),
+                el.grid_to_node_string(el.x_plus, el.y_plus),
                 v, l))
 
         with open(self.netlist_file, 'w') as f:
@@ -332,11 +344,10 @@ class SnappingCanvas(tk.Canvas):
             self.history_location+=1
         
         saved_message = self.create_text(
-               5, 5, text="Saved", anchor=tk.NW,
+               5, 2, text="Saving...", anchor=tk.NW,
                font=Font(family='Helvetica', size=8, weight='normal'))
         self.after(300, lambda : self.delete(saved_message))
 
-        
     def create_circle(self, x, y, r):
         # Everything defined in canvas units
         x0 = x - r
@@ -353,10 +364,15 @@ class SnappingCanvas(tk.Canvas):
         y1 = y + r
         self.coords(circle,x0, y0, x1, y1)
 
-    def coords_to_canvas(self, pos):
+    def grid_to_canvas(self, pos):
         # pos = [x ,y] (in grid units) 
         return [self.canvas_center[0]+self.grid_unit*pos[0],
                 self.canvas_center[1]+self.grid_unit*pos[1]]
+
+    def canvas_to_grid(self, pos):
+        # pos = [x ,y] (in canvas units) 
+        return [(pos[0]-self.canvas_center[0])/self.grid_unit,
+                (pos[1]-self.canvas_center[1])/self.grid_unit]
 
 class TwoNodeElement(object):
     def __init__(self, canvas, event=None, auto_place=None):
@@ -378,9 +394,9 @@ class TwoNodeElement(object):
             
             self.prop = [v,l]
 
-            self.x_minus, self.y_minus = self.node_string_to_coords(
+            self.x_minus, self.y_minus = self.node_string_to_grid(
                 auto_place[1])
-            self.x_plus, self.y_plus = self.node_string_to_coords(
+            self.x_plus, self.y_plus = self.node_string_to_grid(
                 auto_place[2])
             self.auto_place(auto_place)
     @property
@@ -408,18 +424,18 @@ class TwoNodeElement(object):
         newone.prop = deepcopy(self.prop)
         return newone
 
-    def coords_to_node_string(self, x, y):
+    def grid_to_node_string(self, x, y):
         gu = self.canvas.grid_unit
         return "%d,%d" % (int(x), int(y))
 
-    def node_string_to_coords(self, node):
+    def node_string_to_grid(self, node):
         xy = node.split(',')
         x = int(xy[0])
         y = int(xy[1])
         return x, y
 
-    def coords_to_canvas(self, pos):
-        return self.canvas.coords_to_canvas(pos)
+    def grid_to_canvas(self, pos):
+        return self.canvas.grid_to_canvas(pos)
 
     def deselect(self):
         pass
@@ -492,8 +508,8 @@ class W(TwoNodeElement):
 
     def create(self):
         gu = self.canvas.grid_unit
-        canvas_coords_minus = self.coords_to_canvas(self.pos[:2])
-        canvas_coords_plus = self.coords_to_canvas(self.pos[2:])
+        canvas_coords_minus = self.grid_to_canvas(self.pos[:2])
+        canvas_coords_plus = self.grid_to_canvas(self.pos[2:])
         self.line = self.canvas.create_line(*(canvas_coords_minus+canvas_coords_plus))
         self.dot_minus = self.canvas.create_circle(*canvas_coords_minus,gu/20.)
         self.dot_plus = self.canvas.create_circle(*canvas_coords_plus, gu/20.)
@@ -501,8 +517,8 @@ class W(TwoNodeElement):
 
     def adapt_to_grid_unit(self):
         gu = self.canvas.grid_unit
-        canvas_coords_minus = self.coords_to_canvas(self.pos[:2])
-        canvas_coords_plus = self.coords_to_canvas(self.pos[2:])
+        canvas_coords_minus = self.grid_to_canvas(self.pos[:2])
+        canvas_coords_plus = self.grid_to_canvas(self.pos[2:])
         self.canvas.coords(self.line,*(canvas_coords_minus+canvas_coords_plus))
         self.canvas.update_circle(self.dot_minus,*canvas_coords_minus,gu/20.)
         self.canvas.update_circle(self.dot_plus,*canvas_coords_plus,gu/20.)
@@ -510,7 +526,7 @@ class W(TwoNodeElement):
     def show_line(self, event):
         self.canvas.delete("temp")
         self.canvas.create_line(
-            *self.coords_to_canvas(self.x_minus, self.y_minus), event.x, event.y, tags='temp')
+            *self.grid_to_canvas(self.x_minus, self.y_minus), event.x, event.y, tags='temp')
 
     def snap_to_grid(self, event):
         gu = float(self.canvas.grid_unit)
@@ -606,7 +622,7 @@ class Component(TwoNodeElement):
         self.pos = [x,y,angle]
         self.import_tk_image()
         self.image = self.canvas.create_image(
-                *self.coords_to_canvas([x,y]), image=self.tk_image)
+                *self.grid_to_canvas([x,y]), image=self.tk_image)
         self.add_or_replace_label()
         self.canvas.elements.append(self)
         self.set_allstate_bindings()
@@ -614,7 +630,7 @@ class Component(TwoNodeElement):
     def adapt_to_grid_unit(self):
         self.import_tk_image()
         self.canvas.itemconfig(self.image, image=self.tk_image)
-        self.canvas.coords(self.image,*self.coords_to_canvas(self.pos[:2]))
+        self.canvas.coords(self.image,*self.grid_to_canvas(self.pos[:2]))
         self.add_or_replace_label()
 
     def hover_enter(self, event):
@@ -721,7 +737,7 @@ class Component(TwoNodeElement):
 
         self.import_tk_image() # import rotated version
         self.canvas.itemconfig(self.image, image=self.tk_image)
-        self.canvas.coords(self.image,*self.coords_to_canvas(self.pos[:2]))
+        self.canvas.coords(self.image,*self.grid_to_canvas(self.pos[:2]))
         self.add_or_replace_label()
 
     def on_click(self, event,shift_control = False):
@@ -803,7 +819,7 @@ class Component(TwoNodeElement):
         gu = self.canvas.grid_unit
         xs = [x0, x1]
         ys = [y0, y1]
-        x,y = self.coords_to_canvas(self.pos[:2])
+        x,y = self.grid_to_canvas(self.pos[:2])
         if min(xs) <= x <= max(xs) and min(ys) <=  y <= max(ys):
             self.force_select()
 
@@ -872,14 +888,14 @@ class Component(TwoNodeElement):
                 round(float(x-x0)/gu),
                 round(float(y-y0-gu/2.)/gu) + 0.5,
                 -90.]
-            self.canvas.coords(self.image, *self.coords_to_canvas(self.pos[:2]))
+            self.canvas.coords(self.image, *self.grid_to_canvas(self.pos[:2]))
 
         elif angle == 0.:
             self.pos = [
                0.5 + round(float(x-x0-gu/2.)/gu),
                 round(float(y-y0)/gu),
                 0.]
-            self.canvas.coords(self.image, *self.coords_to_canvas(self.pos[:2]))
+            self.canvas.coords(self.image, *self.grid_to_canvas(self.pos[:2]))
 
 
 
