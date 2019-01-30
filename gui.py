@@ -103,7 +103,7 @@ class SnappingCanvas(tk.Canvas):
         vbar.grid(row=0, column=1, sticky='ns')
 
         tk.Canvas.__init__(self, self.frame, bd=0, highlightthickness=0,
-            xscrollcommand=hbar.set, yscrollcommand=vbar.set, bg="white")
+            xscrollcommand=hbar.set, yscrollcommand=vbar.set, confine = False, bg="white")
 
         self.grid(row=0, column=0, sticky='nswe')
         
@@ -136,6 +136,12 @@ class SnappingCanvas(tk.Canvas):
         self.bind('<MouseWheel>', self.wheel)  # zoom for Windows and MacOS, but not Linux
         self.bind('<Button-5>',   self.wheel)  # zoom for Linux, wheel scroll down
         self.bind('<Button-4>',   self.wheel)  # zoom for Linux, wheel scroll up
+        self.bind('<Control-MouseWheel>', self.hscroll)  # zoom for Windows and MacOS, but not Linux
+        self.bind('<Control-Button-5>',   self.hscroll)  # zoom for Linux, wheel scroll down
+        self.bind('<Control-Button-4>',   self.hscroll)  # zoom for Linux, wheel scroll up
+        self.bind('<Shift-MouseWheel>', self.vscroll)  # zoom for Windows and MacOS, but not Linux
+        self.bind('<Shift-Button-5>',   self.vscroll)  # zoom for Linux, wheel scroll down
+        self.bind('<Shift-Button-4>',   self.vscroll)  # zoom for Linux, wheel scroll up
     
         self.elements = []
         self.copied_elements = []
@@ -158,14 +164,48 @@ class SnappingCanvas(tk.Canvas):
     
     def paste(self,event = None):
         self.deselect_all()
+
+        # smalles x and y of copied elements, in grid units
+        x_min = min([el.x_minus for el in self.copied_elements]+[el.x_plus for el in self.copied_elements])
+        y_min = min([el.y_minus for el in self.copied_elements]+[el.y_plus for el in self.copied_elements])
+
+        # Upper left corner, in grid units
+        NW = self.canvas_to_grid([self.canvasx(0.),self.canvasy(0.)])
+        NW = [round(NW[0]),round(NW[1])]
+
+        # shift to apply, in canvas units
+        dx = (NW[0]+1-x_min)*self.grid_unit
+        dy = (NW[1]+1-y_min)*self.grid_unit
+
         for el in self.copied_elements:
             el.create(*el.pos)
             el.adapt_to_grid_unit()
             el.force_select()
-            el.move(self.grid_unit,-self.grid_unit)
+            el.move(dx,dy)
+            el.add_or_replace_label()
+        
+        self.save()
+        
 
     def copy_selection(self,event = None):
         self.copied_elements = [deepcopy(el) for el in self.elements if el.selected]
+
+    def vscroll(self,event):
+        pass
+    def hscroll(self,event):
+        pass
+        # xscrollincrement = int(self.grid_unit/1.7)
+        # self.configure(xscrollincrement='%d'%xscrollincrement)
+        # if event.num == 5 or event.delta < 0:
+        #     direction = 1
+        # if event.num == 4 or event.delta > 0:
+        #     direction = -1
+        # self.xview_scroll(direction, tk.UNITS)
+        # # self.canvas_center = [self.canvas_center[0]+direction*xscrollincrement,self.canvas_center[1]]
+        # #     for el in self.elements:
+        # #         el.adapt_to_grid_unit()
+        # # self.on_resize()
+
 
     def wheel(self, event):
         old_grid_unit = self.grid_unit
@@ -197,9 +237,12 @@ class SnappingCanvas(tk.Canvas):
             canvas_center_shift = [event.x-canvas_pos_old[0],event.y-canvas_pos_old[1]]
             self.canvas_center = [self.canvas_center[0]+canvas_center_shift[0],
                         self.canvas_center[1]+canvas_center_shift[1]]
+            print(self.canvas_center)
             for el in self.elements:
                 el.adapt_to_grid_unit()
-            self.on_resize()
+
+            self.configure_scrollregion()
+            self.draw_grid(event)
 
 
     def scroll_x(self, *args, **kwargs):
