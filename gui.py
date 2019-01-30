@@ -58,6 +58,44 @@ class SnappingCanvas(tk.Canvas):
         self.frame.rowconfigure(0, weight=1)  # make canvas expandable
         self.frame.columnconfigure(0, weight=1)
 
+        menu_label_template ="{:<6}"
+        # TODO make this pretty?
+        menu_font = Font(family="Courier New", size=9, weight='normal')
+
+        self.menubar = tk.Menu(self.frame)
+        menu = tk.Menu(self.menubar, tearoff=0)
+        self.menubar.add_cascade(label=menu_label_template.format("File"), menu=menu)
+
+        label_template = "{:<15}{:>6}"
+        menu.add_command(label=label_template.format("Save","Ctrl+S"),command = self.save, font = menu_font)
+        menu.add_command(label=label_template.format("Exit",""),command =master.destroy, font = menu_font)
+
+        menu = tk.Menu(self.menubar, tearoff=0)
+        self.menubar.add_cascade(label=menu_label_template.format("Edit"), menu=menu)
+        
+        menu.add_command(label=label_template.format("Undo","Ctrl+Z"),command = self.ctrl_z, font = menu_font)
+        menu.add_command(label=label_template.format("Redo","Ctrl+Y"),command = self.ctrl_y, font = menu_font)
+        menu.add_separator()
+        menu.add_command(label=label_template.format("Cut","Ctrl+X"),command = self.cut_selection, font = menu_font)
+        menu.add_command(label=label_template.format("Copy","Ctrl+C"),command = self.copy_selection, font = menu_font)
+        menu.add_command(label=label_template.format("Paste","Ctrl+V"),command = self.paste, font = menu_font)
+        menu.add_separator()
+        menu.add_command(label=label_template.format("Select all","Ctrl+A"),command = self.select_all, font = menu_font)
+        menu.add_separator()
+        menu.add_command(label=label_template.format("Delete","Del"),command = self.delete_selection, font = menu_font)
+        menu.add_command(label=label_template.format("Delete all",""),command = self.delete_all, font = menu_font)
+        master.config(menu=self.menubar)
+
+        menu = tk.Menu(self.menubar, tearoff=0)
+        self.menubar.add_cascade(label=menu_label_template.format("Insert"), menu=menu)
+        
+        menu.add_command(label=label_template.format("Wire","W"),command = (lambda : self.event_generate('w')), font = menu_font)
+        menu.add_command(label=label_template.format("Junction","J"),command = (lambda : self.event_generate('j')), font = menu_font)
+        menu.add_command(label=label_template.format("Inductor","L"),command = (lambda : self.event_generate('l')), font = menu_font)
+        menu.add_command(label=label_template.format("Capacitor","C"),command = (lambda : self.event_generate('c')), font = menu_font)
+        menu.add_command(label=label_template.format("Resistor","R"),command = (lambda : self.event_generate('r')), font = menu_font)
+        master.config(menu=self.menubar)
+
         # Vertical and horizontal scrollbars for canvas
         hbar = AutoScrollbar(self.frame, orient='horizontal')
         vbar = AutoScrollbar(self.frame, orient='vertical')
@@ -82,7 +120,7 @@ class SnappingCanvas(tk.Canvas):
         self.bind('c', lambda event: C(self, event))
         self.bind('j', lambda event: J(self, event))
         self.bind('w', lambda event: W(self, event))
-        self.bind('s', self.save)
+        self.bind('<Control-s>', self.save)
         self.bind("<Configure>", self.on_resize)
         self.bind('<Delete>', self.delete_selection)
         self.bind('<Control-c>', self.copy_selection)
@@ -109,11 +147,11 @@ class SnappingCanvas(tk.Canvas):
         self.track_changes = True 
         self.save()
 
-    def cut_selection(self,event):
+    def cut_selection(self,event = None):
         self.copied_elements = [deepcopy(el) for el in self.elements if el.selected]
         self.delete_selection()
     
-    def paste(self,event):
+    def paste(self,event = None):
         self.deselect_all()
         for el in self.copied_elements:
             el.create(*el.pos)
@@ -121,7 +159,7 @@ class SnappingCanvas(tk.Canvas):
             el.force_select()
             el.move(self.grid_unit,-self.grid_unit)
 
-    def copy_selection(self,event):
+    def copy_selection(self,event = None):
         self.copied_elements = [deepcopy(el) for el in self.elements if el.selected]
 
     def wheel(self, event):
@@ -162,14 +200,15 @@ class SnappingCanvas(tk.Canvas):
         self.yview(*args)  # scroll vertically
         self.draw_grid()
 
-    def ctrl_z(self,event):
+    def ctrl_z(self,event = None):
         if self.history_location > 0:
             self.track_changes = False 
             self.history_location -= 1
             self.load_netlist(self.history[self.history_location].split('\n'))
+            self.save()
             self.track_changes = True 
 
-    def ctrl_y(self,event):
+    def ctrl_y(self,event = None):
         if 0 < self.history_location < len(self.history)-1:
             self.track_changes = False 
             self.history_location += 1
@@ -253,9 +292,11 @@ class SnappingCanvas(tk.Canvas):
         self.save()
 
     def delete_all(self, event=None):
+        self.track_changes = False
         to_delete = [el for el in self.elements]
         for el in to_delete:
             el.delete()
+        self.track_changes = True
 
     def save(self,event = None):
 
@@ -283,6 +324,11 @@ class SnappingCanvas(tk.Canvas):
             del self.history[self.history_location+1:]
             self.history.append(netlist_string)
             self.history_location+=1
+        
+        saved_message = self.create_text(
+               5, 5, text="Saved", anchor=tk.NW,
+               font=Font(family='Helvetica', size=8, weight='normal'))
+        self.after(300, lambda : self.delete(saved_message))
 
         
     def create_circle(self, x, y, r):
