@@ -113,6 +113,10 @@ class SnappingCanvas(tk.Canvas):
 
         self.netlist_file = netlist_file
         self.grid_unit = int(grid_unit)
+        self.canvas_center = [
+                      self.canvasx(self.winfo_width()/2.),
+                      self.canvasy(self.winfo_height()/2.)]
+
         # self.pack(fill=tk.BOTH, expand=1)
         self.focus_set()
         self.bind('r', lambda event: R(self, event))
@@ -190,6 +194,7 @@ class SnappingCanvas(tk.Canvas):
                 el.adapt_to_grid_unit()
             self.on_resize()
 
+
     def scroll_x(self, *args, **kwargs):
         """ Scroll canvas horizontally and redraw the image """
         self.xview(*args)  # scroll horizontally
@@ -224,14 +229,14 @@ class SnappingCanvas(tk.Canvas):
                 string_to_component(el[0], self, auto_place=el)
 
     def on_resize(self,event = None):
-        self.draw_grid(event)
         self.configure_scrollregion()
+        self.draw_grid(event)
 
     def configure_scrollregion(self):
         if len(self.elements)>0:
             xs = [el.x_minus for el in self.elements]+[el.x_plus for el in self.elements]
             ys = [el.y_minus for el in self.elements]+[el.y_plus for el in self.elements]
-            self.configure(scrollregion = [0,0,max(xs)*self.grid_unit,max(ys)*self.grid_unit])
+            self.configure(scrollregion = self.coords_to_canvas([min(xs),min(ys)])+self.coords_to_canvas([max(xs),max(ys)]))
 
     def draw_grid(self, event = None):
 
@@ -246,6 +251,7 @@ class SnappingCanvas(tk.Canvas):
 
         self.background = self.create_rectangle(
             *box_canvas, fill='white', tags='grid')
+
         for x in np.arange(int(box_canvas[0]/self.grid_unit)*self.grid_unit, box_canvas[2], self.grid_unit):
             for y in np.arange(int(box_canvas[1]/self.grid_unit)*self.grid_unit, box_canvas[3], self.grid_unit):
                 self.create_line(x-dx, y, x+2*dx, y, tags='grid')
@@ -347,6 +353,10 @@ class SnappingCanvas(tk.Canvas):
         y1 = y + r
         self.coords(circle,x0, y0, x1, y1)
 
+    def coords_to_canvas(self, pos):
+        # pos = [x ,y] (in grid units) 
+        return [self.canvas_center[0]+self.grid_unit*pos[0],
+                self.canvas_center[1]+self.grid_unit*pos[1]]
 
 class TwoNodeElement(object):
     def __init__(self, canvas, event=None, auto_place=None):
@@ -408,6 +418,9 @@ class TwoNodeElement(object):
         y = int(xy[1])
         return x, y
 
+    def coords_to_canvas(self, pos):
+        return self.canvas.coords_to_canvas(pos)
+
     def deselect(self):
         pass
 
@@ -435,10 +448,10 @@ class W(TwoNodeElement):
     @pos.setter
     def pos(self,pos):
         if pos != self.pos:
-            self.x_minus = int(abs(pos[0]))
-            self.y_minus = int(abs(pos[1]))
-            self.x_plus = int(abs(pos[2]))
-            self.y_plus = int(abs(pos[3]))
+            self.x_minus = pos[0]
+            self.y_minus = pos[1]
+            self.x_plus = pos[2]
+            self.y_plus = pos[3]
             self.canvas.save()
 
     @property
@@ -479,27 +492,31 @@ class W(TwoNodeElement):
 
     def create(self):
         gu = self.canvas.grid_unit
-        self.line = self.canvas.create_line(*[p*gu for p in self.pos])
-        self.dot_minus = self.canvas.create_circle(*[p*gu for p in self.pos[:2]],gu/20.)
-        self.dot_plus = self.canvas.create_circle(*[p*gu for p in self.pos[2:]], gu/20.)
+        canvas_coords_minus = self.coords_to_canvas(self.pos[:2])
+        canvas_coords_plus = self.coords_to_canvas(self.pos[2:])
+        self.line = self.canvas.create_line(*(canvas_coords_minus+canvas_coords_plus))
+        self.dot_minus = self.canvas.create_circle(*canvas_coords_minus,gu/20.)
+        self.dot_plus = self.canvas.create_circle(*canvas_coords_plus, gu/20.)
         self.canvas.elements.append(self)
 
     def adapt_to_grid_unit(self):
         gu = self.canvas.grid_unit
-        self.canvas.coords(self.line,*[p*self.canvas.grid_unit for p in self.pos])
-        self.canvas.update_circle(self.dot_minus,*[p*gu for p in self.pos[:2]],gu/20.)
-        self.canvas.update_circle(self.dot_plus,*[p*gu for p in self.pos[2:]],gu/20.)
+        canvas_coords_minus = self.coords_to_canvas(self.pos[:2])
+        canvas_coords_plus = self.coords_to_canvas(self.pos[2:])
+        self.canvas.coords(self.line,*(canvas_coords_minus+canvas_coords_plus))
+        self.canvas.update_circle(self.dot_minus,*canvas_coords_minus,gu/20.)
+        self.canvas.update_circle(self.dot_plus,*canvas_coords_plus,gu/20.)
 
     def show_line(self, event):
-        gu = self.canvas.grid_unit
         self.canvas.delete("temp")
         self.canvas.create_line(
-            self.x_minus*gu, self.y_minus*gu, event.x, event.y, tags='temp')
+            *self.coords_to_canvas(self.x_minus, self.y_minus), event.x, event.y, tags='temp')
 
     def snap_to_grid(self, event):
         gu = float(self.canvas.grid_unit)
-        return int(round(float(event.x)/gu)),\
-            int(round(float(event.y)/gu))
+        x0,y0 = self.canvas.canvas_center
+        return int(round(float(event.x-x0)/gu)),\
+            int(round(float(event.y-y0)/gu))
 
 
 class Component(TwoNodeElement):
@@ -522,10 +539,10 @@ class Component(TwoNodeElement):
 
     @pos.setter
     def pos(self,pos):
-        # Defined in grid units, _x/y_center should be n+(0. or 0.5) with n a positive integer
+        # Defined in grid units, _x/y_center should be n+(0. or 0.5) with n an integer
         if pos != self.pos:
-            self._x_center = abs(pos[0])
-            self._y_center = abs(pos[1])
+            self._x_center = pos[0]
+            self._y_center = pos[1]
             self._angle = pos[2]
 
             if self._angle == -90.:
@@ -589,7 +606,7 @@ class Component(TwoNodeElement):
         self.pos = [x,y,angle]
         self.import_tk_image()
         self.image = self.canvas.create_image(
-                x*gu, y*gu, image=self.tk_image)
+                *self.coords_to_canvas([x,y]), image=self.tk_image)
         self.add_or_replace_label()
         self.canvas.elements.append(self)
         self.set_allstate_bindings()
@@ -597,7 +614,7 @@ class Component(TwoNodeElement):
     def adapt_to_grid_unit(self):
         self.import_tk_image()
         self.canvas.itemconfig(self.image, image=self.tk_image)
-        self.canvas.coords(self.image,*[p*self.canvas.grid_unit for p in self.pos[:2]])
+        self.canvas.coords(self.image,*self.coords_to_canvas(self.pos[:2]))
         self.add_or_replace_label()
 
     def hover_enter(self, event):
@@ -704,7 +721,7 @@ class Component(TwoNodeElement):
 
         self.import_tk_image() # import rotated version
         self.canvas.itemconfig(self.image, image=self.tk_image)
-        self.canvas.coords(self.image,*[p*self.canvas.grid_unit for p in self.pos[:2]])
+        self.canvas.coords(self.image,*self.coords_to_canvas(self.pos[:2]))
         self.add_or_replace_label()
 
     def on_click(self, event,shift_control = False):
@@ -786,7 +803,8 @@ class Component(TwoNodeElement):
         gu = self.canvas.grid_unit
         xs = [x0, x1]
         ys = [y0, y1]
-        if min(xs) <= self.pos[0]*gu <= max(xs) and min(ys) <=  self.pos[1]*gu <= max(ys):
+        x,y = self.coords_to_canvas(self.pos[:2])
+        if min(xs) <= x <= max(xs) and min(ys) <=  y <= max(ys):
             self.force_select()
 
     def ctrl_shift_select(self):
@@ -841,11 +859,8 @@ class Component(TwoNodeElement):
 
     def snap_to_grid(self, event = None):
         x, y = self.canvas.coords(self.image)
+        x0,y0 = self.canvas.canvas_center
         gu = float(self.canvas.grid_unit)
-        if x<self.canvas.grid_unit:
-            x = 1
-        if y<self.canvas.grid_unit:
-            y = 1
 
         if self.pos[2] is None:
             angle = self.init_angle
@@ -854,17 +869,17 @@ class Component(TwoNodeElement):
 
         if angle == -90:
             self.pos = [
-                round(float(x)/gu),
-                round(float(y-gu/2.)/gu) + 0.5,
+                round(float(x-x0)/gu),
+                round(float(y-y0-gu/2.)/gu) + 0.5,
                 -90.]
-            self.canvas.coords(self.image, self.pos[0]*gu,self.pos[1]*gu)
+            self.canvas.coords(self.image, *self.coords_to_canvas(self.pos[:2]))
 
         elif angle == 0.:
             self.pos = [
-               0.5 + round(float(x-gu/2.)/gu),
-                round(float(y)/gu),
+               0.5 + round(float(x-x0-gu/2.)/gu),
+                round(float(y-y0)/gu),
                 0.]
-            self.canvas.coords(self.image, self.pos[0]*gu, self.pos[1]*gu)
+            self.canvas.coords(self.image, *self.coords_to_canvas(self.pos[:2]))
 
 
 
