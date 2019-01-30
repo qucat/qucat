@@ -94,7 +94,7 @@ class SnappingCanvas(tk.Canvas):
 
         # Handle keystrokes in idle mode, because program slows down on a weak computers,
         # when too many key stroke events in the same time
-        # self.bind('<Key>', lambda event: self.after_idle(self.__keystroke, event))
+        self.bind('<Key>', lambda event: self.after_idle(self.__keystroke, event))
 
         self.elements = []
         self.history = []
@@ -110,38 +110,51 @@ class SnappingCanvas(tk.Canvas):
         self.save()
 
 
-    # def __keystroke(self, event):
-    #     """ Scrolling with the keyboard.
-    #         Independent from the language of the keyboard, CapsLock, <Ctrl>+<key>, etc. """
-    #     if event.state - self.__previous_state == 4:  # means that the Control key is pressed
-    #         pass  # do nothing if Control key is pressed
-    #     else:
-    #         self.__previous_state = event.state  # remember the last keystroke state
-    #         # Up, Down, Left, Right keystrokes
-    #         if event.keycode in [68, 39, 102]:  # scroll right, keys 'd' or 'Right'
-    #             self.__scroll_x('scroll',  1, 'unit', event=event)
-    #         elif event.keycode in [65, 37, 100]:  # scroll left, keys 'a' or 'Left'
-    #             self.__scroll_x('scroll', -1, 'unit', event=event)
-    #         elif event.keycode in [87, 38, 104]:  # scroll up, keys 'w' or 'Up'
-    #             self.__scroll_y('scroll', -1, 'unit', event=event)
-    #         elif event.keycode in [83, 40, 98]:  # scroll down, keys 's' or 'Down'
-    #             self.__scroll_y('scroll',  1, 'unit', event=event)
+    def __keystroke(self, event):
+        """ Scrolling with the keyboard.
+            Independent from the language of the keyboard, CapsLock, <Ctrl>+<key>, etc. """
+        if event.state - self.__previous_state == 4:  # means that the Control key is pressed
+            pass  # do nothing if Control key is pressed
+        else:
+            self.__previous_state = event.state  # remember the last keystroke state
+            # Up, Down, Left, Right keystrokes
+            if event.keycode in [68, 39, 102]:  # scroll right, keys 'd' or 'Right'
+                self.__scroll_x('scroll',  1, 'unit', event=event)
+            elif event.keycode in [65, 37, 100]:  # scroll left, keys 'a' or 'Left'
+                self.__scroll_x('scroll', -1, 'unit', event=event)
+            elif event.keycode in [87, 38, 104]:  # scroll up, keys 'w' or 'Up'
+                self.__scroll_y('scroll', -1, 'unit', event=event)
+            elif event.keycode in [83, 40, 98]:  # scroll down, keys 's' or 'Down'
+                self.__scroll_y('scroll',  1, 'unit', event=event)
 
 
     def wheel(self, event):
-        old_grid_size = self.grid_unit
+        old_grid_unit = self.grid_unit
         scaling = 1.04
+        try:
+            if abs(event.delta)>120:
+                # Fast scrolling case on Windows
+                scaling = 1.12
+        except:
+            pass
+        smallest_grid_unit = 20
+        largest_grid_unit = 100
+
         # Respond to Linux (event.num) or Windows (event.delta) wheel event
-        if event.num == 5 or event.delta == -120:  # scroll down, smaller
-            self.grid_unit /= scaling
-        if event.num == 4 or event.delta == 120:  # scroll up, bigger
-            self.grid_unit *= scaling
-        self.grid_unit = int(self.grid_unit)
-
-        for el in self.elements:
-            el.adapt_to_gridsize(old_grid_size)
-        self.on_resize()
-
+        if event.num == 5 or event.delta < 0:  # scroll down, smaller
+            new_grid_unit = int(self.grid_unit/scaling)
+            if new_grid_unit == old_grid_unit:
+                new_grid_unit -= 1
+        elif event.num == 4 or event.delta > 0:  # scroll up, bigger
+            new_grid_unit = int(self.grid_unit*scaling)
+            if new_grid_unit == old_grid_unit:
+                new_grid_unit += 1
+    
+        if smallest_grid_unit <= new_grid_unit <= largest_grid_unit:
+            self.grid_unit = new_grid_unit
+            for el in self.elements:
+                el.adapt_to_grid_unit(old_grid_unit)
+            self.on_resize()
 
     def __scroll_x(self, *args, **kwargs):
         """ Scroll canvas horizontally and redraw the image """
@@ -298,7 +311,6 @@ class SnappingCanvas(tk.Canvas):
 class TwoNodeElement(object):
     def __init__(self, canvas, event=None, auto_place=None):
         self.canvas = canvas
-        self.grid_unit = canvas.grid_unit
 
         if auto_place is None and event is not None:
             self.manual_place(event)
@@ -322,13 +334,13 @@ class TwoNodeElement(object):
             self.auto_place(auto_place)
 
     def coords_to_node_string(self, x, y):
-        gu = self.grid_unit
+        gu = self.canvas.grid_unit
         return "%d,%d" % (round(x/gu), round(y/gu))
 
     def node_string_to_coords(self, node):
         xy = node.split(',')
-        x = int(xy[0])*self.grid_unit
-        y = int(xy[1])*self.grid_unit
+        x = int(xy[0])*self.canvas.grid_unit
+        y = int(xy[1])*self.canvas.grid_unit
         return x, y
 
     def deselect(self):
@@ -395,12 +407,12 @@ class W(TwoNodeElement):
 
     def create(self):
         self.line = self.canvas.create_line(*self.pos)
-        self.dot_minus = self.canvas.create_circle(*self.pos[:2], self.grid_unit/20.)
-        self.dot_plus = self.canvas.create_circle(*self.pos[2:], self.grid_unit/20.)
+        self.dot_minus = self.canvas.create_circle(*self.pos[:2], self.canvas.grid_unit/20.)
+        self.dot_plus = self.canvas.create_circle(*self.pos[2:], self.canvas.grid_unit/20.)
         self.canvas.elements.append(self)
 
-    def adapt_to_gridsize(self,old_gu):
-        gu = self.grid_unit
+    def adapt_to_grid_unit(self,old_gu):
+        gu = self.canvas.grid_unit
         def to_new_units(xy):
             return int(xy/old_gu)*gu
         self.pos = list(map(to_new_units,self.pos) )
@@ -416,7 +428,7 @@ class W(TwoNodeElement):
             self.x_minus, self.y_minus, event.x, event.y, tags='temp')
 
     def snap_to_grid(self, event):
-        gu = float(self.grid_unit)
+        gu = float(self.canvas.grid_unit)
         return int(gu * round(float(event.x)/gu)),\
             int(gu * round(float(event.y)/gu))
 
@@ -447,14 +459,14 @@ class Component(TwoNodeElement):
 
             if self._angle == -90.:
                 self.x_minus = pos[0]
-                self.y_minus = pos[1]-self.grid_unit/2.
+                self.y_minus = pos[1]-self.canvas.grid_unit/2.
                 self.x_plus = pos[0]
-                self.y_plus = pos[1]+self.grid_unit/2.
+                self.y_plus = pos[1]+self.canvas.grid_unit/2.
 
             if self._angle == 0.:
-                self.x_minus = pos[0]-self.grid_unit/2.
+                self.x_minus = pos[0]-self.canvas.grid_unit/2.
                 self.y_minus = pos[1]
-                self.x_plus = pos[0]+self.grid_unit/2.
+                self.x_plus = pos[0]+self.canvas.grid_unit/2.
                 self.y_plus = pos[1]
 
             self.canvas.save()
@@ -480,7 +492,7 @@ class Component(TwoNodeElement):
             self.create(self.x_minus, (self.y_minus+self.y_plus)/2, -90.)
         elif self.y_minus == self.y_plus:
             self.create((self.x_minus+self.x_plus)/2, self.y_minus, 0.)
-        self.add_label()
+        self.add_or_replace_label()
         self.canvas.elements.append(self)
         self.set_allstate_bindings()
 
@@ -503,7 +515,7 @@ class Component(TwoNodeElement):
 
         img = Image.open(os.path.join(png_directory, png))
         self.tk_image = ImageTk.PhotoImage(img.resize(
-            (self.grid_unit, self.grid_unit)).rotate(angle))
+            (self.canvas.grid_unit, self.canvas.grid_unit)).rotate(angle))
 
     def create(self, x, y, angle=0.):
         self.pos = [x,y,angle]
@@ -519,18 +531,18 @@ class Component(TwoNodeElement):
                 x, y, image=self.tk_image)
 
         if self.text is not None:
-            self.add_label()
+            self.add_or_replace_label()
 
-    def adapt_to_gridsize(self,old_gu):
-        gu = self.grid_unit
+    def adapt_to_grid_unit(self,old_gu):
+        gu = self.canvas.grid_unit
         def to_new_units(xy):
             return int(xy/(old_gu/2.))*(gu/2.)
-        self.pos = list(map(to_new_units,self.pos) )
+        self.pos = list(map(to_new_units,self.pos[:2]) )+[self.pos[2]]
 
         self.import_tk_image()
         self.canvas.itemconfig(self.image, image=self.tk_image)
         self.canvas.coords(self.image, *self.pos[:2])
-        self.add_label()
+        self.add_or_replace_label()
 
 
     def hover_enter(self, event):
@@ -559,7 +571,7 @@ class Component(TwoNodeElement):
 
     def modify_values(self, event = None):
         self.request_value_label()
-        self.add_label()
+        self.add_or_replace_label()
 
     def hover_leave(self, event):
         self.hover = False
@@ -611,7 +623,7 @@ class Component(TwoNodeElement):
         self.unset_initialization_bindings()
         self.snap_to_grid(event)
         self.request_value_label()
-        self.add_label()
+        self.add_or_replace_label()
         self.canvas.elements.append(self)
         self.set_allstate_bindings()
         self.canvas.track_changes = True
@@ -638,14 +650,14 @@ class Component(TwoNodeElement):
 
     def rotate(self):
         if self.pos[2] == 0.:
-            self.pos = [self.pos[0]-self.grid_unit/2., self.pos[1]+self.grid_unit/2., -90.]
+            self.pos = [self.pos[0]-self.canvas.grid_unit/2., self.pos[1]+self.canvas.grid_unit/2., -90.]
         elif self.pos[2] == -90.:
-            self.pos = [self.pos[0]+self.grid_unit/2., self.pos[1]-self.grid_unit/2., 0.]
+            self.pos = [self.pos[0]+self.canvas.grid_unit/2., self.pos[1]-self.canvas.grid_unit/2., 0.]
 
         self.import_tk_image() # import rotated version
         self.canvas.itemconfig(self.image, image=self.tk_image)
         self.canvas.coords(self.image,self.pos[:2])
-        self.add_label()
+        self.add_or_replace_label()
 
 
 
@@ -668,7 +680,7 @@ class Component(TwoNodeElement):
 
     def release_motion(self, event, shift_control=False):
         self.snap_to_grid(event)
-        self.add_label()
+        self.add_or_replace_label()
         self.canvas.bind('<Left>', lambda event: None)
         self.canvas.bind('<Right>', lambda event: None)
         self.canvas.bind('<Up>', lambda event: None)
@@ -683,13 +695,13 @@ class Component(TwoNodeElement):
         self.pos = [event.x,event.y, 0.]
         self.import_tk_image() # import rotated version
         self.canvas.itemconfig(self.image, image=self.tk_image)
-        self.add_label()
+        self.add_or_replace_label()
 
     def on_updown(self,event):
         self.pos = [event.x,event.y, -90.]
         self.import_tk_image() # import rotated version
         self.canvas.itemconfig(self.image, image=self.tk_image)
-        self.add_label()
+        self.add_or_replace_label()
 
     def select(self):
         self.canvas.deselect_all()
@@ -730,14 +742,14 @@ class Component(TwoNodeElement):
         self.canvas.save()
         del self
 
-    def add_label(self):
+    def add_or_replace_label(self):
 
         x, y, angle = self.pos
         value,label = self.prop
         text = to_string(self.unit, label, value,
                          use_math=False, use_unicode=True)
-        font = Font(family='Helvetica', size=int(self.grid_unit/8.), weight='normal')
-        text_position = (0.3)*self.grid_unit
+        font = Font(family='Helvetica', size=int(self.canvas.grid_unit/8.), weight='normal')
+        text_position = (0.3)*self.canvas.grid_unit
         if angle == -90. and self.text is None:
             self.text = self.canvas.create_text(
                 x+text_position, y, text=text, anchor=tk.W, font=font)
@@ -755,12 +767,12 @@ class Component(TwoNodeElement):
 
     def snap_to_grid(self, event = None):
         x, y = self.canvas.coords(self.image)
-        if x<self.grid_unit:
-            x = self.grid_unit
-        if y<self.grid_unit:
-            y = self.grid_unit
+        if x<self.canvas.grid_unit:
+            x = self.canvas.grid_unit
+        if y<self.canvas.grid_unit:
+            y = self.canvas.grid_unit
 
-        gu = float(self.grid_unit)
+        gu = float(self.canvas.grid_unit)
 
         if self.pos[2] is None:
             angle = self.init_angle
