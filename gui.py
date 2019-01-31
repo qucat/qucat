@@ -34,11 +34,11 @@ def string_to_component(s, *arg, **kwarg):
 class AutoScrollbar(ttk.Scrollbar):
     """ A scrollbar that hides itself if it's not needed. """
     def set(self, lo, hi):
-        if float(lo) <= 0.0 and float(hi) >= 1.0:
-            self.grid_remove()
-        else:
-            self.grid()
-            ttk.Scrollbar.set(self, lo, hi)
+        # if float(lo) <= 0.0 and float(hi) >= 1.0:
+        #     self.grid_remove()
+        # else:
+        self.grid()
+        ttk.Scrollbar.set(self, lo, hi)
 
     def pack(self, **kw):
         raise tk.TclError('Cannot use pack with the widget ' + self.__class__.__name__)
@@ -103,7 +103,7 @@ class SnappingCanvas(tk.Canvas):
         vbar.grid(row=0, column=1, sticky='ns')
 
         tk.Canvas.__init__(self, self.frame, bd=0, highlightthickness=0,
-            xscrollcommand=hbar.set, yscrollcommand=vbar.set, confine = False, bg="white")
+            xscrollcommand=hbar.set, yscrollcommand=vbar.set, confine = True, bg="white")
 
         self.grid(row=0, column=0, sticky='nswe')
         
@@ -136,12 +136,12 @@ class SnappingCanvas(tk.Canvas):
         self.bind('<MouseWheel>', self.wheel)  # zoom for Windows and MacOS, but not Linux
         self.bind('<Button-5>',   self.wheel)  # zoom for Linux, wheel scroll down
         self.bind('<Button-4>',   self.wheel)  # zoom for Linux, wheel scroll up
-        self.bind('<Control-MouseWheel>', self.hscroll)  # zoom for Windows and MacOS, but not Linux
-        self.bind('<Control-Button-5>',   self.hscroll)  # zoom for Linux, wheel scroll down
-        self.bind('<Control-Button-4>',   self.hscroll)  # zoom for Linux, wheel scroll up
-        self.bind('<Shift-MouseWheel>', self.vscroll)  # zoom for Windows and MacOS, but not Linux
-        self.bind('<Shift-Button-5>',   self.vscroll)  # zoom for Linux, wheel scroll down
-        self.bind('<Shift-Button-4>',   self.vscroll)  # zoom for Linux, wheel scroll up
+        self.bind('<Control-MouseWheel>', self.scroll_x_wheel)  # zoom for Windows and MacOS, but not Linux
+        self.bind('<Control-Button-5>',   self.scroll_x_wheel)  # zoom for Linux, wheel scroll down
+        self.bind('<Control-Button-4>',   self.scroll_x_wheel)  # zoom for Linux, wheel scroll up
+        self.bind('<Shift-MouseWheel>', self.scroll_y_wheel)  # zoom for Windows and MacOS, but not Linux
+        self.bind('<Shift-Button-5>',   self.scroll_y_wheel)  # zoom for Linux, wheel scroll down
+        self.bind('<Shift-Button-4>',   self.scroll_y_wheel)  # zoom for Linux, wheel scroll up
     
         self.elements = []
         self.copied_elements = []
@@ -190,21 +190,20 @@ class SnappingCanvas(tk.Canvas):
     def copy_selection(self,event = None):
         self.copied_elements = [deepcopy(el) for el in self.elements if el.selected]
 
-    def vscroll(self,event):
+    def scroll_y_wheel(self,event):
         pass
-    def hscroll(self,event):
-        pass
-        # xscrollincrement = int(self.grid_unit/1.7)
-        # self.configure(xscrollincrement='%d'%xscrollincrement)
-        # if event.num == 5 or event.delta < 0:
-        #     direction = 1
-        # if event.num == 4 or event.delta > 0:
-        #     direction = -1
-        # self.xview_scroll(direction, tk.UNITS)
-        # # self.canvas_center = [self.canvas_center[0]+direction*xscrollincrement,self.canvas_center[1]]
-        # #     for el in self.elements:
-        # #         el.adapt_to_grid_unit()
-        # # self.on_resize()
+    def scroll_x_wheel(self,event):
+        xscrollincrement = int(self.grid_unit/1.7)
+        self.configure(xscrollincrement='%d'%xscrollincrement)
+        if event.num == 5 or event.delta < 0:
+            direction = 1
+        if event.num == 4 or event.delta > 0:
+            direction = -1
+        self.xview_scroll(direction, tk.UNITS)
+        self.canvas_center = [self.canvas_center[0]+direction*xscrollincrement,self.canvas_center[1]]
+        # for el in self.elements:
+        #     el.adapt_to_grid_unit()
+        # self.on_resize()
 
 
     def wheel(self, event):
@@ -237,12 +236,11 @@ class SnappingCanvas(tk.Canvas):
             canvas_center_shift = [event.x-canvas_pos_old[0],event.y-canvas_pos_old[1]]
             self.canvas_center = [self.canvas_center[0]+canvas_center_shift[0],
                         self.canvas_center[1]+canvas_center_shift[1]]
-            print(self.canvas_center)
             for el in self.elements:
                 el.adapt_to_grid_unit()
 
-            self.configure_scrollregion()
             self.draw_grid(event)
+            self.configure_scrollregion()
 
 
     def scroll_x(self, *args, **kwargs):
@@ -283,10 +281,25 @@ class SnappingCanvas(tk.Canvas):
         self.draw_grid(event)
 
     def configure_scrollregion(self):
+        
+        box_canvas = [self.canvasx(0),  # get visible area of the canvas
+                      self.canvasy(0),
+                      self.canvasx(self.winfo_width()),
+                      self.canvasy(self.winfo_height())]
+                       
+
         if len(self.elements)>0:
             xs = [el.x_minus for el in self.elements]+[el.x_plus for el in self.elements]
             ys = [el.y_minus for el in self.elements]+[el.y_plus for el in self.elements]
-            self.configure(scrollregion = self.grid_to_canvas([min(xs),min(ys)])+self.grid_to_canvas([max(xs),max(ys)]))
+            box_elements = self.grid_to_canvas([min(xs)-1,min(ys)-1])+self.grid_to_canvas([max(xs)+1,max(ys)+1])
+
+            self.configure(
+                scrollregion = [min(box_elements[0], box_canvas[0]), min(box_elements[1], box_canvas[1]),
+                      max(box_elements[2], box_canvas[2]), max(box_elements[3], box_canvas[3])])
+        else:
+            self.configure(
+                scrollregion = box_canvas)
+
 
     def draw_grid(self, event = None):
 
