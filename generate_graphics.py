@@ -6,7 +6,7 @@ try:
     os.mkdir(png_directory)
 except FileExistsError:
     pass
-dpi = 200
+dpi = 300
 core.pp = {
     "element_width": 1.,
     "element_height": 1.,
