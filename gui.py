@@ -321,7 +321,7 @@ class SnappingCanvas(tk.Canvas):
                       self.canvasy(self.winfo_height()))
 
         self.background = self.create_rectangle(
-            *box_canvas, fill='white', tags='grid')
+            *box_canvas, fill='white',outline='', tags='grid')
 
         grid_x = np.arange(self.canvas_center[0], box_canvas[2], self.grid_unit).tolist()
         grid_x += np.arange(self.canvas_center[0]-self.grid_unit, box_canvas[0], -self.grid_unit).tolist()
@@ -372,6 +372,7 @@ class SnappingCanvas(tk.Canvas):
             el.delete()
         self.track_changes = True
         self.save()
+        self.configure_scrollregion()
 
     def delete_all(self, event=None):
         self.track_changes = False
@@ -593,7 +594,9 @@ class W(TwoNodeElement):
     def show_line(self, event):
         self.canvas.delete("temp")
         self.canvas.create_line(
-            *self.grid_to_canvas(self.x_minus, self.y_minus), self.canvas.canvasx(event.x), self.canvas.canvasy(event.y), tags='temp')
+            *self.grid_to_canvas([self.x_minus, self.y_minus]),
+            self.canvas.canvasx(event.x),
+            self.canvas.canvasy(event.y), tags='temp')
 
     def snap_to_grid(self, event):
         gu = float(self.canvas.grid_unit)
