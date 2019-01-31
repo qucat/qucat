@@ -237,10 +237,10 @@ class SnappingCanvas(tk.Canvas):
         elif new_grid_unit > largest_grid_unit:
             self.message("Can't zoom in more")
         else:
-            grid_pos_old = self.canvas_to_grid([event.x,event.y])
+            grid_pos_old = self.canvas_to_grid([self.canvasx(event.x),self.canvasy(event.y)])
             self.grid_unit = new_grid_unit
             canvas_pos_old = self.grid_to_canvas(grid_pos_old)
-            canvas_center_shift = [event.x-canvas_pos_old[0],event.y-canvas_pos_old[1]]
+            canvas_center_shift = [self.canvasx(event.x)-canvas_pos_old[0],self.canvasy(event.y)-canvas_pos_old[1]]
             self.canvas_center = [self.canvas_center[0]+canvas_center_shift[0],
                         self.canvas_center[1]+canvas_center_shift[1]]
             for el in self.elements:
@@ -338,18 +338,18 @@ class SnappingCanvas(tk.Canvas):
         
     def start_selection_field(self, event):
         self.deselect_all()
-        self.selection_rectangle_x_start = event.x
-        self.selection_rectangle_y_start = event.y
+        self.selection_rectangle_x_start = self.canvasx(event.x)
+        self.selection_rectangle_y_start = self.canvasy(event.y)
         self.selection_rectangle = self.create_rectangle(
-            event.x, event.y, event.x, event.y, dash=(3, 5))
+            self.canvasx(event.x), self.canvasy(event.y), self.canvasx(event.x), self.canvasy(event.y), dash=(3, 5))
 
     def expand_selection_field(self, event):
         self.deselect_all()
         self.coords(self.selection_rectangle,
-        min(event.x,self.selection_rectangle_x_start), 
-        min(event.y,self.selection_rectangle_y_start), 
-        max(event.x,self.selection_rectangle_x_start), 
-        max(event.y,self.selection_rectangle_y_start))
+        min(self.canvasx(event.x),self.selection_rectangle_x_start), 
+        min(self.canvasy(event.y),self.selection_rectangle_y_start), 
+        max(self.canvasx(event.x),self.selection_rectangle_x_start), 
+        max(self.canvasy(event.y),self.selection_rectangle_y_start))
         for el in self.elements:
             el.box_select(*self.coords(self.selection_rectangle))
 
@@ -592,13 +592,13 @@ class W(TwoNodeElement):
     def show_line(self, event):
         self.canvas.delete("temp")
         self.canvas.create_line(
-            *self.grid_to_canvas(self.x_minus, self.y_minus), event.x, event.y, tags='temp')
+            *self.grid_to_canvas(self.x_minus, self.y_minus), self.canvas.canvasx(event.x), self.canvas.canvasy(event.y), tags='temp')
 
     def snap_to_grid(self, event):
         gu = float(self.canvas.grid_unit)
         x0,y0 = self.canvas.canvas_center
-        return int(round(float(event.x-x0)/gu)),\
-            int(round(float(event.y-y0)/gu))
+        return int(round(float(self.canvas.canvasx(event.x)-x0)/gu)),\
+            int(round(float(self.canvas.canvasy(event.y)-y0)/gu))
 
 
 class Component(TwoNodeElement):
@@ -738,7 +738,7 @@ class Component(TwoNodeElement):
         self.init_angle = angle
         self.import_tk_image()
         self.image = self.canvas.create_image(
-                event.x, event.y, image=self.tk_image)
+                self.canvas.canvasx(event.x), self.canvas.canvasy(event.y), image=self.tk_image)
 
         self.canvas.bind("<Button-1>", self.init_release)
         self.canvas.bind('<Motion>', self.init_on_motion)
@@ -818,8 +818,8 @@ class Component(TwoNodeElement):
 
     def init_on_motion(self, event):
         x, y = self.canvas.coords(self.image)
-        dx = event.x - x
-        dy = event.y - y
+        dx = self.canvas.canvasx(event.x) - x
+        dy = self.canvas.canvasy(event.y) - y
         self.canvas.move(self.image, dx, dy)
 
     def on_motion(self, event):
@@ -860,14 +860,14 @@ class Component(TwoNodeElement):
 
     def on_leftright(self,event):
         gu = self.canvas.grid_unit
-        self.pos = [event.x/gu,event.y/gu, 0.]
+        self._angle =  0.
         self.import_tk_image() # import rotated version
         self.canvas.itemconfig(self.image, image=self.tk_image)
         self.add_or_replace_label()
 
     def on_updown(self,event):
         gu = self.canvas.grid_unit
-        self.pos = [event.x/gu,event.y/gu, -90.]
+        self._angle = -90.
         self.import_tk_image() # import rotated version
         self.canvas.itemconfig(self.image, image=self.tk_image)
         self.add_or_replace_label()
