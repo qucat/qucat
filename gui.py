@@ -103,7 +103,7 @@ class SnappingCanvas(tk.Canvas):
         vbar.grid(row=0, column=1, sticky='ns')
 
         tk.Canvas.__init__(self, self.frame, bd=0, highlightthickness=0,
-            xscrollcommand=hbar.set, yscrollcommand=vbar.set, confine = True, bg="white")
+            xscrollcommand=hbar.set, yscrollcommand=vbar.set, confine = False, bg="white")
 
         self.grid(row=0, column=0, sticky='nswe')
         
@@ -158,7 +158,6 @@ class SnappingCanvas(tk.Canvas):
         self.save()
         self.draw_grid()
         self.configure_scrollregion()
-        self.moveto = [0,0]
 
     def cut_selection(self,event = None):
         self.copied_elements = [deepcopy(el) for el in self.elements if el.selected]
@@ -193,20 +192,22 @@ class SnappingCanvas(tk.Canvas):
         self.copied_elements = [deepcopy(el) for el in self.elements if el.selected]
 
     def scroll_y_wheel(self,event):
-        pass
+        if event.num == 5 or event.delta < 0:
+            direction = 1
+        if event.num == 4 or event.delta > 0:
+            direction = -1
+        self.yview_scroll(direction, tk.UNITS)
+        self.configure_scrollregion()
+        self.draw_grid(event)
+
     def scroll_x_wheel(self,event):
-        pass
-        # xscrollincrement = int(self.grid_unit/1.7)
-        # self.configure(xscrollincrement='%d'%xscrollincrement)
-        # if event.num == 5 or event.delta < 0:
-        #     direction = 1
-        # if event.num == 4 or event.delta > 0:
-        #     direction = -1
-        # self.xview_scroll(direction, tk.UNITS)
-        # self.canvas_center = [self.canvas_center[0]+direction*xscrollincrement,self.canvas_center[1]]
-        # # for el in self.elements:
-        # #     el.adapt_to_grid_unit()
-        # # self.on_resize()
+        if event.num == 5 or event.delta < 0:
+            direction = 1
+        if event.num == 4 or event.delta > 0:
+            direction = -1
+        self.xview_scroll(direction, tk.UNITS)
+        self.configure_scrollregion()
+        self.draw_grid(event)
 
 
     def wheel(self, event):
