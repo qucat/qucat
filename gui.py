@@ -562,7 +562,9 @@ class W(TwoNodeElement):
         pass
 
     def manual_place(self, event):
+        self.canvas.config(cursor = 'plus')
         self.canvas.bind("<Button-1>", self.start_line)
+        self.canvas.bind("<Escape>", self.abort_creation)
 
     def auto_place(self, auto_place_info):
         self.create()
@@ -571,6 +573,15 @@ class W(TwoNodeElement):
         self.x_minus, self.y_minus = self.snap_to_grid(event)
         self.canvas.bind("<Motion>", self.show_line)
         self.canvas.bind("<Button-1>", self.end_line)
+
+    def abort_creation(self,event = None):
+        self.canvas.bind("<Button-1>",lambda event: None)
+        self.canvas.bind("<Escape>", lambda event: None)
+        self.canvas.bind("<Motion>", lambda event: None)
+        self.canvas.bind("<Button-1>",lambda event: None)
+        self.canvas.delete('temp')
+        self.canvas.config(cursor = 'arrow')
+        del self
 
     def delete(self, event=None):
         self.canvas.elements.remove(self)
@@ -584,6 +595,7 @@ class W(TwoNodeElement):
         self.canvas.delete("temp")
         self.canvas.bind("<Button-1>", lambda event: None)
         self.canvas.bind('<Motion>', lambda event: None)
+        self.canvas.config(cursor = 'arrow')
 
         x,y = self.snap_to_grid(event)
         self.pos = [self.x_minus,self.y_minus,x,y]
