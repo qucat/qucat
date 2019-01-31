@@ -725,8 +725,12 @@ class Component(TwoNodeElement):
         self.modify_values(self)
 
     def modify_values(self, event = None):
+        old_prop = self.prop
         self.request_value_label()
-        self.add_or_replace_label()
+        if self.prop[0] is None and self.prop[1] is None:
+            self.prop = old_prop
+        else:
+            cself.add_or_replace_label()
 
     def hover_leave(self, event):
         self.hover = False
@@ -771,6 +775,9 @@ class Component(TwoNodeElement):
         self.unset_initialization_bindings()
         self.snap_to_grid(event)
         self.request_value_label()
+        if self.prop[0] is None and self.prop[1] is None:
+            self.abort_creation()
+            return
         self.add_or_replace_label()
         self.canvas.elements.append(self)
         self.set_allstate_bindings()
