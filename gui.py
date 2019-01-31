@@ -49,7 +49,6 @@ class AutoScrollbar(ttk.Scrollbar):
 
 class SnappingCanvas(tk.Canvas):
     def __init__(self, master, grid_unit, netlist_file, **kw):
-        
         """ Initialize the ImageFrame """
 
         self.frame = ttk.Frame()
@@ -154,13 +153,15 @@ class SnappingCanvas(tk.Canvas):
         except FileNotFoundError:
             with open(netlist_file, 'w') as f:
                 pass
-        self.track_changes = True 
-        self.save()
         self.draw_grid()
         self.configure_scrollregion()
+        self.track_changes = True 
+        self.save()
 
     def cut_selection(self,event = None):
+        self.track_changes = False
         self.copied_elements = [deepcopy(el) for el in self.elements if el.selected]
+        self.track_changes = True
         self.delete_selection()
     
     def paste(self,event = None):
@@ -187,9 +188,10 @@ class SnappingCanvas(tk.Canvas):
         
         self.save()
         
-
     def copy_selection(self,event = None):
+        self.track_changes = False
         self.copied_elements = [deepcopy(el) for el in self.elements if el.selected]
+        self.track_changes = True
 
     def scroll_y_wheel(self,event):
         if event.num == 5 or event.delta < 0:
@@ -208,7 +210,6 @@ class SnappingCanvas(tk.Canvas):
         self.xview_scroll(direction, tk.UNITS)
         self.configure_scrollregion()
         self.draw_grid(event)
-
 
     def wheel(self, event):
         old_grid_unit = self.grid_unit
@@ -250,7 +251,6 @@ class SnappingCanvas(tk.Canvas):
             self.draw_grid(event)
             self.configure_scrollregion()
 
-
     def scroll_x(self, *args, **kwargs):
         """ Scroll canvas horizontally and redraw the image """
         self.xview(*args)  # scroll vertically
@@ -263,22 +263,30 @@ class SnappingCanvas(tk.Canvas):
         self.draw_grid()
 
     def ctrl_z(self,event = None):
+        print('CTRL-Z')
+        print (self.history)
+        print ("location was: %d"%self.history_location)
         if self.history_location > 0:
             self.track_changes = False 
             self.history_location -= 1
             self.load_netlist(self.history[self.history_location].split('\n'))
             self.save()
             self.track_changes = True 
+        print ("location is: %d"%self.history_location)
 
     def ctrl_y(self,event = None):
+        print('CTRL-Y')
+        print (self.history)
+        print ("location was: %d"%self.history_location)
         if 0 < self.history_location < len(self.history)-1:
             self.track_changes = False 
             self.history_location += 1
             self.load_netlist(self.history[self.history_location].split('\n'))
             self.track_changes = True 
+        print ("location is: %d"%self.history_location)
 
     def load_netlist(self,lines):
-        self.delete_all()
+        self.delete_all(track_changes = False)
         for el in lines:
             el = el.replace('\n', '')
             el = el.split(";")
@@ -365,21 +373,26 @@ class SnappingCanvas(tk.Canvas):
         for el in self.elements:
             el.force_select()
 
-    def delete_selection(self, event=None):
+    def delete_selection(self, event=None,track_changes = None):
+        was_tracking_changes = self.track_changes
         self.track_changes = False
         to_delete = [el for el in self.elements if el.selected]
         for el in to_delete:
             el.delete()
-        self.track_changes = True
-        self.save()
+        if track_changes is None: # Just follow "was_tracking_changes"
+            self.track_changes = was_tracking_changes
+            self.save()
+        elif track_changes is False:
+            self.track_changes = was_tracking_changes
+        elif track_changes is True:
+            self.track_changes = True
+            self.save()
+            self.track_changes = track_changes
         self.configure_scrollregion()
 
-    def delete_all(self, event=None):
-        self.track_changes = False
-        to_delete = [el for el in self.elements]
-        for el in to_delete:
-            el.delete()
-        self.track_changes = True
+    def delete_all(self, event=None,track_changes = None):
+        self.select_all()
+        self.delete_selection(event,track_changes)
 
     def save(self,event = None):
 
@@ -407,6 +420,8 @@ class SnappingCanvas(tk.Canvas):
             del self.history[self.history_location+1:]
             self.history.append(netlist_string)
             self.history_location+=1
+            print ('ADDED TO HISTORY')
+            print (self.history)
 
         self.message("Saving...")
 
@@ -760,6 +775,7 @@ class Component(TwoNodeElement):
             '<Up>', lambda event: self.init_create_component(event, angle=-90.))
         self.canvas.bind(
             '<Down>', lambda event: self.init_create_component(event, angle=-90.))
+        self.hover_enter(event)
 
     def unset_initialization_bindings(self):
         self.canvas.bind("<Button-1>", lambda event: None)
