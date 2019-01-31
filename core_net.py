@@ -372,7 +372,6 @@ class Qcircuit_GUI(_Qcircuit):
 
         x_margin = pp['x_fig_margin']
         y_margin = pp['y_fig_margin'] # ensures that any text labels are not cutoff
-        
         fig = plt.figure(figsize = (
             ((x_max-x_min)+2.*x_margin)*pp["figsize_scaling"],
             ((y_max-y_min)+2.*y_margin)*pp["figsize_scaling"]))
@@ -734,7 +733,19 @@ class Circuit(object):
         self.node_plus_plot = '1,0'
         self.set_plot_coordinates()
         xs, ys, line_type = self.draw()
-        fig = plt.figure(figsize=(1,1))
+
+        
+        x_min = min([np.amin(x) for x in xs])
+        x_max = max([np.amax(x) for x in xs])
+        y_min = min([np.amin(x) for x in ys])
+        y_max = max([np.amax(x) for x in ys])
+
+        x_margin = pp['x_fig_margin']
+        y_margin = pp['y_fig_margin'] # ensures that any text labels are not cutoff
+
+        fig = plt.figure(figsize=
+            (((x_max-x_min)+2.*x_margin)*pp["figsize_scaling"],
+            ((y_max-y_min)+2.*y_margin)*pp["figsize_scaling"]))
         ax = fig.add_subplot(111)
         ax.set_axis_off()
         plt.margins(x=0., y=0.)

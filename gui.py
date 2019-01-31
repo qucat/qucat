@@ -681,8 +681,9 @@ class Component(TwoNodeElement):
             angle = self.pos[2]
 
         img = Image.open(os.path.join(png_directory, png))
-        self.tk_image = ImageTk.PhotoImage(img.resize(
-            (self.canvas.grid_unit, self.canvas.grid_unit)).rotate(angle))
+        img = img.resize((self.canvas.grid_unit, int(self.canvas.grid_unit)))
+        img = img.rotate(angle)
+        self.tk_image = ImageTk.PhotoImage(img)
 
     def create(self, x, y, angle=0.):
         gu = self.canvas.grid_unit
@@ -929,7 +930,7 @@ class Component(TwoNodeElement):
         text = to_string(self.unit, label, value,
                          use_math=False, use_unicode=True)
         font = Font(family='Helvetica', size=int(gu/8.), weight='normal')
-        text_position = (0.3)*gu
+        text_position = (0.2)*gu
         if angle == -90. and self.text is None:
             self.text = self.canvas.create_text(
                 x+text_position, y, text=text, anchor=tk.W, font=font)
