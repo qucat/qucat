@@ -278,7 +278,7 @@ class SnappingCanvas(tk.Canvas):
         print('CTRL-Y')
         print (self.history)
         print ("location was: %d"%self.history_location)
-        if 0 < self.history_location < len(self.history)-1:
+        if 0 <= self.history_location < len(self.history)-1:
             self.track_changes = False 
             self.history_location += 1
             self.load_netlist(self.history[self.history_location].split('\n'))
@@ -749,7 +749,7 @@ class Component(TwoNodeElement):
         if self.prop[0] is None and self.prop[1] is None:
             self.prop = old_prop
         else:
-            cself.add_or_replace_label()
+            self.add_or_replace_label()
 
     def hover_leave(self, event):
         self.hover = False
