@@ -34,11 +34,11 @@ def string_to_component(s, *arg, **kwarg):
 class AutoScrollbar(ttk.Scrollbar):
     """ A scrollbar that hides itself if it's not needed. """
     def set(self, lo, hi):
-        # if float(lo) <= 0.0 and float(hi) >= 1.0:
-        #     self.grid_remove()
-        # else:
-        self.grid()
-        ttk.Scrollbar.set(self, lo, hi)
+        if float(lo) <= 0.0 and float(hi) >= 1.0:
+            self.grid_remove()
+        else:
+            self.grid()
+            ttk.Scrollbar.set(self, lo, hi)
 
     def pack(self, **kw):
         raise tk.TclError('Cannot use pack with the widget ' + self.__class__.__name__)
@@ -157,6 +157,8 @@ class SnappingCanvas(tk.Canvas):
         self.track_changes = True 
         self.save()
         self.draw_grid()
+        self.configure_scrollregion()
+        self.moveto = [0,0]
 
     def cut_selection(self,event = None):
         self.copied_elements = [deepcopy(el) for el in self.elements if el.selected]
@@ -193,17 +195,18 @@ class SnappingCanvas(tk.Canvas):
     def scroll_y_wheel(self,event):
         pass
     def scroll_x_wheel(self,event):
-        xscrollincrement = int(self.grid_unit/1.7)
-        self.configure(xscrollincrement='%d'%xscrollincrement)
-        if event.num == 5 or event.delta < 0:
-            direction = 1
-        if event.num == 4 or event.delta > 0:
-            direction = -1
-        self.xview_scroll(direction, tk.UNITS)
-        self.canvas_center = [self.canvas_center[0]+direction*xscrollincrement,self.canvas_center[1]]
-        # for el in self.elements:
-        #     el.adapt_to_grid_unit()
-        # self.on_resize()
+        pass
+        # xscrollincrement = int(self.grid_unit/1.7)
+        # self.configure(xscrollincrement='%d'%xscrollincrement)
+        # if event.num == 5 or event.delta < 0:
+        #     direction = 1
+        # if event.num == 4 or event.delta > 0:
+        #     direction = -1
+        # self.xview_scroll(direction, tk.UNITS)
+        # self.canvas_center = [self.canvas_center[0]+direction*xscrollincrement,self.canvas_center[1]]
+        # # for el in self.elements:
+        # #     el.adapt_to_grid_unit()
+        # # self.on_resize()
 
 
     def wheel(self, event):
@@ -229,7 +232,11 @@ class SnappingCanvas(tk.Canvas):
             if new_grid_unit == old_grid_unit:
                 new_grid_unit += 1
     
-        if smallest_grid_unit <= new_grid_unit <= largest_grid_unit:
+        if smallest_grid_unit > new_grid_unit:
+            self.message("Can't zoom out more")
+        elif new_grid_unit > largest_grid_unit:
+            self.message("Can't zoom in more")
+        else:
             grid_pos_old = self.canvas_to_grid([event.x,event.y])
             self.grid_unit = new_grid_unit
             canvas_pos_old = self.grid_to_canvas(grid_pos_old)
@@ -245,8 +252,9 @@ class SnappingCanvas(tk.Canvas):
 
     def scroll_x(self, *args, **kwargs):
         """ Scroll canvas horizontally and redraw the image """
-        self.xview(*args)  # scroll horizontally
+        self.xview(*args)  # scroll vertically
         self.draw_grid()
+
 
     def scroll_y(self, *args, **kwargs):
         """ Scroll canvas vertically and redraw the image """
@@ -299,7 +307,6 @@ class SnappingCanvas(tk.Canvas):
         else:
             self.configure(
                 scrollregion = box_canvas)
-
 
     def draw_grid(self, event = None):
 
@@ -398,9 +405,12 @@ class SnappingCanvas(tk.Canvas):
             del self.history[self.history_location+1:]
             self.history.append(netlist_string)
             self.history_location+=1
-        
+
+        self.message("Saving...")
+
+    def message(self,text):
         saved_message = self.create_text(
-               5, 2, text="Saving...", anchor=tk.NW,
+               self.canvasx(5), self.canvasy(2), text=text, anchor=tk.NW,
                font=Font(family='Helvetica', size=8, weight='normal'))
         self.after(300, lambda : self.delete(saved_message))
 
@@ -814,8 +824,8 @@ class Component(TwoNodeElement):
 
     def on_motion(self, event):
         x, y = self.canvas.coords(self.image)
-        dx = event.x - x
-        dy = event.y - y
+        dx = self.canvas.canvasx(event.x) - x
+        dy = self.canvas.canvasy(event.y) - y
         for el in self.canvas.elements:
             if el.selected or el==self:
                 el.move(dx,dy)
@@ -825,8 +835,6 @@ class Component(TwoNodeElement):
         '''
         Input given in canvas units
         '''
-        gu = self.canvas.grid_unit
-        x, y, angle = self.pos
         self.canvas.move(self.image, dx, dy)
         self.add_or_replace_label()
 
