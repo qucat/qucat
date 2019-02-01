@@ -17,11 +17,11 @@ from copy import deepcopy
 
 png_directory = os.path.join(os.path.dirname(__file__), ".graphics")
 
-# ANGLES
-EAST = 0.
-NORTH = -90.
-WEST = -180.
-SOUTH = -270.
+# ANGLES (negative = clock-wise rotation)
+EAST = 0. # as generated in core_net
+NORTH = 90.
+WEST = 180.
+SOUTH = 270.
 
 def string_to_component(s, *arg, **kwarg):
     if s == 'W':
@@ -547,7 +547,6 @@ class TwoNodeElement(object):
     def box_select(self, x0, y0, x1, y1):
         pass
 
-
 class W(TwoNodeElement):
     def __init__(self, canvas, event=None, auto_place=None):
         self.hover = False
@@ -649,7 +648,6 @@ class W(TwoNodeElement):
         return int(round(float(self.canvas.canvasx(event.x)-x0)/gu)),\
             int(round(float(self.canvas.canvasy(event.y)-y0)/gu))
 
-
 class Component(TwoNodeElement):
     def __init__(self, canvas, event = None, auto_place = None):
         self.image = None
@@ -676,16 +674,26 @@ class Component(TwoNodeElement):
             self._y_center = pos[1]
             self._angle = pos[2]
 
-            if self._angle == -90.:
+            if self._angle == SOUTH:
                 self.x_minus = pos[0]
                 self.y_minus = pos[1]-0.5
                 self.x_plus = pos[0]
                 self.y_plus = pos[1]+0.5
+            elif self._angle == NORTH:
+                self.x_minus = pos[0]
+                self.y_minus = pos[1]+0.5
+                self.x_plus = pos[0]
+                self.y_plus = pos[1]-0.5
 
-            elif self._angle == 0.:
+            elif self._angle == EAST:
                 self.x_minus = pos[0]-0.5
                 self.y_minus = pos[1]
                 self.x_plus = pos[0]+0.5
+                self.y_plus = pos[1]
+            elif self._angle == WEST:
+                self.x_minus = pos[0]+0.5
+                self.y_minus = pos[1]
+                self.x_plus = pos[0]-0.5
                 self.y_plus = pos[1]
 
             self.canvas.save()
@@ -707,9 +715,15 @@ class Component(TwoNodeElement):
     def auto_place(self, auto_place_info):
 
         if self.x_minus == self.x_plus:
-            self.create(self.x_minus, (self.y_minus+self.y_plus)/2, -90.)
+            if self.y_minus<self.y_plus:
+                self.create(self.x_minus, (self.y_minus+self.y_plus)/2, NORTH)
+            else:
+                self.create(self.x_minus, (self.y_minus+self.y_plus)/2, SOUTH)
         elif self.y_minus == self.y_plus:
-            self.create((self.x_minus+self.x_plus)/2, self.y_minus, 0.)
+            if self.x_minus<self.x_plus:
+                self.create((self.x_minus+self.x_plus)/2, self.y_minus, EAST)
+            else:
+                self.create((self.x_minus+self.x_plus)/2, self.y_minus, WEST)
 
     def request_value_label(self):
         window = RequestValueLabelWindow(self.canvas.master, self)
@@ -733,7 +747,7 @@ class Component(TwoNodeElement):
         img = img.rotate(angle)
         self.tk_image = ImageTk.PhotoImage(img)
 
-    def create(self, x, y, angle=0.):
+    def create(self, x, y, angle=EAST):
         gu = self.canvas.grid_unit
         self.pos = [x,y,angle]
         self.import_tk_image()
@@ -798,13 +812,13 @@ class Component(TwoNodeElement):
         self.canvas.bind('<Motion>', self.init_on_motion)
         self.canvas.bind('<Escape>',self.abort_creation)
         self.canvas.bind(
-            '<Left>', lambda event: self.init_create_component(event))
+            '<Left>', lambda event: self.init_create_component(event, angle=WEST))
         self.canvas.bind(
-            '<Right>', lambda event: self.init_create_component(event))
+            '<Right>', lambda event: self.init_create_component(event, angle=EAST))
         self.canvas.bind(
-            '<Up>', lambda event: self.init_create_component(event, angle=-90.))
+            '<Up>', lambda event: self.init_create_component(event, angle=NORTH))
         self.canvas.bind(
-            '<Down>', lambda event: self.init_create_component(event, angle=-90.))
+            '<Down>', lambda event: self.init_create_component(event, angle=SOUTH))
         self.hover_enter(event)
 
     def unset_initialization_bindings(self):
@@ -854,10 +868,10 @@ class Component(TwoNodeElement):
         self.canvas.bind("<ButtonRelease-3>", lambda event: None)
 
     def rotate(self):
-        if self.pos[2] == 0.:
-            self.pos = [self.pos[0]-0.5, self.pos[1]+0.5, -90.]
-        elif self.pos[2] == -90.:
-            self.pos = [self.pos[0]+0.5, self.pos[1]-0.5, 0.]
+        if self.pos[2]%180. == 0.:
+            self.pos = [self.pos[0]-0.5, self.pos[1]+0.5, (self.pos[2]+90.)%360.]
+        elif self.pos[2]%180. == 90.:
+            self.pos = [self.pos[0]+0.5, self.pos[1]-0.5, (self.pos[2]+90.)%360.]
 
         self.import_tk_image() # import rotated version
         self.canvas.itemconfig(self.image, image=self.tk_image)
@@ -869,10 +883,10 @@ class Component(TwoNodeElement):
         if self.selected is False and shift_control is False:
             self.canvas.deselect_all()
 
-        self.canvas.bind('<Left>', self.on_leftright)
-        self.canvas.bind('<Right>', self.on_leftright)
-        self.canvas.bind('<Up>', self.on_updown)
-        self.canvas.bind('<Down>', self.on_updown)
+        self.canvas.bind('<Left>', lambda event:self.on_updownleftright(event,angle = WEST))
+        self.canvas.bind('<Right>', lambda event:self.on_updownleftright(event,angle = EAST))
+        self.canvas.bind('<Up>', lambda event:self.on_updownleftright(event,angle = NORTH))
+        self.canvas.bind('<Down>', lambda event:self.on_updownleftright(event,angle = SOUTH))
 
     def init_on_motion(self, event):
         x, y = self.canvas.coords(self.image)
@@ -916,16 +930,9 @@ class Component(TwoNodeElement):
         else:
             self.select()
 
-    def on_leftright(self,event):
+    def on_updownleftright(self,event,angle):
         gu = self.canvas.grid_unit
-        self._angle =  0.
-        self.import_tk_image() # import rotated version
-        self.canvas.itemconfig(self.image, image=self.tk_image)
-        self.add_or_replace_label()
-
-    def on_updown(self,event):
-        gu = self.canvas.grid_unit
-        self._angle = -90.
+        self._angle = angle
         self.import_tk_image() # import rotated version
         self.canvas.itemconfig(self.image, image=self.tk_image)
         self.add_or_replace_label()
@@ -980,17 +987,17 @@ class Component(TwoNodeElement):
                          use_math=False, use_unicode=True)
         font = Font(family='Helvetica', size=int(gu/8.), weight='normal')
         text_position = (0.2)*gu
-        if angle == -90. and self.text is None:
+        if angle%180. == 90. and self.text is None:
             self.text = self.canvas.create_text(
                 x+text_position, y, text=text, anchor=tk.W, font=font)
-        elif angle == -90. and self.text is not None:
+        elif angle%180. == 90. and self.text is not None:
             self.canvas.coords(self.text,x+text_position, y )
             self.canvas.itemconfig(self.text,
                 text=text, anchor=tk.W, font=font)
-        elif angle == 0. and self.text is None:
+        elif angle%180. == 0. and self.text is None:
             self.text = self.canvas.create_text(
                 x, y+text_position, text=text, anchor=tk.N, font=font)
-        elif angle == 0. and self.text is not None:
+        elif angle%180. == 0. and self.text is not None:
             self.canvas.coords(self.text,x, y+text_position )
             self.canvas.itemconfig(self.text,
                 text=text, anchor=tk.N, font=font)
@@ -1005,18 +1012,18 @@ class Component(TwoNodeElement):
         else:
             angle = self.pos[2]
 
-        if angle == -90:
+        if angle%180. == 90.:
             self.pos = [
                 round(float(x-x0)/gu),
                 round(float(y-y0-gu/2.)/gu) + 0.5,
-                -90.]
+                angle]
             self.canvas.coords(self.image, *self.grid_to_canvas(self.pos[:2]))
 
-        elif angle == 0.:
+        elif angle%180. == 0.:
             self.pos = [
                0.5 + round(float(x-x0-gu/2.)/gu),
                 round(float(y-y0)/gu),
-                0.]
+                angle]
             self.canvas.coords(self.image, *self.grid_to_canvas(self.pos[:2]))
 
 

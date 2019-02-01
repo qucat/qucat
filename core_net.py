@@ -1063,9 +1063,9 @@ class G(Component):
     def draw(self):
         line_type = []
         x = [
-            np.array([-0.5, -0.25])*pp['element_width'],
-            np.array([-0.25, -0.25])*pp['element_width'],
-            np.array([-0.125, -0.125])*pp['element_width'],
+            np.array([0.5, 0.25])*pp['element_width'],
+            np.array([0.25, 0.25])*pp['element_width'],
+            np.array([0.125, 0.125])*pp['element_width'],
             np.array([0., 0.])*pp['element_width'],
         ]
         y = [
