@@ -22,6 +22,68 @@ def string_to_component(s, *arg, **kwarg):
         return J(*arg, **kwarg)
     elif s == 'C':
         return C(*arg, **kwarg)
+    elif s == 'G':
+        return G(*arg, **kwarg)
+
+pp = {
+    "element_width": 1.,
+    "element_height": 1.,
+    "margin": 0.,
+    "figsize_scaling": 1,
+    "element_height_normal_modes": 1.5,
+    "color": [0.15, 0.15, 0.15],
+    "x_fig_margin": 0.,
+    "y_fig_margin": 0.25,
+    "C": {
+        "gap": 0.2,
+        "height": 0.25,
+        "lw": 6
+    },
+    "J": {
+        "width": 0.25,
+        "lw": 6
+    },
+    "L": {
+        "width": 0.7,
+        "height": 0.25,
+        "N_points": 150,
+        "N_turns": 5,
+        "lw": 2
+    },
+    "R": {
+        "width": 0.6,
+        "height": 0.25,
+        "N_points": 150,
+        "N_ridges": 4,
+        "lw": 2
+    },
+    "P": {
+        "side_wire_width": 0.25
+    },
+    "W": {
+        "lw": 1
+    },
+    "label": {
+        "fontsize": 10,
+        "text_position": 0.35
+    },
+    "normal_mode_label": {
+        "fontsize": 10,
+        "y_arrow": 0.26,
+        "y_text": 0.37
+    },
+    "normal_mode_arrow": {
+        "logscale": "False",
+        "min_width": 0.1,
+        "max_width": 0.5,
+        "min_lw": 1,
+        "max_lw": 3,
+        "min_head": 0.07,
+        "max_head": 0.071,
+        "color_positive": [0.483, 0.622, 0.974],
+        "color_negative": [0.931, 0.519, 0.406]
+    }
+}
 
 class _Qcircuit(object):
     """docstring for BBQcircuit"""
@@ -983,6 +1045,48 @@ class R(Component):
         if self.angle == -90.:
             return shift(y_list,self.x_plot_center), shift(x_list,self.y_plot_center),line_type
 
+class G(Component):
+    def __init__(self, node_minus, node_plus, arg1=None, arg2=None):
+        super(G, self).__init__(node_minus, node_plus, arg1, arg2)
+        self.type = 'G'
+        self.unit = None
+        self.label = None
+        self.value = None
+
+    def to_string(*args, **kwargs):
+        return ' '
+
+    def set_component_lists(self):
+        super(G, self).set_component_lists()
+        self.head.grounds.append(self)
+
+    def draw(self):
+        line_type = []
+        x = [
+            np.array([-0.5, -0.25])*pp['element_width'],
+            np.array([-0.25, -0.25])*pp['element_width'],
+            np.array([-0.125, -0.125])*pp['element_width'],
+            np.array([0., 0.])*pp['element_width'],
+        ]
+        y = [
+            np.array([0., 0.]),
+            np.array([-1., 1.])*pp['element_height']*5./16.,
+            np.array([-1., 1.])*pp['element_height']*3./16.,
+            np.array([-1., 1.])*pp['element_height']*1./16.,
+        ]
+        line_type.append('W')
+        line_type.append('W')
+        line_type.append('W')
+        line_type.append('W')
+
+        if self.angle == 0.:
+            return shift(x,self.x_plot_center), shift(y,self.y_plot_center),line_type
+        if self.angle == -90.:
+            return shift(y,self.x_plot_center), shift(x,self.y_plot_center),line_type
+
+
+
+
 class L(Component):
     def __init__(self, node_minus, node_plus, arg1=None, arg2=None):
         super(L, self).__init__(node_minus, node_plus, arg1, arg2)
@@ -1042,7 +1146,6 @@ class L(Component):
             return shift(x_list,self.x_plot_center), shift(y_list,self.y_plot_center),line_type
         if self.angle == -90.:
             return shift(y_list,self.x_plot_center), shift(x_list,self.y_plot_center),line_type
-
 
 class J(L):
     def __init__(self, node_minus, node_plus, arg1=None, arg2=None, use_E=False, use_I=False):
@@ -1105,7 +1208,6 @@ class J(L):
             return shift(x,self.x_plot_center), shift(y,self.y_plot_center),line_type
         if self.angle == -90.:
             return shift(y,self.x_plot_center), shift(x,self.y_plot_center),line_type
-
 
 class R(Component):
     def __init__(self, node_minus, node_plus, arg1=None, arg2=None):
@@ -1226,36 +1328,4 @@ class Admittance(Component):
 
 if __name__ == '__main__':
 
-    # n = Network([
-    #     R(0,1,1.),
-    #     R(1,2,1.),
-    #     R(0,2,1.),
-    #     ])
-    # nl = n.net_dict
-    # print nl
-    # n.remove_node(1)
-    # print nl
-    # print nl[0][2].admittance()
-
-    cQED_circuit = Qcircuit_GUI("test.txt", edit=True,plot = False)
-
-    # cQED_circuit = Qcircuit([
-    #     C(0,1,100e-15),
-    #     J(0,1,10e-9),
-    # C(1,2,10e-15),
-    # C(2,0,64e-15),
-    # L(2,0,22e-9),
-    # C(2,0,33e-15),
-    # L(2,3,45e-9),
-    # C(0,3,63e-15),
-    # L(2,3,45e-9),
-    # C(1,3,63e-15),
-    # C(0,2,34e-15),
-    # L(4,3,45e-15),
-    # L(2,4,67e-9),
-    # ])
-    # print cQED_circuit.eigenfrequencies()
-    # print cQED_circuit.loss_rates()
-    # cQED_circuit.w_k_A_chi(pretty_print=True)
-    # cQED_circuit.show_normal_mode(mode=0,L_J=10e-9)
-    # cQED_circuit.hamiltonian(L_J=10e-9)
+    G(0,1,'').show()

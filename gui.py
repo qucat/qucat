@@ -17,6 +17,11 @@ from copy import deepcopy
 
 png_directory = os.path.join(os.path.dirname(__file__), ".graphics")
 
+# ANGLES
+EAST = 0.
+NORTH = -90.
+WEST = -180.
+SOUTH = -270.
 
 def string_to_component(s, *arg, **kwarg):
     if s == 'W':
@@ -29,6 +34,8 @@ def string_to_component(s, *arg, **kwarg):
         return J(*arg, **kwarg)
     elif s == 'C':
         return C(*arg, **kwarg)
+    elif s == 'G':
+        return G(*arg, **kwarg)
 
 
 class AutoScrollbar(ttk.Scrollbar):
@@ -123,6 +130,7 @@ class SnappingCanvas(tk.Canvas):
         self.bind('c', lambda event: C(self, event))
         self.bind('j', lambda event: J(self, event))
         self.bind('w', lambda event: W(self, event))
+        self.bind('g', lambda event: G(self, event))
         self.bind('<Control-s>', self.save)
         self.bind("<Configure>", self.on_resize)
         self.bind('<Delete>', self.delete_selection)
@@ -166,27 +174,27 @@ class SnappingCanvas(tk.Canvas):
     
     def paste(self,event = None):
         self.deselect_all()
+        if len(self.copied_elements)>0:
+            # smallest x and y of copied elements, in grid units
+            x_min = min([el.x_minus for el in self.copied_elements]+[el.x_plus for el in self.copied_elements])
+            y_min = min([el.y_minus for el in self.copied_elements]+[el.y_plus for el in self.copied_elements])
 
-        # smalles x and y of copied elements, in grid units
-        x_min = min([el.x_minus for el in self.copied_elements]+[el.x_plus for el in self.copied_elements])
-        y_min = min([el.y_minus for el in self.copied_elements]+[el.y_plus for el in self.copied_elements])
+            # Upper left corner, in grid units
+            NW = self.canvas_to_grid([self.canvasx(0.),self.canvasy(0.)])
+            NW = [round(NW[0]),round(NW[1])]
 
-        # Upper left corner, in grid units
-        NW = self.canvas_to_grid([self.canvasx(0.),self.canvasy(0.)])
-        NW = [round(NW[0]),round(NW[1])]
+            # shift to apply, in canvas units
+            dx = (NW[0]+1-x_min)*self.grid_unit
+            dy = (NW[1]+1-y_min)*self.grid_unit
 
-        # shift to apply, in canvas units
-        dx = (NW[0]+1-x_min)*self.grid_unit
-        dy = (NW[1]+1-y_min)*self.grid_unit
-
-        for el in self.copied_elements:
-            el.create(*el.pos)
-            el.adapt_to_grid_unit()
-            el.force_select()
-            el.move(dx,dy)
-            el.add_or_replace_label()
-        
-        self.save()
+            for el in self.copied_elements:
+                el.create(*el.pos)
+                el.adapt_to_grid_unit()
+                el.force_select()
+                el.move(dx,dy)
+                el.add_or_replace_label()
+            
+            self.save()
         
     def copy_selection(self,event = None):
         self.track_changes = False
@@ -255,7 +263,6 @@ class SnappingCanvas(tk.Canvas):
         """ Scroll canvas horizontally and redraw the image """
         self.xview(*args)  # scroll vertically
         self.draw_grid()
-
 
     def scroll_y(self, *args, **kwargs):
         """ Scroll canvas vertically and redraw the image """
@@ -344,6 +351,17 @@ class SnappingCanvas(tk.Canvas):
         self.tag_bind('grid', '<ButtonPress-1>', self.start_selection_field)
         self.tag_bind('grid', "<B1-Motion>", self.expand_selection_field)
         self.tag_bind('grid', "<ButtonRelease-1>", self.end_selection_field)
+        self.tag_bind('grid', "<Button-3>", self.right_click)
+
+    def right_click(self,event):
+        self.deselect_all()
+        self.bind("<ButtonRelease-3>", self.open_right_click_menu)
+
+    def open_right_click_menu(self,event):
+        menu = tk.Menu(self, tearoff=0)
+        menu.add_command(label="Paste",command = self.paste)
+        menu.tk_popup(event.x_root, event.y_root, 0)
+        self.bind("<ButtonRelease-3>", lambda event: None)
         
     def start_selection_field(self, event):
         self.deselect_all()
@@ -664,7 +682,7 @@ class Component(TwoNodeElement):
                 self.x_plus = pos[0]
                 self.y_plus = pos[1]+0.5
 
-            if self._angle == 0.:
+            elif self._angle == 0.:
                 self.x_minus = pos[0]-0.5
                 self.y_minus = pos[1]
                 self.x_plus = pos[0]+0.5
@@ -830,8 +848,8 @@ class Component(TwoNodeElement):
         menu.add_command(label="Rotate",command = self.rotate)
         menu.add_command(label="Delete",command = self.delete)
         menu.add_separator()
-        menu.add_command(label="Copy")
-        menu.add_command(label="Cut")
+        menu.add_command(label="Copy",command = self.canvas.copy_selection)
+        menu.add_command(label="Cut",command = self.canvas.cut_selection)
         menu.tk_popup(event.x_root, event.y_root, 0)
         self.canvas.bind("<ButtonRelease-3>", lambda event: None)
 
@@ -1010,14 +1028,12 @@ class R(Component):
         self.unit = r'$\Omega$'
         super(R, self).__init__(canvas, event, auto_place)
 
-
 class L(Component):
     """docstring for L"""
 
     def __init__(self, canvas, event=None, auto_place=None):
         self.unit = 'H'
         super(L, self).__init__(canvas, event, auto_place)
-
 
 class C(Component):
     """docstring for C"""
@@ -1026,13 +1042,47 @@ class C(Component):
         self.unit = 'F'
         super(C, self).__init__(canvas, event, auto_place)
 
-
 class J(Component):
     """docstring for J"""
 
     def __init__(self, canvas, event=None, auto_place=None):
         self.unit = 'H'
         super(J, self).__init__(canvas, event, auto_place)
+
+class G(Component):
+    """docstring for J"""
+
+    def __init__(self, canvas, event=None, auto_place=None):
+        self.unit = ''
+        super(G, self).__init__(canvas, event, auto_place)
+
+    @property
+    def prop(self):
+        return [None,'']
+
+    @prop.setter
+    def prop(self,prop):
+        pass
+
+    def double_click(self,event):
+        pass
+    
+    def request_value_label(self):
+        pass
+
+    def open_right_click_menu(self,event):
+        menu = tk.Menu(self.canvas, tearoff=0)
+        menu.add_command(label="Rotate",command = self.rotate)
+        menu.add_command(label="Delete",command = self.delete)
+        menu.add_separator()
+        menu.add_command(label="Copy",command = self.canvas.copy_selection)
+        menu.add_command(label="Cut",command = self.canvas.cut_selection)
+        menu.tk_popup(event.x_root, event.y_root, 0)
+        self.canvas.bind("<ButtonRelease-3>", lambda event: None)
+
+    def add_or_replace_label(self):
+        pass
+
 
 
 class RequestValueLabelWindow(tk.Toplevel):
