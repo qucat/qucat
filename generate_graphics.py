@@ -58,7 +58,7 @@ for el in el_str_list:
     string_to_component(el,None,None,'').show(save_to = os.path.join(png_directory,'%s_hover.png'%el),plot = False, dpi = dpi)
 
 # hover selected state
-core.pp['color']=[0.483, 0.622, 0.974]
+core.pp['color']="#666666"
 for el in el_str_list:
     string_to_component(el,None,None,'').show(save_to = os.path.join(png_directory,'%s_hover_selected.png'%el),plot = False, dpi = dpi)
 # selected state
@@ -72,6 +72,6 @@ for el in el_str_list:
     string_to_component(el,None,None,'').show(save_to = os.path.join(png_directory,'%s_selected.png'%el),plot = False, dpi = dpi)
 
 # rest state
-core.pp['color']=[0.15, 0.15, 0.15]
+core.pp['color']="#1c1c1c"
 for el in el_str_list:
     string_to_component(el,None,None,'').show(save_to = os.path.join(png_directory,'%s.png'%el),plot = False, dpi = dpi)

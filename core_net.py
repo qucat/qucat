@@ -8,7 +8,7 @@ from numbers import Number
 from math import floor,factorial
 from Qcircuits import gui
 import os
-from bbq.utility import pretty_value,\
+from Qcircuits.utility import pretty_value,\
     check_there_are_no_iterables_in_kwarg,shift,to_string
 
 def string_to_component(s, *arg, **kwarg):
