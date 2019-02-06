@@ -6,7 +6,7 @@ from copy import deepcopy
 import matplotlib.pyplot as plt
 from numbers import Number
 from math import floor,factorial
-from bbq import gui
+from Qcircuits import gui
 import os
 from bbq.utility import pretty_value,\
     check_there_are_no_iterables_in_kwarg,shift,to_string

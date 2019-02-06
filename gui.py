@@ -12,7 +12,7 @@ from PIL import Image, ImageTk
 from tkinter import ttk
 import numpy as np
 import os
-from bbq.utility import to_string
+from Qcircuits.utility import to_string
 from copy import deepcopy
 
 png_directory = os.path.join(os.path.dirname(__file__), ".graphics")
