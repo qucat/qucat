@@ -188,7 +188,7 @@ class SnappingCanvas(tk.Canvas):
             dy = (NW[1]+1-y_min)*self.grid_unit
 
             for el in self.copied_elements:
-                el.create(*el.pos)
+                el.create()
                 el.adapt_to_grid_unit()
                 el.force_select()
                 el.move(dx,dy)
@@ -674,12 +674,14 @@ class W(TwoNodeElement):
         xm,ym,xp,yp = self.canvas.coords(self.line)
         # snapped to grid units
         xm,ym,xp,yp = [round(p) for p in self.canvas.canvas_to_grid([xm,ym])+self.canvas.canvas_to_grid([xp,yp])] 
+        self.pos = [xm,ym,xp,yp]
+        
         # back to canvas units:
         xm,ym,xp,yp = self.canvas.grid_to_canvas([xm,ym])+self.canvas.grid_to_canvas([xp,yp])
-
         self.canvas.coords(self.line,xm,ym,xp,yp)
         self.canvas.update_circle(self.dot_minus,xm,ym,self.canvas.grid_unit/20.)
         self.canvas.update_circle(self.dot_plus,xp,yp,self.canvas.grid_unit/20.)
+        
 
 
     def init_minus_snap_to_grid(self, event):
@@ -915,14 +917,18 @@ class Component(TwoNodeElement):
 
         if self.x_minus == self.x_plus:
             if self.y_minus<self.y_plus:
-                self.create(self.x_minus, (self.y_minus+self.y_plus)/2, NORTH)
+                self.pos = [self.x_minus, (self.y_minus+self.y_plus)/2, NORTH]
+                self.create()
             else:
-                self.create(self.x_minus, (self.y_minus+self.y_plus)/2, SOUTH)
+                self.pos = [self.x_minus, (self.y_minus+self.y_plus)/2, SOUTH]
+                self.create()
         elif self.y_minus == self.y_plus:
             if self.x_minus<self.x_plus:
-                self.create((self.x_minus+self.x_plus)/2, self.y_minus, EAST)
+                self.pos = [(self.x_minus+self.x_plus)/2, self.y_minus, EAST]
+                self.create()
             else:
-                self.create((self.x_minus+self.x_plus)/2, self.y_minus, WEST)
+                self.pos = [(self.x_minus+self.x_plus)/2, self.y_minus, WEST]
+                self.create()
 
     def request_value_label(self):
         window = RequestValueLabelWindow(self.canvas.master, self)
@@ -946,9 +952,9 @@ class Component(TwoNodeElement):
         img = img.rotate(angle)
         self.tk_image = ImageTk.PhotoImage(img)
 
-    def create(self, x, y, angle=EAST):
+    def create(self):
         gu = self.canvas.grid_unit
-        self.pos = [x,y,angle]
+        x,y,angle = self.pos
         self.import_tk_image()
         self.image = self.canvas.create_image(
                 *self.grid_to_canvas([x,y]), image=self.tk_image)
