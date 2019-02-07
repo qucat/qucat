@@ -173,8 +173,8 @@ class SnappingCanvas(tk.Canvas):
         self.delete_selection()
     
     def paste(self,event = None):
-        self.deselect_all()
         if len(self.copied_elements)>0:
+            self.deselect_all()
 
             # paste in the top left corner
 
@@ -215,9 +215,8 @@ class SnappingCanvas(tk.Canvas):
                 el.move(dx,dy)
                 el.add_or_replace_label()
             
-            for el in self.copied_elements[:1]:
-                self.bind("<Motion>", el.on_motion)
-                self.bind("<ButtonRelease-1>", el.release_motion)
+            self.bind("<Motion>", el.on_motion)
+            self.bind("<ButtonRelease-1>", el.release_motion_paste)
                     
     def copy_selection(self,event = None):
         self.track_changes = False
@@ -609,7 +608,11 @@ class TwoNodeElement(object):
         self.canvas.bind('<Right>', lambda event: None)
         self.canvas.bind('<Up>', lambda event: None)
         self.canvas.bind('<Down>', lambda event: None)
+
+    def release_motion_paste(self, event):
+        self.release_motion(event)
         self.canvas.bind('<Motion>', lambda event: None)
+        self.canvas.bind("<ButtonRelease-1>", lambda event: None)
 
 
         if self.was_moved:
