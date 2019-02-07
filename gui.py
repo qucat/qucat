@@ -175,17 +175,38 @@ class SnappingCanvas(tk.Canvas):
     def paste(self,event = None):
         self.deselect_all()
         if len(self.copied_elements)>0:
-            # smallest x and y of copied elements, in grid units
+
+            # paste in the top left corner
+
+            # # smallest x and y of copied elements, in grid units
+            # x_min = min([el.x_minus for el in self.copied_elements]+[el.x_plus for el in self.copied_elements])
+            # y_min = min([el.y_minus for el in self.copied_elements]+[el.y_plus for el in self.copied_elements])
+
+            # # Upper left corner, in grid units
+            # NW = self.canvas_to_grid([self.canvasx(0.),self.canvasy(0.)])
+            # NW = [round(NW[0]),round(NW[1])]
+
+            # # shift to apply, in canvas units
+            # dx = (NW[0]+1-x_min)*self.grid_unit
+            # dy = (NW[1]+1-y_min)*self.grid_unit
+
+            # for el in self.copied_elements:
+            #     el.create()
+            #     el.adapt_to_grid_unit()
+            #     el.force_select()
+            #     el.move(dx,dy)
+            #     el.add_or_replace_label()
+
+            # click to drop
+
+            # smallest x and y of copied elements, in canvas units
             x_min = min([el.x_minus for el in self.copied_elements]+[el.x_plus for el in self.copied_elements])
             y_min = min([el.y_minus for el in self.copied_elements]+[el.y_plus for el in self.copied_elements])
-
-            # Upper left corner, in grid units
-            NW = self.canvas_to_grid([self.canvasx(0.),self.canvasy(0.)])
-            NW = [round(NW[0]),round(NW[1])]
+            x_min,y_min = self.grid_to_canvas([x_min,y_min])
 
             # shift to apply, in canvas units
-            dx = (NW[0]+1-x_min)*self.grid_unit
-            dy = (NW[1]+1-y_min)*self.grid_unit
+            dx = self.canvasx(event.x)-x_min
+            dy = self.canvasy(event.y)-y_min
 
             for el in self.copied_elements:
                 el.create()
@@ -194,8 +215,10 @@ class SnappingCanvas(tk.Canvas):
                 el.move(dx,dy)
                 el.add_or_replace_label()
             
-            self.save()
-        
+            for el in self.copied_elements[:1]:
+                self.bind("<Motion>", el.on_motion)
+                self.bind("<ButtonRelease-1>", el.release_motion)
+                    
     def copy_selection(self,event = None):
         self.track_changes = False
         self.copied_elements = [deepcopy(el) for el in self.elements if el.selected]
@@ -574,15 +597,19 @@ class TwoNodeElement(object):
 
     def release_motion(self, event, shift_control=False):
         N_selected = 0
+        self.canvas.track_changes = False
         for el in self.canvas.elements:
             if el.selected or el==self:
                 N_selected += 1
                 el.snap_to_grid()
                 el.add_or_replace_label()
+        self.canvas.track_changes = True
+        self.canvas.save()
         self.canvas.bind('<Left>', lambda event: None)
         self.canvas.bind('<Right>', lambda event: None)
         self.canvas.bind('<Up>', lambda event: None)
         self.canvas.bind('<Down>', lambda event: None)
+        self.canvas.bind('<Motion>', lambda event: None)
 
 
         if self.was_moved:
