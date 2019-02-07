@@ -23,6 +23,8 @@ SOUTH = 90.
 EAST = 180.
 NORTH = 270.
 
+node_dot_radius = 1./30.
+
 def string_to_component(s, *arg, **kwarg):
     if s == 'W':
         return W(*arg, **kwarg)
@@ -216,7 +218,7 @@ class SnappingCanvas(tk.Canvas):
                 el.add_or_replace_label()
             
             self.bind("<Motion>", el.on_motion)
-            self.bind("<ButtonRelease-1>", el.release_motion_paste)
+            self.bind("<ButtonPress-1>", el.release_motion_paste)
                     
     def copy_selection(self,event = None):
         self.track_changes = False
@@ -609,18 +611,17 @@ class TwoNodeElement(object):
         self.canvas.bind('<Up>', lambda event: None)
         self.canvas.bind('<Down>', lambda event: None)
 
-    def release_motion_paste(self, event):
-        self.release_motion(event)
-        self.canvas.bind('<Motion>', lambda event: None)
-        self.canvas.bind("<ButtonRelease-1>", lambda event: None)
-
-
         if self.was_moved:
             self.force_select()
         elif shift_control:
             self.ctrl_shift_select()
         else:
             self.select()
+
+    def release_motion_paste(self, event):
+        self.release_motion(event)
+        self.canvas.bind("<Motion>", lambda event: None)
+        self.canvas.bind("<ButtonPress-1>", lambda event: None)
    
     def hover_enter(self, event):
         self.hover = True
@@ -709,8 +710,8 @@ class W(TwoNodeElement):
         # back to canvas units:
         xm,ym,xp,yp = self.canvas.grid_to_canvas([xm,ym])+self.canvas.grid_to_canvas([xp,yp])
         self.canvas.coords(self.line,xm,ym,xp,yp)
-        self.canvas.update_circle(self.dot_minus,xm,ym,self.canvas.grid_unit/20.)
-        self.canvas.update_circle(self.dot_plus,xp,yp,self.canvas.grid_unit/20.)
+        self.canvas.update_circle(self.dot_minus,xm,ym,self.canvas.grid_unit*node_dot_radius)
+        self.canvas.update_circle(self.dot_plus,xp,yp,self.canvas.grid_unit*node_dot_radius)
         
 
 
@@ -832,8 +833,8 @@ class W(TwoNodeElement):
         canvas_coords_minus = self.grid_to_canvas(self.pos[:2])
         canvas_coords_plus = self.grid_to_canvas(self.pos[2:])
         self.line = self.canvas.create_line(*(canvas_coords_minus+canvas_coords_plus))
-        self.dot_minus = self.canvas.create_circle(*canvas_coords_minus,gu/20.)
-        self.dot_plus = self.canvas.create_circle(*canvas_coords_plus, gu/20.)
+        self.dot_minus = self.canvas.create_circle(*canvas_coords_minus,gu*node_dot_radius)
+        self.dot_plus = self.canvas.create_circle(*canvas_coords_plus, gu*node_dot_radius)
         self.canvas.elements.append(self)
         self.set_allstate_bindings()
 
@@ -842,8 +843,8 @@ class W(TwoNodeElement):
         canvas_coords_minus = self.grid_to_canvas(self.pos[:2])
         canvas_coords_plus = self.grid_to_canvas(self.pos[2:])
         self.canvas.coords(self.line,*(canvas_coords_minus+canvas_coords_plus))
-        self.canvas.update_circle(self.dot_minus,*canvas_coords_minus,gu/20.)
-        self.canvas.update_circle(self.dot_plus,*canvas_coords_plus,gu/20.)
+        self.canvas.update_circle(self.dot_minus,*canvas_coords_minus,gu*node_dot_radius)
+        self.canvas.update_circle(self.dot_plus,*canvas_coords_plus,gu*node_dot_radius)
 
     def show_line(self, event):
         self.canvas.delete("temp")
