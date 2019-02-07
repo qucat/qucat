@@ -13,16 +13,10 @@ from tkinter import ttk
 import numpy as np
 import os
 from Qcircuits.utility import to_string
+from Qcircuits.constants import *
 from copy import deepcopy
 
 png_directory = os.path.join(os.path.dirname(__file__), ".graphics")
-
-# ANGLES (negative = clock-wise rotation)
-WEST = 0.  # as generated in core_net
-SOUTH = 90.
-EAST = 180.
-NORTH = 270.
-
 node_dot_radius = 1./30.
 
 
@@ -209,29 +203,6 @@ class SnappingCanvas(tk.Canvas):
         if len(self.copied_elements) > 0:
             self.deselect_all()
 
-            # paste in the top left corner
-
-            # # smallest x and y of copied elements, in grid units
-            # x_min = min([el.x_minus for el in self.copied_elements]+[el.x_plus for el in self.copied_elements])
-            # y_min = min([el.y_minus for el in self.copied_elements]+[el.y_plus for el in self.copied_elements])
-
-            # # Upper left corner, in grid units
-            # NW = self.canvas_to_grid([self.canvasx(0.),self.canvasy(0.)])
-            # NW = [round(NW[0]),round(NW[1])]
-
-            # # shift to apply, in canvas units
-            # dx = (NW[0]+1-x_min)*self.grid_unit
-            # dy = (NW[1]+1-y_min)*self.grid_unit
-
-            # for el in self.copied_elements:
-            #     el.create()
-            #     el.adapt_to_grid_unit()
-            #     el.force_select()
-            #     el.move(dx,dy)
-            #     el.add_or_replace_label()
-
-            # click to drop
-
             # smallest x and y of copied elements, in canvas units
             x_min = min([el.x_minus for el in self.copied_elements] +
                         [el.x_plus for el in self.copied_elements])
@@ -330,37 +301,36 @@ class SnappingCanvas(tk.Canvas):
         self.draw_grid()
 
     def ctrl_z(self, event=None):
-        print('CTRL-Z')
-        for net in self.history:
-            print(net)
-        print("location was: %d" % self.history_location)
+        # print('CTRL-Z')
+        # for net in self.history:
+        #     print(net)
+        # print("location was: %d" % self.history_location)
         if self.history_location > 0:
             self.track_changes = False
             self.history_location -= 1
             self.load_netlist(self.history[self.history_location].split('\n'))
             self.save()
             self.track_changes = True
-        print("location is: %d" % self.history_location)
+        # print("location is: %d" % self.history_location)
 
     def ctrl_y(self, event=None):
-        print('CTRL-Y')
-        for net in self.history:
-            print(net)
-        print("location was: %d" % self.history_location)
+        # print('CTRL-Y')
+        # for net in self.history:
+        #     print(net)
+        # print("location was: %d" % self.history_location)
         if 0 <= self.history_location < len(self.history)-1:
             self.track_changes = False
             self.history_location += 1
             self.load_netlist(self.history[self.history_location].split('\n'))
             self.track_changes = True
-        print("location is: %d" % self.history_location)
+        # print("location is: %d" % self.history_location)
 
     def load_netlist(self, lines):
         self.delete_all(track_changes=False)
         for el in lines:
             el = el.replace('\n', '')
             el = el.split(";")
-            if el[0] in ['C', 'L', 'R', 'J', 'W']:
-                string_to_component(el[0], self, auto_place=el)
+            string_to_component(el[0], self, auto_place=el)
 
     def on_resize(self, event=None):
         self.configure_scrollregion()
@@ -506,9 +476,9 @@ class SnappingCanvas(tk.Canvas):
             del self.history[self.history_location+1:]
             self.history.append(netlist_string)
             self.history_location += 1
-            print('ADDED TO HISTORY')
-            for net in self.history:
-                print(net)
+            # print('ADDED TO HISTORY')
+            # for net in self.history:
+            #     print(net)
 
         self.message("Saving...")
 
@@ -1046,12 +1016,12 @@ class Component(TwoNodeElement):
             self._y_center = pos[1]
             self._angle = pos[2]
 
-            if self._angle == SOUTH:
+            if self._angle == NORTH:
                 self.x_minus = pos[0]
                 self.y_minus = pos[1]-0.5
                 self.x_plus = pos[0]
                 self.y_plus = pos[1]+0.5
-            elif self._angle == NORTH:
+            elif self._angle == SOUTH:
                 self.x_minus = pos[0]
                 self.y_minus = pos[1]+0.5
                 self.x_plus = pos[0]

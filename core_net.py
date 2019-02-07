@@ -5,11 +5,13 @@ from sympy.core.mul import Mul, Pow, Add
 from copy import deepcopy
 import matplotlib.pyplot as plt
 from numbers import Number
-from math import floor,factorial
+from math import floor, factorial
 from Qcircuits import gui
 import os
+from Qcircuits.constants import *
 from Qcircuits.utility import pretty_value,\
-    check_there_are_no_iterables_in_kwarg,shift,to_string
+    check_there_are_no_iterables_in_kwarg, shift, to_string
+
 
 def string_to_component(s, *arg, **kwarg):
     if s == 'W':
@@ -32,7 +34,7 @@ pp = {
     "figsize_scaling": 1,
     "element_height_normal_modes": 1.5,
     "color": [0.15, 0.15, 0.15],
-    "x_fig_margin": 0.,
+    "x_fig_margin": 0.5,
     "y_fig_margin": 0.25,
     "C": {
         "gap": 0.2,
@@ -85,6 +87,7 @@ pp = {
     }
 }
 
+
 class _Qcircuit(object):
     """docstring for BBQcircuit"""
 
@@ -96,6 +99,7 @@ class _Qcircuit(object):
         self.junctions = []
         self.resistors = []
         self.wires = []
+        self.grounds = []
         self.no_value_components = []
         for elt in netlist:
             elt.head = self
@@ -145,25 +149,25 @@ class _Qcircuit(object):
             iter(w)
         except TypeError:
             # iterable = False
-            
+
             # derivative of u/v is (du*v-dv*u)/v^2
             u = sum([complex(a*w**(self.Y_numer_poly_order-n))
-                    for n, a in enumerate(self.Y_numer_poly_coeffs(**kwargs))])
+                     for n, a in enumerate(self.Y_numer_poly_coeffs(**kwargs))])
             v = sum([complex(a*w**(self.Y_denom_poly_order-n))
-                    for n, a in enumerate(self.Y_denom_poly_coeffs(**kwargs))])
+                     for n, a in enumerate(self.Y_denom_poly_coeffs(**kwargs))])
             du = sum([complex((self.Y_numer_poly_order-n)*a*w**(self.Y_numer_poly_order-n-1))
-                    for n, a in enumerate(self.Y_numer_poly_coeffs(**kwargs))])
+                      for n, a in enumerate(self.Y_numer_poly_coeffs(**kwargs))])
             dv = sum([complex((self.Y_denom_poly_order-n)*a*w**(self.Y_denom_poly_order-n-1))
-                    for n, a in enumerate(self.Y_denom_poly_coeffs(**kwargs))])
+                      for n, a in enumerate(self.Y_denom_poly_coeffs(**kwargs))])
 
         else:
             # iterable = True
 
             # derivative of u/v is (du*v-dv*u)/v^2
             u = sum([np.array([complex(a*_w**(self.Y_numer_poly_order-n)) for _w in w])
-                    for n, a in enumerate(self.Y_numer_poly_coeffs(**kwargs))])
+                     for n, a in enumerate(self.Y_numer_poly_coeffs(**kwargs))])
             v = sum([np.array([complex(a*_w**(self.Y_denom_poly_order-n)) for _w in w])
-                    for n, a in enumerate(self.Y_denom_poly_coeffs(**kwargs))])
+                     for n, a in enumerate(self.Y_denom_poly_coeffs(**kwargs))])
             du = sum([np.array([complex((self.Y_numer_poly_order-n)*a*_w**(self.Y_numer_poly_order-n-1))
                                 for _w in w]) for n, a in enumerate(self.Y_numer_poly_coeffs(**kwargs))])
             dv = sum([np.array([complex((self.Y_denom_poly_order-n)*a*_w**(self.Y_denom_poly_order-n-1))
@@ -334,15 +338,15 @@ class _Qcircuit(object):
         Ks = self.kerr(**kwargs)
         return [Ks[i, i] for i in range(Ks.shape[0])]
 
-    def hamiltonian(self,modes = 'all', junction_expansion = 4, photons = 6,**kwargs):
+    def hamiltonian(self, modes='all', junction_expansion=4, photons=6, **kwargs):
 
-        from qutip import destroy,qeye,tensor
+        from qutip import destroy, qeye, tensor
 
         fs = self.eigenfrequencies(**kwargs)
         N_modes = len(fs)
         N_junctions = len(self.junctions)
 
-        if modes=='all':
+        if modes == 'all':
             modes = range(N_modes)
         if photons is not list:
             photons = [int(photons) for i in modes]
@@ -351,23 +355,24 @@ class _Qcircuit(object):
         phi = [0 for junction in self.junctions]
         qeye_list = [qeye(n) for n in photons]
 
-        for i,f in enumerate(fs):
+        for i, f in enumerate(fs):
             a_list = deepcopy(qeye_list)
             a_list[i] = destroy(photons[i])
             a = tensor(a_list)
-            H+= f*a.dag()*a
+            H += f*a.dag()*a
             phi_0 = hbar/2./e
-            for j,junction in enumerate(self.junctions):
-                phi[j]+=junction.flux(w=f*2.*pi,**kwargs)/phi_0*(a+a.dag())
+            for j, junction in enumerate(self.junctions):
+                phi[j] += junction.flux(w=f*2.*pi, **kwargs)/phi_0*(a+a.dag())
 
-        for j,junction in enumerate(self.junctions):
+        for j, junction in enumerate(self.junctions):
             n = 2
             EJ = (hbar/2./e)**2/(junction.get_value(**kwargs)*h)
-            while 2*n<=junction_expansion:
+            while 2*n <= junction_expansion:
                 H += (-1)**(n+1)*EJ/factorial(2*n)*phi[j]**(2*n)
-                n+=1
+                n += 1
 
         return H
+
 
 class Qcircuit_NET(_Qcircuit):
     """docstring for Qcircuit"""
@@ -388,31 +393,30 @@ class Qcircuit_GUI(_Qcircuit):
             for el in f:
                 el = el.replace('\n', '')
                 el = el.split(";")
-                if el[0] in ['C', 'L', 'R', 'J', 'W']:
-                    if el[3] == '':
-                        v = None
-                    else:
-                        v = float(el[3])
-                    if el[4] == '':
-                        l = None
-                    else:
-                        l = el[4]
-                    netlist.append(
-                        string_to_component(el[0], el[1], el[2], v, l))
+                if el[3] == '':
+                    v = None
+                else:
+                    v = float(el[3])
+                if el[4] == '':
+                    l = None
+                else:
+                    l = el[4]
+                netlist.append(
+                    string_to_component(el[0], el[1], el[2], v, l))
 
         super(Qcircuit_GUI, self).__init__(netlist)
         for el in self.netlist:
             el.set_plot_coordinates()
-        
+
         if plot:
             self.show()
 
     def show(self,
-        plot = True,
-        full_output = False,
-        add_vertical_space = False,
-        save_to = None,
-        **savefig_kwargs):
+             plot=True,
+             full_output=False,
+             add_vertical_space=False,
+             save_to=None,
+             **savefig_kwargs):
 
         if add_vertical_space:
             normal_element_height = pp['element_height']
@@ -433,77 +437,77 @@ class Qcircuit_GUI(_Qcircuit):
         y_max = max([np.amax(x) for x in ys])
 
         x_margin = pp['x_fig_margin']
-        y_margin = pp['y_fig_margin'] # ensures that any text labels are not cutoff
-        fig = plt.figure(figsize = (
+        # ensures that any text labels are not cutoff
+        y_margin = pp['y_fig_margin']
+        fig = plt.figure(figsize=(
             ((x_max-x_min)+2.*x_margin)*pp["figsize_scaling"],
             ((y_max-y_min)+2.*y_margin)*pp["figsize_scaling"]))
         ax = fig.add_subplot(111)
         plt.subplots_adjust(left=0., right=1., top=1., bottom=0.)
-            
-        for i,_ in enumerate(xs):
+
+        for i, _ in enumerate(xs):
             ax.plot(xs[i], ys[i], color=pp["color"], lw=pp[line_type[i]]['lw'])
 
         for elt in self.netlist:
             elt.draw_label(ax)
 
         ax.set_axis_off()
-        ax.set_xlim(x_min-x_margin,x_max+x_margin)
-        ax.set_ylim(y_min-y_margin,y_max+y_margin)
-        plt.margins(x=0.,y=0.)
-        
+        ax.set_xlim(x_min-x_margin, x_max+x_margin)
+        ax.set_ylim(y_min-y_margin, y_max+y_margin)
+        plt.margins(x=0., y=0.)
+
         if add_vertical_space:
             pp['element_height'] = normal_element_height
 
         if full_output:
-            return fig,ax
+            return fig, ax
 
         if save_to is not None:
-            fig.savefig(save_to,transparent = True,**savefig_kwargs)
+            fig.savefig(save_to, transparent=True, **savefig_kwargs)
 
         if plot:
             plt.show()
 
         plt.close()
 
-
-    def show_normal_mode(self,mode,unit='current',
-        plot = True,save_to = None,**kwargs):
+    def show_normal_mode(self, mode, unit='current',
+                         plot=True, save_to=None, **kwargs):
 
         check_there_are_no_iterables_in_kwarg(**kwargs)
         self.set_w_cpx(**kwargs)
         mode_w = np.real(self.w_cpx[mode])
 
-        def string_to_function(comp,function,**kwargs):
+        def string_to_function(comp, function, **kwargs):
             if function == 'flux':
                 phi_0 = hbar/2./e
-                return comp.flux(mode_w,**kwargs)/phi_0
+                return comp.flux(mode_w, **kwargs)/phi_0
             if function == 'charge':
-                return comp.charge(mode_w,**kwargs)/e
+                return comp.charge(mode_w, **kwargs)/e
             if function == 'voltage':
-                return comp.voltage(mode_w,**kwargs)
+                return comp.voltage(mode_w, **kwargs)
             if function == 'current':
-                return comp.current(mode_w,**kwargs)
+                return comp.current(mode_w, **kwargs)
 
-        def pretty(v,function):
+        def pretty(v, function):
             if function == 'flux':
                 return pretty_value(v)+r'$\phi_0$'
             elif function == 'charge':
-                return pretty_value(v,use_power_10 = True)+r'$e$'
+                return pretty_value(v, use_power_10=True)+r'$e$'
             elif function == 'voltage':
                 return pretty_value(v)+'V'
             elif function == 'current':
                 return pretty_value(v)+'A'
-     
-        fig,ax = self.show(
-        plot = False,
-        full_output = True,
-        add_vertical_space = True)
+
+        fig, ax = self.show(
+            plot=False,
+            full_output=True,
+            add_vertical_space=True)
 
         # Determine arrow size
         all_values = []
         for el in self.netlist:
-            if type(el) is not W:
-                all_values.append(string_to_function(el,unit,**kwargs))
+            if not isinstance(el,W):
+                all_values.append(string_to_function(el, unit, **kwargs))
         all_values = np.absolute(all_values)
         max_value = np.amax(all_values)
         min_value = np.amin(all_values)
@@ -526,21 +530,22 @@ class Qcircuit_GUI(_Qcircuit):
             value_01 = value_to_01_range(value)
             ppnm = pp['normal_mode_arrow']
             lw = ppnm['min_lw']+value_01*(ppnm['max_lw']-ppnm['min_lw'])
-            head = ppnm['min_head']+value_01*(ppnm['max_head']-ppnm['min_head'])
-            return {'lw':lw,
-            'head_width':head,
-            'head_length':head,
-            'clip_on':False}
+            head = ppnm['min_head']+value_01 * \
+                (ppnm['max_head']-ppnm['min_head'])
+            return {'lw': lw,
+                    'head_width': head,
+                    'head_length': head,
+                    'clip_on': False}
 
         for el in self.netlist:
-            if type(el) is not W:
-                value = string_to_function(el,unit,**kwargs)
-                value_current = string_to_function(el,'current',**kwargs)
+            if not isinstance(el,W):
+                value = string_to_function(el, unit, **kwargs)
+                value_current = string_to_function(el, 'current', **kwargs)
 
                 x = el.x_plot_center
                 y = el.y_plot_center
-                
-                if el.angle == 0.:
+
+                if el.angle%180 == 0.:
                     # Defined for positive arrows
                     x_arrow = x-arrow_width(value)/2.
                     y_arrow = y+pp["normal_mode_label"]["y_arrow"]
@@ -559,34 +564,33 @@ class Qcircuit_GUI(_Qcircuit):
                     y_arrow = y-arrow_width(value)/2.
                     dx_arrow = 0.
                     dy_arrow = arrow_width(value)
-                    
+
                     x_text = x-pp["normal_mode_label"]["y_text"]
                     y_text = y
 
                     ha = 'left'
                     va = 'center'
 
-                
-                if np.real(value_current)>0:
-                    ax.arrow(x_arrow,y_arrow ,dx_arrow, dy_arrow,
-                        fc = pp['normal_mode_arrow']['color_positive'],
-                        ec = pp['normal_mode_arrow']['color_positive'],
-                        **arrow_kwargs(value))
+                if np.real(value_current) > 0:
+                    ax.arrow(x_arrow, y_arrow, dx_arrow, dy_arrow,
+                             fc=pp['normal_mode_arrow']['color_positive'],
+                             ec=pp['normal_mode_arrow']['color_positive'],
+                             **arrow_kwargs(value))
                 else:
-                    ax.arrow(x_arrow+dx_arrow,y_arrow+dy_arrow,-dx_arrow, -dy_arrow,
-                        fc = pp['normal_mode_arrow']['color_negative'],
-                        ec = pp['normal_mode_arrow']['color_negative'],
-                        **arrow_kwargs(value))
+                    ax.arrow(x_arrow+dx_arrow, y_arrow+dy_arrow, -dx_arrow, -dy_arrow,
+                             fc=pp['normal_mode_arrow']['color_negative'],
+                             ec=pp['normal_mode_arrow']['color_negative'],
+                             **arrow_kwargs(value))
 
-                ax.text(x_text,y_text,
-                        pretty(np.absolute(value),unit),
+                ax.text(x_text, y_text,
+                        pretty(np.absolute(value), unit),
                         fontsize=pp["normal_mode_label"]["fontsize"],
-                        ha=ha,va=va,style='italic',weight = 'bold')
+                        ha=ha, va=va, style='italic', weight='bold')
 
         if plot == True:
             plt.show()
         if save_to is not None:
-            fig.savefig(save_to,transparent = True)
+            fig.savefig(save_to, transparent=True)
         plt.close()
 
 
@@ -594,7 +598,6 @@ class Network(object):
     """docstring for Network"""
 
     def __init__(self, netlist):
-
         # Group nodes which are connected by wires into chains of nodes
         # indexed by a integer which is to become the new node names
         # for future calculations
@@ -604,32 +607,48 @@ class Network(object):
             chains[i] = chains[i]+to_add
             return chains
 
+        # chains is a list of node lists (node list = a chain)
+        # each chain lists nodes which are connected one to another
+        # either through wires (or through ground, which is a special type of wire)
         chains = []
-        for el in netlist:
-            if type(el) is W:
 
+        for el in netlist:
+
+            # First go through all the wires
+            if isinstance(el,W):
+
+                np = el.node_plus
+                if type(el) is G:
+                    nm = 'ground'
+                else:
+                    nm = el.node_minus
+
+                # added tells us if both nodes have been added
+                # to a same chain
                 added = False
+
                 for i, ch in enumerate(chains):
-                    if (el.node_minus in ch) and (el.node_plus in ch):
+                    if (nm in ch) and (np in ch):
                         added = True
-                    elif (el.node_minus in ch):
+
+                    elif (nm in ch):
                         for j, ch2 in enumerate(chains):
-                            if el.node_plus in ch2:
+                            if np in ch2:
                                 chains = merge_chains(chains, i, j)
                                 added = True
                         if added == False:
-                            ch.append(el.node_plus)
+                            ch.append(np)
                             added = True
-                    elif (el.node_plus in ch):
+                    elif (np in ch):
                         for j, ch2 in enumerate(chains):
-                            if el.node_minus in ch2:
+                            if nm in ch2:
                                 chains = merge_chains(chains, i, j)
                                 added = True
                         if added == False:
-                            ch.append(el.node_minus)
+                            ch.append(nm)
                             added = True
                 if added == False:
-                    chains.append([el.node_minus, el.node_plus])
+                    chains.append([nm, np])
 
         def plot_node_to_new_node(node):
             for i, ch in enumerate(chains):
@@ -643,11 +662,12 @@ class Network(object):
         for el in netlist:
             el.node_minus_plot = el.node_minus
             el.node_plus_plot = el.node_plus
-            el.node_minus = plot_node_to_new_node(el.node_minus)
-            el.node_plus = plot_node_to_new_node(el.node_plus)
-            for n in [el.node_minus, el.node_plus]:
-                if n not in self.nodes:
-                    self.nodes.append(n)
+            if not isinstance(el,W):
+                el.node_minus = plot_node_to_new_node(el.node_minus)
+                el.node_plus = plot_node_to_new_node(el.node_plus)
+                for n in [el.node_minus, el.node_plus]:
+                    if n not in self.nodes:
+                        self.nodes.append(n)
 
         # build netlist_dict
         self.net_dict = {}
@@ -655,7 +675,7 @@ class Network(object):
             self.net_dict[n] = {}
 
         for el in netlist:
-            if type(el) is not W:
+            if not isinstance(el,W):
                 self.connect(el, el.node_minus, el.node_plus)
 
     def connect(self, element, node_minus, node_plus):
@@ -790,29 +810,28 @@ class Circuit(object):
              plot=True,
              save_to=None,
              **savefig_kwargs):
-    
+
         self.node_minus_plot = '0,0'
         self.node_plus_plot = '1,0'
         self.set_plot_coordinates()
         xs, ys, line_type = self.draw()
 
-        
         x_min = min([np.amin(x) for x in xs])
         x_max = max([np.amax(x) for x in xs])
         y_min = min([np.amin(x) for x in ys])
         y_max = max([np.amax(x) for x in ys])
 
         x_margin = pp['x_fig_margin']
-        y_margin = pp['y_fig_margin'] # ensures that any text labels are not cutoff
+        # ensures that any text labels are not cutoff
+        y_margin = pp['y_fig_margin']
 
-        fig = plt.figure(figsize=
-            (((x_max-x_min)+2.*x_margin)*pp["figsize_scaling"],
-            ((y_max-y_min)+2.*y_margin)*pp["figsize_scaling"]))
+        fig = plt.figure(figsize=(((x_max-x_min)+2.*x_margin)*pp["figsize_scaling"],
+                                  ((y_max-y_min)+2.*y_margin)*pp["figsize_scaling"]))
         ax = fig.add_subplot(111)
         ax.set_axis_off()
         plt.margins(x=0., y=0.)
-        ax.set_ylim(-0.5,0.5)
-        ax.set_xlim(0.,1.)
+        ax.set_ylim(-0.5, 0.5)
+        ax.set_xlim(0., 1.)
         plt.subplots_adjust(left=0., right=1., top=1., bottom=0.)
 
         for i in range(len(xs)):
@@ -825,20 +844,28 @@ class Circuit(object):
         plt.close()
 
     def set_plot_coordinates(self):
-    
+
         self.x_plot_node_minus = float(self.node_minus_plot.split(',')[0])
         self.x_plot_node_plus = float(self.node_plus_plot.split(',')[0])
         self.y_plot_node_minus = -float(self.node_minus_plot.split(',')[1])
         self.y_plot_node_plus = -float(self.node_plus_plot.split(',')[1])
-        self.x_plot_center = (self.x_plot_node_minus +  self.x_plot_node_plus)/2.
-        self.y_plot_center = (self.y_plot_node_minus +  self.y_plot_node_plus)/2.
+        self.x_plot_center = (self.x_plot_node_minus +
+                              self.x_plot_node_plus)/2.
+        self.y_plot_center = (self.y_plot_node_minus +
+                              self.y_plot_node_plus)/2.
         if self.x_plot_node_minus == self.x_plot_node_plus:
-            self.angle = -90.
+            if self.y_plot_node_minus < self.y_plot_node_plus:
+                self.angle = NORTH
+            else:
+                self.angle = SOUTH
         else:
-            self.angle = 0.
+            if self.x_plot_node_minus < self.x_plot_node_plus:
+                self.angle = WEST
+            else:
+                self.angle = EAST
 
     def draw_label(self, ax):
-        if self.angle == 0.:
+        if self.angle%180. == 0.:
             x = self.x_plot_center
             y = self.y_plot_center-pp['label']['text_position']
             ha = 'center'
@@ -851,9 +878,9 @@ class Circuit(object):
             va = 'center'
 
         ax.text(x, y,
-                 to_string(self.unit,self.label,self.value),
-                 fontsize=pp['label']['fontsize'],
-                 ha=ha, va=va)
+                to_string(self.unit, self.label, self.value),
+                fontsize=pp['label']['fontsize'],
+                ha=ha, va=va)
 
 
 class Parallel(Circuit):
@@ -910,7 +937,7 @@ class Component(Circuit):
         return sp.Symbol(self.label)
 
     def set_component_lists(self):
-        if self.value is None and self.label not in ['', ' ', 'None',None]:
+        if self.value is None and self.label not in ['', ' ', 'None', None]:
             if self.label in self.head.no_value_components:
                 raise ValueError(
                     "Two components may not have the same name %s" % self.label)
@@ -955,14 +982,15 @@ class Component(Circuit):
         return self.current(w, **kwargs)/w
 
     def to_string(self, use_math=True, use_unicode=False):
-        to_string(self.unit,self.label,self.value,use_math=True, use_unicode=False)
+        to_string(self.unit, self.label, self.value,
+                  use_math=True, use_unicode=False)
+
 
 class W(Component):
     """docstring for Wire"""
 
     def __init__(self, node_minus, node_plus, arg1='', arg2=None):
         super(W, self).__init__(node_minus, node_plus, arg1='', arg2=None)
-        self.type = 'W'
         self.unit = None
         self.label = None
         self.value = None
@@ -977,16 +1005,57 @@ class W(Component):
     def draw(self):
 
         # add side wire connections
-        x = [np.array([self.x_plot_node_minus,self.x_plot_node_plus   ])]
-        y = [np.array([self.y_plot_node_minus,self.y_plot_node_plus   ])]
+        x = [np.array([self.x_plot_node_minus, self.x_plot_node_plus])]
+        y = [np.array([self.y_plot_node_minus, self.y_plot_node_plus])]
         line_type = ['W']
-        return x,y,line_type
+        return x, y, line_type
+
+class G(W):
+    '''
+    From a network perspective, a ground element is a wire that connects
+    node_plus to a node called 'ground'
+    '''
+    def __init__(self, node_minus, node_plus, arg1=None, arg2=None):
+        super(G, self).__init__(node_minus, node_plus, arg1, arg2)
+
+    def set_component_lists(self):
+        super(G, self).set_component_lists()
+        self.head.grounds.append(self)
+
+    def draw(self):
+        # Defined for EAST
+        line_type = []
+        x = [
+            np.array([0.5, 0.25])*pp['element_width'],
+            np.array([0.25, 0.25])*pp['element_width'],
+            np.array([0.125, 0.125])*pp['element_width'],
+            np.array([0., 0.])*pp['element_width'],
+        ]
+        y = [
+            np.array([0., 0.]),
+            np.array([-1., 1.])*pp['element_height']*5./16.,
+            np.array([-1., 1.])*pp['element_height']*3./16.,
+            np.array([-1., 1.])*pp['element_height']*1./16.,
+        ]
+        line_type.append('W')
+        line_type.append('W')
+        line_type.append('W')
+        line_type.append('W')
+
+        if self.angle == WEST:
+            return shift(x, self.x_plot_center), shift(y, self.y_plot_center), line_type
+        elif self.angle == NORTH:
+            return shift(y, self.x_plot_center), shift([-xx for xx in x], self.y_plot_center), line_type
+        elif self.angle == EAST:
+            return shift([-xx for xx in x], self.x_plot_center), shift(y, self.y_plot_center), line_type
+        elif self.angle == SOUTH:
+            return shift(y, self.x_plot_center), shift(x, self.y_plot_center), line_type
+
 
 class R(Component):
     def __init__(self, node_minus, node_plus, arg1=None, arg2=None):
         super(R, self).__init__(node_minus, node_plus, arg1, arg2)
         self.unit = r'$\Omega$'
-        self.type = R
 
     def admittance(self):
         return 1/self.get_value()
@@ -1040,58 +1109,15 @@ class R(Component):
         y_list += [np.array([0., 0.])]
         y_list += [np.array([0., 0.])]
 
-        if self.angle == 0.:
-            return shift(x_list,self.x_plot_center), shift(y_list,self.y_plot_center),line_type
-        if self.angle == -90.:
-            return shift(y_list,self.x_plot_center), shift(x_list,self.y_plot_center),line_type
-
-class G(Component):
-    def __init__(self, node_minus, node_plus, arg1=None, arg2=None):
-        super(G, self).__init__(node_minus, node_plus, arg1, arg2)
-        self.type = 'G'
-        self.unit = None
-        self.label = None
-        self.value = None
-
-    def to_string(*args, **kwargs):
-        return ' '
-
-    def set_component_lists(self):
-        super(G, self).set_component_lists()
-        self.head.grounds.append(self)
-
-    def draw(self):
-        line_type = []
-        x = [
-            np.array([0.5, 0.25])*pp['element_width'],
-            np.array([0.25, 0.25])*pp['element_width'],
-            np.array([0.125, 0.125])*pp['element_width'],
-            np.array([0., 0.])*pp['element_width'],
-        ]
-        y = [
-            np.array([0., 0.]),
-            np.array([-1., 1.])*pp['element_height']*5./16.,
-            np.array([-1., 1.])*pp['element_height']*3./16.,
-            np.array([-1., 1.])*pp['element_height']*1./16.,
-        ]
-        line_type.append('W')
-        line_type.append('W')
-        line_type.append('W')
-        line_type.append('W')
-
-        if self.angle == 0.:
-            return shift(x,self.x_plot_center), shift(y,self.y_plot_center),line_type
-        if self.angle == -90.:
-            return shift(y,self.x_plot_center), shift(x,self.y_plot_center),line_type
-
-
-
+        if self.angle%180. == 0.:
+            return shift(x_list, self.x_plot_center), shift(y_list, self.y_plot_center), line_type
+        if self.angle%180. == 90.:
+            return shift(y_list, self.x_plot_center), shift(x_list, self.y_plot_center), line_type
 
 class L(Component):
     def __init__(self, node_minus, node_plus, arg1=None, arg2=None):
         super(L, self).__init__(node_minus, node_plus, arg1, arg2)
         self.unit = 'H'
-        self.type = 'L'
 
     def admittance(self):
         return -sp.I*Mul(1/sp.Symbol('w'), 1/self.get_value())
@@ -1132,7 +1158,7 @@ class L(Component):
         line_type.append('W')
 
         # center in x
-        x_list = shift(x_list,-pp['element_width']/2.)
+        x_list = shift(x_list, -pp['element_width']/2.)
 
         # set height of inductor
         y *= pp['L']['height']/2.
@@ -1142,15 +1168,15 @@ class L(Component):
         y_list += [np.array([0., 0.])]
         y_list += [np.array([0., 0.])]
 
-        if self.angle == 0.:
-            return shift(x_list,self.x_plot_center), shift(y_list,self.y_plot_center),line_type
-        if self.angle == -90.:
-            return shift(y_list,self.x_plot_center), shift(x_list,self.y_plot_center),line_type
+        if self.angle%180. == 0.:
+            return shift(x_list, self.x_plot_center), shift(y_list, self.y_plot_center), line_type
+        if self.angle%180. == 90.:
+            return shift(y_list, self.x_plot_center), shift(x_list, self.y_plot_center), line_type
+
 
 class J(L):
     def __init__(self, node_minus, node_plus, arg1=None, arg2=None, use_E=False, use_I=False):
         super(J, self).__init__(node_minus, node_plus, arg1, arg2)
-        self.type = 'J'
 
         self.use_E = use_E
         self.use_I = use_I
@@ -1202,18 +1228,18 @@ class J(L):
         line_type.append('J')
 
         # center in x and y
-        x = shift(x,-pp['element_width']/2.)
+        x = shift(x, -pp['element_width']/2.)
 
-        if self.angle == 0.:
-            return shift(x,self.x_plot_center), shift(y,self.y_plot_center),line_type
-        if self.angle == -90.:
-            return shift(y,self.x_plot_center), shift(x,self.y_plot_center),line_type
+        if self.angle%180. == 0.:
+            return shift(x, self.x_plot_center), shift(y, self.y_plot_center), line_type
+        if self.angle%180. == 90.:
+            return shift(y, self.x_plot_center), shift(x, self.y_plot_center), line_type
+
 
 class R(Component):
     def __init__(self, node_minus, node_plus, arg1=None, arg2=None):
         super(R, self).__init__(node_minus, node_plus, arg1, arg2)
         self.unit = r'$\Omega$'
-        self.type = R
 
     def admittance(self):
         return 1/self.get_value()
@@ -1257,7 +1283,7 @@ class R(Component):
         line_type.append('W')
 
         # center in x
-        x_list = shift(x_list,-pp['element_width']/2.)
+        x_list = shift(x_list, -pp['element_width']/2.)
 
         # set height of inductor
         y *= pp['R']['height']/2.
@@ -1267,17 +1293,16 @@ class R(Component):
         y_list += [np.array([0., 0.])]
         y_list += [np.array([0., 0.])]
 
-        if self.angle == 0.:
-            return shift(x_list,self.x_plot_center), shift(y_list,self.y_plot_center),line_type
-        if self.angle == -90.:
-            return shift(y_list,self.x_plot_center), shift(x_list,self.y_plot_center),line_type
+        if self.angle%180. == 0.:
+            return shift(x_list, self.x_plot_center), shift(y_list, self.y_plot_center), line_type
+        if self.angle%180. == 90.:
+            return shift(y_list, self.x_plot_center), shift(x_list, self.y_plot_center), line_type
 
 
 class C(Component):
     def __init__(self, node_minus, node_plus, arg1=None, arg2=None):
         super(C, self).__init__(node_minus, node_plus, arg1, arg2)
         self.unit = 'F'
-        self.type = 'C'
 
     def admittance(self):
         return sp.I*Mul(sp.Symbol('w'), self.get_value())
@@ -1308,14 +1333,13 @@ class C(Component):
         line_type.append('C')
         line_type.append('C')
 
-        
         # center in x and y
-        x = shift(x,-pp['element_width']/2.)
+        x = shift(x, -pp['element_width']/2.)
 
-        if self.angle == 0.:
-            return shift(x,self.x_plot_center), shift(y,self.y_plot_center),line_type
-        if self.angle == -90.:
-            return shift(y,self.x_plot_center), shift(x,self.y_plot_center),line_type
+        if self.angle%180. == 0.:
+            return shift(x, self.x_plot_center), shift(y, self.y_plot_center), line_type
+        if self.angle%180. == 90.:
+            return shift(y, self.x_plot_center), shift(x, self.y_plot_center), line_type
 
 
 class Admittance(Component):
@@ -1327,5 +1351,6 @@ class Admittance(Component):
 
 
 if __name__ == '__main__':
-
-    G(0,1,'').show()
+    c = Qcircuit_GUI('test.txt', edit=True, plot=True, print=True)
+    c.w_k_A_chi(pretty_print=True)
+    c.show_normal_mode(0)
