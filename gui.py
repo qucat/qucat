@@ -544,29 +544,6 @@ class SnappingCanvas(tk.Canvas):
         return [(pos[0]-self.canvas_center[0])/self.grid_unit,
                 (pos[1]-self.canvas_center[1])/self.grid_unit]
 
-    def add_node(self,pos):
-        wires = []
-        for el in self.elements:
-            if type(el) == W:
-                wires.append(el)
-        
-        for w in wires:
-            if w.x_minus == w.x_plus == pos[0]:
-                # vertical wire
-                if pos[1] in range(min(w.y_minus,w.y_plus)+1,
-                                    max(w.y_minus,w.y_plus)):
-                    W(self,auto_place=['W','%d,%d'%(w.x_minus,w.y_minus),'%d,%d'%(w.x_minus,pos[1]),'',''])
-                    W(self,auto_place=['W','%d,%d'%(w.x_minus,w.y_plus),'%d,%d'%(w.x_minus,pos[1]),'',''])
-                    w.delete()
-
-            elif w.y_minus == w.y_plus == pos[1]:
-                # horizontal wire
-                if pos[0] in range(min(w.x_minus,w.x_plus)+1,
-                                    max(w.x_minus,w.x_plus)):
-                    W(self,auto_place=['W','%d,%d'%(w.x_minus,w.y_minus),'%d,%d'%(pos[0],w.y_minus),'',''])
-                    W(self,auto_place=['W','%d,%d'%(w.x_plus,w.y_minus),'%d,%d'%(pos[0],w.y_minus),'',''])
-                    w.delete()
-
 class TwoNodeElement(object):
     def __init__(self, canvas, event=None, auto_place=None):
         self.canvas = canvas
@@ -638,9 +615,6 @@ class TwoNodeElement(object):
         pass
 
     def force_select(self):
-        pass
-
-    def box_select(self, x0, y0, x1, y1):
         pass
 
     def on_click(self, event, shift_control=False):
@@ -750,14 +724,82 @@ class TwoNodeElement(object):
     def box_select(self, x0, y0, x1, y1):
         xs = [x0, x1]
         ys = [y0, y1]
+        xm,ym = self.canvas.grid_to_canvas([self.x_minus,self.y_minus])
+        xp,yp = self.canvas.grid_to_canvas([self.x_plus,self.y_plus])
 
-        if min(xs) <= self.x_minus <= max(xs) and min(ys) <= self.y_minus <= max(ys)\
-                and min(xs) <= self.x_plus <= max(xs) and min(ys) <= self.y_plus <= max(ys):
+        if min(xs) <= xm <= max(xs) and min(ys) <= ym <= max(ys)\
+                and min(xs) <= xp <= max(xs) and min(ys) <= yp <= max(ys):
             self.force_select()
 
-    def add_nodes(self):
-        self.canvas.add_node([self.x_minus,self.y_minus])
-        self.canvas.add_node([self.x_plus,self.y_plus])
+        
+    def add_nodes(self, to = 'all wires'):
+
+        # Check if one of the nodes of this component/wire 
+        # is on a wire
+        if to == 'all wires':
+            to_nodify = []
+            for el in self.canvas.elements:
+                if type(el) == W and el != self:
+                    to_nodify.append(el)
+        else:
+            to_nodify = to
+        
+        for w in to_nodify:
+            if w.x_minus == w.x_plus == self.x_minus:
+                # vertical wire, minus node
+                if self.y_minus in range(min(w.y_minus,w.y_plus)+1,
+                                    max(w.y_minus,w.y_plus)):
+                    x = w.x_minus
+                    ym = w.y_minus
+                    yp = w.y_plus
+                    w.delete()
+                    W(self.canvas,auto_place=['W','%d,%d'%(x,ym),
+                        '%d,%d'%(x,self.y_minus),'',''])
+                    W(self.canvas,auto_place=['W','%d,%d'%(x,yp),
+                        '%d,%d'%(x,self.y_minus),'',''])
+                    return True
+
+            elif w.y_minus == w.y_plus == self.y_minus:
+                # horizontal wire, minus node
+                if self.x_minus in range(min(w.x_minus,w.x_plus)+1,
+                                    max(w.x_minus,w.x_plus)):
+                    xm = w.x_minus
+                    xp = w.x_plus
+                    y = w.y_minus
+                    w.delete()
+                    W(self.canvas,auto_place=['W','%d,%d'%(xm,y),
+                        '%d,%d'%(self.x_minus,y),'',''])
+                    W(self.canvas,auto_place=['W','%d,%d'%(xp,y),
+                        '%d,%d'%(self.x_minus,y),'',''])
+                    return True
+            elif w.x_minus == w.x_plus == self.x_plus:
+                # vertical wire, positive node
+                if self.y_plus in range(min(w.y_minus,w.y_plus)+1,
+                                    max(w.y_minus,w.y_plus)):
+                    x = w.x_minus
+                    ym = w.y_minus
+                    yp = w.y_plus
+                    w.delete()
+                    W(self.canvas,auto_place=['W','%d,%d'%(x,ym),
+                        '%d,%d'%(x,self.y_plus),'',''])
+                    W(self.canvas,auto_place=['W','%d,%d'%(x,yp),
+                        '%d,%d'%(x,self.y_plus),'',''])
+                    return True
+
+            elif w.y_minus == w.y_plus == self.y_plus:
+                # horizontal wire, positive node
+                if self.x_plus in range(min(w.x_minus,w.x_plus)+1,
+                                    max(w.x_minus,w.x_plus)):
+                    xm = w.x_minus
+                    xp = w.x_plus
+                    y = w.y_minus
+                    w.delete()
+                    W(self.canvas,auto_place=['W','%d,%d'%(xm,y),
+                        '%d,%d'%(self.x_plus,y),'',''])
+                    W(self.canvas,auto_place=['W','%d,%d'%(xp,y),
+                        '%d,%d'%(self.x_plus,y),'',''])
+                    return True
+        return False
 
 class W(TwoNodeElement):
 
@@ -792,6 +834,20 @@ class W(TwoNodeElement):
     @prop.setter
     def prop(self, prop):
         pass
+    def add_nodes(self,to = 'all wires'):
+
+        all_other_elements = [el for el in self.canvas.elements if el != self]
+        for el in all_other_elements:
+            added_a_node = TwoNodeElement.add_nodes(el,to = [self])
+            if added_a_node:
+                return True
+
+        added_a_node = TwoNodeElement.add_nodes(self,to)
+        if added_a_node:
+            return True
+        else:
+            return False
+
 
     def get_center_pos(self):
         # returns center in canvas units
@@ -853,7 +909,6 @@ class W(TwoNodeElement):
             self.y_plus = int(round(float(self.canvas.canvasy(event.y)-y0)/gu))
         
         self.pos = [self.x_minus, self.y_minus, self.x_plus, self.y_plus]
-        self.add_nodes()
         
     def end_line(self, event):
         self.canvas.delete("temp")
@@ -863,6 +918,7 @@ class W(TwoNodeElement):
 
         self.init_plus_snap_to_grid(event)
         self.create()
+        self.add_nodes()
 
     def move(self, dx, dy):
         '''
@@ -895,6 +951,7 @@ class W(TwoNodeElement):
 
     def auto_place(self, auto_place_info):
         self.create()
+        self.add_nodes()
 
     def start_line(self, event):
         self.x_minus, self.y_minus = self.init_minus_snap_to_grid(event)
