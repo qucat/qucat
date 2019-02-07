@@ -18,12 +18,13 @@ from copy import deepcopy
 png_directory = os.path.join(os.path.dirname(__file__), ".graphics")
 
 # ANGLES (negative = clock-wise rotation)
-WEST = 0. # as generated in core_net
+WEST = 0.  # as generated in core_net
 SOUTH = 90.
 EAST = 180.
 NORTH = 270.
 
 node_dot_radius = 1./30.
+
 
 def string_to_component(s, *arg, **kwarg):
     if s == 'W':
@@ -42,6 +43,7 @@ def string_to_component(s, *arg, **kwarg):
 
 class AutoScrollbar(ttk.Scrollbar):
     """ A scrollbar that hides itself if it's not needed. """
+
     def set(self, lo, hi):
         if float(lo) <= 0.0 and float(hi) >= 1.0:
             self.grid_remove()
@@ -50,10 +52,12 @@ class AutoScrollbar(ttk.Scrollbar):
             ttk.Scrollbar.set(self, lo, hi)
 
     def pack(self, **kw):
-        raise tk.TclError('Cannot use pack with the widget ' + self.__class__.__name__)
+        raise tk.TclError(
+            'Cannot use pack with the widget ' + self.__class__.__name__)
 
     def place(self, **kw):
-        raise tk.TclError('Cannot use place with the widget ' + self.__class__.__name__)
+        raise tk.TclError(
+            'Cannot use place with the widget ' + self.__class__.__name__)
 
 
 class SnappingCanvas(tk.Canvas):
@@ -66,42 +70,60 @@ class SnappingCanvas(tk.Canvas):
         self.frame.rowconfigure(0, weight=1)  # make canvas expandable
         self.frame.columnconfigure(0, weight=1)
 
-        menu_label_template ="{:<6}"
+        menu_label_template = "{:<6}"
         # TODO make this pretty?
         menu_font = Font(family="Courier New", size=9, weight='normal')
 
         self.menubar = tk.Menu(self.frame)
         menu = tk.Menu(self.menubar, tearoff=0)
-        self.menubar.add_cascade(label=menu_label_template.format("File"), menu=menu)
+        self.menubar.add_cascade(
+            label=menu_label_template.format("File"), menu=menu)
 
         label_template = "{:<15}{:>6}"
-        menu.add_command(label=label_template.format("Save","Ctrl+S"),command = self.save, font = menu_font)
-        menu.add_command(label=label_template.format("Exit",""),command =master.destroy, font = menu_font)
+        menu.add_command(label=label_template.format(
+            "Save", "Ctrl+S"), command=self.save, font=menu_font)
+        menu.add_command(label=label_template.format(
+            "Exit", ""), command=master.destroy, font=menu_font)
 
         menu = tk.Menu(self.menubar, tearoff=0)
-        self.menubar.add_cascade(label=menu_label_template.format("Edit"), menu=menu)
-        
-        menu.add_command(label=label_template.format("Undo","Ctrl+Z"),command = self.ctrl_z, font = menu_font)
-        menu.add_command(label=label_template.format("Redo","Ctrl+Y"),command = self.ctrl_y, font = menu_font)
+        self.menubar.add_cascade(
+            label=menu_label_template.format("Edit"), menu=menu)
+
+        menu.add_command(label=label_template.format(
+            "Undo", "Ctrl+Z"), command=self.ctrl_z, font=menu_font)
+        menu.add_command(label=label_template.format(
+            "Redo", "Ctrl+Y"), command=self.ctrl_y, font=menu_font)
         menu.add_separator()
-        menu.add_command(label=label_template.format("Cut","Ctrl+X"),command = self.cut_selection, font = menu_font)
-        menu.add_command(label=label_template.format("Copy","Ctrl+C"),command = self.copy_selection, font = menu_font)
-        menu.add_command(label=label_template.format("Paste","Ctrl+V"),command = self.paste, font = menu_font)
+        menu.add_command(label=label_template.format(
+            "Cut", "Ctrl+X"), command=self.cut_selection, font=menu_font)
+        menu.add_command(label=label_template.format(
+            "Copy", "Ctrl+C"), command=self.copy_selection, font=menu_font)
+        menu.add_command(label=label_template.format(
+            "Paste", "Ctrl+V"), command=self.paste, font=menu_font)
         menu.add_separator()
-        menu.add_command(label=label_template.format("Select all","Ctrl+A"),command = self.select_all, font = menu_font)
+        menu.add_command(label=label_template.format(
+            "Select all", "Ctrl+A"), command=self.select_all, font=menu_font)
         menu.add_separator()
-        menu.add_command(label=label_template.format("Delete","Del"),command = self.delete_selection, font = menu_font)
-        menu.add_command(label=label_template.format("Delete all",""),command = self.delete_all, font = menu_font)
+        menu.add_command(label=label_template.format(
+            "Delete", "Del"), command=self.delete_selection, font=menu_font)
+        menu.add_command(label=label_template.format(
+            "Delete all", ""), command=self.delete_all, font=menu_font)
         master.config(menu=self.menubar)
 
         menu = tk.Menu(self.menubar, tearoff=0)
-        self.menubar.add_cascade(label=menu_label_template.format("Insert"), menu=menu)
-        
-        menu.add_command(label=label_template.format("Wire","W"),command = (lambda : self.event_generate('w')), font = menu_font)
-        menu.add_command(label=label_template.format("Junction","J"),command = (lambda : self.event_generate('j')), font = menu_font)
-        menu.add_command(label=label_template.format("Inductor","L"),command = (lambda : self.event_generate('l')), font = menu_font)
-        menu.add_command(label=label_template.format("Capacitor","C"),command = (lambda : self.event_generate('c')), font = menu_font)
-        menu.add_command(label=label_template.format("Resistor","R"),command = (lambda : self.event_generate('r')), font = menu_font)
+        self.menubar.add_cascade(
+            label=menu_label_template.format("Insert"), menu=menu)
+
+        menu.add_command(label=label_template.format("Wire", "W"), command=(
+            lambda: self.event_generate('w')), font=menu_font)
+        menu.add_command(label=label_template.format("Junction", "J"), command=(
+            lambda: self.event_generate('j')), font=menu_font)
+        menu.add_command(label=label_template.format("Inductor", "L"), command=(
+            lambda: self.event_generate('l')), font=menu_font)
+        menu.add_command(label=label_template.format("Capacitor", "C"), command=(
+            lambda: self.event_generate('c')), font=menu_font)
+        menu.add_command(label=label_template.format("Resistor", "R"), command=(
+            lambda: self.event_generate('r')), font=menu_font)
         master.config(menu=self.menubar)
 
         # Vertical and horizontal scrollbars for canvas
@@ -111,18 +133,17 @@ class SnappingCanvas(tk.Canvas):
         vbar.grid(row=0, column=1, sticky='ns')
 
         tk.Canvas.__init__(self, self.frame, bd=0, highlightthickness=0,
-            xscrollcommand=hbar.set, yscrollcommand=vbar.set, confine = False, bg="white")
+                           xscrollcommand=hbar.set, yscrollcommand=vbar.set, confine=False, bg="white")
 
         self.grid(row=0, column=0, sticky='nswe')
-        
+
         hbar.configure(command=self.scroll_x)  # bind scrollbars to the canvas
         vbar.configure(command=self.scroll_y)
-        self.update() # Waits for the canvas to pop up before asking for its window size below
-
+        self.update()  # Waits for the canvas to pop up before asking for its window size below
 
         self.canvas_center = [
-                     self.canvasx(self.winfo_width()/2.),
-                      self.canvasy(self.winfo_height()/2.)]
+            self.canvasx(self.winfo_width()/2.),
+            self.canvasy(self.winfo_height()/2.)]
         self.netlist_file = netlist_file
         self.grid_unit = int(grid_unit)
 
@@ -142,21 +163,30 @@ class SnappingCanvas(tk.Canvas):
         self.bind('<Control-a>', self.select_all)
         self.bind('<Control-y>', self.ctrl_y)
         self.bind('<Control-z>', self.ctrl_z)
-        self.bind('<MouseWheel>', self.wheel)  # zoom for Windows and MacOS, but not Linux
-        self.bind('<Button-5>',   self.wheel)  # zoom for Linux, wheel scroll down
-        self.bind('<Button-4>',   self.wheel)  # zoom for Linux, wheel scroll up
-        self.bind('<Control-MouseWheel>', self.scroll_x_wheel)  # zoom for Windows and MacOS, but not Linux
-        self.bind('<Control-Button-5>',   self.scroll_x_wheel)  # zoom for Linux, wheel scroll down
-        self.bind('<Control-Button-4>',   self.scroll_x_wheel)  # zoom for Linux, wheel scroll up
-        self.bind('<Shift-MouseWheel>', self.scroll_y_wheel)  # zoom for Windows and MacOS, but not Linux
-        self.bind('<Shift-Button-5>',   self.scroll_y_wheel)  # zoom for Linux, wheel scroll down
-        self.bind('<Shift-Button-4>',   self.scroll_y_wheel)  # zoom for Linux, wheel scroll up
-    
+        # zoom for Windows and MacOS, but not Linux
+        self.bind('<MouseWheel>', self.wheel)
+        # zoom for Linux, wheel scroll down
+        self.bind('<Button-5>',   self.wheel)
+        # zoom for Linux, wheel scroll up
+        self.bind('<Button-4>',   self.wheel)
+        # zoom for Windows and MacOS, but not Linux
+        self.bind('<Control-MouseWheel>', self.scroll_x_wheel)
+        # zoom for Linux, wheel scroll down
+        self.bind('<Control-Button-5>',   self.scroll_x_wheel)
+        # zoom for Linux, wheel scroll up
+        self.bind('<Control-Button-4>',   self.scroll_x_wheel)
+        # zoom for Windows and MacOS, but not Linux
+        self.bind('<Shift-MouseWheel>', self.scroll_y_wheel)
+        # zoom for Linux, wheel scroll down
+        self.bind('<Shift-Button-5>',   self.scroll_y_wheel)
+        # zoom for Linux, wheel scroll up
+        self.bind('<Shift-Button-4>',   self.scroll_y_wheel)
+
         self.elements = []
         self.copied_elements = []
         self.history = []
         self.history_location = -1
-        self.track_changes = False 
+        self.track_changes = False
         try:
             with open(netlist_file, 'r') as f:
                 self.load_netlist(f)
@@ -165,17 +195,18 @@ class SnappingCanvas(tk.Canvas):
                 pass
         self.draw_grid()
         self.configure_scrollregion()
-        self.track_changes = True 
+        self.track_changes = True
         self.save()
 
-    def cut_selection(self,event = None):
+    def cut_selection(self, event=None):
         self.track_changes = False
-        self.copied_elements = [deepcopy(el) for el in self.elements if el.selected]
+        self.copied_elements = [deepcopy(el)
+                                for el in self.elements if el.selected]
         self.track_changes = True
         self.delete_selection()
-    
-    def paste(self,event = None):
-        if len(self.copied_elements)>0:
+
+    def paste(self, event=None):
+        if len(self.copied_elements) > 0:
             self.deselect_all()
 
             # paste in the top left corner
@@ -202,9 +233,11 @@ class SnappingCanvas(tk.Canvas):
             # click to drop
 
             # smallest x and y of copied elements, in canvas units
-            x_min = min([el.x_minus for el in self.copied_elements]+[el.x_plus for el in self.copied_elements])
-            y_min = min([el.y_minus for el in self.copied_elements]+[el.y_plus for el in self.copied_elements])
-            x_min,y_min = self.grid_to_canvas([x_min,y_min])
+            x_min = min([el.x_minus for el in self.copied_elements] +
+                        [el.x_plus for el in self.copied_elements])
+            y_min = min([el.y_minus for el in self.copied_elements] +
+                        [el.y_plus for el in self.copied_elements])
+            x_min, y_min = self.grid_to_canvas([x_min, y_min])
 
             # shift to apply, in canvas units
             dx = self.canvasx(event.x)-x_min
@@ -214,18 +247,19 @@ class SnappingCanvas(tk.Canvas):
                 el.create()
                 el.adapt_to_grid_unit()
                 el.force_select()
-                el.move(dx,dy)
+                el.move(dx, dy)
                 el.add_or_replace_label()
-            
+
             self.bind("<Motion>", el.on_motion)
             self.bind("<ButtonPress-1>", el.release_motion_paste)
-                    
-    def copy_selection(self,event = None):
+
+    def copy_selection(self, event=None):
         self.track_changes = False
-        self.copied_elements = [deepcopy(el) for el in self.elements if el.selected]
+        self.copied_elements = [deepcopy(el)
+                                for el in self.elements if el.selected]
         self.track_changes = True
 
-    def scroll_y_wheel(self,event):
+    def scroll_y_wheel(self, event):
         if event.num == 5 or event.delta < 0:
             direction = 1
         if event.num == 4 or event.delta > 0:
@@ -234,7 +268,7 @@ class SnappingCanvas(tk.Canvas):
         self.configure_scrollregion()
         self.draw_grid(event)
 
-    def scroll_x_wheel(self,event):
+    def scroll_x_wheel(self, event):
         if event.num == 5 or event.delta < 0:
             direction = 1
         if event.num == 4 or event.delta > 0:
@@ -248,7 +282,7 @@ class SnappingCanvas(tk.Canvas):
 
         scaling = 1.04
         try:
-            if abs(event.delta)>120:
+            if abs(event.delta) > 120:
                 # Fast scrolling case on Windows
                 scaling = 1.12
         except:
@@ -265,18 +299,20 @@ class SnappingCanvas(tk.Canvas):
             new_grid_unit = int(self.grid_unit*scaling)
             if new_grid_unit == old_grid_unit:
                 new_grid_unit += 1
-    
+
         if smallest_grid_unit > new_grid_unit:
             self.message("Can't zoom out more")
         elif new_grid_unit > largest_grid_unit:
             self.message("Can't zoom in more")
         else:
-            grid_pos_old = self.canvas_to_grid([self.canvasx(event.x),self.canvasy(event.y)])
+            grid_pos_old = self.canvas_to_grid(
+                [self.canvasx(event.x), self.canvasy(event.y)])
             self.grid_unit = new_grid_unit
             canvas_pos_old = self.grid_to_canvas(grid_pos_old)
-            canvas_center_shift = [self.canvasx(event.x)-canvas_pos_old[0],self.canvasy(event.y)-canvas_pos_old[1]]
+            canvas_center_shift = [self.canvasx(
+                event.x)-canvas_pos_old[0], self.canvasy(event.y)-canvas_pos_old[1]]
             self.canvas_center = [self.canvas_center[0]+canvas_center_shift[0],
-                        self.canvas_center[1]+canvas_center_shift[1]]
+                                  self.canvas_center[1]+canvas_center_shift[1]]
             for el in self.elements:
                 el.adapt_to_grid_unit()
 
@@ -293,64 +329,66 @@ class SnappingCanvas(tk.Canvas):
         self.yview(*args)  # scroll vertically
         self.draw_grid()
 
-    def ctrl_z(self,event = None):
+    def ctrl_z(self, event=None):
         print('CTRL-Z')
         for net in self.history:
-            print (net)
-        print ("location was: %d"%self.history_location)
+            print(net)
+        print("location was: %d" % self.history_location)
         if self.history_location > 0:
-            self.track_changes = False 
+            self.track_changes = False
             self.history_location -= 1
             self.load_netlist(self.history[self.history_location].split('\n'))
             self.save()
-            self.track_changes = True 
-        print ("location is: %d"%self.history_location)
+            self.track_changes = True
+        print("location is: %d" % self.history_location)
 
-    def ctrl_y(self,event = None):
+    def ctrl_y(self, event=None):
         print('CTRL-Y')
         for net in self.history:
-            print (net)
-        print ("location was: %d"%self.history_location)
+            print(net)
+        print("location was: %d" % self.history_location)
         if 0 <= self.history_location < len(self.history)-1:
-            self.track_changes = False 
+            self.track_changes = False
             self.history_location += 1
             self.load_netlist(self.history[self.history_location].split('\n'))
-            self.track_changes = True 
-        print ("location is: %d"%self.history_location)
+            self.track_changes = True
+        print("location is: %d" % self.history_location)
 
-    def load_netlist(self,lines):
-        self.delete_all(track_changes = False)
+    def load_netlist(self, lines):
+        self.delete_all(track_changes=False)
         for el in lines:
             el = el.replace('\n', '')
             el = el.split(";")
             if el[0] in ['C', 'L', 'R', 'J', 'W']:
                 string_to_component(el[0], self, auto_place=el)
 
-    def on_resize(self,event = None):
+    def on_resize(self, event=None):
         self.configure_scrollregion()
         self.draw_grid(event)
 
     def configure_scrollregion(self):
-        
+
         box_canvas = [self.canvasx(0),  # get visible area of the canvas
                       self.canvasy(0),
                       self.canvasx(self.winfo_width()),
                       self.canvasy(self.winfo_height())]
-                       
 
-        if len(self.elements)>0:
-            xs = [el.x_minus for el in self.elements]+[el.x_plus for el in self.elements]
-            ys = [el.y_minus for el in self.elements]+[el.y_plus for el in self.elements]
-            box_elements = self.grid_to_canvas([min(xs)-1,min(ys)-1])+self.grid_to_canvas([max(xs)+1,max(ys)+1])
+        if len(self.elements) > 0:
+            xs = [el.x_minus for el in self.elements] + \
+                [el.x_plus for el in self.elements]
+            ys = [el.y_minus for el in self.elements] + \
+                [el.y_plus for el in self.elements]
+            box_elements = self.grid_to_canvas(
+                [min(xs)-1, min(ys)-1])+self.grid_to_canvas([max(xs)+1, max(ys)+1])
 
             self.configure(
-                scrollregion = [min(box_elements[0], box_canvas[0]), min(box_elements[1], box_canvas[1]),
-                      max(box_elements[2], box_canvas[2]), max(box_elements[3], box_canvas[3])])
+                scrollregion=[min(box_elements[0], box_canvas[0]), min(box_elements[1], box_canvas[1]),
+                              max(box_elements[2], box_canvas[2]), max(box_elements[3], box_canvas[3])])
         else:
             self.configure(
-                scrollregion = box_canvas)
+                scrollregion=box_canvas)
 
-    def draw_grid(self, event = None):
+    def draw_grid(self, event=None):
 
         # Draw the grid
         self.delete("grid")
@@ -362,12 +400,16 @@ class SnappingCanvas(tk.Canvas):
                       self.canvasy(self.winfo_height()))
 
         self.background = self.create_rectangle(
-            *box_canvas, fill='white',outline='', tags='grid')
+            *box_canvas, fill='white', outline='', tags='grid')
 
-        grid_x = np.arange(self.canvas_center[0], box_canvas[2], self.grid_unit).tolist()
-        grid_x += np.arange(self.canvas_center[0]-self.grid_unit, box_canvas[0], -self.grid_unit).tolist()
-        grid_y = np.arange(self.canvas_center[1], box_canvas[3], self.grid_unit).tolist()
-        grid_y += np.arange(self.canvas_center[1]-self.grid_unit, box_canvas[1], -self.grid_unit).tolist()
+        grid_x = np.arange(
+            self.canvas_center[0], box_canvas[2], self.grid_unit).tolist()
+        grid_x += np.arange(self.canvas_center[0]-self.grid_unit,
+                            box_canvas[0], -self.grid_unit).tolist()
+        grid_y = np.arange(
+            self.canvas_center[1], box_canvas[3], self.grid_unit).tolist()
+        grid_y += np.arange(self.canvas_center[1]-self.grid_unit,
+                            box_canvas[1], -self.grid_unit).tolist()
 
         for x in grid_x:
             for y in grid_y:
@@ -379,16 +421,16 @@ class SnappingCanvas(tk.Canvas):
         self.tag_bind('grid', "<ButtonRelease-1>", self.end_selection_field)
         self.tag_bind('grid', "<Button-3>", self.right_click)
 
-    def right_click(self,event):
+    def right_click(self, event):
         self.deselect_all()
         self.bind("<ButtonRelease-3>", self.open_right_click_menu)
 
-    def open_right_click_menu(self,event):
+    def open_right_click_menu(self, event):
         menu = tk.Menu(self, tearoff=0)
-        menu.add_command(label="Paste",command = self.paste)
+        menu.add_command(label="Paste", command=self.paste)
         menu.tk_popup(event.x_root, event.y_root, 0)
         self.bind("<ButtonRelease-3>", lambda event: None)
-        
+
     def start_selection_field(self, event):
         self.deselect_all()
         self.selection_rectangle_x_start = self.canvasx(event.x)
@@ -399,10 +441,10 @@ class SnappingCanvas(tk.Canvas):
     def expand_selection_field(self, event):
         self.deselect_all()
         self.coords(self.selection_rectangle,
-        min(self.canvasx(event.x),self.selection_rectangle_x_start), 
-        min(self.canvasy(event.y),self.selection_rectangle_y_start), 
-        max(self.canvasx(event.x),self.selection_rectangle_x_start), 
-        max(self.canvasy(event.y),self.selection_rectangle_y_start))
+                    min(self.canvasx(event.x), self.selection_rectangle_x_start),
+                    min(self.canvasy(event.y), self.selection_rectangle_y_start),
+                    max(self.canvasx(event.x), self.selection_rectangle_x_start),
+                    max(self.canvasy(event.y), self.selection_rectangle_y_start))
         for el in self.elements:
             el.box_select(*self.coords(self.selection_rectangle))
 
@@ -417,13 +459,13 @@ class SnappingCanvas(tk.Canvas):
         for el in self.elements:
             el.force_select()
 
-    def delete_selection(self, event=None,track_changes = None):
+    def delete_selection(self, event=None, track_changes=None):
         was_tracking_changes = self.track_changes
         self.track_changes = False
         to_delete = [el for el in self.elements if el.selected]
         for el in to_delete:
             el.delete()
-        if track_changes is None: # Just follow "was_tracking_changes"
+        if track_changes is None:  # Just follow "was_tracking_changes"
             self.track_changes = was_tracking_changes
             self.save()
         elif track_changes is False:
@@ -434,15 +476,15 @@ class SnappingCanvas(tk.Canvas):
             self.track_changes = track_changes
         self.configure_scrollregion()
 
-    def delete_all(self, event=None,track_changes = None):
+    def delete_all(self, event=None, track_changes=None):
         self.select_all()
-        self.delete_selection(event,track_changes)
+        self.delete_selection(event, track_changes)
 
-    def save(self,event = None):
+    def save(self, event=None):
 
         netlist_string = ""
         for el in self.elements:
-            v,l  = el.prop
+            v, l = el.prop
             if v is None:
                 v = ''
             else:
@@ -450,8 +492,8 @@ class SnappingCanvas(tk.Canvas):
 
             if l is None:
                 l = ''
-                
-            netlist_string+=("%s;%s;%s;%s;%s\n" % (
+
+            netlist_string += ("%s;%s;%s;%s;%s\n" % (
                 type(el).__name__,
                 el.grid_to_node_string(el.x_minus, el.y_minus),
                 el.grid_to_node_string(el.x_plus, el.y_plus),
@@ -463,18 +505,18 @@ class SnappingCanvas(tk.Canvas):
         if self.track_changes:
             del self.history[self.history_location+1:]
             self.history.append(netlist_string)
-            self.history_location+=1
-            print ('ADDED TO HISTORY')
+            self.history_location += 1
+            print('ADDED TO HISTORY')
             for net in self.history:
-                print (net)
+                print(net)
 
         self.message("Saving...")
 
-    def message(self,text):
+    def message(self, text):
         saved_message = self.create_text(
-               self.canvasx(5), self.canvasy(2), text=text, anchor=tk.NW,
-               font=Font(family='Helvetica', size=8, weight='normal'))
-        self.after(300, lambda : self.delete(saved_message))
+            self.canvasx(5), self.canvasy(2), text=text, anchor=tk.NW,
+            font=Font(family='Helvetica', size=8, weight='normal'))
+        self.after(300, lambda: self.delete(saved_message))
 
     def create_circle(self, x, y, r):
         # Everything defined in canvas units
@@ -484,23 +526,46 @@ class SnappingCanvas(tk.Canvas):
         y1 = y + r
         return self.create_oval(x0, y0, x1, y1, fill='black')
 
-    def update_circle(self,circle,x,y,r):
+    def update_circle(self, circle, x, y, r):
         # Everything defined in canvas units
         x0 = x - r
         y0 = y - r
         x1 = x + r
         y1 = y + r
-        self.coords(circle,x0, y0, x1, y1)
+        self.coords(circle, x0, y0, x1, y1)
 
     def grid_to_canvas(self, pos):
-        # pos = [x ,y] (in grid units) 
+        # pos = [x ,y] (in grid units)
         return [self.canvas_center[0]+self.grid_unit*pos[0],
                 self.canvas_center[1]+self.grid_unit*pos[1]]
 
     def canvas_to_grid(self, pos):
-        # pos = [x ,y] (in canvas units) 
+        # pos = [x ,y] (in canvas units)
         return [(pos[0]-self.canvas_center[0])/self.grid_unit,
                 (pos[1]-self.canvas_center[1])/self.grid_unit]
+
+    def add_node(self,pos):
+        wires = []
+        for el in self.elements:
+            if type(el) == W:
+                wires.append(el)
+        
+        for w in wires:
+            if w.x_minus == w.x_plus == pos[0]:
+                # vertical wire
+                if pos[1] in range(min(w.y_minus,w.y_plus)+1,
+                                    max(w.y_minus,w.y_plus)):
+                    W(self,auto_place=['W','%d,%d'%(w.x_minus,w.y_minus),'%d,%d'%(w.x_minus,pos[1]),'',''])
+                    W(self,auto_place=['W','%d,%d'%(w.x_minus,w.y_plus),'%d,%d'%(w.x_minus,pos[1]),'',''])
+                    w.delete()
+
+            elif w.y_minus == w.y_plus == pos[1]:
+                # horizontal wire
+                if pos[0] in range(min(w.x_minus,w.x_plus)+1,
+                                    max(w.x_minus,w.x_plus)):
+                    W(self,auto_place=['W','%d,%d'%(w.x_minus,w.y_minus),'%d,%d'%(pos[0],w.y_minus),'',''])
+                    W(self,auto_place=['W','%d,%d'%(w.x_plus,w.y_minus),'%d,%d'%(pos[0],w.y_minus),'',''])
+                    w.delete()
 
 class TwoNodeElement(object):
     def __init__(self, canvas, event=None, auto_place=None):
@@ -522,20 +587,21 @@ class TwoNodeElement(object):
                 v = None
             else:
                 v = float(v)
-            
-            self.prop = [v,l]
+
+            self.prop = [v, l]
 
             self.x_minus, self.y_minus = self.node_string_to_grid(
                 auto_place[1])
             self.x_plus, self.y_plus = self.node_string_to_grid(
                 auto_place[2])
             self.auto_place(auto_place)
+
     @property
     def pos(self):
         return []
 
     @pos.setter
-    def pos(self,pos):
+    def pos(self, pos):
         pass
 
     @property
@@ -543,7 +609,7 @@ class TwoNodeElement(object):
         return []
 
     @prop.setter
-    def prop(self,prop):
+    def prop(self, prop):
         pass
 
     def __deepcopy__(self, memo):
@@ -577,30 +643,34 @@ class TwoNodeElement(object):
     def box_select(self, x0, y0, x1, y1):
         pass
 
-    def on_click(self, event,shift_control = False):
+    def on_click(self, event, shift_control=False):
 
         if self.selected is False and shift_control is False:
             self.canvas.deselect_all()
 
-        self.canvas.bind('<Left>', lambda event:self.on_updownleftright(event,angle = WEST))
-        self.canvas.bind('<Right>', lambda event:self.on_updownleftright(event,angle = EAST))
-        self.canvas.bind('<Up>', lambda event:self.on_updownleftright(event,angle = NORTH))
-        self.canvas.bind('<Down>', lambda event:self.on_updownleftright(event,angle = SOUTH))
+        self.canvas.bind(
+            '<Left>', lambda event: self.on_updownleftright(event, angle=WEST))
+        self.canvas.bind(
+            '<Right>', lambda event: self.on_updownleftright(event, angle=EAST))
+        self.canvas.bind(
+            '<Up>', lambda event: self.on_updownleftright(event, angle=NORTH))
+        self.canvas.bind(
+            '<Down>', lambda event: self.on_updownleftright(event, angle=SOUTH))
 
     def on_motion(self, event):
         x, y = self.get_center_pos()
         dx = self.canvas.canvasx(event.x) - x
         dy = self.canvas.canvasy(event.y) - y
         for el in self.canvas.elements:
-            if el.selected or el==self:
-                el.move(dx,dy)
+            if el.selected or el == self:
+                el.move(dx, dy)
         self.was_moved = True
 
     def release_motion(self, event, shift_control=False):
         N_selected = 0
         self.canvas.track_changes = False
         for el in self.canvas.elements:
-            if el.selected or el==self:
+            if el.selected or el == self:
                 N_selected += 1
                 el.snap_to_grid()
                 el.add_or_replace_label()
@@ -622,17 +692,18 @@ class TwoNodeElement(object):
         self.release_motion(event)
         self.canvas.bind("<Motion>", lambda event: None)
         self.canvas.bind("<ButtonPress-1>", lambda event: None)
-   
+
     def hover_enter(self, event):
         self.hover = True
         self.update_graphic()
 
         self.canvas.tag_bind(self.binding_object, "<Button-1>", self.on_click)
-        self.canvas.tag_bind(self.binding_object, "<Shift-Button-1>", 
-            lambda event: self.on_click(event, shift_control=True))
-        self.canvas.tag_bind(self.binding_object, "<Control-Button-1>", 
-            lambda event: self.on_click(event, shift_control=True))
-        self.canvas.tag_bind(self.binding_object, "<B1-Motion>", self.on_motion)
+        self.canvas.tag_bind(self.binding_object, "<Shift-Button-1>",
+                             lambda event: self.on_click(event, shift_control=True))
+        self.canvas.tag_bind(self.binding_object, "<Control-Button-1>",
+                             lambda event: self.on_click(event, shift_control=True))
+        self.canvas.tag_bind(self.binding_object,
+                             "<B1-Motion>", self.on_motion)
         self.canvas.tag_bind(
             self.binding_object, "<ButtonRelease-1>", self.release_motion)
         self.canvas.tag_bind(
@@ -645,14 +716,16 @@ class TwoNodeElement(object):
     def set_allstate_bindings(self):
         self.canvas.tag_bind(self.binding_object, "<Enter>", self.hover_enter)
         self.canvas.tag_bind(self.binding_object, "<Leave>", self.hover_leave)
-        self.canvas.tag_bind(self.binding_object, "<Button-3>", self.right_click)
+        self.canvas.tag_bind(self.binding_object,
+                             "<Button-3>", self.right_click)
 
     def hover_leave(self, event):
         self.hover = False
         self.update_graphic()
 
-    def right_click(self,event):
+    def right_click(self, event):
         self.canvas.bind("<ButtonRelease-3>", self.open_right_click_menu)
+
     def select(self):
         self.canvas.deselect_all()
         if self.selected is False:
@@ -674,6 +747,17 @@ class TwoNodeElement(object):
         self.selected = False
         self.update_graphic()
 
+    def box_select(self, x0, y0, x1, y1):
+        xs = [x0, x1]
+        ys = [y0, y1]
+
+        if min(xs) <= self.x_minus <= max(xs) and min(ys) <= self.y_minus <= max(ys)\
+                and min(xs) <= self.x_plus <= max(xs) and min(ys) <= self.y_plus <= max(ys):
+            self.force_select()
+
+    def add_nodes(self):
+        self.canvas.add_node([self.x_minus,self.y_minus])
+        self.canvas.add_node([self.x_plus,self.y_plus])
 
 class W(TwoNodeElement):
 
@@ -684,95 +768,16 @@ class W(TwoNodeElement):
         self.y_plus = None
         super(W, self).__init__(canvas, event, auto_place)
 
-    def get_center_pos(self):
-        # returns center in canvas units
-        xm,ym,xp,yp = self.canvas.coords(self.line)
-        return [(xm+xp)/2.,(ym+yp)/2.]
-    
-    def open_right_click_menu(self,event):
-        menu = tk.Menu(self.canvas, tearoff=0)
-        menu.add_command(label="Delete",command = self.canvas.delete_selection)
-        menu.add_command(label="Copy",command = self.canvas.copy_selection)
-        menu.add_command(label="Cut",command = self.canvas.cut_selection)
-        menu.tk_popup(event.x_root, event.y_root, 0)
-        self.canvas.bind("<ButtonRelease-3>", lambda event: None)
-
-    def double_click(self,event = None):
-        pass
-    
-    def snap_to_grid(self):
-        # in canvas coordinates
-        xm,ym,xp,yp = self.canvas.coords(self.line)
-        # snapped to grid units
-        xm,ym,xp,yp = [round(p) for p in self.canvas.canvas_to_grid([xm,ym])+self.canvas.canvas_to_grid([xp,yp])] 
-        self.pos = [xm,ym,xp,yp]
-        
-        # back to canvas units:
-        xm,ym,xp,yp = self.canvas.grid_to_canvas([xm,ym])+self.canvas.grid_to_canvas([xp,yp])
-        self.canvas.coords(self.line,xm,ym,xp,yp)
-        self.canvas.update_circle(self.dot_minus,xm,ym,self.canvas.grid_unit*node_dot_radius)
-        self.canvas.update_circle(self.dot_plus,xp,yp,self.canvas.grid_unit*node_dot_radius)
-        
-
-
-    def init_minus_snap_to_grid(self, event):
-        gu = float(self.canvas.grid_unit)
-        x0,y0 = self.canvas.canvas_center
-        return int(round(float(self.canvas.canvasx(event.x)-x0)/gu)),\
-            int(round(float(self.canvas.canvasy(event.y)-y0)/gu))
-            
-    def init_plus_snap_to_grid(self, event):
-
-        xm,ym = self.grid_to_canvas([self.x_minus, self.y_minus])
-        xp = self.canvas.canvasx(event.x)
-        yp = self.canvas.canvasy(event.y)
-        gu = float(self.canvas.grid_unit)
-        x0,y0 = self.canvas.canvas_center
-
-        if abs(xm-xp)>abs(ym-yp):
-            # Horizontal line
-            return int(round(float(self.canvas.canvasx(event.x)-x0)/gu)),\
-                self.y_minus
-        else:
-            # Vertical line
-            return self.x_minus,\
-                int(round(float(self.canvas.canvasy(event.y)-y0)/gu))
-            
-
-    def move(self,dx,dy):
-        '''
-        Input given in canvas units
-        '''
-        self.canvas.move(self.line, dx, dy)
-        self.canvas.move(self.dot_minus, dx, dy)
-        self.canvas.move(self.dot_plus, dx, dy)
-
-    def add_or_replace_label(self):
-        pass
-    def update_graphic(self):
-        if self.selected and self.hover:
-            self.canvas.itemconfig(self.line,fill =  '#666666',width =  3)
-        elif self.selected:
-            self.canvas.itemconfig(self.line,fill =  '#666666',width =  2)
-        elif self.hover:
-            self.canvas.itemconfig(self.line,fill =  '#1c1c1c',width =  3)
-        else:
-            self.canvas.itemconfig(self.line,fill = "#1c1c1c",width = 1)
-
-
-    def on_updownleftright(self,event = None):
-        pass
-
     @property
     def binding_object(self):
         return self.line
 
     @property
     def pos(self):
-        return [self.x_minus,self.y_minus,self.x_plus,self.y_plus]
+        return [self.x_minus, self.y_minus, self.x_plus, self.y_plus]
 
     @pos.setter
-    def pos(self,pos):
+    def pos(self, pos):
         if pos != self.pos:
             self.x_minus = pos[0]
             self.y_minus = pos[1]
@@ -782,14 +787,109 @@ class W(TwoNodeElement):
 
     @property
     def prop(self):
-        return [None,None]
+        return [None, None]
 
     @prop.setter
-    def prop(self,prop):
+    def prop(self, prop):
+        pass
+
+    def get_center_pos(self):
+        # returns center in canvas units
+        xm, ym, xp, yp = self.canvas.coords(self.line)
+        return [(xm+xp)/2., (ym+yp)/2.]
+
+    def open_right_click_menu(self, event):
+        menu = tk.Menu(self.canvas, tearoff=0)
+        menu.add_command(label="Delete", command=self.canvas.delete_selection)
+        menu.add_command(label="Copy", command=self.canvas.copy_selection)
+        menu.add_command(label="Cut", command=self.canvas.cut_selection)
+        menu.tk_popup(event.x_root, event.y_root, 0)
+        self.canvas.bind("<ButtonRelease-3>", lambda event: None)
+
+    def double_click(self, event=None):
+        pass
+
+    def snap_to_grid(self):
+        # in canvas coordinates
+        xm, ym, xp, yp = self.canvas.coords(self.line)
+        # snapped to grid units
+        xm, ym, xp, yp = [round(p) for p in self.canvas.canvas_to_grid(
+            [xm, ym])+self.canvas.canvas_to_grid([xp, yp])]
+        self.pos = [xm, ym, xp, yp]
+
+        # back to canvas units:
+        xm, ym, xp, yp = self.canvas.grid_to_canvas(
+            [xm, ym])+self.canvas.grid_to_canvas([xp, yp])
+        self.canvas.coords(self.line, xm, ym, xp, yp)
+        self.canvas.update_circle(
+            self.dot_minus, xm, ym, self.canvas.grid_unit*node_dot_radius)
+        self.canvas.update_circle(
+            self.dot_plus, xp, yp, self.canvas.grid_unit*node_dot_radius)
+
+        # Add node if a node of this line is on another line
+        self.add_nodes()
+
+    def init_minus_snap_to_grid(self, event):
+        gu = float(self.canvas.grid_unit)
+        x0, y0 = self.canvas.canvas_center
+        return int(round(float(self.canvas.canvasx(event.x)-x0)/gu)),\
+            int(round(float(self.canvas.canvasy(event.y)-y0)/gu))
+
+    def init_plus_snap_to_grid(self, event):
+
+        xm, ym = self.grid_to_canvas([self.x_minus, self.y_minus])
+        xp = self.canvas.canvasx(event.x)
+        yp = self.canvas.canvasy(event.y)
+        gu = float(self.canvas.grid_unit)
+        x0, y0 = self.canvas.canvas_center
+
+        if abs(xm-xp) > abs(ym-yp):
+            # Horizontal line
+            self.x_plus = int(round(float(self.canvas.canvasx(event.x)-x0)/gu))
+            self.y_plus = self.y_minus
+        else:
+            # Vertical line
+            self.x_plus = self.x_minus
+            self.y_plus = int(round(float(self.canvas.canvasy(event.y)-y0)/gu))
+        
+        self.pos = [self.x_minus, self.y_minus, self.x_plus, self.y_plus]
+        self.add_nodes()
+        
+    def end_line(self, event):
+        self.canvas.delete("temp")
+        self.canvas.bind("<Button-1>", lambda event: None)
+        self.canvas.bind('<Motion>', lambda event: None)
+        self.canvas.config(cursor='arrow')
+
+        self.init_plus_snap_to_grid(event)
+        self.create()
+
+    def move(self, dx, dy):
+        '''
+        Input given in canvas units
+        '''
+        self.canvas.move(self.line, dx, dy)
+        self.canvas.move(self.dot_minus, dx, dy)
+        self.canvas.move(self.dot_plus, dx, dy)
+
+    def add_or_replace_label(self):
+        pass
+
+    def update_graphic(self):
+        if self.selected and self.hover:
+            self.canvas.itemconfig(self.line, fill='#666666', width=3)
+        elif self.selected:
+            self.canvas.itemconfig(self.line, fill='#666666', width=2)
+        elif self.hover:
+            self.canvas.itemconfig(self.line, fill='#1c1c1c', width=3)
+        else:
+            self.canvas.itemconfig(self.line, fill="#1c1c1c", width=1)
+
+    def on_updownleftright(self, event=None):
         pass
 
     def manual_place(self, event):
-        self.canvas.config(cursor = 'plus')
+        self.canvas.config(cursor='plus')
         self.canvas.bind("<Button-1>", self.start_line)
         self.canvas.bind("<Escape>", self.abort_creation)
 
@@ -801,13 +901,13 @@ class W(TwoNodeElement):
         self.canvas.bind("<Motion>", self.show_line)
         self.canvas.bind("<Button-1>", self.end_line)
 
-    def abort_creation(self,event = None):
-        self.canvas.bind("<Button-1>",lambda event: None)
+    def abort_creation(self, event=None):
+        self.canvas.bind("<Button-1>", lambda event: None)
         self.canvas.bind("<Escape>", lambda event: None)
         self.canvas.bind("<Motion>", lambda event: None)
-        self.canvas.bind("<Button-1>",lambda event: None)
+        self.canvas.bind("<Button-1>", lambda event: None)
         self.canvas.delete('temp')
-        self.canvas.config(cursor = 'arrow')
+        self.canvas.config(cursor='arrow')
         del self
 
     def delete(self, event=None):
@@ -818,23 +918,16 @@ class W(TwoNodeElement):
         self.canvas.save()
         del self
 
-    def end_line(self, event):
-        self.canvas.delete("temp")
-        self.canvas.bind("<Button-1>", lambda event: None)
-        self.canvas.bind('<Motion>', lambda event: None)
-        self.canvas.config(cursor = 'arrow')
-
-        x,y = self.init_plus_snap_to_grid(event)
-        self.pos = [self.x_minus,self.y_minus,x,y]
-        self.create()
-
     def create(self):
         gu = self.canvas.grid_unit
         canvas_coords_minus = self.grid_to_canvas(self.pos[:2])
         canvas_coords_plus = self.grid_to_canvas(self.pos[2:])
-        self.line = self.canvas.create_line(*(canvas_coords_minus+canvas_coords_plus))
-        self.dot_minus = self.canvas.create_circle(*canvas_coords_minus,gu*node_dot_radius)
-        self.dot_plus = self.canvas.create_circle(*canvas_coords_plus, gu*node_dot_radius)
+        self.line = self.canvas.create_line(
+            *(canvas_coords_minus+canvas_coords_plus))
+        self.dot_minus = self.canvas.create_circle(
+            *canvas_coords_minus, gu*node_dot_radius)
+        self.dot_plus = self.canvas.create_circle(
+            *canvas_coords_plus, gu*node_dot_radius)
         self.canvas.elements.append(self)
         self.set_allstate_bindings()
 
@@ -842,35 +935,31 @@ class W(TwoNodeElement):
         gu = self.canvas.grid_unit
         canvas_coords_minus = self.grid_to_canvas(self.pos[:2])
         canvas_coords_plus = self.grid_to_canvas(self.pos[2:])
-        self.canvas.coords(self.line,*(canvas_coords_minus+canvas_coords_plus))
-        self.canvas.update_circle(self.dot_minus,*canvas_coords_minus,gu*node_dot_radius)
-        self.canvas.update_circle(self.dot_plus,*canvas_coords_plus,gu*node_dot_radius)
+        self.canvas.coords(
+            self.line, *(canvas_coords_minus+canvas_coords_plus))
+        self.canvas.update_circle(
+            self.dot_minus, *canvas_coords_minus, gu*node_dot_radius)
+        self.canvas.update_circle(
+            self.dot_plus, *canvas_coords_plus, gu*node_dot_radius)
 
     def show_line(self, event):
         self.canvas.delete("temp")
 
-        xm,ym = self.grid_to_canvas([self.x_minus, self.y_minus])
+        xm, ym = self.grid_to_canvas([self.x_minus, self.y_minus])
         xp = self.canvas.canvasx(event.x)
         yp = self.canvas.canvasy(event.y)
 
-        if abs(xm-xp)>abs(ym-yp):
+        if abs(xm-xp) > abs(ym-yp):
             # Horizontal line
-            self.canvas.create_line(xm,ym,xp,ym, tags='temp')
+            self.canvas.create_line(xm, ym, xp, ym, tags='temp')
         else:
             # Vertical line
-            self.canvas.create_line(xm,ym,xm,yp, tags='temp')
-    def box_select(self, x0, y0, x1, y1):
-        xs = [x0, x1]
-        ys = [y0, y1]
+            self.canvas.create_line(xm, ym, xm, yp, tags='temp')
 
-        xm,ym,xp,yp = self.canvas.coords(self.line)
 
-        if min(xs) <= xm <= max(xs) and min(ys) <=  ym <= max(ys)\
-          and min(xs) <= xp <= max(xs) and min(ys) <=  yp <= max(ys):
-            self.force_select()
 
 class Component(TwoNodeElement):
-    def __init__(self, canvas, event = None, auto_place = None):
+    def __init__(self, canvas, event=None, auto_place=None):
         self.image = None
         self._value = None
         self._label = None
@@ -890,10 +979,10 @@ class Component(TwoNodeElement):
 
     @property
     def pos(self):
-        return [self._x_center,self._y_center,self._angle]
+        return [self._x_center, self._y_center, self._angle]
 
     @pos.setter
-    def pos(self,pos):
+    def pos(self, pos):
         # Defined in grid units, _x/y_center should be n+(0. or 0.5) with n an integer
         if pos != self.pos:
             self._x_center = pos[0]
@@ -926,20 +1015,14 @@ class Component(TwoNodeElement):
 
     @property
     def prop(self):
-        return [self._value,self._label]
+        return [self._value, self._label]
 
     @prop.setter
-    def prop(self,prop):
+    def prop(self, prop):
         if prop != self.prop:
             self._value = prop[0]
             self._label = prop[1]
             self.canvas.save()
-    def box_select(self, x0, y0, x1, y1):
-        xs = [x0, x1]
-        ys = [y0, y1]
-        x,y = self.grid_to_canvas(self.pos[:2])
-        if min(xs) <= x <= max(xs) and min(ys) <=  y <= max(ys):
-            self.force_select()
 
     def manual_place(self, event):
         self.init_create_component(event)
@@ -947,14 +1030,14 @@ class Component(TwoNodeElement):
     def auto_place(self, auto_place_info):
 
         if self.x_minus == self.x_plus:
-            if self.y_minus<self.y_plus:
+            if self.y_minus < self.y_plus:
                 self.pos = [self.x_minus, (self.y_minus+self.y_plus)/2, NORTH]
                 self.create()
             else:
                 self.pos = [self.x_minus, (self.y_minus+self.y_plus)/2, SOUTH]
                 self.create()
         elif self.y_minus == self.y_plus:
-            if self.x_minus<self.x_plus:
+            if self.x_minus < self.x_plus:
                 self.pos = [(self.x_minus+self.x_plus)/2, self.y_minus, EAST]
                 self.create()
             else:
@@ -985,10 +1068,10 @@ class Component(TwoNodeElement):
 
     def create(self):
         gu = self.canvas.grid_unit
-        x,y,angle = self.pos
+        x, y, angle = self.pos
         self.import_tk_image()
         self.image = self.canvas.create_image(
-                *self.grid_to_canvas([x,y]), image=self.tk_image)
+            *self.grid_to_canvas([x, y]), image=self.tk_image)
         self.add_or_replace_label()
         self.canvas.elements.append(self)
         self.set_allstate_bindings()
@@ -999,13 +1082,13 @@ class Component(TwoNodeElement):
 
     def adapt_to_grid_unit(self):
         self.update_graphic()
-        self.canvas.coords(self.image,*self.grid_to_canvas(self.pos[:2]))
+        self.canvas.coords(self.image, *self.grid_to_canvas(self.pos[:2]))
         self.add_or_replace_label()
 
-    def double_click(self,event):
+    def double_click(self, event):
         self.modify_values(self)
 
-    def modify_values(self, event = None):
+    def modify_values(self, event=None):
         old_prop = self.prop
         self.request_value_label()
         if self.prop[0] is None and self.prop[1] is None:
@@ -1018,11 +1101,11 @@ class Component(TwoNodeElement):
         self.init_angle = angle
         self.import_tk_image()
         self.image = self.canvas.create_image(
-                self.canvas.canvasx(event.x), self.canvas.canvasy(event.y), image=self.tk_image)
+            self.canvas.canvasx(event.x), self.canvas.canvasy(event.y), image=self.tk_image)
 
         self.canvas.bind("<Button-1>", self.init_release)
         self.canvas.bind('<Motion>', self.init_on_motion)
-        self.canvas.bind('<Escape>',self.abort_creation)
+        self.canvas.bind('<Escape>', self.abort_creation)
         self.canvas.bind(
             '<Left>', lambda event: self.init_create_component(event, angle=WEST))
         self.canvas.bind(
@@ -1042,14 +1125,14 @@ class Component(TwoNodeElement):
         self.canvas.bind('<Down>', lambda event: None)
         self.canvas.bind('<Escape>', lambda event: None)
 
-    def abort_creation(self,event = None):
+    def abort_creation(self, event=None):
         self.unset_initialization_bindings()
         self.canvas.delete(self.image)
         del self
 
     def init_release(self, event):
         self.unset_initialization_bindings()
-        self.snap_to_grid(event)
+        self.snap_to_grid()
         self.request_value_label()
         if self.prop[0] is None and self.prop[1] is None:
             self.abort_creation()
@@ -1060,25 +1143,27 @@ class Component(TwoNodeElement):
         self.canvas.track_changes = True
         self.canvas.save()
 
-    def open_right_click_menu(self,event):
+    def open_right_click_menu(self, event):
         menu = tk.Menu(self.canvas, tearoff=0)
-        menu.add_command(label="Edit",command = self.modify_values)
-        menu.add_command(label="Rotate",command = self.rotate)
-        menu.add_command(label="Delete",command = self.canvas.delete_selection)
+        menu.add_command(label="Edit", command=self.modify_values)
+        menu.add_command(label="Rotate", command=self.rotate)
+        menu.add_command(label="Delete", command=self.canvas.delete_selection)
         menu.add_separator()
-        menu.add_command(label="Copy",command = self.canvas.copy_selection)
-        menu.add_command(label="Cut",command = self.canvas.cut_selection)
+        menu.add_command(label="Copy", command=self.canvas.copy_selection)
+        menu.add_command(label="Cut", command=self.canvas.cut_selection)
         menu.tk_popup(event.x_root, event.y_root, 0)
         self.canvas.bind("<ButtonRelease-3>", lambda event: None)
 
     def rotate(self):
-        if self.pos[2]%180. == 0.:
-            self.pos = [self.pos[0]-0.5, self.pos[1]+0.5, (self.pos[2]+90.)%360.]
-        elif self.pos[2]%180. == 90.:
-            self.pos = [self.pos[0]+0.5, self.pos[1]-0.5, (self.pos[2]+90.)%360.]
+        if self.pos[2] % 180. == 0.:
+            self.pos = [self.pos[0]-0.5, self.pos[1] +
+                        0.5, (self.pos[2]+90.) % 360.]
+        elif self.pos[2] % 180. == 90.:
+            self.pos = [self.pos[0]+0.5, self.pos[1] -
+                        0.5, (self.pos[2]+90.) % 360.]
 
         self.update_graphic()
-        self.canvas.coords(self.image,*self.grid_to_canvas(self.pos[:2]))
+        self.canvas.coords(self.image, *self.grid_to_canvas(self.pos[:2]))
         self.add_or_replace_label()
 
     def init_on_motion(self, event):
@@ -1087,14 +1172,14 @@ class Component(TwoNodeElement):
         dy = self.canvas.canvasy(event.y) - y
         self.canvas.move(self.image, dx, dy)
 
-    def move(self,dx,dy):
+    def move(self, dx, dy):
         '''
         Input given in canvas units
         '''
         self.canvas.move(self.image, dx, dy)
         self.add_or_replace_label()
 
-    def on_updownleftright(self,event,angle):
+    def on_updownleftright(self, event, angle):
         gu = self.canvas.grid_unit
         self._angle = angle
         self.update_graphic()
@@ -1110,31 +1195,31 @@ class Component(TwoNodeElement):
 
     def add_or_replace_label(self):
         gu = self.canvas.grid_unit
-        _,_, angle = self.pos
+        _, _, angle = self.pos
         x, y = self.canvas.coords(self.image)
-        value,label = self.prop
+        value, label = self.prop
         text = to_string(self.unit, label, value,
                          use_math=False, use_unicode=True)
         font = Font(family='Helvetica', size=int(gu/8.), weight='normal')
         text_position = (0.2)*gu
-        if angle%180. == 90. and self.text is None:
+        if angle % 180. == 90. and self.text is None:
             self.text = self.canvas.create_text(
                 x+text_position, y, text=text, anchor=tk.W, font=font)
-        elif angle%180. == 90. and self.text is not None:
-            self.canvas.coords(self.text,x+text_position, y )
+        elif angle % 180. == 90. and self.text is not None:
+            self.canvas.coords(self.text, x+text_position, y)
             self.canvas.itemconfig(self.text,
-                text=text, anchor=tk.W, font=font)
-        elif angle%180. == 0. and self.text is None:
+                                   text=text, anchor=tk.W, font=font)
+        elif angle % 180. == 0. and self.text is None:
             self.text = self.canvas.create_text(
                 x, y+text_position, text=text, anchor=tk.N, font=font)
-        elif angle%180. == 0. and self.text is not None:
-            self.canvas.coords(self.text,x, y+text_position )
+        elif angle % 180. == 0. and self.text is not None:
+            self.canvas.coords(self.text, x, y+text_position)
             self.canvas.itemconfig(self.text,
-                text=text, anchor=tk.N, font=font)
+                                   text=text, anchor=tk.N, font=font)
 
-    def snap_to_grid(self, event = None):
+    def snap_to_grid(self, event=None):
         x, y = self.canvas.coords(self.image)
-        x0,y0 = self.canvas.canvas_center
+        x0, y0 = self.canvas.canvas_center
         gu = float(self.canvas.grid_unit)
 
         if self.pos[2] is None:
@@ -1142,21 +1227,21 @@ class Component(TwoNodeElement):
         else:
             angle = self.pos[2]
 
-        if angle%180. == 90.:
+        if angle % 180. == 90.:
             self.pos = [
                 round(float(x-x0)/gu),
                 round(float(y-y0-gu/2.)/gu) + 0.5,
                 angle]
             self.canvas.coords(self.image, *self.grid_to_canvas(self.pos[:2]))
 
-        elif angle%180. == 0.:
+        elif angle % 180. == 0.:
             self.pos = [
-               0.5 + round(float(x-x0-gu/2.)/gu),
+                0.5 + round(float(x-x0-gu/2.)/gu),
                 round(float(y-y0)/gu),
                 angle]
             self.canvas.coords(self.image, *self.grid_to_canvas(self.pos[:2]))
 
-
+        self.add_nodes()
 
 class R(Component):
     """docstring for R"""
@@ -1165,12 +1250,14 @@ class R(Component):
         self.unit = r'$\Omega$'
         super(R, self).__init__(canvas, event, auto_place)
 
+
 class L(Component):
     """docstring for L"""
 
     def __init__(self, canvas, event=None, auto_place=None):
         self.unit = 'H'
         super(L, self).__init__(canvas, event, auto_place)
+
 
 class C(Component):
     """docstring for C"""
@@ -1179,12 +1266,14 @@ class C(Component):
         self.unit = 'F'
         super(C, self).__init__(canvas, event, auto_place)
 
+
 class J(Component):
     """docstring for J"""
 
     def __init__(self, canvas, event=None, auto_place=None):
         self.unit = 'H'
         super(J, self).__init__(canvas, event, auto_place)
+
 
 class G(Component):
     """docstring for J"""
@@ -1195,31 +1284,30 @@ class G(Component):
 
     @property
     def prop(self):
-        return [None,'']
+        return [None, '']
 
     @prop.setter
-    def prop(self,prop):
+    def prop(self, prop):
         pass
 
-    def double_click(self,event):
+    def double_click(self, event):
         pass
-    
+
     def request_value_label(self):
         pass
 
-    def open_right_click_menu(self,event):
+    def open_right_click_menu(self, event):
         menu = tk.Menu(self.canvas, tearoff=0)
-        menu.add_command(label="Rotate",command = self.rotate)
-        menu.add_command(label="Delete",command = self.delete)
+        menu.add_command(label="Rotate", command=self.rotate)
+        menu.add_command(label="Delete", command=self.delete)
         menu.add_separator()
-        menu.add_command(label="Copy",command = self.canvas.copy_selection)
-        menu.add_command(label="Cut",command = self.canvas.cut_selection)
+        menu.add_command(label="Copy", command=self.canvas.copy_selection)
+        menu.add_command(label="Cut", command=self.canvas.cut_selection)
         menu.tk_popup(event.x_root, event.y_root, 0)
         self.canvas.bind("<ButtonRelease-3>", lambda event: None)
 
     def add_or_replace_label(self):
         pass
-
 
 
 class RequestValueLabelWindow(tk.Toplevel):
@@ -1232,15 +1320,15 @@ class RequestValueLabelWindow(tk.Toplevel):
         fields = 'Value', 'Label'
 
         # Determine values of the fields
-        v,l = self.component.prop
+        v, l = self.component.prop
         if v is None:
             v = ''
         else:
-            v = "%e"%v
+            v = "%e" % v
 
         if l is None:
             l = ''
-            
+
         field_values = [v, l]
 
         self.entries = []
@@ -1264,28 +1352,29 @@ class RequestValueLabelWindow(tk.Toplevel):
     def ok(self):
         value = self.entries[0][1].get()
         label = self.entries[1][1].get()
-        if value.replace(' ','') == "":
+        if value.replace(' ', '') == "":
             v = None
         else:
             try:
                 v = float(value)
             except ValueError:
-                messagebox.showinfo("Incorrect value", "Enter a python style float, for example: 1e-2 or 0.01")
+                messagebox.showinfo(
+                    "Incorrect value", "Enter a python style float, for example: 1e-2 or 0.01")
                 self.focus_force()
                 return None
-                
 
-        if label.replace(' ','') == "":
+        if label.replace(' ', '') == "":
             l = None
         else:
             l = label
 
         if l is None and v is None:
-            messagebox.showinfo("No inputs", "Enter a value or a label or both")
+            messagebox.showinfo(
+                "No inputs", "Enter a value or a label or both")
             self.focus_force()
             return None
         else:
-            self.component.prop = [v,l] 
+            self.component.prop = [v, l]
             self.destroy()
 
     def cancel(self):
@@ -1304,6 +1393,7 @@ def open_canvas(netlist_file):
 
 class MainWindow(ttk.Frame):
     """ Main window class """
+
     def __init__(self, mainframe, netlist_file):
         """ Initialize the main Frame """
         ttk.Frame.__init__(self, master=mainframe)
@@ -1311,7 +1401,9 @@ class MainWindow(ttk.Frame):
         self.master.geometry('800x600')  # size of the main window
         self.master.rowconfigure(0, weight=1)  # make canvas expandable
         self.master.columnconfigure(0, weight=1)
-        self.canvas = SnappingCanvas(self.master, netlist_file=netlist_file, grid_unit=60)
+        self.canvas = SnappingCanvas(
+            self.master, netlist_file=netlist_file, grid_unit=60)
+
 
 if __name__ == '__main__':
     open_canvas("test.txt")
