@@ -158,23 +158,23 @@ class SnappingCanvas(tk.Canvas):
         self.bind('<Control-y>', self.ctrl_y)
         self.bind('<Control-z>', self.ctrl_z)
         # zoom for Windows and MacOS, but not Linux
-        self.bind('<MouseWheel>', self.wheel)
+        self.bind('<Control-MouseWheel>', self.wheel)
         # zoom for Linux, wheel scroll down
-        self.bind('<Button-5>',   self.wheel)
+        self.bind('<Control-Button-5>',   self.wheel)
         # zoom for Linux, wheel scroll up
-        self.bind('<Button-4>',   self.wheel)
+        self.bind('<Control-Button-4>',   self.wheel)
         # zoom for Windows and MacOS, but not Linux
-        self.bind('<Control-MouseWheel>', self.scroll_x_wheel)
+        self.bind('<Shift-MouseWheel>', self.scroll_x_wheel)
         # zoom for Linux, wheel scroll down
-        self.bind('<Control-Button-5>',   self.scroll_x_wheel)
+        self.bind('<Shift-Button-5>',   self.scroll_x_wheel)
         # zoom for Linux, wheel scroll up
-        self.bind('<Control-Button-4>',   self.scroll_x_wheel)
+        self.bind('<Shift-Button-4>',   self.scroll_x_wheel)
         # zoom for Windows and MacOS, but not Linux
-        self.bind('<Shift-MouseWheel>', self.scroll_y_wheel)
+        self.bind('<MouseWheel>', self.scroll_y_wheel)
         # zoom for Linux, wheel scroll down
-        self.bind('<Shift-Button-5>',   self.scroll_y_wheel)
+        self.bind('<Button-5>',   self.scroll_y_wheel)
         # zoom for Linux, wheel scroll up
-        self.bind('<Shift-Button-4>',   self.scroll_y_wheel)
+        self.bind('<Button-4>',   self.scroll_y_wheel)
 
         self.elements = []
         self.copied_elements = []
@@ -191,6 +191,9 @@ class SnappingCanvas(tk.Canvas):
         self.configure_scrollregion()
         self.track_changes = True
         self.save()
+
+        # Keep track of what the user knows what to do
+        self.used_arrows = False
 
     def cut_selection(self, event=None):
         self.track_changes = False
@@ -251,11 +254,11 @@ class SnappingCanvas(tk.Canvas):
     def wheel(self, event):
         old_grid_unit = self.grid_unit
 
-        scaling = 1.04
+        scaling = 1.08
         try:
             if abs(event.delta) > 120:
                 # Fast scrolling case on Windows
-                scaling = 1.12
+                scaling = 1.15
         except:
             pass
         smallest_grid_unit = 20
@@ -482,11 +485,11 @@ class SnappingCanvas(tk.Canvas):
 
         self.message("Saving...")
 
-    def message(self, text):
+    def message(self, text, t = 0.3):
         saved_message = self.create_text(
             self.canvasx(5), self.canvasy(2), text=text, anchor=tk.NW,
             font=Font(family='Helvetica', size=8, weight='normal'))
-        self.after(300, lambda: self.delete(saved_message))
+        self.after(int(1000*t), lambda: self.delete(saved_message))
 
     def create_circle(self, x, y, r):
         # Everything defined in canvas units
@@ -1124,6 +1127,11 @@ class Component(TwoNodeElement):
             self.add_or_replace_label()
 
     def init_create_component(self, event, angle=0.):
+        if angle == 0. and  not self.canvas.used_arrows:
+            self.canvas.message("Use arrows to rotate",t = 2)
+        if angle != 0.:
+            self.canvas.used_arrows = True
+
         self.canvas.track_changes = False
         self.init_angle = angle
         self.import_tk_image()
@@ -1207,6 +1215,7 @@ class Component(TwoNodeElement):
         self.add_or_replace_label()
 
     def on_updownleftright(self, event, angle):
+        self.canvas.used_arrows = True
         gu = self.canvas.grid_unit
         self._angle = angle
         self.update_graphic()
