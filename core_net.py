@@ -30,11 +30,10 @@ def string_to_component(s, *arg, **kwarg):
 pp = {
     "element_width": 1.,
     "element_height": 1.,
-    "margin": 0.,
     "figsize_scaling": 1,
     "element_height_normal_modes": 1.5,
     "color": light_black,
-    "x_fig_margin": 0.5,
+    "x_fig_margin": 1,
     "y_fig_margin": 0.25,
     "C": {
         "gap": 0.2,
@@ -67,7 +66,7 @@ pp = {
     },
     "label": {
         "fontsize": 10,
-        "text_position": 0.35
+        "text_position": 0.22
     },
     "normal_mode_label": {
         "fontsize": 10,
@@ -1000,14 +999,14 @@ class G(W):
         x = [
             np.array([0.5, 0.3])*pp['element_width'],
             np.array([0.3, 0.3])*pp['element_width'],
-            np.array([0.2, 0.2])*pp['element_width'],
-            np.array([0.1, 0.1])*pp['element_width'],
+            np.array([0.23, 0.23])*pp['element_width'],
+            np.array([0.16, 0.16])*pp['element_width'],
         ]
         y = [
             np.array([0., 0.]),
-            np.array([-1., 1.])*pp['element_height']*5./24.,
-            np.array([-1., 1.])*pp['element_height']*3./24.,
-            np.array([-1., 1.])*pp['element_height']*1./24.,
+            np.array([-1., 1.])*pp['element_height']*5./30.,
+            np.array([-1., 1.])*pp['element_height']*3./30.,
+            np.array([-1., 1.])*pp['element_height']*1./30.,
         ]
         line_type.append('W')
         line_type.append('W')
@@ -1322,6 +1321,6 @@ class Admittance(Component):
         return self.Y
 
 if __name__ == '__main__':
-    c = Qcircuit_GUI('test.txt', edit=True, plot=False, print_network=True)
-    c.w_k_A_chi(pretty_print=True)
+    c = Qcircuit_GUI('test.txt', edit=True, plot=False, print_network=False)
+    # c.w_k_A_chi(pretty_print=True)
     c.show_normal_mode(0)
