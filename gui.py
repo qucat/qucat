@@ -898,7 +898,7 @@ class W(TwoNodeElement):
         self.track_changes = False
         self.add_nodes()
         self.track_changes = True
-        self.save()
+        self.canvas.save()
 
     def move(self, dx, dy):
         '''
