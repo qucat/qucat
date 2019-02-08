@@ -1,6 +1,7 @@
 import os
-import core_net as core
-from core_net import string_to_component
+import Qcircuits.core_net as core
+from Qcircuits.core_net import string_to_component
+from Qcircuits.constants import *
 png_directory = os.path.join(os.path.dirname(__file__),".graphics")
 try:
     os.mkdir(png_directory)
@@ -42,7 +43,7 @@ core.pp = {
         "side_wire_width": 0.25
     },
     "W": {
-        "lw": 1
+        "lw": 2
     }
 }
 # Generate pngs of the different components in their HOVER state
@@ -58,7 +59,7 @@ for el in el_str_list:
     string_to_component(el,None,None,'').show(save_to = os.path.join(png_directory,'%s_hover.png'%el),plot = False, dpi = dpi)
 
 # hover selected state
-core.pp['color']="#666666"
+core.pp['color'] = gray
 for el in el_str_list:
     string_to_component(el,None,None,'').show(save_to = os.path.join(png_directory,'%s_hover_selected.png'%el),plot = False, dpi = dpi)
 # selected state
@@ -72,6 +73,6 @@ for el in el_str_list:
     string_to_component(el,None,None,'').show(save_to = os.path.join(png_directory,'%s_selected.png'%el),plot = False, dpi = dpi)
 
 # rest state
-core.pp['color']="#1c1c1c"
+core.pp['color'] = light_black
 for el in el_str_list:
     string_to_component(el,None,None,'').show(save_to = os.path.join(png_directory,'%s.png'%el),plot = False, dpi = dpi)

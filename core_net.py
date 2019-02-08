@@ -825,8 +825,7 @@ class Circuit(object):
         # ensures that any text labels are not cutoff
         y_margin = pp['y_fig_margin']
 
-        fig = plt.figure(figsize=(((x_max-x_min)+2.*x_margin)*pp["figsize_scaling"],
-                                  ((y_max-y_min)+2.*y_margin)*pp["figsize_scaling"]))
+        fig = plt.figure(figsize=(1,1))
         ax = fig.add_subplot(111)
         ax.set_axis_off()
         plt.margins(x=0., y=0.)

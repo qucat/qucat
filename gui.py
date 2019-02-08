@@ -18,6 +18,10 @@ from copy import deepcopy
 
 png_directory = os.path.join(os.path.dirname(__file__), ".graphics")
 node_dot_radius = 1./30.
+lw = 1./50.
+lw_hover = 2.*lw
+lw_select_hover = 5.*lw
+lw_select = 3.*lw
 
 
 def string_to_component(s, *arg, **kwarg):
@@ -261,7 +265,7 @@ class SnappingCanvas(tk.Canvas):
                 scaling = 1.15
         except:
             pass
-        smallest_grid_unit = 20
+        smallest_grid_unit = 35
         largest_grid_unit = 100
 
         # Respond to Linux (event.num) or Windows (event.delta) wheel event
@@ -906,13 +910,13 @@ class W(TwoNodeElement):
 
     def update_graphic(self):
         if self.selected and self.hover:
-            self.canvas.itemconfig(self.line, fill='#666666', width=3)
+            self.canvas.itemconfig(self.line, fill=gray, width=lw_select_hover*self.canvas.grid_unit)
         elif self.selected:
-            self.canvas.itemconfig(self.line, fill='#666666', width=2)
+            self.canvas.itemconfig(self.line, fill=gray, width=lw_select*self.canvas.grid_unit)
         elif self.hover:
-            self.canvas.itemconfig(self.line, fill='#1c1c1c', width=3)
+            self.canvas.itemconfig(self.line, fill=light_black, width=lw_hover*self.canvas.grid_unit)
         else:
-            self.canvas.itemconfig(self.line, fill="#1c1c1c", width=1)
+            self.canvas.itemconfig(self.line, fill=light_black, width=lw*self.canvas.grid_unit)
 
     def on_updownleftright(self, event=None):
         pass
@@ -953,7 +957,9 @@ class W(TwoNodeElement):
         canvas_coords_minus = self.grid_to_canvas(self.pos[:2])
         canvas_coords_plus = self.grid_to_canvas(self.pos[2:])
         self.line = self.canvas.create_line(
-            *(canvas_coords_minus+canvas_coords_plus))
+            *(canvas_coords_minus+canvas_coords_plus),
+            width=lw*self.canvas.grid_unit,
+            fill = light_black)
         self.dot_minus = self.canvas.create_circle(
             *canvas_coords_minus, gu*node_dot_radius)
         self.dot_plus = self.canvas.create_circle(
@@ -967,6 +973,7 @@ class W(TwoNodeElement):
         canvas_coords_plus = self.grid_to_canvas(self.pos[2:])
         self.canvas.coords(
             self.line, *(canvas_coords_minus+canvas_coords_plus))
+        self.update_graphic()
         self.canvas.update_circle(
             self.dot_minus, *canvas_coords_minus, gu*node_dot_radius)
         self.canvas.update_circle(
@@ -981,10 +988,14 @@ class W(TwoNodeElement):
 
         if abs(xm-xp) > abs(ym-yp):
             # Horizontal line
-            self.canvas.create_line(xm, ym, xp, ym, tags='temp')
+            self.canvas.create_line(xm, ym, xp, ym, tags='temp',
+            width=lw*self.canvas.grid_unit,
+            fill = light_black)
         else:
             # Vertical line
-            self.canvas.create_line(xm, ym, xm, yp, tags='temp')
+            self.canvas.create_line(xm, ym, xm, yp, tags='temp',
+            width=lw*self.canvas.grid_unit,
+            fill = light_black)
 
 
 
