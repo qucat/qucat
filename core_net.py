@@ -806,7 +806,7 @@ class Circuit(object):
     def __or__(self, other_circuit):
         return Parallel(self, other_circuit)
 
-    def show(self,
+    def generate_icon(self,
              plot=True,
              save_to=None,
              **savefig_kwargs):
@@ -896,7 +896,9 @@ class Parallel(Circuit):
         return Add(
             self.left.admittance(),
             self.right.admittance())
-
+    
+    def generate_icon(self, plot, save_to, **savefig_kwargs):
+        print("Cannot draw parallel connection")
 
 class Component(Circuit):
     """docstring for Component"""
@@ -1025,16 +1027,16 @@ class G(W):
         # Defined for EAST
         line_type = []
         x = [
-            np.array([0.5, 0.25])*pp['element_width'],
-            np.array([0.25, 0.25])*pp['element_width'],
-            np.array([0.125, 0.125])*pp['element_width'],
-            np.array([0., 0.])*pp['element_width'],
+            np.array([0.5, 0.3])*pp['element_width'],
+            np.array([0.3, 0.3])*pp['element_width'],
+            np.array([0.2, 0.2])*pp['element_width'],
+            np.array([0.1, 0.1])*pp['element_width'],
         ]
         y = [
             np.array([0., 0.]),
-            np.array([-1., 1.])*pp['element_height']*5./16.,
-            np.array([-1., 1.])*pp['element_height']*3./16.,
-            np.array([-1., 1.])*pp['element_height']*1./16.,
+            np.array([-1., 1.])*pp['element_height']*5./24.,
+            np.array([-1., 1.])*pp['element_height']*3./24.,
+            np.array([-1., 1.])*pp['element_height']*1./24.,
         ]
         line_type.append('W')
         line_type.append('W')
@@ -1348,6 +1350,8 @@ class Admittance(Component):
     def admittance(self):
         return self.Y
 
+    def generate_icon(self, plot, save_to, **savefig_kwargs):
+        print("Cannot draw arbitrary admittance")
 
 if __name__ == '__main__':
     c = Qcircuit_GUI('test.txt', edit=True, plot=True, print=True)

@@ -318,6 +318,8 @@ class SnappingCanvas(tk.Canvas):
             self.load_netlist(self.history[self.history_location].split('\n'))
             self.save()
             self.track_changes = True
+        else:
+            self.message('Nothing to undo')
         # print("location is: %d" % self.history_location)
 
     def ctrl_y(self, event=None):
@@ -330,6 +332,8 @@ class SnappingCanvas(tk.Canvas):
             self.history_location += 1
             self.load_netlist(self.history[self.history_location].split('\n'))
             self.track_changes = True
+        else:
+            self.message('Nothing to redo')
         # print("location is: %d" % self.history_location)
 
     def load_netlist(self, lines):

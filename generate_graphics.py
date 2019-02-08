@@ -56,12 +56,12 @@ core.pp['J']['lw']+=increment
 el_str_list = ['R','C','L','J','G']
 
 for el in el_str_list:
-    string_to_component(el,None,None,'').show(save_to = os.path.join(png_directory,'%s_hover.png'%el),plot = False, dpi = dpi)
+    string_to_component(el,None,None,'').generate_icon(save_to = os.path.join(png_directory,'%s_hover.png'%el),plot = False, dpi = dpi)
 
 # hover selected state
 core.pp['color'] = gray
 for el in el_str_list:
-    string_to_component(el,None,None,'').show(save_to = os.path.join(png_directory,'%s_hover_selected.png'%el),plot = False, dpi = dpi)
+    string_to_component(el,None,None,'').generate_icon(save_to = os.path.join(png_directory,'%s_hover_selected.png'%el),plot = False, dpi = dpi)
 # selected state
 increment = -1
 core.pp['W']['lw']+=increment
@@ -70,9 +70,9 @@ core.pp['L']['lw']+=increment
 core.pp['R']['lw']+=increment
 core.pp['J']['lw']+=increment
 for el in el_str_list:
-    string_to_component(el,None,None,'').show(save_to = os.path.join(png_directory,'%s_selected.png'%el),plot = False, dpi = dpi)
+    string_to_component(el,None,None,'').generate_icon(save_to = os.path.join(png_directory,'%s_selected.png'%el),plot = False, dpi = dpi)
 
 # rest state
 core.pp['color'] = light_black
 for el in el_str_list:
-    string_to_component(el,None,None,'').show(save_to = os.path.join(png_directory,'%s.png'%el),plot = False, dpi = dpi)
+    string_to_component(el,None,None,'').generate_icon(save_to = os.path.join(png_directory,'%s.png'%el),plot = False, dpi = dpi)
