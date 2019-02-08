@@ -701,17 +701,6 @@ class TwoNodeElement(object):
     def deselect(self):
         self.selected = False
         self.update_graphic()
-
-    def box_select(self, x0, y0, x1, y1):
-        xs = [x0, x1]
-        ys = [y0, y1]
-        xm,ym = self.canvas.grid_to_canvas([self.x_minus,self.y_minus])
-        xp,yp = self.canvas.grid_to_canvas([self.x_plus,self.y_plus])
-
-        if min(xs) <= xm <= max(xs) and min(ys) <= ym <= max(ys)\
-                and min(xs) <= xp <= max(xs) and min(ys) <= yp <= max(ys):
-            self.force_select()
-
         
     def add_nodes(self, to = 'all wires'):
 
@@ -829,6 +818,15 @@ class W(TwoNodeElement):
         else:
             return False
 
+    def box_select(self, x0, y0, x1, y1):
+        xs = [x0, x1]
+        ys = [y0, y1]
+        xm,ym = self.canvas.grid_to_canvas([self.x_minus,self.y_minus])
+        xp,yp = self.canvas.grid_to_canvas([self.x_plus,self.y_plus])
+
+        if min(xs) <= xm <= max(xs) and min(ys) <= ym <= max(ys)\
+                and min(xs) <= xp <= max(xs) and min(ys) <= yp <= max(ys):
+            self.force_select()
 
     def get_center_pos(self):
         # returns center in canvas units
@@ -914,9 +912,9 @@ class W(TwoNodeElement):
 
     def update_graphic(self):
         if self.selected and self.hover:
-            self.canvas.itemconfig(self.line, fill=gray, width=lw_select_hover*self.canvas.grid_unit)
+            self.canvas.itemconfig(self.line, fill=blue, width=lw_select_hover*self.canvas.grid_unit)
         elif self.selected:
-            self.canvas.itemconfig(self.line, fill=gray, width=lw_select*self.canvas.grid_unit)
+            self.canvas.itemconfig(self.line, fill=light_blue, width=lw_select*self.canvas.grid_unit)
         elif self.hover:
             self.canvas.itemconfig(self.line, fill=light_black, width=lw_hover*self.canvas.grid_unit)
         else:
@@ -1068,6 +1066,14 @@ class Component(TwoNodeElement):
             self._value = prop[0]
             self._label = prop[1]
             self.canvas.save()
+
+    def box_select(self, x0, y0, x1, y1):
+        xs = [x0, x1]
+        ys = [y0, y1]
+        x,y = self.get_center_pos()
+
+        if min(xs) <= x <= max(xs) and min(ys) <= y <= max(ys):
+            self.force_select()
 
     def manual_place(self, event):
         self.init_create_component(event)

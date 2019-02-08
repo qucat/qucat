@@ -33,7 +33,7 @@ pp = {
     "margin": 0.,
     "figsize_scaling": 1,
     "element_height_normal_modes": 1.5,
-    "color": [0.15, 0.15, 0.15],
+    "color": light_black,
     "x_fig_margin": 0.5,
     "y_fig_margin": 0.25,
     "C": {
@@ -82,8 +82,8 @@ pp = {
         "max_lw": 3,
         "min_head": 0.07,
         "max_head": 0.071,
-        "color_positive": [0.483, 0.622, 0.974],
-        "color_negative": [0.931, 0.519, 0.406]
+        "color_positive": red,
+        "color_negative": blue
     }
 }
 
@@ -806,42 +806,6 @@ class Circuit(object):
     def __or__(self, other_circuit):
         return Parallel(self, other_circuit)
 
-    def generate_icon(self,
-             plot=True,
-             save_to=None,
-             **savefig_kwargs):
-
-        self.node_minus_plot = '0,0'
-        self.node_plus_plot = '1,0'
-        self.set_plot_coordinates()
-        xs, ys, line_type = self.draw()
-
-        x_min = min([np.amin(x) for x in xs])
-        x_max = max([np.amax(x) for x in xs])
-        y_min = min([np.amin(x) for x in ys])
-        y_max = max([np.amax(x) for x in ys])
-
-        x_margin = pp['x_fig_margin']
-        # ensures that any text labels are not cutoff
-        y_margin = pp['y_fig_margin']
-
-        fig = plt.figure(figsize=(1,1))
-        ax = fig.add_subplot(111)
-        ax.set_axis_off()
-        plt.margins(x=0., y=0.)
-        ax.set_ylim(-0.5, 0.5)
-        ax.set_xlim(0., 1.)
-        plt.subplots_adjust(left=0., right=1., top=1., bottom=0.)
-
-        for i in range(len(xs)):
-            ax.plot(xs[i], ys[i], color=pp["color"], lw=pp[line_type[i]]['lw'])
-
-        if save_to is not None:
-            fig.savefig(save_to, transparent=True, **savefig_kwargs)
-        if plot:
-            plt.show()
-        plt.close()
-
     def set_plot_coordinates(self):
 
         self.x_plot_node_minus = float(self.node_minus_plot.split(',')[0])
@@ -897,9 +861,6 @@ class Parallel(Circuit):
             self.left.admittance(),
             self.right.admittance())
     
-    def generate_icon(self, plot, save_to, **savefig_kwargs):
-        print("Cannot draw parallel connection")
-
 class Component(Circuit):
     """docstring for Component"""
 
@@ -1349,9 +1310,6 @@ class Admittance(Component):
 
     def admittance(self):
         return self.Y
-
-    def generate_icon(self, plot, save_to, **savefig_kwargs):
-        print("Cannot draw arbitrary admittance")
 
 if __name__ == '__main__':
     c = Qcircuit_GUI('test.txt', edit=True, plot=True, print=True)
