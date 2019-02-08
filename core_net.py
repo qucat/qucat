@@ -384,7 +384,7 @@ class Qcircuit_NET(_Qcircuit):
 class Qcircuit_GUI(_Qcircuit):
     """docstring for Qcircuit"""
 
-    def __init__(self, filename, edit=True, plot=True, print=True):
+    def __init__(self, filename, edit=True, plot=True, print_network=True):
         if edit:
             gui.open_canvas(filename)
 
@@ -410,6 +410,15 @@ class Qcircuit_GUI(_Qcircuit):
 
         if plot:
             self.show()
+
+        if print_network:
+            for el in [el for el in self.netlist if not isinstance(el,W)]:
+                print("%s %d %d %s"%(
+                    el.__class__.__name__,
+                    min(el.node_minus,el.node_plus),
+                    max(el.node_minus,el.node_plus),
+                    el.to_string(use_math = False)))
+            print('\n')
 
     def show(self,
              plot=True,
@@ -817,10 +826,11 @@ class Circuit(object):
         self.y_plot_center = (self.y_plot_node_minus +
                               self.y_plot_node_plus)/2.
         if self.x_plot_node_minus == self.x_plot_node_plus:
+            # increasing y = SOUTH in tkinter
             if self.y_plot_node_minus < self.y_plot_node_plus:
-                self.angle = NORTH
-            else:
                 self.angle = SOUTH
+            else:
+                self.angle = NORTH
         else:
             if self.x_plot_node_minus < self.x_plot_node_plus:
                 self.angle = WEST
@@ -944,8 +954,8 @@ class Component(Circuit):
         return self.current(w, **kwargs)/w
 
     def to_string(self, use_math=True, use_unicode=False):
-        to_string(self.unit, self.label, self.value,
-                  use_math=True, use_unicode=False)
+        return to_string(self.unit, self.label, self.value,
+                  use_math=use_math, use_unicode=use_unicode)
 
 
 class W(Component):
@@ -1312,6 +1322,6 @@ class Admittance(Component):
         return self.Y
 
 if __name__ == '__main__':
-    c = Qcircuit_GUI('test.txt', edit=True, plot=True, print=True)
+    c = Qcircuit_GUI('test.txt', edit=True, plot=False, print_network=True)
     c.w_k_A_chi(pretty_print=True)
     c.show_normal_mode(0)

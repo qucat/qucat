@@ -529,6 +529,7 @@ class TwoNodeElement(object):
     def __init__(self, canvas, event=None, auto_place=None):
         self.canvas = canvas
         self.was_moved = False
+        self.was_rotated = False
         self.hover = False
         self.selected = False
 
@@ -579,6 +580,9 @@ class TwoNodeElement(object):
         newone.prop = deepcopy(self.prop)
         return newone
 
+    def set_nodes(self):
+        pass
+
     def grid_to_node_string(self, x, y):
         gu = self.canvas.grid_unit
         return "%d,%d" % (int(x), int(y))
@@ -624,11 +628,18 @@ class TwoNodeElement(object):
     def release_motion(self, event, shift_control=False):
         N_selected = 0
         self.canvas.track_changes = False
+
+
         for el in self.canvas.elements:
             if el.selected or el == self:
                 N_selected += 1
                 el.snap_to_grid()
                 el.add_or_replace_label()
+
+        if self.was_rotated:
+            self.set_nodes()
+            self.was_rotated = False
+
         self.canvas.track_changes = True
         self.canvas.save()
         self.canvas.bind('<Left>', lambda event: None)
@@ -638,6 +649,7 @@ class TwoNodeElement(object):
 
         if self.was_moved:
             self.force_select()
+            self.was_moved = False
         elif shift_control:
             self.ctrl_shift_select()
         else:
@@ -1032,29 +1044,7 @@ class Component(TwoNodeElement):
             self._x_center = pos[0]
             self._y_center = pos[1]
             self._angle = pos[2]
-
-            if self._angle == NORTH:
-                self.x_minus = pos[0]
-                self.y_minus = pos[1]-0.5
-                self.x_plus = pos[0]
-                self.y_plus = pos[1]+0.5
-            elif self._angle == SOUTH:
-                self.x_minus = pos[0]
-                self.y_minus = pos[1]+0.5
-                self.x_plus = pos[0]
-                self.y_plus = pos[1]-0.5
-
-            elif self._angle == EAST:
-                self.x_minus = pos[0]-0.5
-                self.y_minus = pos[1]
-                self.x_plus = pos[0]+0.5
-                self.y_plus = pos[1]
-            elif self._angle == WEST:
-                self.x_minus = pos[0]+0.5
-                self.y_minus = pos[1]
-                self.x_plus = pos[0]-0.5
-                self.y_plus = pos[1]
-
+            self.set_nodes()
             self.canvas.save()
 
     @property
@@ -1067,6 +1057,32 @@ class Component(TwoNodeElement):
             self._value = prop[0]
             self._label = prop[1]
             self.canvas.save()
+
+    def set_nodes(self):
+
+        # positive y points south
+        pos = self.pos
+        if self._angle == SOUTH:
+            self.x_minus = pos[0]
+            self.y_minus = pos[1]-0.5
+            self.x_plus = pos[0]
+            self.y_plus = pos[1]+0.5
+        elif self._angle == NORTH:
+            self.x_minus = pos[0]
+            self.y_minus = pos[1]+0.5
+            self.x_plus = pos[0]
+            self.y_plus = pos[1]-0.5
+
+        elif self._angle == EAST:
+            self.x_minus = pos[0]-0.5
+            self.y_minus = pos[1]
+            self.x_plus = pos[0]+0.5
+            self.y_plus = pos[1]
+        elif self._angle == WEST:
+            self.x_minus = pos[0]+0.5
+            self.y_minus = pos[1]
+            self.x_plus = pos[0]-0.5
+            self.y_plus = pos[1]
 
     def box_select(self, x0, y0, x1, y1):
         xs = [x0, x1]
@@ -1082,11 +1098,12 @@ class Component(TwoNodeElement):
     def auto_place(self, auto_place_info):
 
         if self.x_minus == self.x_plus:
+            # increasing y = SOUTH in tkinter
             if self.y_minus < self.y_plus:
-                self.pos = [self.x_minus, (self.y_minus+self.y_plus)/2, NORTH]
+                self.pos = [self.x_minus, (self.y_minus+self.y_plus)/2, SOUTH]
                 self.create()
             else:
-                self.pos = [self.x_minus, (self.y_minus+self.y_plus)/2, SOUTH]
+                self.pos = [self.x_minus, (self.y_minus+self.y_plus)/2, NORTH]
                 self.create()
         elif self.y_minus == self.y_plus:
             if self.x_minus < self.x_plus:
@@ -1239,9 +1256,11 @@ class Component(TwoNodeElement):
     def on_updownleftright(self, event, angle):
         self.canvas.used_arrows = True
         gu = self.canvas.grid_unit
-        self._angle = angle
-        self.update_graphic()
-        self.add_or_replace_label()
+        if angle != self.pos[2]:
+            self._angle = angle
+            self.update_graphic()
+            self.add_or_replace_label()
+            self.was_rotated = True
 
     def delete(self, event=None):
         self.canvas.elements.remove(self)
