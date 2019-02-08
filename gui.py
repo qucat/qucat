@@ -887,8 +887,6 @@ class W(TwoNodeElement):
             self.x_plus = self.x_minus
             self.y_plus = int(round(float(self.canvas.canvasy(event.y)-y0)/gu))
         
-        self.pos = [self.x_minus, self.y_minus, self.x_plus, self.y_plus]
-        
     def end_line(self, event):
         self.canvas.delete("temp")
         self.canvas.bind("<Button-1>", lambda event: None)
@@ -897,7 +895,10 @@ class W(TwoNodeElement):
 
         self.init_plus_snap_to_grid(event)
         self.create()
+        self.track_changes = False
         self.add_nodes()
+        self.track_changes = True
+        self.save()
 
     def move(self, dx, dy):
         '''

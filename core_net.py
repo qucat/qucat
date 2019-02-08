@@ -82,7 +82,7 @@ pp = {
         "max_lw": 3,
         "min_head": 0.07,
         "max_head": 0.071,
-        "color_positive": red,
+        "color_positive": orange,
         "color_negative": blue
     }
 }
