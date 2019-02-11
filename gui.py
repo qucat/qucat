@@ -1142,7 +1142,7 @@ class Component(TwoNodeElement):
         window = RequestValueLabelWindow(self.canvas.master, self)
         self.canvas.master.wait_window(window)
 
-    def import_tk_image(self):
+    def import_image(self):
         png = type(self).__name__
         if self.hover:
             png += '_hover'
@@ -1156,7 +1156,7 @@ class Component(TwoNodeElement):
             angle = self.pos[2]
 
         img = Image.open(os.path.join(png_directory, png))
-        size = round(self.canvas.grid_unit*(1-node_dot_radius))
+        size = int(self.canvas.grid_unit*(1-1*node_dot_radius))
         img = img.resize((size, size))
         img = img.rotate(angle)
         self.tk_image = ImageTk.PhotoImage(img)
@@ -1164,7 +1164,7 @@ class Component(TwoNodeElement):
     def create(self):
         self.add_or_replace_node_dots()
         x, y, angle = self.pos
-        self.import_tk_image()
+        self.import_image()
         self.image = self.canvas.create_image(
             *self.grid_to_canvas([x, y]), image=self.tk_image)
         self.add_or_replace_label()
@@ -1172,7 +1172,7 @@ class Component(TwoNodeElement):
         self.set_allstate_bindings()
 
     def update_graphic(self):
-        self.import_tk_image()
+        self.import_image()
         self.canvas.itemconfig(self.image, image=self.tk_image)
 
     def adapt_to_grid_unit(self):
@@ -1200,7 +1200,7 @@ class Component(TwoNodeElement):
 
         self.canvas.track_changes = False
         self.init_angle = angle
-        self.import_tk_image()
+        self.import_image()
         self.image = self.canvas.create_image(
             self.canvas.canvasx(event.x), self.canvas.canvasy(event.y), image=self.tk_image)
 
