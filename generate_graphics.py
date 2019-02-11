@@ -59,11 +59,11 @@ def generate_icon(comp,hover = False, selected = False):
     xs, ys, line_type = comp.draw()
 
 
-    fig = plt.figure(figsize=(1,1))
+    fig = plt.figure(figsize=(1,0.5))
     ax = fig.add_subplot(111)
     ax.set_axis_off()
     plt.margins(x=0., y=0.)
-    ax.set_ylim(-0.5, 0.5)
+    ax.set_ylim(-0.25, 0.25)
     ax.set_xlim(0., 1.)
     plt.subplots_adjust(left=0., right=1., top=1., bottom=0.)
 

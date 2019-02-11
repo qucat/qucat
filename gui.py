@@ -1169,8 +1169,8 @@ class Component(TwoNodeElement):
 
         img = Image.open(os.path.join(png_directory, png))
         size = int(self.canvas.grid_unit*(1-1*node_dot_radius))
-        img = img.resize((size, size))
-        img = img.rotate(angle)
+        img = img.resize((size, int(size/2)))
+        img = img.rotate(angle,expand = True)
         self.tk_image = ImageTk.PhotoImage(img)
 
     def create(self):
