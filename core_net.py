@@ -27,7 +27,7 @@ def string_to_component(s, *arg, **kwarg):
     elif s == 'G':
         return G(*arg, **kwarg)
 
-pp = {
+plot_parameters = {
     "figsize_scaling": 1,
     "color": light_black,
     "x_fig_margin": 1,
@@ -38,7 +38,7 @@ pp = {
         "lw": 6
     },
     "J": {
-        "width": 0.25,
+        "width": 0.22,
         "lw": 6
     },
     "L": {
@@ -65,17 +65,34 @@ pp = {
         "fontsize": 10,
         "text_position_horizontal": [0.,-0.22],
         "text_position_vertical": [0.22,0.]
-    },
-    "normal_mode_label": {
+    }
+}
+
+pp = deepcopy(plot_parameters)
+scale = 1.5
+pp["figsize_scaling"] = scale
+pp["C"]["gap"] /= scale
+pp["C"]["height"] /= scale
+pp["J"]["width"] /= scale
+pp["L"]["width"] /= scale
+pp["L"]["height"] /= scale
+pp["R"]["width"] /= scale
+pp["R"]["height"] /= scale
+pp["label"]= {
         "fontsize": 10,
-        "y_arrow": 0.26,
-        "text_position_horizontal": [0.,0.5],
-        "text_position_vertical": [-0.3,0.]
-    },
-    "normal_mode_arrow": {
+        "text_position_horizontal": [0.,-pp["C"]["height"]/2-0.07],
+        "text_position_vertical": [pp["C"]["height"]/2+0.05,0.05]
+    }
+pp["normal_mode_label"]= {
+        "fontsize": 10,
+        "y_arrow": pp["C"]["height"]/2+0.07,
+        "text_position_horizontal": [0.,pp["C"]["height"]/2+0.2],
+        "text_position_vertical": [-pp["C"]["height"]/2-0.1,-0.05]
+    }
+pp["normal_mode_arrow"]= {
         "logscale": "False",
         "min_width": 0.1,
-        "max_width": 0.5,
+        "max_width": 0.4,
         "min_lw": 1,
         "max_lw": 3,
         "min_head": 0.07,
@@ -83,8 +100,7 @@ pp = {
         "color_positive": orange,
         "color_negative": blue
     }
-}
-
+plot_parameters_normal_modes = pp
 
 class _Qcircuit(object):
     """docstring for BBQcircuit"""
@@ -425,9 +441,11 @@ class Qcircuit_GUI(_Qcircuit):
     def show(self,
              plot=True,
              full_output=False,
-             add_vertical_space=False,
+             pp=plot_parameters,
              save_to=None,
              **savefig_kwargs):
+        
+        self.pp = pp
 
         xs = []
         ys = []
@@ -443,17 +461,17 @@ class Qcircuit_GUI(_Qcircuit):
         y_min = min([np.amin(x) for x in ys])
         y_max = max([np.amax(x) for x in ys])
 
-        x_margin = pp['x_fig_margin']
+        x_margin = self.pp['x_fig_margin']
         # ensures that any text labels are not cutoff
-        y_margin = pp['y_fig_margin']
+        y_margin = self.pp['y_fig_margin']
         fig = plt.figure(figsize=(
-            ((x_max-x_min)+2.*x_margin)*pp["figsize_scaling"],
-            ((y_max-y_min)+2.*y_margin)*pp["figsize_scaling"]))
+            ((x_max-x_min)+2.*x_margin)*self.pp["figsize_scaling"],
+            ((y_max-y_min)+2.*y_margin)*self.pp["figsize_scaling"]))
         ax = fig.add_subplot(111)
         plt.subplots_adjust(left=0., right=1., top=1., bottom=0.)
 
         for i, _ in enumerate(xs):
-            ax.plot(xs[i], ys[i], color=pp["color"], lw=pp[line_type[i]]['lw'])
+            ax.plot(xs[i], ys[i], color=self.pp["color"], lw=self.pp[line_type[i]]['lw'])
 
         for elt in self.netlist:
             elt.draw_label(ax)
@@ -505,7 +523,7 @@ class Qcircuit_GUI(_Qcircuit):
         fig, ax = self.show(
             plot=False,
             full_output=True,
-            add_vertical_space=True)
+            pp=plot_parameters_normal_modes)
 
         # Determine arrow size
         all_values = []
@@ -518,7 +536,7 @@ class Qcircuit_GUI(_Qcircuit):
 
         def value_to_01_range(value):
             try:
-                if pp['normal_mode_arrow']['logscale'] == "True":
+                if self.pp['normal_mode_arrow']['logscale'] == "True":
                     return np.absolute((np.log10(value)-np.log10(min_value))/(np.log10(max_value)-np.log10(min_value)))
                 else:
                     return np.absolute((value-min_value)/(max_value-min_value))
@@ -527,12 +545,12 @@ class Qcircuit_GUI(_Qcircuit):
 
         def arrow_width(value):
             value_01 = value_to_01_range(value)
-            ppnm = pp['normal_mode_arrow']
+            ppnm = self.pp['normal_mode_arrow']
             return np.absolute(ppnm['min_width']+value_01*(ppnm['max_width']-ppnm['min_width']))
 
         def arrow_kwargs(value):
             value_01 = value_to_01_range(value)
-            ppnm = pp['normal_mode_arrow']
+            ppnm = self.pp['normal_mode_arrow']
             lw = ppnm['min_lw']+value_01*(ppnm['max_lw']-ppnm['min_lw'])
             head = ppnm['min_head']+value_01 * \
                 (ppnm['max_head']-ppnm['min_head'])
@@ -552,43 +570,43 @@ class Qcircuit_GUI(_Qcircuit):
                 if el.angle%180 == 0.:
                     # Defined for positive arrows
                     x_arrow = x-arrow_width(value)/2.
-                    y_arrow = y+pp["normal_mode_label"]["y_arrow"]
+                    y_arrow = y+self.pp["normal_mode_label"]["y_arrow"]
                     dx_arrow = arrow_width(value)
                     dy_arrow = 0.
 
-                    x_text = x+pp["normal_mode_label"]["text_position_horizontal"][0]
-                    y_text = y+pp["normal_mode_label"]["text_position_horizontal"][1]
+                    x_text = x+self.pp["normal_mode_label"]["text_position_horizontal"][0]
+                    y_text = y+self.pp["normal_mode_label"]["text_position_horizontal"][1]
 
                     ha = 'center'
                     va = 'top'
 
                 else:
                     # Defined for positive arrows
-                    x_arrow = x-pp["normal_mode_label"]["y_arrow"]
+                    x_arrow = x-self.pp["normal_mode_label"]["y_arrow"]
                     y_arrow = y-arrow_width(value)/2.
                     dx_arrow = 0.
                     dy_arrow = arrow_width(value)
 
-                    x_text = x+pp["normal_mode_label"]["text_position_vertical"][0]
-                    y_text = y+pp["normal_mode_label"]["text_position_vertical"][1]
+                    x_text = x+self.pp["normal_mode_label"]["text_position_vertical"][0]
+                    y_text = y+self.pp["normal_mode_label"]["text_position_vertical"][1]
 
                     ha = 'right'
                     va = 'center'
 
                 if np.real(value_current) > 0:
                     ax.arrow(x_arrow, y_arrow, dx_arrow, dy_arrow,
-                             fc=pp['normal_mode_arrow']['color_positive'],
-                             ec=pp['normal_mode_arrow']['color_positive'],
+                             fc=self.pp['normal_mode_arrow']['color_positive'],
+                             ec=self.pp['normal_mode_arrow']['color_positive'],
                              **arrow_kwargs(value))
                 else:
                     ax.arrow(x_arrow+dx_arrow, y_arrow+dy_arrow, -dx_arrow, -dy_arrow,
-                             fc=pp['normal_mode_arrow']['color_negative'],
-                             ec=pp['normal_mode_arrow']['color_negative'],
+                             fc=self.pp['normal_mode_arrow']['color_negative'],
+                             ec=self.pp['normal_mode_arrow']['color_negative'],
                              **arrow_kwargs(value))
 
                 ax.text(x_text, y_text,
                         pretty(np.absolute(value), unit),
-                        fontsize=pp["normal_mode_label"]["fontsize"],
+                        fontsize=self.pp["normal_mode_label"]["fontsize"],
                         ha=ha, va=va, style='italic', weight='bold')
 
         if plot == True:
@@ -837,20 +855,20 @@ class Circuit(object):
 
     def draw_label(self, ax):
         if self.angle%180. == 0.:
-            x = self.x_plot_center+pp['label']['text_position_horizontal'][0]
-            y = self.y_plot_center+pp['label']['text_position_horizontal'][1]
+            x = self.x_plot_center+self.head.pp['label']['text_position_horizontal'][0]
+            y = self.y_plot_center+self.head.pp['label']['text_position_horizontal'][1]
             ha = 'center'
             va = 'top'
 
         else:
-            x = self.x_plot_center+pp['label']['text_position_vertical'][0]
-            y = self.y_plot_center+pp['label']['text_position_vertical'][1]
+            x = self.x_plot_center+self.head.pp['label']['text_position_vertical'][0]
+            y = self.y_plot_center+self.head.pp['label']['text_position_vertical'][1]
             ha = 'left'
             va = 'center'
 
         ax.text(x, y,
                 to_string(self.unit, self.label, self.value),
-                fontsize=pp['label']['fontsize'],
+                fontsize=self.head.pp['label']['fontsize'],
                 ha=ha, va=va)
 
 
@@ -1037,7 +1055,7 @@ class R(Component):
     def draw(self):
 
         x = np.linspace(-0.25, 0.25 +
-                        float(pp['R']['N_ridges']), pp['R']['N_points'])
+                        float(self.head.pp['R']['N_ridges']), self.head.pp['R']['N_points'])
         height = 1.
         period = 1.
         a = height*2.*(-1.+2.*np.mod(np.floor(2.*x/period), 2.))
@@ -1053,11 +1071,11 @@ class R(Component):
 
         # set width inductor width
         x_max = x[-1]
-        x *= pp['R']['width']/x_max
+        x *= self.head.pp['R']['width']/x_max
 
         # set leftmost point to the length of
         # the side connection wires
-        x += (1.-pp['R']['width'])/2.
+        x += (1.-self.head.pp['R']['width'])/2.
 
         # add side wire connections
         x_min = x[0]
@@ -1072,7 +1090,7 @@ class R(Component):
         x_list = shift(x_list-1./2.)
 
         # set height of inductor
-        y *= pp['R']['height']/2.
+        y *= self.head.pp['R']['height']/2.
 
         # add side wire connections
         y_list = [y]
@@ -1099,7 +1117,7 @@ class L(Component):
     def draw(self):
 
         x = np.linspace(0.5, float(
-            pp['L']['N_turns']) + 1., pp['L']['N_points'])
+            self.head.pp['L']['N_turns']) + 1., self.head.pp['L']['N_points'])
         y = -np.sin(2.*np.pi*x)
         x = np.cos(2.*np.pi*x)+2.*x
 
@@ -1112,11 +1130,11 @@ class L(Component):
 
         # set width inductor width
         x_max = x[-1]
-        x *= pp['L']['width']/x_max
+        x *= self.head.pp['L']['width']/x_max
 
         # set leftmost point to the length of
         # the side connection wires
-        x += (1.-pp['L']['width'])/2.
+        x += (1.-self.head.pp['L']['width'])/2.
 
         # add side wire connections
         x_min = x[0]
@@ -1131,7 +1149,7 @@ class L(Component):
         x_list = shift(x_list, -1./2.)
 
         # set height of inductor
-        y *= pp['L']['height']/2.
+        y *= self.head.pp['L']['height']/2.
 
         # add side wire connections
         y_list = [y]
@@ -1183,15 +1201,15 @@ class J(L):
         line_type = []
         x = [
             np.array([0., 1.]),
-            np.array([(1.-pp['J']['width'])/2.,
-                      (1.+pp['J']['width'])/2.]),
-            np.array([(1.-pp['J']['width'])/2.,
-                      (1.+pp['J']['width'])/2.])
+            np.array([(1.-self.head.pp['J']['width'])/2.,
+                      (1.+self.head.pp['J']['width'])/2.]),
+            np.array([(1.-self.head.pp['J']['width'])/2.,
+                      (1.+self.head.pp['J']['width'])/2.])
         ]
         y = [
             np.array([0., 0.]),
-            np.array([-1., 1.])*pp['J']['width']/2.,
-            np.array([1., -1.])*pp['J']['width']/2.
+            np.array([-1., 1.])*self.head.pp['J']['width']/2.,
+            np.array([1., -1.])*self.head.pp['J']['width']/2.
         ]
         line_type.append('W')
         line_type.append('J')
@@ -1221,7 +1239,7 @@ class R(Component):
     def draw(self):
 
         x = np.linspace(-0.25, 0.25 +
-                        float(pp['R']['N_ridges']), pp['R']['N_points'])
+                        float(self.head.pp['R']['N_ridges']), self.head.pp['R']['N_points'])
         height = 1.
         period = 1.
         a = height*2.*(-1.+2.*np.mod(np.floor(2.*x/period), 2.))
@@ -1237,11 +1255,11 @@ class R(Component):
 
         # set width inductor width
         x_max = x[-1]
-        x *= pp['R']['width']/x_max
+        x *= self.head.pp['R']['width']/x_max
 
         # set leftmost point to the length of
         # the side connection wires
-        x += (1.-pp['R']['width'])/2.
+        x += (1.-self.head.pp['R']['width'])/2.
 
         # add side wire connections
         x_min = x[0]
@@ -1256,7 +1274,7 @@ class R(Component):
         x_list = shift(x_list, -1./2.)
 
         # set height of inductor
-        y *= pp['R']['height']/2.
+        y *= self.head.pp['R']['height']/2.
 
         # add side wire connections
         y_list = [y]
@@ -1284,19 +1302,19 @@ class C(Component):
     def draw(self):
         line_type = []
         x = [
-            np.array([0., (1.-pp['C']['gap'])/2.]),
-            np.array([(1.+pp['C']['gap']) /
+            np.array([0., (1.-self.head.pp['C']['gap'])/2.]),
+            np.array([(1.+self.head.pp['C']['gap']) /
                       2., 1.]),
-            np.array([(1.-pp['C']['gap'])/2.,
-                      (1.-pp['C']['gap'])/2.]),
-            np.array([(1.+pp['C']['gap'])/2.,
-                      (1.+pp['C']['gap'])/2.]),
+            np.array([(1.-self.head.pp['C']['gap'])/2.,
+                      (1.-self.head.pp['C']['gap'])/2.]),
+            np.array([(1.+self.head.pp['C']['gap'])/2.,
+                      (1.+self.head.pp['C']['gap'])/2.]),
         ]
         y = [
             np.array([0., 0.]),
             np.array([0., 0.]),
-            np.array([-pp['C']['height']/2., pp['C']['height']/2.]),
-            np.array([-pp['C']['height']/2., pp['C']['height']/2.]),
+            np.array([-self.head.pp['C']['height']/2., self.head.pp['C']['height']/2.]),
+            np.array([-self.head.pp['C']['height']/2., self.head.pp['C']['height']/2.]),
         ]
         line_type.append('W')
         line_type.append('W')
@@ -1320,6 +1338,6 @@ class Admittance(Component):
         return self.Y
 
 if __name__ == '__main__':
-    c = Qcircuit_GUI('test.txt', edit=True, plot=False, print_network=True)
+    c = Qcircuit_GUI('test.txt', edit=False, plot=False, print_network=True)
     c.w_k_A_chi(pretty_print=True)
     c.show_normal_mode(0)
