@@ -181,6 +181,7 @@ class SnappingCanvas(tk.Canvas):
         self.bind('<Button-4>',   self.scroll_y_wheel)
 
         self.elements = []
+        self.in_creation = None
         self.copied_elements = []
         self.history = []
         self.history_location = -1
@@ -295,6 +296,8 @@ class SnappingCanvas(tk.Canvas):
                                   self.canvas_center[1]+canvas_center_shift[1]]
             for el in self.elements:
                 el.adapt_to_grid_unit()
+            if self.in_creation is not None:
+                self.in_creation.init_adapt_to_grid_unit(event)
 
             self.draw_grid(event)
             self.configure_scrollregion()
@@ -787,29 +790,29 @@ class TwoNodeElement(object):
                     return True
         return False
 
-    def add_or_replace_node_dots(self):
+    def add_or_replace_node_dots(self, plus = True, minus = True):
         gu = self.canvas.grid_unit
         canvas_coords_minus = self.grid_to_canvas([self.x_minus,self.y_minus])
-        canvas_coords_plus = self.grid_to_canvas([self.x_plus,self.y_plus])
 
+        if minus:
+            if self.dot_minus is None:
+                self.dot_minus = self.canvas.create_circle(
+                    *canvas_coords_minus, gu*node_dot_radius)
+            else:
+                self.canvas.update_circle(self.dot_minus,
+                    *canvas_coords_minus, gu*node_dot_radius)
+            self.canvas.tag_raise(self.dot_minus)
 
-        if self.dot_minus is None:
-            self.dot_minus = self.canvas.create_circle(
-                *canvas_coords_minus, gu*node_dot_radius)
-        else:
-            self.canvas.update_circle(self.dot_minus,
-                *canvas_coords_minus, gu*node_dot_radius)
+        if plus:
+            canvas_coords_plus = self.grid_to_canvas([self.x_plus,self.y_plus])
+            if self.dot_plus is None:
+                self.dot_plus = self.canvas.create_circle(
+                    *canvas_coords_plus, gu*node_dot_radius)
+            else:
+                self.canvas.update_circle(self.dot_plus,
+                    *canvas_coords_plus, gu*node_dot_radius)
 
-
-        if self.dot_plus is None:
-            self.dot_plus = self.canvas.create_circle(
-                *canvas_coords_plus, gu*node_dot_radius)
-        else:
-            self.canvas.update_circle(self.dot_plus,
-                *canvas_coords_plus, gu*node_dot_radius)
-
-        self.canvas.tag_raise(self.dot_plus)
-        self.canvas.tag_raise(self.dot_minus)
+            self.canvas.tag_raise(self.dot_plus)
 
 class W(TwoNodeElement):
 
@@ -934,6 +937,7 @@ class W(TwoNodeElement):
         self.canvas.config(cursor='arrow')
 
         self.init_plus_snap_to_grid(event)
+        self.canvas.in_creation = None
         self.create()
         self.track_changes = False
         self.add_nodes()
@@ -982,6 +986,7 @@ class W(TwoNodeElement):
 
         self.canvas.bind("<Motion>", self.show_line)
         self.canvas.bind("<Button-1>", self.end_line)
+        self.canvas.in_creation = self
 
     def abort_creation(self, event=None):
         self.canvas.bind("<Button-1>", lambda event: None)
@@ -990,6 +995,7 @@ class W(TwoNodeElement):
         self.canvas.bind("<Button-1>", lambda event: None)
         self.canvas.delete('temp')
         self.canvas.config(cursor='arrow')
+        self.canvas.in_creation = None
         del self
 
     def delete(self, event=None):
@@ -1019,6 +1025,9 @@ class W(TwoNodeElement):
         self.update_graphic()
         self.add_or_replace_node_dots()
 
+    def init_adapt_to_grid_unit(self, event):
+        self.show_line(event)
+        self.add_or_replace_node_dots(plus = False)
 
     def show_line(self, event):
         self.canvas.delete("temp")
@@ -1029,14 +1038,15 @@ class W(TwoNodeElement):
 
         if abs(xm-xp) > abs(ym-yp):
             # Horizontal line
-            self.canvas.create_line(xm, ym, xp, ym, tags='temp',
+            self.line = self.canvas.create_line(xm, ym, xp, ym, tags='temp',
             width=lw*self.canvas.grid_unit,
             fill = light_black)
         else:
             # Vertical line
-            self.canvas.create_line(xm, ym, xm, yp, tags='temp',
+            self.line = self.canvas.create_line(xm, ym, xm, yp, tags='temp',
             width=lw*self.canvas.grid_unit,
             fill = light_black)
+
 
 
 
@@ -1120,6 +1130,7 @@ class Component(TwoNodeElement):
 
     def manual_place(self, event):
         self.init_create_component(event)
+        self.canvas.in_creation = self
 
     def auto_place(self, auto_place_info):
 
@@ -1181,6 +1192,9 @@ class Component(TwoNodeElement):
         self.canvas.coords(self.image, *self.grid_to_canvas(self.pos[:2]))
         self.add_or_replace_label()
         self.add_or_replace_node_dots()
+        
+    def init_adapt_to_grid_unit(self,event):
+        self.update_graphic()
 
     def double_click(self, event):
         self.modify_values(self)
@@ -1232,6 +1246,7 @@ class Component(TwoNodeElement):
         self.canvas.delete(self.image)
         self.canvas.delete(self.dot_minus)
         self.canvas.delete(self.dot_plus)
+        self.canvas.in_creation = None
         del self
 
     def init_release(self, event):
@@ -1242,6 +1257,7 @@ class Component(TwoNodeElement):
             self.abort_creation()
             return
         self.add_or_replace_label()
+        self.canvas.in_creation = None
         self.canvas.elements.append(self)
         self.set_allstate_bindings()
         self.canvas.track_changes = True
@@ -1438,9 +1454,7 @@ class G(Component):
         pass
 
     def add_or_replace_node_dots(self):
-        super(G,self).add_or_replace_node_dots()
-        if self.dot_plus is not None:
-            self.canvas.remove(self.dot_plus)
+        super(G,self).add_or_replace_node_dots(minus = False)
                 
 
 class RequestValueLabelWindow(tk.Toplevel):
