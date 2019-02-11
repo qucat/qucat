@@ -808,6 +808,7 @@ class TwoNodeElement(object):
             self.canvas.update_circle(self.dot_plus,
                 *canvas_coords_plus, gu*node_dot_radius)
 
+
 class W(TwoNodeElement):
 
     def __init__(self, canvas, event=None, auto_place=None):
@@ -958,7 +959,7 @@ class W(TwoNodeElement):
         else:
             self.canvas.itemconfig(self.line, fill=light_black, width=lw*self.canvas.grid_unit)
 
-    def on_updownleftright(self, event=None):
+    def on_updownleftright(self, event=None, angle = None):
         pass
 
     def manual_place(self, event):
@@ -972,6 +973,12 @@ class W(TwoNodeElement):
 
     def start_line(self, event):
         self.x_minus, self.y_minus = self.init_minus_snap_to_grid(event)
+
+        
+        gu = self.canvas.grid_unit
+        self.dot_minus = self.canvas.create_circle(
+            gu*self.x_minus, gu*self.y_minus, gu*node_dot_radius)
+
         self.canvas.bind("<Motion>", self.show_line)
         self.canvas.bind("<Button-1>", self.end_line)
 
@@ -1259,7 +1266,8 @@ class Component(TwoNodeElement):
         self.update_graphic()
         self.canvas.coords(self.image, *self.grid_to_canvas(self.pos[:2]))
         self.add_or_replace_label()
-
+        self.add_or_replace_node_dots()
+                
     def init_on_motion(self, event):
         x, y = self.canvas.coords(self.image)
         dx = self.canvas.canvasx(event.x) - x
@@ -1271,8 +1279,12 @@ class Component(TwoNodeElement):
         Input given in canvas units
         '''
         self.canvas.move(self.image, dx, dy)
-        self.canvas.move(self.dot_minus, dx, dy)
-        self.canvas.move(self.dot_plus, dx, dy)
+        if self.dot_minus is not None:
+            self.canvas.delete(self.dot_minus)
+            self.dot_minus = None
+        if self.dot_plus is not None:
+            self.canvas.delete(self.dot_plus)
+            self.dot_plus = None
         self.add_or_replace_label()
 
     def on_updownleftright(self, event, angle):
@@ -1282,7 +1294,15 @@ class Component(TwoNodeElement):
             self._angle = angle
             self.update_graphic()
             self.add_or_replace_label()
+
+            if self.dot_minus is not None:
+                self.canvas.delete(self.dot_minus)
+                self.dot_minus = None
+            if self.dot_plus is not None:
+                self.canvas.delete(self.dot_plus)
+                self.dot_plus = None
             self.was_rotated = True
+
 
     def delete(self, event=None):
         self.canvas.elements.remove(self)
@@ -1414,6 +1434,15 @@ class G(Component):
     def add_or_replace_label(self):
         pass
 
+    def add_or_replace_node_dots(self):
+        gu = self.canvas.grid_unit
+        canvas_coords_plus = self.grid_to_canvas([self.x_plus,self.y_plus])
+        if self.dot_plus is None:
+            self.dot_plus = self.canvas.create_circle(
+                *canvas_coords_plus, gu*node_dot_radius)
+        else:
+            self.canvas.update_circle(self.dot_plus,
+                *canvas_coords_plus, gu*node_dot_radius)
 
 class RequestValueLabelWindow(tk.Toplevel):
     def __init__(self, master, component):
