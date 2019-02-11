@@ -808,6 +808,8 @@ class TwoNodeElement(object):
             self.canvas.update_circle(self.dot_plus,
                 *canvas_coords_plus, gu*node_dot_radius)
 
+        self.canvas.tag_raise(self.dot_plus)
+        self.canvas.tag_raise(self.dot_minus)
 
 class W(TwoNodeElement):
 
@@ -974,10 +976,9 @@ class W(TwoNodeElement):
     def start_line(self, event):
         self.x_minus, self.y_minus = self.init_minus_snap_to_grid(event)
 
-        
         gu = self.canvas.grid_unit
         self.dot_minus = self.canvas.create_circle(
-            gu*self.x_minus, gu*self.y_minus, gu*node_dot_radius)
+            *(self.canvas.grid_to_canvas([self.x_minus,self.y_minus])), gu*node_dot_radius)
 
         self.canvas.bind("<Motion>", self.show_line)
         self.canvas.bind("<Button-1>", self.end_line)
@@ -1229,6 +1230,8 @@ class Component(TwoNodeElement):
     def abort_creation(self, event=None):
         self.unset_initialization_bindings()
         self.canvas.delete(self.image)
+        self.canvas.delete(self.dot_minus)
+        self.canvas.delete(self.dot_plus)
         del self
 
     def init_release(self, event):
@@ -1435,14 +1438,10 @@ class G(Component):
         pass
 
     def add_or_replace_node_dots(self):
-        gu = self.canvas.grid_unit
-        canvas_coords_plus = self.grid_to_canvas([self.x_plus,self.y_plus])
-        if self.dot_plus is None:
-            self.dot_plus = self.canvas.create_circle(
-                *canvas_coords_plus, gu*node_dot_radius)
-        else:
-            self.canvas.update_circle(self.dot_plus,
-                *canvas_coords_plus, gu*node_dot_radius)
+        super(G,self).add_or_replace_node_dots()
+        if self.dot_plus is not None:
+            self.canvas.remove(self.dot_plus)
+                
 
 class RequestValueLabelWindow(tk.Toplevel):
     def __init__(self, master, component):
