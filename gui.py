@@ -187,10 +187,12 @@ class SnappingCanvas(tk.Canvas):
         self.track_changes = False
         try:
             with open(netlist_file, 'r') as f:
-                self.load_netlist(f)
+                netlist_file_string = [line for line in f]
         except FileNotFoundError:
+            netlist_file_string = []
             with open(netlist_file, 'w') as f:
                 pass
+        self.load_netlist(netlist_file_string)
         self.draw_grid()
         self.configure_scrollregion()
         self.track_changes = True
@@ -532,6 +534,8 @@ class TwoNodeElement(object):
         self.was_rotated = False
         self.hover = False
         self.selected = False
+        self.dot_minus = None
+        self.dot_plus = None
 
         if auto_place is None and event is not None:
             self.manual_place(event)
@@ -783,6 +787,27 @@ class TwoNodeElement(object):
                     return True
         return False
 
+    def add_or_replace_node_dots(self):
+        gu = self.canvas.grid_unit
+        canvas_coords_minus = self.grid_to_canvas([self.x_minus,self.y_minus])
+        canvas_coords_plus = self.grid_to_canvas([self.x_plus,self.y_plus])
+
+
+        if self.dot_minus is None:
+            self.dot_minus = self.canvas.create_circle(
+                *canvas_coords_minus, gu*node_dot_radius)
+        else:
+            self.canvas.update_circle(self.dot_minus,
+                *canvas_coords_minus, gu*node_dot_radius)
+
+
+        if self.dot_plus is None:
+            self.dot_plus = self.canvas.create_circle(
+                *canvas_coords_plus, gu*node_dot_radius)
+        else:
+            self.canvas.update_circle(self.dot_plus,
+                *canvas_coords_plus, gu*node_dot_radius)
+
 class W(TwoNodeElement):
 
     def __init__(self, canvas, event=None, auto_place=None):
@@ -968,31 +993,24 @@ class W(TwoNodeElement):
         del self
 
     def create(self):
-        gu = self.canvas.grid_unit
         canvas_coords_minus = self.grid_to_canvas(self.pos[:2])
         canvas_coords_plus = self.grid_to_canvas(self.pos[2:])
         self.line = self.canvas.create_line(
             *(canvas_coords_minus+canvas_coords_plus),
             width=lw*self.canvas.grid_unit,
             fill = light_black)
-        self.dot_minus = self.canvas.create_circle(
-            *canvas_coords_minus, gu*node_dot_radius)
-        self.dot_plus = self.canvas.create_circle(
-            *canvas_coords_plus, gu*node_dot_radius)
+        self.add_or_replace_node_dots()
         self.canvas.elements.append(self)
         self.set_allstate_bindings()
 
     def adapt_to_grid_unit(self):
-        gu = self.canvas.grid_unit
         canvas_coords_minus = self.grid_to_canvas(self.pos[:2])
         canvas_coords_plus = self.grid_to_canvas(self.pos[2:])
         self.canvas.coords(
             self.line, *(canvas_coords_minus+canvas_coords_plus))
         self.update_graphic()
-        self.canvas.update_circle(
-            self.dot_minus, *canvas_coords_minus, gu*node_dot_radius)
-        self.canvas.update_circle(
-            self.dot_plus, *canvas_coords_plus, gu*node_dot_radius)
+        self.add_or_replace_node_dots()
+
 
     def show_line(self, event):
         self.canvas.delete("temp")
@@ -1131,12 +1149,13 @@ class Component(TwoNodeElement):
             angle = self.pos[2]
 
         img = Image.open(os.path.join(png_directory, png))
-        img = img.resize((self.canvas.grid_unit, int(self.canvas.grid_unit)))
+        size = round(self.canvas.grid_unit*(1-node_dot_radius))
+        img = img.resize((size, size))
         img = img.rotate(angle)
         self.tk_image = ImageTk.PhotoImage(img)
 
     def create(self):
-        gu = self.canvas.grid_unit
+        self.add_or_replace_node_dots()
         x, y, angle = self.pos
         self.import_tk_image()
         self.image = self.canvas.create_image(
@@ -1153,6 +1172,7 @@ class Component(TwoNodeElement):
         self.update_graphic()
         self.canvas.coords(self.image, *self.grid_to_canvas(self.pos[:2]))
         self.add_or_replace_label()
+        self.add_or_replace_node_dots()
 
     def double_click(self, event):
         self.modify_values(self)
@@ -1251,6 +1271,8 @@ class Component(TwoNodeElement):
         Input given in canvas units
         '''
         self.canvas.move(self.image, dx, dy)
+        self.canvas.move(self.dot_minus, dx, dy)
+        self.canvas.move(self.dot_plus, dx, dy)
         self.add_or_replace_label()
 
     def on_updownleftright(self, event, angle):
@@ -1267,6 +1289,8 @@ class Component(TwoNodeElement):
         self.canvas.delete(self.image)
         if self.text is not None:
             self.canvas.delete(self.text)
+        self.canvas.delete(self.dot_minus)
+        self.canvas.delete(self.dot_plus)
         self.canvas.save()
         del self
 
@@ -1318,7 +1342,11 @@ class Component(TwoNodeElement):
                 angle]
             self.canvas.coords(self.image, *self.grid_to_canvas(self.pos[:2]))
 
+        # Add nodes in case of intersection with a wire
         self.add_nodes()
+
+        # Add circles at the nodes of the component
+        self.add_or_replace_node_dots()
 
 class R(Component):
     """docstring for R"""
