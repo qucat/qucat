@@ -28,13 +28,10 @@ def string_to_component(s, *arg, **kwarg):
         return G(*arg, **kwarg)
 
 pp = {
-    "element_width": 1.,
-    "element_height": 1.,
     "figsize_scaling": 1,
-    "element_height_normal_modes": 1.5,
     "color": light_black,
     "x_fig_margin": 1,
-    "y_fig_margin": 0.25,
+    "y_fig_margin": 0.5,
     "C": {
         "gap": 0.2,
         "height": 0.25,
@@ -66,12 +63,14 @@ pp = {
     },
     "label": {
         "fontsize": 10,
-        "text_position": 0.22
+        "text_position_horizontal": [0.,-0.22],
+        "text_position_vertical": [0.22,0.]
     },
     "normal_mode_label": {
         "fontsize": 10,
         "y_arrow": 0.26,
-        "y_text": 0.37
+        "text_position_horizontal": [0.,0.5],
+        "text_position_vertical": [-0.3,0.]
     },
     "normal_mode_arrow": {
         "logscale": "False",
@@ -337,7 +336,11 @@ class _Qcircuit(object):
         Ks = self.kerr(**kwargs)
         return [Ks[i, i] for i in range(Ks.shape[0])]
 
-    def hamiltonian(self, modes='all', junction_expansion=4, photons=6, **kwargs):
+    def hamiltonian(self, 
+        modes='all', 
+        junc_pot_taylor_exp=4, 
+        excitations=6, 
+        **kwargs):
 
         from qutip import destroy, qeye, tensor
 
@@ -347,16 +350,16 @@ class _Qcircuit(object):
 
         if modes == 'all':
             modes = range(N_modes)
-        if photons is not list:
-            photons = [int(photons) for i in modes]
+        if excitations is not list:
+            excitations = [int(excitations) for i in modes]
 
         H = 0
         phi = [0 for junction in self.junctions]
-        qeye_list = [qeye(n) for n in photons]
+        qeye_list = [qeye(n) for n in excitations]
 
         for i, f in enumerate(fs):
             a_list = deepcopy(qeye_list)
-            a_list[i] = destroy(photons[i])
+            a_list[i] = destroy(excitations[i])
             a = tensor(a_list)
             H += f*a.dag()*a
             phi_0 = hbar/2./e
@@ -366,7 +369,7 @@ class _Qcircuit(object):
         for j, junction in enumerate(self.junctions):
             n = 2
             EJ = (hbar/2./e)**2/(junction.get_value(**kwargs)*h)
-            while 2*n <= junction_expansion:
+            while 2*n <= junc_pot_taylor_exp:
                 H += (-1)**(n+1)*EJ/factorial(2*n)*phi[j]**(2*n)
                 n += 1
 
@@ -426,10 +429,6 @@ class Qcircuit_GUI(_Qcircuit):
              save_to=None,
              **savefig_kwargs):
 
-        if add_vertical_space:
-            normal_element_height = pp['element_height']
-            pp['element_height'] = pp['element_height_normal_modes']
-
         xs = []
         ys = []
         line_type = []
@@ -463,9 +462,6 @@ class Qcircuit_GUI(_Qcircuit):
         ax.set_xlim(x_min-x_margin, x_max+x_margin)
         ax.set_ylim(y_min-y_margin, y_max+y_margin)
         plt.margins(x=0., y=0.)
-
-        if add_vertical_space:
-            pp['element_height'] = normal_element_height
 
         if full_output:
             return fig, ax
@@ -560,8 +556,8 @@ class Qcircuit_GUI(_Qcircuit):
                     dx_arrow = arrow_width(value)
                     dy_arrow = 0.
 
-                    x_text = x
-                    y_text = y+pp["normal_mode_label"]["y_text"]
+                    x_text = x+pp["normal_mode_label"]["text_position_horizontal"][0]
+                    y_text = y+pp["normal_mode_label"]["text_position_horizontal"][1]
 
                     ha = 'center'
                     va = 'top'
@@ -573,10 +569,10 @@ class Qcircuit_GUI(_Qcircuit):
                     dx_arrow = 0.
                     dy_arrow = arrow_width(value)
 
-                    x_text = x-pp["normal_mode_label"]["y_text"]
-                    y_text = y
+                    x_text = x+pp["normal_mode_label"]["text_position_vertical"][0]
+                    y_text = y+pp["normal_mode_label"]["text_position_vertical"][1]
 
-                    ha = 'left'
+                    ha = 'right'
                     va = 'center'
 
                 if np.real(value_current) > 0:
@@ -659,10 +655,13 @@ class Network(object):
                     chains.append([nm, np])
 
         def plot_node_to_new_node(node):
-            for i, ch in enumerate(chains):
+            i = 0
+            for ch in chains:
                 if node in ch:
                     return i
-            return node
+                i+=1
+            chains.append([node])
+            return i
 
         # replace plotting nodes with new nodes
         # and make a list of all nodes
@@ -838,14 +837,14 @@ class Circuit(object):
 
     def draw_label(self, ax):
         if self.angle%180. == 0.:
-            x = self.x_plot_center
-            y = self.y_plot_center-pp['label']['text_position']
+            x = self.x_plot_center+pp['label']['text_position_horizontal'][0]
+            y = self.y_plot_center+pp['label']['text_position_horizontal'][1]
             ha = 'center'
             va = 'top'
 
         else:
-            x = self.x_plot_center+pp['label']['text_position']
-            y = self.y_plot_center
+            x = self.x_plot_center+pp['label']['text_position_vertical'][0]
+            y = self.y_plot_center+pp['label']['text_position_vertical'][1]
             ha = 'left'
             va = 'center'
 
@@ -997,16 +996,16 @@ class G(W):
         # Defined for EAST
         line_type = []
         x = [
-            np.array([0.5, 0.3])*pp['element_width'],
-            np.array([0.3, 0.3])*pp['element_width'],
-            np.array([0.23, 0.23])*pp['element_width'],
-            np.array([0.16, 0.16])*pp['element_width'],
+            np.array([0.5, 0.3]),
+            np.array([0.3, 0.3]),
+            np.array([0.23, 0.23]),
+            np.array([0.16, 0.16]),
         ]
         y = [
             np.array([0., 0.]),
-            np.array([-1., 1.])*pp['element_height']*5./30.,
-            np.array([-1., 1.])*pp['element_height']*3./30.,
-            np.array([-1., 1.])*pp['element_height']*1./30.,
+            np.array([-1., 1.])*5./30.,
+            np.array([-1., 1.])*3./30.,
+            np.array([-1., 1.])*1./30.,
         ]
         line_type.append('W')
         line_type.append('W')
@@ -1058,19 +1057,19 @@ class R(Component):
 
         # set leftmost point to the length of
         # the side connection wires
-        x += (pp['element_width']-pp['R']['width'])/2.
+        x += (1.-pp['R']['width'])/2.
 
         # add side wire connections
         x_min = x[0]
         x_max = x[-1]
         x_list = [x]
         x_list += [np.array([0., x_min])]
-        x_list += [np.array([x_max, pp['element_width']])]
+        x_list += [np.array([x_max, 1.])]
         line_type.append('W')
         line_type.append('W')
 
         # center in x
-        x_list = shift(x_list-pp['element_width']/2.)
+        x_list = shift(x_list-1./2.)
 
         # set height of inductor
         y *= pp['R']['height']/2.
@@ -1117,19 +1116,19 @@ class L(Component):
 
         # set leftmost point to the length of
         # the side connection wires
-        x += (pp['element_width']-pp['L']['width'])/2.
+        x += (1.-pp['L']['width'])/2.
 
         # add side wire connections
         x_min = x[0]
         x_max = x[-1]
         x_list = [x]
         x_list += [np.array([0., x_min])]
-        x_list += [np.array([x_max, pp['element_width']])]
+        x_list += [np.array([x_max, 1.])]
         line_type.append('W')
         line_type.append('W')
 
         # center in x
-        x_list = shift(x_list, -pp['element_width']/2.)
+        x_list = shift(x_list, -1./2.)
 
         # set height of inductor
         y *= pp['L']['height']/2.
@@ -1183,11 +1182,11 @@ class J(L):
 
         line_type = []
         x = [
-            np.array([0., pp['element_width']]),
-            np.array([(pp['element_width']-pp['J']['width'])/2.,
-                      (pp['element_width']+pp['J']['width'])/2.]),
-            np.array([(pp['element_width']-pp['J']['width'])/2.,
-                      (pp['element_width']+pp['J']['width'])/2.])
+            np.array([0., 1.]),
+            np.array([(1.-pp['J']['width'])/2.,
+                      (1.+pp['J']['width'])/2.]),
+            np.array([(1.-pp['J']['width'])/2.,
+                      (1.+pp['J']['width'])/2.])
         ]
         y = [
             np.array([0., 0.]),
@@ -1199,7 +1198,7 @@ class J(L):
         line_type.append('J')
 
         # center in x and y
-        x = shift(x, -pp['element_width']/2.)
+        x = shift(x, -1./2.)
 
         if self.angle%180. == 0.:
             return shift(x, self.x_plot_center), shift(y, self.y_plot_center), line_type
@@ -1242,19 +1241,19 @@ class R(Component):
 
         # set leftmost point to the length of
         # the side connection wires
-        x += (pp['element_width']-pp['R']['width'])/2.
+        x += (1.-pp['R']['width'])/2.
 
         # add side wire connections
         x_min = x[0]
         x_max = x[-1]
         x_list = [x]
         x_list += [np.array([0., x_min])]
-        x_list += [np.array([x_max, pp['element_width']])]
+        x_list += [np.array([x_max, 1.])]
         line_type.append('W')
         line_type.append('W')
 
         # center in x
-        x_list = shift(x_list, -pp['element_width']/2.)
+        x_list = shift(x_list, -1./2.)
 
         # set height of inductor
         y *= pp['R']['height']/2.
@@ -1285,13 +1284,13 @@ class C(Component):
     def draw(self):
         line_type = []
         x = [
-            np.array([0., (pp['element_width']-pp['C']['gap'])/2.]),
-            np.array([(pp['element_width']+pp['C']['gap']) /
-                      2., pp['element_width']]),
-            np.array([(pp['element_width']-pp['C']['gap'])/2.,
-                      (pp['element_width']-pp['C']['gap'])/2.]),
-            np.array([(pp['element_width']+pp['C']['gap'])/2.,
-                      (pp['element_width']+pp['C']['gap'])/2.]),
+            np.array([0., (1.-pp['C']['gap'])/2.]),
+            np.array([(1.+pp['C']['gap']) /
+                      2., 1.]),
+            np.array([(1.-pp['C']['gap'])/2.,
+                      (1.-pp['C']['gap'])/2.]),
+            np.array([(1.+pp['C']['gap'])/2.,
+                      (1.+pp['C']['gap'])/2.]),
         ]
         y = [
             np.array([0., 0.]),
@@ -1305,7 +1304,7 @@ class C(Component):
         line_type.append('C')
 
         # center in x and y
-        x = shift(x, -pp['element_width']/2.)
+        x = shift(x, -1./2.)
 
         if self.angle%180. == 0.:
             return shift(x, self.x_plot_center), shift(y, self.y_plot_center), line_type
@@ -1321,6 +1320,6 @@ class Admittance(Component):
         return self.Y
 
 if __name__ == '__main__':
-    c = Qcircuit_GUI('test.txt', edit=True, plot=True, print_network=True)
-    # c.w_k_A_chi(pretty_print=True)
+    c = Qcircuit_GUI('test.txt', edit=False, plot=False, print_network=True)
+    c.w_k_A_chi(pretty_print=True)
     c.show_normal_mode(0)
