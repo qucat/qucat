@@ -227,18 +227,22 @@ class SnappingCanvas(tk.Canvas):
         if len(self.copied_elements) > 0:
             self.deselect_all()
 
+            self.track_changes = False
+            to_paste = [deepcopy(el) for el in self.copied_elements]
+            self.track_changes = True
+
             # smallest x and y of copied elements, in canvas units
-            x_min = min([el.x_minus for el in self.copied_elements] +
-                        [el.x_plus for el in self.copied_elements])
-            y_min = min([el.y_minus for el in self.copied_elements] +
-                        [el.y_plus for el in self.copied_elements])
+            x_min = min([el.x_minus for el in to_paste] +
+                        [el.x_plus for el in to_paste])
+            y_min = min([el.y_minus for el in to_paste] +
+                        [el.y_plus for el in to_paste])
             x_min, y_min = self.grid_to_canvas([x_min, y_min])
 
             # shift to apply, in canvas units
             dx = self.canvasx(event.x)-x_min
             dy = self.canvasy(event.y)-y_min
 
-            for el in self.copied_elements:
+            for el in to_paste:
                 el.create()
                 el.adapt_to_grid_unit()
                 el.force_select()
@@ -438,7 +442,7 @@ class SnappingCanvas(tk.Canvas):
 
     def open_right_click_menu(self, event):
         menu = tk.Menu(self, tearoff=0)
-        menu.add_command(label="Paste", command=self.paste)
+        menu.add_command(label="Paste", command=self.paste(event))
         menu.tk_popup(event.x_root, event.y_root, 0)
         self.bind("<ButtonRelease-3>", lambda event: None)
 
