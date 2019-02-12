@@ -208,8 +208,8 @@ class SnappingCanvas(tk.Canvas):
             with open(netlist_file, 'w') as f:
                 pass
         self.load_netlist(netlist_file_string)
+        self.center_window_on_circuit()
         self.draw_grid()
-        self.configure_scrollregion()
         self.track_changes = True
         self.save()
 
@@ -262,6 +262,23 @@ class SnappingCanvas(tk.Canvas):
                                 for el in self.elements if el.selected]
         self.track_changes = True
 
+    def center_window_on_circuit(self):
+
+        if len(self.elements) > 0:
+            xs = [el.x_minus for el in self.elements] + \
+                [el.x_plus for el in self.elements]
+            ys = [el.y_minus for el in self.elements] + \
+                [el.y_plus for el in self.elements]
+            box_elements = self.grid_to_canvas([min(xs)-3, min(ys)-3])\
+                    +self.grid_to_canvas([max(xs)+3, max(ys)+3])
+
+            self.configure(scrollregion=box_elements)
+            self.xview_moveto(0)
+            self.yview_moveto(0)
+
+        self.configure_scrollregion()
+
+
     def scroll_y_wheel(self, event):
         if event.num == 5 or event.delta < 0:
             direction = 1
@@ -279,6 +296,27 @@ class SnappingCanvas(tk.Canvas):
         self.xview_scroll(direction, tk.UNITS)
         self.configure_scrollregion()
         self.draw_grid(event)
+
+    def configure_scrollregion(self):
+        extra_scrollable_region = 200 # in canvas units
+        box_canvas = [self.canvasx(0)-extra_scrollable_region,  # get visible area of the canvas
+                      self.canvasy(0)-extra_scrollable_region,
+                      self.canvasx(self.winfo_width())+extra_scrollable_region,
+                      self.canvasy(self.winfo_height())+extra_scrollable_region]
+
+        if len(self.elements) > 0:
+            xs = [el.x_minus for el in self.elements] + \
+                [el.x_plus for el in self.elements]
+            ys = [el.y_minus for el in self.elements] + \
+                [el.y_plus for el in self.elements]
+            box_elements = self.grid_to_canvas(
+                [min(xs)-1, min(ys)-1])+self.grid_to_canvas([max(xs)+1, max(ys)+1])
+
+            self.configure(
+                scrollregion=[min(box_elements[0], box_canvas[0]), min(box_elements[1], box_canvas[1]),
+                              max(box_elements[2], box_canvas[2]), max(box_elements[3], box_canvas[3])])
+        else:
+            self.configure(scrollregion=box_canvas)
 
     def wheel(self, event):
         old_grid_unit = self.grid_unit
@@ -383,29 +421,6 @@ class SnappingCanvas(tk.Canvas):
         self.configure_scrollregion()
         self.draw_grid(event)
 
-    def configure_scrollregion(self):
-
-        extra_scrollable_region = 200 # in canvas-units
-
-        box_canvas = [self.canvasx(0)-extra_scrollable_region,  # get visible area of the canvas
-                      self.canvasy(0)-extra_scrollable_region,
-                      self.canvasx(self.winfo_width())+extra_scrollable_region,
-                      self.canvasy(self.winfo_height())+extra_scrollable_region]
-
-        if len(self.elements) > 0:
-            xs = [el.x_minus for el in self.elements] + \
-                [el.x_plus for el in self.elements]
-            ys = [el.y_minus for el in self.elements] + \
-                [el.y_plus for el in self.elements]
-            box_elements = self.grid_to_canvas(
-                [min(xs)-1, min(ys)-1])+self.grid_to_canvas([max(xs)+1, max(ys)+1])
-
-            self.configure(
-                scrollregion=[min(box_elements[0], box_canvas[0]), min(box_elements[1], box_canvas[1]),
-                              max(box_elements[2], box_canvas[2]), max(box_elements[3], box_canvas[3])])
-        else:
-            self.configure(
-                scrollregion=box_canvas)
 
     def draw_grid(self, event=None):
 
