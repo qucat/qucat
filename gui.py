@@ -254,7 +254,15 @@ class SnappingCanvas(tk.Canvas):
                 el.add_or_replace_label()
 
             self.bind("<Motion>", el.on_motion)
-            self.bind("<ButtonPress-1>", el.release_motion_paste)
+            if len(to_paste) == 1:
+                self.bind("<ButtonPress-1>", el.release_motion_paste_single)
+                self.bind('<Left>', lambda event: el.on_updownleftright(event, angle=WEST))
+                self.bind('<Right>', lambda event: el.on_updownleftright(event, angle=EAST))
+                self.bind('<Up>', lambda event: el.on_updownleftright(event, angle=NORTH))
+                self.bind('<Down>', lambda event: el.on_updownleftright(event, angle=SOUTH))
+            else:
+                self.bind("<ButtonPress-1>", el.release_motion_paste)
+
 
     def copy_selection(self, event=None):
         self.track_changes = False
@@ -298,7 +306,7 @@ class SnappingCanvas(tk.Canvas):
         self.draw_grid(event)
 
     def configure_scrollregion(self):
-        extra_scrollable_region = 200 # in canvas units
+        extra_scrollable_region = 50 # in canvas units
         box_canvas = [self.canvasx(0)-extra_scrollable_region,  # get visible area of the canvas
                       self.canvasy(0)-extra_scrollable_region,
                       self.canvasx(self.winfo_width())+extra_scrollable_region,
@@ -714,6 +722,13 @@ class TwoNodeElement(object):
         self.release_motion(event)
         self.canvas.bind("<Motion>", lambda event: None)
         self.canvas.bind("<ButtonPress-1>", lambda event: None)
+
+    def release_motion_paste_single(self, event):
+        self.release_motion_paste(event)
+        self.canvas.bind('<Left>', lambda event: None)
+        self.canvas.bind('<Right>', lambda event: None)
+        self.canvas.bind('<Up>', lambda event: None)
+        self.canvas.bind('<Down>', lambda event: None)
 
     def hover_enter(self, event):
         self.hover = True
