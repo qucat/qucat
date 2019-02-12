@@ -330,14 +330,11 @@ class _Qcircuit(object):
         self.set_w_cpx(**kwargs)
 
         if len(self.junctions) == 0:
-            raise UserWarning(
-                "There are no junctions and hence no anharmonicity in the circuit")
-        else:
             return [j.anharmonicity(self.w_cpx, **kwargs)/h for j in self.junctions]
 
     def kerr(self, **kwargs):
         As = self.anharmonicities_per_junction(**kwargs)
-        N_modes = len(As[0])
+        N_modes = len(self.w_cpx)
         N_junctions = len(As)
 
         Ks = np.zeros((N_modes, N_modes))
@@ -543,10 +540,10 @@ class Qcircuit_GUI(_Qcircuit):
         min_value = np.amin(all_values)
 
         def value_to_01_range(value):
-            try:
-                return (np.absolute(value)-min_value)/(max_value-min_value)
-            except ZeroDivisionError:
+            if max_value == min_value:
                 return 1.
+            else:
+                return (np.absolute(value)-min_value)/(max_value-min_value)
 
         def arrow_width(value):
             value_01 = value_to_01_range(value)
