@@ -1512,7 +1512,7 @@ class RequestValueLabelWindow(tk.Toplevel):
         if v is None:
             v = ''
         else:
-            v = "%e" % v
+            v = "%.e" % v
 
         if l is None:
             l = ''
