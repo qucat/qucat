@@ -98,7 +98,7 @@ class SnappingCanvas(tk.Canvas):
         menu.add_command(label=label_template.format(
             "Copy", "Ctrl+C"), command=self.copy_selection, font=menu_font)
         menu.add_command(label=label_template.format(
-            "Paste", "Ctrl+V"), command=self.paste, font=menu_font)
+            "Paste", "Ctrl+V"), command=(lambda :self.event_generate('<Control-v>')), font=menu_font)
         menu.add_separator()
         menu.add_command(label=label_template.format(
             "Select all", "Ctrl+A"), command=self.select_all, font=menu_font)
