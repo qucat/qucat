@@ -72,7 +72,7 @@ plot_parameters = {
 }
 
 pp = deepcopy(plot_parameters)
-scale = 1.5
+scale = 1.25
 pp["figsize_scaling"] = scale
 pp["C"]["gap"] /= scale
 pp["C"]["height"] /= scale
@@ -88,9 +88,9 @@ pp["label"]= {
     }
 pp["normal_mode_label"]= {
         "fontsize": 10,
-        "y_arrow": pp["C"]["height"]/2+0.07,
-        "text_position_horizontal": [0.,pp["C"]["height"]/2+0.2],
-        "text_position_vertical": [-pp["C"]["height"]/2-0.1,-0.05]
+        "y_arrow": pp["C"]["height"]/2+0.08,
+        "text_position_horizontal": [0.,pp["C"]["height"]/2+0.25],
+        "text_position_vertical": [-pp["C"]["height"]/2-0.1,-0.07]
     }
 pp["normal_mode_arrow"]= {
         "min_width": 0.1,
@@ -302,6 +302,9 @@ class _Qcircuit(object):
     def set_w_cpx(self, **kwargs):
         self.check_kwargs(**kwargs)
         ws_cpx = np.roots(self.Y_numer_poly_coeffs(**kwargs))
+        
+        if len(self.resistors) == 0:
+            ws_cpx = np.real(ws_cpx)
 
         # take only roots with a positive real part (i.e. freq)
         # and significant Q factors
@@ -609,7 +612,21 @@ class Qcircuit_GUI(_Qcircuit):
                 ax.text(x_text, y_text,
                         pretty(np.absolute(value), unit),
                         fontsize=self.pp["normal_mode_label"]["fontsize"],
-                        ha=ha, va=va, style='italic', weight='bold')
+                        ha=ha, va=va, style='italic', weight='normal')
+
+        
+        w,k,A,chi = self.w_k_A_chi()
+        ax.annotate(r'Mode %d, f=%sHz, k=%sHz, A=%sHz'%
+            (mode,
+            pretty_value(w[mode], use_math=True),
+            pretty_value(k[mode], use_math=True),
+            pretty_value(A[mode], use_math=True)),
+            xy=(0.05, 0.95),
+            horizontalalignment='left',
+            verticalalignment='center',
+            xycoords='axes fraction',
+            fontsize=12, 
+            weight='bold')
 
         if plot == True:
             plt.show()
@@ -1348,6 +1365,6 @@ class Admittance(Component):
         return self.Y
 
 if __name__ == '__main__':
-    c = Qcircuit_GUI('test.txt', edit=False, plot=True, print_network=True)
+    c = Qcircuit_GUI('test.txt', edit=False, plot=False, print_network=True)
     c.w_k_A_chi(pretty_print=True)
     c.show_normal_mode(0)
