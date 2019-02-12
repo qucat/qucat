@@ -216,6 +216,10 @@ class SnappingCanvas(tk.Canvas):
         # Keep track of what the user knows what to do
         self.used_arrows = False
 
+    def get_mouse_location(self):
+        return [self.canvasx(self.winfo_pointerx())-self.winfo_rootx(), 
+            self.canvasy(self.winfo_pointery())-self.winfo_rooty()]
+
     def cut_selection(self, event=None):
         self.track_changes = False
         self.copied_elements = [deepcopy(el)
@@ -1076,9 +1080,6 @@ class W(TwoNodeElement):
             width=lw*self.canvas.grid_unit,
             fill = light_black)
 
-
-
-
 class Component(TwoNodeElement):
     def __init__(self, canvas, event=None, auto_place=None):
         self.image = None
@@ -1259,7 +1260,6 @@ class Component(TwoNodeElement):
             '<Up>', lambda event: self.init_create_component(event, angle=NORTH))
         self.canvas.bind(
             '<Down>', lambda event: self.init_create_component(event, angle=SOUTH))
-        self.hover_enter(event)
 
     def unset_initialization_bindings(self):
         self.canvas.bind("<Button-1>", lambda event: None)
@@ -1291,6 +1291,18 @@ class Component(TwoNodeElement):
         self.set_allstate_bindings()
         self.canvas.track_changes = True
         self.canvas.save()
+
+        # If mouse is still on top of component,
+        # act as if one had hovered on top of component
+
+        x,y = self.canvas.get_mouse_location()
+
+        # bounding box of image
+        xm,ym,xp,yp = self.canvas.bbox(self.image)
+
+        if xm<x<xp and ym<y<yp:
+            self.hover_enter(event)
+
 
     def open_right_click_menu(self, event):
         menu = tk.Menu(self.canvas, tearoff=0)
