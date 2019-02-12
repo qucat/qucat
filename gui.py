@@ -442,7 +442,7 @@ class SnappingCanvas(tk.Canvas):
 
     def open_right_click_menu(self, event):
         menu = tk.Menu(self, tearoff=0)
-        menu.add_command(label="Paste", command=self.paste(event))
+        menu.add_command(label="Paste", command=(lambda :self.paste(event)))
         menu.tk_popup(event.x_root, event.y_root, 0)
         self.bind("<ButtonRelease-3>", lambda event: None)
 
