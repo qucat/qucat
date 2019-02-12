@@ -90,7 +90,6 @@ pp["normal_mode_label"]= {
         "text_position_vertical": [-pp["C"]["height"]/2-0.1,-0.05]
     }
 pp["normal_mode_arrow"]= {
-        "logscale": "False",
         "min_width": 0.1,
         "max_width": 0.4,
         "min_lw": 1,
@@ -536,10 +535,7 @@ class Qcircuit_GUI(_Qcircuit):
 
         def value_to_01_range(value):
             try:
-                if self.pp['normal_mode_arrow']['logscale'] == "True":
-                    return np.absolute((np.log10(value)-np.log10(min_value))/(np.log10(max_value)-np.log10(min_value)))
-                else:
-                    return np.absolute((value-min_value)/(max_value-min_value))
+                return (np.absolute(value)-min_value)/(max_value-min_value)
             except ZeroDivisionError:
                 return 1.
 
