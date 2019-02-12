@@ -443,7 +443,7 @@ class SnappingCanvas(tk.Canvas):
     def open_right_click_menu(self, event):
         menu = tk.Menu(self, tearoff=0)
         menu.add_command(label="Paste", command=(lambda :self.paste(event)))
-        menu.tk_popup(event.x_root, event.y_root, 0)
+        menu.tk_popup(event.x_root, event.y_root)
         self.bind("<ButtonRelease-3>", lambda event: None)
 
     def start_selection_field(self, event):
@@ -910,7 +910,7 @@ class W(TwoNodeElement):
         menu.add_command(label="Delete", command=self.canvas.delete_selection)
         menu.add_command(label="Copy", command=self.canvas.copy_selection)
         menu.add_command(label="Cut", command=self.canvas.cut_selection)
-        menu.tk_popup(event.x_root, event.y_root, 0)
+        menu.tk_popup(event.x_root, event.y_root)
         self.canvas.bind("<ButtonRelease-3>", lambda event: None)
 
     def double_click(self, event=None):
@@ -1300,7 +1300,7 @@ class Component(TwoNodeElement):
         menu.add_separator()
         menu.add_command(label="Copy", command=self.canvas.copy_selection)
         menu.add_command(label="Cut", command=self.canvas.cut_selection)
-        menu.tk_popup(event.x_root, event.y_root, 0)
+        menu.tk_popup(event.x_root, event.y_root)
         self.canvas.bind("<ButtonRelease-3>", lambda event: None)
 
     def rotate(self):
@@ -1476,7 +1476,7 @@ class G(Component):
         menu.add_separator()
         menu.add_command(label="Copy", command=self.canvas.copy_selection)
         menu.add_command(label="Cut", command=self.canvas.cut_selection)
-        menu.tk_popup(event.x_root, event.y_root, 0)
+        menu.tk_popup(event.x_root, event.y_root)
         self.canvas.bind("<ButtonRelease-3>", lambda event: None)
 
     def add_or_replace_label(self):
