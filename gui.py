@@ -122,6 +122,8 @@ class SnappingCanvas(tk.Canvas):
             lambda: self.event_generate('c')), font=menu_font)
         menu.add_command(label=label_template.format("Resistor", "R"), command=(
             lambda: self.event_generate('r')), font=menu_font)
+        menu.add_command(label=label_template.format("Ground", "G"), command=(
+            lambda: self.event_generate('g')), font=menu_font)
         master.config(menu=self.menubar)
 
         # Vertical and horizontal scrollbars for canvas

@@ -621,7 +621,7 @@ class Qcircuit_GUI(_Qcircuit):
             pretty_value(w[mode], use_math=True),
             pretty_value(k[mode], use_math=True),
             pretty_value(A[mode], use_math=True)),
-            xy=(0.05, 0.95),
+            xy=(0.05, 0.97),
             horizontalalignment='left',
             verticalalignment='center',
             xycoords='axes fraction',
