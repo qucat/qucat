@@ -136,6 +136,9 @@ class SnappingCanvas(tk.Canvas):
             lambda: self.zoom('in')), font=menu_font)
         menu.add_command(label=label_template.format("Zoom out", "Ctrl+scroll"), command=(
             lambda: self.zoom('out')), font=menu_font)
+        menu.add_separator()
+        menu.add_command(label=label_template.format("Re-center", ""), command=(
+            self.center_window_on_circuit), font=menu_font)
         master.config(menu=self.menubar)
 
         # Vertical and horizontal scrollbars for canvas
@@ -209,7 +212,6 @@ class SnappingCanvas(tk.Canvas):
                 pass
         self.load_netlist(netlist_file_string)
         self.center_window_on_circuit()
-        self.draw_grid()
         self.track_changes = True
         self.save()
 
@@ -285,6 +287,7 @@ class SnappingCanvas(tk.Canvas):
             self.yview_moveto(0)
 
         self.configure_scrollregion()
+        self.draw_grid()
 
 
     def scroll_y_wheel(self, event):
