@@ -43,11 +43,12 @@ class AutoScrollbar(ttk.Scrollbar):
     """ A scrollbar that hides itself if it's not needed. """
 
     def set(self, lo, hi):
-        if float(lo) <= 0.0 and float(hi) >= 1.0:
-            self.grid_remove()
-        else:
-            self.grid()
-            ttk.Scrollbar.set(self, lo, hi)
+        # uncomment for auto-hiding scroll bars
+        # if float(lo) <= 0.0 and float(hi) >= 1.0:
+        #     self.grid_remove()
+        # else:
+        self.grid()
+        ttk.Scrollbar.set(self, lo, hi)
 
     def pack(self, **kw):
         raise tk.TclError(
@@ -376,10 +377,12 @@ class SnappingCanvas(tk.Canvas):
 
     def configure_scrollregion(self):
 
-        box_canvas = [self.canvasx(0),  # get visible area of the canvas
-                      self.canvasy(0),
-                      self.canvasx(self.winfo_width()),
-                      self.canvasy(self.winfo_height())]
+        extra_scrollable_region = 200 # in canvas-units
+
+        box_canvas = [self.canvasx(0)-extra_scrollable_region,  # get visible area of the canvas
+                      self.canvasy(0)-extra_scrollable_region,
+                      self.canvasx(self.winfo_width())+extra_scrollable_region,
+                      self.canvasy(self.winfo_height())+extra_scrollable_region]
 
         if len(self.elements) > 0:
             xs = [el.x_minus for el in self.elements] + \
