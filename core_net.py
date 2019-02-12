@@ -58,6 +58,9 @@ plot_parameters = {
     "P": {
         "side_wire_width": 0.25
     },
+    "node": {
+        "diameter": 12
+    },
     "W": {
         "lw": 1
     },
@@ -470,7 +473,10 @@ class Qcircuit_GUI(_Qcircuit):
         plt.subplots_adjust(left=0., right=1., top=1., bottom=0.)
 
         for i, _ in enumerate(xs):
-            ax.plot(xs[i], ys[i], color=self.pp["color"], lw=self.pp[line_type[i]]['lw'])
+            if line_type[i] == "node":
+                ax.scatter(xs[i], ys[i], c=self.pp["color"], s=self.pp['node']['diameter'])
+            else:
+                ax.plot(xs[i], ys[i], color=self.pp["color"], lw=self.pp[line_type[i]]['lw'])
 
         for elt in self.netlist:
             elt.draw_label(ax)
@@ -988,10 +994,18 @@ class W(Component):
 
     def draw(self):
 
-        # add side wire connections
-        x = [np.array([self.x_plot_node_minus, self.x_plot_node_plus])]
-        y = [np.array([self.y_plot_node_minus, self.y_plot_node_plus])]
+        x = [np.array([self.x_plot_node_minus, self.x_plot_node_plus]),
+        np.array([self.x_plot_node_minus]),
+        np.array([self.x_plot_node_plus])]
+
+        y = [np.array([self.y_plot_node_minus, self.y_plot_node_plus]),
+        np.array([self.y_plot_node_minus]),
+        np.array([self.y_plot_node_plus])]
+
         line_type = ['W']
+        line_type += ['node']
+        line_type += ['node']
+
         return x, y, line_type
 
 class G(W):
@@ -1334,6 +1348,6 @@ class Admittance(Component):
         return self.Y
 
 if __name__ == '__main__':
-    c = Qcircuit_GUI('test.txt', edit=False, plot=False, print_network=True)
+    c = Qcircuit_GUI('test.txt', edit=False, plot=True, print_network=True)
     c.w_k_A_chi(pretty_print=True)
     c.show_normal_mode(0)
