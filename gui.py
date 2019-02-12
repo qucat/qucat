@@ -126,6 +126,17 @@ class SnappingCanvas(tk.Canvas):
             lambda: self.event_generate('g')), font=menu_font)
         master.config(menu=self.menubar)
 
+        
+        menu = tk.Menu(self.menubar, tearoff=0)
+        self.menubar.add_cascade(
+            label=menu_label_template.format("View"), menu=menu)
+
+        menu.add_command(label=label_template.format("Zoom in", "Ctrl+scroll"), command=(
+            lambda: self.zoom('in')), font=menu_font)
+        menu.add_command(label=label_template.format("Zoom out", "Ctrl+scroll"), command=(
+            lambda: self.zoom('out')), font=menu_font)
+        master.config(menu=self.menubar)
+
         # Vertical and horizontal scrollbars for canvas
         hbar = AutoScrollbar(self.frame, orient='horizontal')
         vbar = AutoScrollbar(self.frame, orient='vertical')
@@ -262,7 +273,7 @@ class SnappingCanvas(tk.Canvas):
 
     def wheel(self, event):
         old_grid_unit = self.grid_unit
-
+        
         scaling = 1.08
         try:
             if abs(event.delta) > 120:
@@ -274,11 +285,11 @@ class SnappingCanvas(tk.Canvas):
         largest_grid_unit = 100
 
         # Respond to Linux (event.num) or Windows (event.delta) wheel event
-        if event.num == 5 or event.delta < 0:  # scroll down, smaller
+        if event.num == 5 or event.delta < 0:  # scroll out, smaller
             new_grid_unit = int(self.grid_unit/scaling)
             if new_grid_unit == old_grid_unit:
                 new_grid_unit -= 1
-        elif event.num == 4 or event.delta > 0:  # scroll up, bigger
+        elif event.num == 4 or event.delta > 0:  # scroll in, bigger
             new_grid_unit = int(self.grid_unit*scaling)
             if new_grid_unit == old_grid_unit:
                 new_grid_unit += 1
@@ -303,6 +314,15 @@ class SnappingCanvas(tk.Canvas):
 
             self.draw_grid(event)
             self.configure_scrollregion()
+
+            
+    def zoom(self, direction = 'in'):
+        args = ['<Control-MouseWheel>']
+        kwargs = {'x':0,'y':0}
+        if direction == 'in':
+            self.event_generate(*args, delta = 121, **kwargs)
+        if direction == 'out':
+            self.event_generate(*args, delta = -121, **kwargs)
 
     def scroll_x(self, *args, **kwargs):
         """ Scroll canvas horizontally and redraw the image """
