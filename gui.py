@@ -166,12 +166,7 @@ class SnappingCanvas(tk.Canvas):
         self.grid_unit = int(grid_unit)
 
         self.focus_set()
-        self.bind('r', lambda event: R(self, event))
-        self.bind('l', lambda event: L(self, event))
-        self.bind('c', lambda event: C(self, event))
-        self.bind('j', lambda event: J(self, event))
-        self.bind('w', lambda event: W(self, event))
-        self.bind('g', lambda event: G(self, event))
+        self.set_element_creation_bindings()
         self.bind('<Control-s>', self.save)
         self.bind("<Configure>", self.on_resize)
         self.bind('<Delete>', self.delete_selection)
@@ -220,6 +215,14 @@ class SnappingCanvas(tk.Canvas):
 
         # Keep track of what the user knows what to do
         self.used_arrows = False
+
+    def set_element_creation_bindings(self):
+        self.bind('r', lambda event: R(self, event))
+        self.bind('l', lambda event: L(self, event))
+        self.bind('c', lambda event: C(self, event))
+        self.bind('j', lambda event: J(self, event))
+        self.bind('w', lambda event: W(self, event))
+        self.bind('g', lambda event: G(self, event))
 
     def open(self):
         netlist_file = filedialog.askopenfilename(initialdir = os.getcwd())
@@ -670,6 +673,14 @@ class TwoNodeElement(object):
         newone.prop = deepcopy(self.prop)
         return newone
 
+    def abort_creation(self,event = None):
+        self.canvas.in_creation = None
+        self.canvas.set_element_creation_bindings()
+        if event.type == tk.EventType.KeyPress:
+            self.canvas.event_generate(event.char)
+        del self
+
+
     def set_nodes(self):
         pass
 
@@ -1027,6 +1038,7 @@ class W(TwoNodeElement):
         self.canvas.config(cursor='arrow')
 
         self.init_plus_snap_to_grid(event)
+        self.canvas.set_element_creation_bindings()
         self.canvas.in_creation = None
         self.create()
         self.track_changes = False
@@ -1062,6 +1074,12 @@ class W(TwoNodeElement):
         self.canvas.config(cursor='plus')
         self.canvas.bind("<Button-1>", self.start_line)
         self.canvas.bind("<Escape>", self.abort_creation)
+        self.canvas.bind('r', self.abort_creation)
+        self.canvas.bind('l', self.abort_creation)
+        self.canvas.bind('c', self.abort_creation)
+        self.canvas.bind('j', self.abort_creation)
+        self.canvas.bind('w', self.abort_creation)
+        self.canvas.bind('g', self.abort_creation)
 
     def auto_place(self, auto_place_info):
         self.create()
@@ -1081,12 +1099,13 @@ class W(TwoNodeElement):
     def abort_creation(self, event=None):
         self.canvas.bind("<Button-1>", lambda event: None)
         self.canvas.bind("<Escape>", lambda event: None)
-        self.canvas.bind("<Motion>", lambda event: None)
-        self.canvas.bind("<Button-1>", lambda event: None)
-        self.canvas.delete('temp')
         self.canvas.config(cursor='arrow')
-        self.canvas.in_creation = None
-        del self
+        if self.dot_minus is not None:
+            # First node has been created
+            self.canvas.bind("<Motion>", lambda event: None)
+            self.canvas.delete('temp')
+            self.canvas.delete(self.dot_minus)
+        super(W,self).abort_creation(event)
 
     def delete(self, event=None):
         self.canvas.elements.remove(self)
@@ -1300,7 +1319,6 @@ class Component(TwoNodeElement):
         if angle != 0.:
             self.canvas.used_arrows = True
 
-        self.canvas.track_changes = False
         self.init_angle = angle
         self.import_image()
         self.image = self.canvas.create_image(
@@ -1309,6 +1327,12 @@ class Component(TwoNodeElement):
         self.canvas.bind("<Button-1>", self.init_release)
         self.canvas.bind('<Motion>', self.init_on_motion)
         self.canvas.bind('<Escape>', self.abort_creation)
+        self.canvas.bind('r', self.abort_creation)
+        self.canvas.bind('l', self.abort_creation)
+        self.canvas.bind('c', self.abort_creation)
+        self.canvas.bind('j', self.abort_creation)
+        self.canvas.bind('w', self.abort_creation)
+        self.canvas.bind('g', self.abort_creation)
         self.canvas.bind(
             '<Left>', lambda event: self.init_create_component(event, angle=WEST))
         self.canvas.bind(
@@ -1332,18 +1356,20 @@ class Component(TwoNodeElement):
         self.canvas.delete(self.image)
         self.canvas.delete(self.dot_minus)
         self.canvas.delete(self.dot_plus)
-        self.canvas.in_creation = None
-        del self
+        super(Component,self).abort_creation(event)
 
     def init_release(self, event):
         self.unset_initialization_bindings()
+        self.canvas.track_changes = False
         self.snap_to_grid()
+        self.canvas.set_element_creation_bindings()
         self.request_value_label()
+        self.canvas.in_creation = None
         if self.prop[0] is None and self.prop[1] is None:
             self.abort_creation()
+            self.canvas.track_changes = True
             return
         self.add_or_replace_label()
-        self.canvas.in_creation = None
         self.canvas.elements.append(self)
         self.set_allstate_bindings()
         self.canvas.track_changes = True
