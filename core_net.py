@@ -405,28 +405,32 @@ class Qcircuit_GUI(_Qcircuit):
     """docstring for Qcircuit"""
 
     def __init__(self, filename, edit=True, plot=True, print_network=True):
+        
         if edit:
             gui.open_canvas(filename)
 
-        netlist = []
+        # if file does not exist, also open the gui
         try:
             with open(filename, 'r') as f:
-                for el in f:
-                    el = el.replace('\n', '')
-                    el = el.split(";")
-                    if el[3] == '':
-                        v = None
-                    else:
-                        v = float(el[3])
-                    if el[4] == '':
-                        l = None
-                    else:
-                        l = el[4]
-                    netlist.append(
-                        string_to_component(el[0], el[1], el[2], v, l))
-
+                pass
         except FileNotFoundError as e:
             gui.open_canvas(filename)
+
+        netlist = []
+        with open(filename, 'r') as f:
+            for el in f:
+                el = el.replace('\n', '')
+                el = el.split(";")
+                if el[3] == '':
+                    v = None
+                else:
+                    v = float(el[3])
+                if el[4] == '':
+                    l = None
+                else:
+                    l = el[4]
+                netlist.append(
+                    string_to_component(el[0], el[1], el[2], v, l))
 
         super(Qcircuit_GUI, self).__init__(netlist)
         for el in self.netlist:
