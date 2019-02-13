@@ -99,7 +99,7 @@ pp["normal_mode_arrow"]= {
         "max_lw": 3,
         "min_head": 0.07,
         "max_head": 0.071,
-        "color_positive": orange,
+        "color_positive": blue,
         "color_negative": blue
     }
 plot_parameters_normal_modes = pp
@@ -328,14 +328,12 @@ class _Qcircuit(object):
 
     def anharmonicities_per_junction(self, pretty_print=False, **kwargs):
         self.set_w_cpx(**kwargs)
-
-        if len(self.junctions) == 0:
-            return [j.anharmonicity(self.w_cpx, **kwargs)/h for j in self.junctions]
+        return [j.anharmonicity(self.w_cpx, **kwargs)/h for j in self.junctions]
 
     def kerr(self, **kwargs):
         As = self.anharmonicities_per_junction(**kwargs)
         N_modes = len(self.w_cpx)
-        N_junctions = len(As)
+        N_junctions = len(self.junctions)
 
         Ks = np.zeros((N_modes, N_modes))
         for i in range(N_modes):
@@ -761,12 +759,12 @@ class Network(object):
             self.connect(mesh_branch[0], mesh_branch[1], mesh_branch[2])
 
     def admittance(self, node_minus, node_plus):
-        network_to_reduce = deepcopy(self)
+        ntr = deepcopy(self) # ntr stands for network to reduce
         for node in self.nodes:
             if node not in [node_minus, node_plus]:
-                network_to_reduce.remove_node(node)
+                ntr.remove_node(node)
 
-        Y = network_to_reduce.net_dict[node_minus][node_plus].admittance()
+        Y = ntr.net_dict[node_minus][node_plus].admittance()
         return Y
 
     def branch_impedance(self, node_1, node_2):
@@ -777,30 +775,31 @@ class Network(object):
 
     def transfer(self, node_left_minus, node_left_plus, node_right_minus, node_right_plus):
 
-        if (node_left_minus in [node_right_plus, node_right_minus]) and (node_left_plus in [node_right_plus, node_right_minus]):
+        if (node_left_minus in [node_right_plus, node_right_minus])\
+            and (node_left_plus in [node_right_plus, node_right_minus]):
             return 1.
 
         # Reduce network
-        network_to_reduce = deepcopy(self)
+        ntr = deepcopy(self) # ntr stands for network to reduce
         for node in self.nodes:
             if node not in [node_left_minus, node_left_plus, node_right_minus, node_right_plus]:
-                network_to_reduce.remove_node(node)
+                ntr.remove_node(node)
 
         if (node_left_minus in [node_right_plus, node_right_minus]) or (node_left_plus in [node_right_plus, node_right_minus]):
             if node_left_minus == node_right_minus:
-                Z = network_to_reduce.branch_impedance(
+                Z = ntr.branch_impedance(
                     node_left_minus, node_right_minus)
             elif node_left_plus == node_right_plus:
-                Z = network_to_reduce.branch_impedance(
+                Z = ntr.branch_impedance(
                     node_left_plus, node_right_plus)
 
             elif node_left_minus == node_right_plus:
                 Z = - \
-                    network_to_reduce.branch_impedance(
+                    ntr.branch_impedance(
                         node_left_minus, node_right_plus)
             elif node_left_plus == node_right_minus:
                 Z = - \
-                    network_to_reduce.branch_impedance(
+                    ntr.branch_impedance(
                         node_left_plus, node_right_minus)
 
             # see Pozar
@@ -810,13 +809,13 @@ class Network(object):
             # Compute ABCD of lattice network
             # see https://www.globalspec.com/reference/71734/203279/10-11-lattice-networks
             # Network Analysis & Circuit (By M. Arshad )section 10.11: LATTICE NETWORKS
-            Za = network_to_reduce.branch_impedance(
+            Za = ntr.branch_impedance(
                 node_left_plus, node_right_plus)
-            Zb = network_to_reduce.branch_impedance(
+            Zb = ntr.branch_impedance(
                 node_left_minus, node_right_plus)
-            Zc = network_to_reduce.branch_impedance(
+            Zc = ntr.branch_impedance(
                 node_left_plus, node_right_minus)
-            Zd = network_to_reduce.branch_impedance(
+            Zd = ntr.branch_impedance(
                 node_left_minus, node_right_minus)
             sum_Z = sum([Za, Zb, Zc, Zd])
             Z11 = (Za+Zb)*(Zd+Zc)/sum_Z
@@ -832,12 +831,12 @@ class Network(object):
             ]])
 
         # Connect missing two elements
-        Y_L = network_to_reduce.branch_impedance(
+        Z_L = ntr.branch_impedance(
             node_left_plus, node_left_minus)
-        Y_R = network_to_reduce.branch_impedance(
+        Z_R = ntr.branch_impedance(
             node_right_plus, node_right_minus)
-        ABCD_L = sp.Matrix([[1, 0], [Y_L, 1]])
-        ABCD_R = sp.Matrix([[1, 0], [Y_R, 1]])
+        ABCD_L = sp.Matrix([[1, Z_L], [0, 1]])
+        ABCD_R = sp.Matrix([[1, Z_R], [0, 1]])
         ABCD = ABCD_L*ABCD*ABCD_R
 
         tr = 1/ABCD[0, 0]
