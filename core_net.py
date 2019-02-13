@@ -785,7 +785,8 @@ class Network(object):
             if node not in [node_left_minus, node_left_plus, node_right_minus, node_right_plus]:
                 ntr.remove_node(node)
 
-        if (node_left_minus in [node_right_plus, node_right_minus]) or (node_left_plus in [node_right_plus, node_right_minus]):
+        if (node_left_minus in [node_right_plus, node_right_minus]) or\
+            (node_left_plus in [node_right_plus, node_right_minus]):
             if node_left_minus == node_right_minus:
                 Z = ntr.branch_impedance(
                     node_left_minus, node_right_minus)

@@ -811,7 +811,7 @@ class TwoNodeElement(object):
         self.selected = False
         self.update_graphic()
         
-    def add_nodes(self, to = 'all wires'):
+    def add_nodes(self, to = 'all wires', minus = True, plus = True):
 
         # Check if one of the nodes of this component/wire 
         # is on a wire
@@ -824,7 +824,7 @@ class TwoNodeElement(object):
             to_nodify = to
         
         for w in to_nodify:
-            if w.x_minus == w.x_plus == self.x_minus:
+            if w.x_minus == w.x_plus == self.x_minus and minus:
                 # vertical wire, minus node
                 if self.y_minus in range(min(w.y_minus,w.y_plus)+1,
                                     max(w.y_minus,w.y_plus)):
@@ -838,7 +838,7 @@ class TwoNodeElement(object):
                         '%d,%d'%(x,self.y_minus),'',''])
                     return True
 
-            elif w.y_minus == w.y_plus == self.y_minus:
+            elif w.y_minus == w.y_plus == self.y_minus and minus:
                 # horizontal wire, minus node
                 if self.x_minus in range(min(w.x_minus,w.x_plus)+1,
                                     max(w.x_minus,w.x_plus)):
@@ -851,7 +851,7 @@ class TwoNodeElement(object):
                     W(self.canvas,auto_place=['W','%d,%d'%(xp,y),
                         '%d,%d'%(self.x_minus,y),'',''])
                     return True
-            elif w.x_minus == w.x_plus == self.x_plus:
+            elif w.x_minus == w.x_plus == self.x_plus and plus:
                 # vertical wire, positive node
                 if self.y_plus in range(min(w.y_minus,w.y_plus)+1,
                                     max(w.y_minus,w.y_plus)):
@@ -865,7 +865,7 @@ class TwoNodeElement(object):
                         '%d,%d'%(x,self.y_plus),'',''])
                     return True
 
-            elif w.y_minus == w.y_plus == self.y_plus:
+            elif w.y_minus == w.y_plus == self.y_plus and plus:
                 # horizontal wire, positive node
                 if self.x_plus in range(min(w.x_minus,w.x_plus)+1,
                                     max(w.x_minus,w.x_plus)):
@@ -1553,7 +1553,9 @@ class G(Component):
 
     def add_or_replace_node_dots(self):
         super(G,self).add_or_replace_node_dots(minus = False)
-                
+
+    def add_nodes(self, to = 'all wires', minus = False, plus = True):   
+        super(G,self).add_nodes(to = to, minus = minus, plus = plus)       
 
 class RequestValueLabelWindow(tk.Toplevel):
     def __init__(self, master, component):
