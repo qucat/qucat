@@ -1362,6 +1362,6 @@ class Admittance(Component):
         return self.Y
 
 if __name__ == '__main__':
-    c = Qcircuit_GUI('test.txt', edit=False, plot=False, print_network=True)
+    c = Qcircuit_GUI('test.txt', edit=True, plot=False, print_network=True)
     c.w_k_A_chi(pretty_print=True)
-    c.show_normal_mode(0)
+    c.show_normal_mode(0,unit = 'current')

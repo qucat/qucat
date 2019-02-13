@@ -3,11 +3,12 @@ try:
     import Tkinter as tk
     from tkFont import Font
     from Tkinter import tkMessageBox as messagebox
+    from Tkinter import tkFileDialog as filedialog
 except ImportError:
     # Tkinter for Python 3.xx
     import tkinter as tk
     from tkinter.font import Font
-    from tkinter import messagebox
+    from tkinter import messagebox,filedialog
 from PIL import Image, ImageTk
 from tkinter import ttk
 import numpy as np
@@ -79,6 +80,8 @@ class SnappingCanvas(tk.Canvas):
             label=menu_label_template.format("File"), menu=menu)
 
         label_template = "{:<15}{:>6}"
+        menu.add_command(label=label_template.format(
+            "Open", ""), command=self.open, font=menu_font)
         menu.add_command(label=label_template.format(
             "Save", "Ctrl+S"), command=self.save, font=menu_font)
         menu.add_command(label=label_template.format(
@@ -217,6 +220,27 @@ class SnappingCanvas(tk.Canvas):
 
         # Keep track of what the user knows what to do
         self.used_arrows = False
+
+    def open(self):
+        netlist_file = filedialog.askopenfilename(initialdir = os.getcwd())
+        if netlist_file == '':
+            # User cancelled
+            pass
+        else:
+            with open(netlist_file, 'r') as f:
+                netlist_file_string = [line for line in f]
+                
+            self.track_changes = False
+            try:
+                self.load_netlist(netlist_file_string)
+            except Exception as e:
+                print("Loading file failed with error:")
+                print(e)
+            else:
+                self.track_changes = True
+                self.save()
+            self.track_changes = True
+            
 
     def get_mouse_location(self):
         return [self.canvasx(self.winfo_pointerx())-self.winfo_rootx(), 
