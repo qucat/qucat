@@ -88,6 +88,7 @@ pp["label"]= {
     }
 pp["normal_mode_label"]= {
         "fontsize": 10,
+        "color": blue,
         "y_arrow": pp["C"]["height"]/2+0.08,
         "text_position_horizontal": [0.,pp["C"]["height"]/2+0.25],
         "text_position_vertical": [-pp["C"]["height"]/2-0.1,-0.07]
@@ -615,7 +616,7 @@ class Qcircuit_GUI(_Qcircuit):
                 ax.text(x_text, y_text,
                         pretty(np.absolute(value), unit),
                         fontsize=self.pp["normal_mode_label"]["fontsize"],
-                        ha=ha, va=va, style='italic', weight='normal')
+                        ha=ha, va=va, weight='normal',color =self.pp["normal_mode_label"]["color"] )
 
         
         w,k,A,chi = self.w_k_A_chi()
@@ -1593,4 +1594,4 @@ class Admittance(Component):
 if __name__ == '__main__':
     c = Qcircuit_GUI('test.txt', edit=False, plot=False, print_network=True)
     # c.w_k_A_chi(pretty_print=True)
-    c.show_normal_mode(0,unit = 'current')
+    c.show_normal_mode(1,unit = 'current')
