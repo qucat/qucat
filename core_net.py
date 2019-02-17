@@ -91,7 +91,7 @@ pp["normal_mode_label"]= {
         "color": blue,
         "y_arrow": pp["C"]["height"]/2+0.08,
         "text_position_horizontal": [0.,pp["C"]["height"]/2+0.25],
-        "text_position_vertical": [-pp["C"]["height"]/2-0.1,-0.07]
+        "text_position_vertical": [-pp["C"]["height"]/2-0.15,-0.07]
     }
 pp["normal_mode_arrow"]= {
         "min_width": 0.1,
@@ -286,9 +286,10 @@ class _Qcircuit(object):
         for key in kwargs:
             if key in self.no_value_components:
                 pass
-            elif key in [c.label for _, c in self.component_dict.iteritems()]:
-                raise ValueError(
-                    'The value of %s was already specified when constructing the circuit' % key)
+            # # component dict is not defined
+            # elif key in [c.label for _, c in self.component_dict.iteritems()]:
+            #     raise ValueError(
+            #         'The value of %s was already specified when constructing the circuit' % key)
             else:
                 raise ValueError(
                     '%s is not the label of a circuit element' % key)
@@ -371,6 +372,7 @@ class _Qcircuit(object):
             excitations = [int(excitations) for i in modes]
 
         H = 0
+        operators = []
         phi = [0 for junction in self.junctions]
         qeye_list = [qeye(n) for n in excitations]
 
@@ -378,6 +380,7 @@ class _Qcircuit(object):
             a_list = deepcopy(qeye_list)
             a_list[i] = destroy(excitations[i])
             a = tensor(a_list)
+            operators.append(a)
             H += f*a.dag()*a
             phi_0 = hbar/2./e
             for j, junction in enumerate(self.junctions):
@@ -481,7 +484,7 @@ class Qcircuit_GUI(_Qcircuit):
 
         for i, _ in enumerate(xs):
             if line_type[i] == "node":
-                ax.scatter(xs[i], ys[i], c=self.pp["color"], s=self.pp['node']['diameter'])
+                ax.scatter(xs[i], ys[i], color=self.pp["color"], s=self.pp['node']['diameter'])
             else:
                 ax.plot(xs[i], ys[i], color=self.pp["color"], lw=self.pp[line_type[i]]['lw'])
 
@@ -619,7 +622,7 @@ class Qcircuit_GUI(_Qcircuit):
                         ha=ha, va=va, weight='normal',color =self.pp["normal_mode_label"]["color"] )
 
         
-        w,k,A,chi = self.w_k_A_chi()
+        w,k,A,chi = self.w_k_A_chi(**kwargs)
         ax.annotate(r'Mode %d, f=%sHz, k=%sHz, A=%sHz'%
             (mode,
             pretty_value(w[mode], use_math=True),
@@ -1592,6 +1595,7 @@ class Admittance(Component):
         return self.Y
 
 if __name__ == '__main__':
-    c = Qcircuit_GUI('test.txt', edit=False, plot=False, print_network=True)
+    c = Qcircuit_GUI('examples/transmon_cQED.txt', edit=False, plot=False, print_network=True)
     # c.w_k_A_chi(pretty_print=True)
-    c.show_normal_mode(1,unit = 'current')
+    # c.show_normal_mode(1,L_J=10e-9,unit = 'current')
+    c.hamiltonian(L_J=10e-9)
