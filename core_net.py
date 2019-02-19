@@ -892,14 +892,13 @@ class Network(object):
 
         # # order nodes from the node with the least amount of connections
         # # to the one with the most
-        # nodes = [key for key in ntr.net_dict]
-        # nodes_order = np.argsort([len(ntr.net_dict[key]) for key in nodes])
-        # nodes_sorted = [nodes[i] for i in nodes_order]
+        nodes = [key for key in ntr.net_dict]
+        nodes_order = np.argsort([len(ntr.net_dict[key]) for key in nodes])
+        nodes_sorted = [nodes[i] for i in nodes_order]
         
         # Remove all nodes except from node_minus, node_plus
         # through star-mesh transforms with the remove_node function
-        # for node in nodes_sorted:
-        for node in self.nodes:
+        for node in nodes_sorted:
             if node not in [node_minus, node_plus]:
                 ntr.remove_node(node)
 
@@ -967,13 +966,12 @@ class Network(object):
         
         # # order nodes from the node with the least amount of connections
         # # to the one with the most
-        # nodes = [key for key in ntr.net_dict]
-        # nodes_order = np.argsort([len(ntr.net_dict[key]) for key in nodes])
-        # nodes_sorted = [nodes[i] for i in nodes_order]
+        nodes = [key for key in ntr.net_dict]
+        nodes_order = np.argsort([len(ntr.net_dict[key]) for key in nodes])
+        nodes_sorted = [nodes[i] for i in nodes_order]
 
         # Remove nodes using the star-mesh relation
-        # for node in nodes_sorted:
-        for node in self.nodes:
+        for node in nodes_sorted:
             if node not in [node_left_minus, node_left_plus, node_right_minus, node_right_plus]:
                 ntr.remove_node(node)
 
@@ -1620,7 +1618,7 @@ class Admittance(Component):
         return self.Y
 
 if __name__ == '__main__':
-    c = Qcircuit_GUI('examples/transmon_cQED.txt', edit=False, plot=False, print_network=True)
+    c = Qcircuit_GUI('examples/transmon_cQED.txt', edit=True, plot=False, print_network=True)
     c.w_k_A_chi(pretty_print=True)
     # c.show_normal_mode(1,L_J=10e-9,unit = 'current')
     # c.hamiltonian(L_J=10e-9)
