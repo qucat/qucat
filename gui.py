@@ -673,10 +673,10 @@ class TwoNodeElement(object):
         newone.prop = deepcopy(self.prop)
         return newone
 
-    def abort_creation(self,event = None):
+    def abort_creation(self,event = None, rerun_command = True):
         self.canvas.in_creation = None
         self.canvas.set_element_creation_bindings()
-        if event.type == tk.EventType.KeyPress:
+        if event.type == tk.EventType.KeyPress and rerun_command:
             self.canvas.event_generate(event.char)
         del self
 
@@ -1073,7 +1073,7 @@ class W(TwoNodeElement):
     def manual_place(self, event):
         self.canvas.config(cursor='plus')
         self.canvas.bind("<Button-1>", self.start_line)
-        self.canvas.bind("<Escape>", self.abort_creation)
+        self.canvas.bind("<Escape>", lambda event: self.abort_creation(event, rerun_command = False))
         self.canvas.bind('r', self.abort_creation)
         self.canvas.bind('l', self.abort_creation)
         self.canvas.bind('c', self.abort_creation)
@@ -1096,7 +1096,7 @@ class W(TwoNodeElement):
         self.canvas.bind("<Button-1>", self.end_line)
         self.canvas.in_creation = self
 
-    def abort_creation(self, event=None):
+    def abort_creation(self, event=None, rerun_command = True):
         self.canvas.bind("<Button-1>", lambda event: None)
         self.canvas.bind("<Escape>", lambda event: None)
         self.canvas.config(cursor='arrow')
@@ -1105,7 +1105,7 @@ class W(TwoNodeElement):
             self.canvas.bind("<Motion>", lambda event: None)
             self.canvas.delete('temp')
             self.canvas.delete(self.dot_minus)
-        super(W,self).abort_creation(event)
+        super(W,self).abort_creation(event,rerun_command)
 
     def delete(self, event=None):
         self.canvas.elements.remove(self)
@@ -1326,7 +1326,7 @@ class Component(TwoNodeElement):
 
         self.canvas.bind("<Button-1>", self.init_release)
         self.canvas.bind('<Motion>', self.init_on_motion)
-        self.canvas.bind('<Escape>', self.abort_creation)
+        self.canvas.bind('<Escape>', lambda event: self.abort_creation(event, rerun_command = False))
         self.canvas.bind('r', self.abort_creation)
         self.canvas.bind('l', self.abort_creation)
         self.canvas.bind('c', self.abort_creation)
@@ -1351,12 +1351,12 @@ class Component(TwoNodeElement):
         self.canvas.bind('<Down>', lambda event: None)
         self.canvas.bind('<Escape>', lambda event: None)
 
-    def abort_creation(self, event=None):
+    def abort_creation(self, event=None, rerun_command = True):
         self.unset_initialization_bindings()
         self.canvas.delete(self.image)
         self.canvas.delete(self.dot_minus)
         self.canvas.delete(self.dot_plus)
-        super(Component,self).abort_creation(event)
+        super(Component,self).abort_creation(event, rerun_command)
 
     def init_release(self, event):
         self.unset_initialization_bindings()
@@ -1366,7 +1366,7 @@ class Component(TwoNodeElement):
         self.request_value_label()
         self.canvas.in_creation = None
         if self.prop[0] is None and self.prop[1] is None:
-            self.abort_creation()
+            self.abort_creation(rerun_command = False)
             self.canvas.track_changes = True
             return
         self.add_or_replace_label()
