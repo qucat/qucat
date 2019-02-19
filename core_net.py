@@ -131,8 +131,8 @@ class _Qcircuit(object):
                 "There should be at least one junction or inductor in the circuit")
 
         self.Q_min = 1.
-        self.Y = self.network.admittance(
-            self.ref_elt.node_minus, self.ref_elt.node_plus)
+        self.Y = self.network.admittance(self.ref_elt.node_minus, self.ref_elt.node_plus)
+        self.Y_lambdified = sp.utilities.lambdify(['w']+self.no_value_components, self.Y, 'numpy')
         Y_together = sp.together(self.Y)
         Y_numer = sp.numer(Y_together)       # Extract the numerator of Y(w)
         Y_denom = sp.denom(Y_together)       # Extract the numerator of Y(w)
@@ -305,16 +305,27 @@ class _Qcircuit(object):
         self.check_kwargs(**kwargs)
         ws_cpx = np.roots(self.Y_numer_poly_coeffs(**kwargs))
         
+        # take only roots with:
+        #  a positive real part (i.e. freq)
+        #  significant Q factors (>self.Q_min)
+        #  roots of the numerator which are actually zeros of the whole admittance 
+        #       (this is not the case if numerator and denominator share a root)
+        #       Sympy evaluates expressions to 15 decimal digit accuracy, 
+        #       therefore we test ==0 using <1e-14
+
+        # Keep solutions with negative imaginary parts
+        # for example if there are no resistors in the circuit, numerical
+        # errors can result in a small negative imaginary part for a valid solution
+        relevant_sols = np.argwhere(
+            (np.real(ws_cpx) >= 0.) & 
+            ((np.real(ws_cpx) > self.Q_min*np.imag(ws_cpx)) &
+            (np.absolute(self.Y_lambdified(ws_cpx,**kwargs))<1e-14)))
+        ws_cpx = ws_cpx[relevant_sols][:, 0]
+
+        # In case there are no resistors in the circuit, 
+        # set the losses to 0
         if len(self.resistors) == 0:
             ws_cpx = np.real(ws_cpx)
-
-        # take only roots with a positive real part (i.e. freq)
-        # and significant Q factors
-        # Keep solutions with negative imaginary parts, since if there is no resistors in the circuit,
-        # there is no garanties on the sign of the resistor...
-        relevant_sols = np.argwhere((np.real(ws_cpx) >= 0.) & (
-            np.real(ws_cpx) > self.Q_min*np.imag(ws_cpx)))
-        ws_cpx = ws_cpx[relevant_sols][:, 0]
 
         # Sort solutions with increasing frequency
         order = np.argsort(np.real(ws_cpx))
@@ -879,8 +890,15 @@ class Network(object):
         # Create a temporary copy of the network which will be reduced
         ntr = deepcopy(self) # ntr stands for Network To Reduce
 
+        # # order nodes from the node with the least amount of connections
+        # # to the one with the most
+        # nodes = [key for key in ntr.net_dict]
+        # nodes_order = np.argsort([len(ntr.net_dict[key]) for key in nodes])
+        # nodes_sorted = [nodes[i] for i in nodes_order]
+        
         # Remove all nodes except from node_minus, node_plus
         # through star-mesh transforms with the remove_node function
+        # for node in nodes_sorted:
         for node in self.nodes:
             if node not in [node_minus, node_plus]:
                 ntr.remove_node(node)
@@ -947,7 +965,14 @@ class Network(object):
         # Create a temporary copy of the network which will be reduced        
         ntr = deepcopy(self) # ntr stands for Network To Reduce
         
+        # # order nodes from the node with the least amount of connections
+        # # to the one with the most
+        # nodes = [key for key in ntr.net_dict]
+        # nodes_order = np.argsort([len(ntr.net_dict[key]) for key in nodes])
+        # nodes_sorted = [nodes[i] for i in nodes_order]
+
         # Remove nodes using the star-mesh relation
+        # for node in nodes_sorted:
         for node in self.nodes:
             if node not in [node_left_minus, node_left_plus, node_right_minus, node_right_plus]:
                 ntr.remove_node(node)
@@ -1596,6 +1621,6 @@ class Admittance(Component):
 
 if __name__ == '__main__':
     c = Qcircuit_GUI('examples/transmon_cQED.txt', edit=False, plot=False, print_network=True)
-    # c.w_k_A_chi(pretty_print=True)
+    c.w_k_A_chi(pretty_print=True)
     # c.show_normal_mode(1,L_J=10e-9,unit = 'current')
-    c.hamiltonian(L_J=10e-9)
+    # c.hamiltonian(L_J=10e-9)
