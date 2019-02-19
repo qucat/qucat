@@ -1,7 +1,7 @@
 #
 .vscode/
 .temp
-test.txt
+test*.txt
 .ipynb_checkpoints
 
 # Byte-compiled / optimized / DLL files

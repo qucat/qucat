@@ -1,4 +1,5 @@
 import sympy as sp
+from sympy.utilities.lambdify import lambdify
 import numpy as np
 from scipy.constants import e, pi, h, hbar
 from sympy.core.mul import Mul, Pow, Add
@@ -132,27 +133,33 @@ class _Qcircuit(object):
 
         self.Q_min = 1.
         self.Y = self.network.admittance(self.ref_elt.node_minus, self.ref_elt.node_plus)
-        self.Y_lambdified = sp.utilities.lambdify(['w']+self.no_value_components, self.Y, 'numpy')
+        self.Y_lambdified = lambdify(['w']+self.no_value_components, self.Y, 'numpy')
         Y_together = sp.together(self.Y)
+        self.Y_together_lambdified = lambdify(['w']+self.no_value_components, Y_together, 'numpy')
         Y_numer = sp.numer(Y_together)       # Extract the numerator of Y(w)
+        self.Y_numer_lambdified = lambdify(['w']+self.no_value_components, Y_numer, 'numpy')
         Y_denom = sp.denom(Y_together)       # Extract the numerator of Y(w)
-        # Write numerator as polynomial in omega
-        Y_numer_poly = sp.collect(sp.expand(Y_numer), sp.Symbol('w'))
-        # Write numerator as polynomial in omega
-        Y_denom_poly = sp.collect(sp.expand(Y_denom), sp.Symbol('w'))
-        self.Y_numer_poly_order = sp.polys.polytools.degree(
-            Y_numer_poly, gen=sp.Symbol('w'))  # Order of the polynomial
-        self.Y_denom_poly_order = sp.polys.polytools.degree(
-            Y_denom_poly, gen=sp.Symbol('w'))  # Order of the polynomial
+        self.Y_denom_lambdified = lambdify(['w']+self.no_value_components, Y_denom, 'numpy')
 
-        self.Y_numer_poly_coeffs_analytical = [Y_numer_poly.coeff(sp.Symbol('w'), n) for n in range(
+
+        w = sp.Symbol('w')
+        # Write numerator as polynomial in omega
+        Y_numer_poly = sp.collect(sp.expand(Y_numer), w)
+        # Write numerator as polynomial in omega
+        Y_denom_poly = sp.collect(sp.expand(Y_denom), w)
+        self.Y_numer_poly_order = sp.polys.polytools.degree(
+            Y_numer_poly, gen=w)  # Order of the polynomial
+        self.Y_denom_poly_order = sp.polys.polytools.degree(
+            Y_denom_poly, gen=w)  # Order of the polynomial
+
+        self.Y_numer_poly_coeffs_analytical = [Y_numer_poly.coeff(w, n) for n in range(
             self.Y_numer_poly_order+1)[::-1]]  # Get polynomial coefficients
-        self.Y_numer_poly_coeffs_analytical = [sp.utilities.lambdify(
+        self.Y_numer_poly_coeffs_analytical = [lambdify(
             self.no_value_components, c, 'numpy') for c in self.Y_numer_poly_coeffs_analytical]
 
-        self.Y_denom_poly_coeffs_analytical = [Y_denom_poly.coeff(sp.Symbol('w'), n) for n in range(
+        self.Y_denom_poly_coeffs_analytical = [Y_denom_poly.coeff(w, n) for n in range(
             self.Y_denom_poly_order+1)[::-1]]  # Get polynomial coefficients
-        self.Y_denom_poly_coeffs_analytical = [sp.utilities.lambdify(
+        self.Y_denom_poly_coeffs_analytical = [lambdify(
             self.no_value_components, c, 'numpy') for c in self.Y_denom_poly_coeffs_analytical]
 
         self.flux_transformation_dict = {}
@@ -304,6 +311,7 @@ class _Qcircuit(object):
     def set_w_cpx(self, **kwargs):
         self.check_kwargs(**kwargs)
         ws_cpx = np.roots(self.Y_numer_poly_coeffs(**kwargs))
+        print(self.Y_numer_lambdified(ws_cpx,**kwargs))
         
         # take only roots with:
         #  a positive real part (i.e. freq)
@@ -317,7 +325,7 @@ class _Qcircuit(object):
         # for example if there are no resistors in the circuit, numerical
         # errors can result in a small negative imaginary part for a valid solution
         relevant_sols = np.argwhere(
-            (np.real(ws_cpx) >= 0.) & 
+            (np.real(ws_cpx) > 0.) & 
             ((np.real(ws_cpx) > self.Q_min*np.imag(ws_cpx)) &
             (np.absolute(self.Y_lambdified(ws_cpx,**kwargs))<1e-14)))
         ws_cpx = ws_cpx[relevant_sols][:, 0]
@@ -1217,7 +1225,7 @@ class Component(Circuit):
                 self.head.flux_transformation_dict[self.node_plus,
                                                    self.node_minus] = -tr
 
-            self._flux_wr_ref = sp.utilities.lambdify(
+            self._flux_wr_ref = lambdify(
                 ['w']+self.head.no_value_components, tr, "numpy")
         return self._flux_wr_ref
 
@@ -1618,7 +1626,7 @@ class Admittance(Component):
         return self.Y
 
 if __name__ == '__main__':
-    c = Qcircuit_GUI('examples/transmon_cQED.txt', edit=True, plot=False, print_network=True)
+    c = Qcircuit_GUI('test.txt', edit=False, plot=False, print_network=True)
     c.w_k_A_chi(pretty_print=True)
     # c.show_normal_mode(1,L_J=10e-9,unit = 'current')
     # c.hamiltonian(L_J=10e-9)
