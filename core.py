@@ -173,11 +173,11 @@ class _Qcircuit(object):
         # to divide to numerator and denomenator 
         # to avoid having too large numbers
         # and OverflowErrors
-        n=1
-        while self.Y_denom_poly_coeffs(**kwargs)[-n]==0:
-            n+=1
-        norm = self.Y_denom_poly_coeffs(**kwargs)[-n]*w**n
-        # norm = 1.
+        # n=1
+        # while self.Y_denom_poly_coeffs(**kwargs)[-n]==0:
+        #     n+=1
+        # norm = self.Y_denom_poly_coeffs(**kwargs)[-n]*w**n
+        norm = 1.
 
         # test if w is an iterable
         try:
@@ -215,11 +215,11 @@ class _Qcircuit(object):
         # to divide to numerator and denomenator 
         # to avoid having too large numbers
         # and OverflowErrors
-        n=1
-        while self.Y_denom_poly_coeffs(**kwargs)[-n]==0:
-            n+=1
-        norm = self.Y_denom_poly_coeffs(**kwargs)[-n]*w**n
-        # norm = 1.
+        # n=1
+        # while self.Y_denom_poly_coeffs(**kwargs)[-n]==0:
+        #     n+=1
+        # norm = self.Y_denom_poly_coeffs(**kwargs)[-n]*w**n
+        norm = 1.
 
         # w should be a single complex number
         u = sum([complex(a*w**(self.Y_numer_poly_order-n))/norm
@@ -349,6 +349,22 @@ class _Qcircuit(object):
         self.check_kwargs(**kwargs)
         initial_guess = np.roots(self.Y_numer_poly_coeffs(**kwargs))
         
+        # take only roots with:
+        #  a positive real part (i.e. a positive frequqncy)
+        #  significant Q factors ( > self.Q_min)
+        #  roots of the numerator which are actually zeros of the whole admittance 
+        #       (this is not the case if numerator and denominator share a root)
+        #       Sympy evaluates expressions to 15 decimal digit accuracy, 
+        #       therefore we test ==0 using <1e-14
+
+        # Keep solutions with negative imaginary parts
+        # for example if there are no resistors in the circuit, numerical
+        # errors can result in a small negative imaginary part for a valid solution
+        relevant_guesses = np.argwhere(
+            (np.real(initial_guess) > 0.) & 
+            (np.real(initial_guess) > self.Q_min*np.imag(initial_guess)))
+        initial_guess = initial_guess[relevant_guesses][:, 0]
+
         # We check which of these initial guesses are actually zeros of Y.
         # Indeed, if a root of the numerator is also a root of the denominator 
         # with equal or higher multiplicity, then that solution should be discarded.
@@ -383,20 +399,6 @@ class _Qcircuit(object):
         # set the losses to 0
         if len(self.resistors) == 0:
             ws_cpx = np.real(ws_cpx)
-
-        
-        # take only roots with:
-        #  a positive real part (i.e. a positive frequency)
-        #  a positive imaginary part (i.e. a positive loss rate)
-        #  significant Q factors ( > self.Q_min)
-        #  roots of the numerator which are actually zeros of the whole admittance 
-        #       (this is not the case if numerator and denominator share a root)
-        #       Sympy evaluates expressions to 15 decimal digit accuracy, 
-        #       therefore we test ==0 using <1e-14
-        relevant_guesses = np.argwhere(
-            (np.real(initial_guess) > 0. & np.imag(initial_guess) > 0.) & 
-            (np.real(initial_guess) > self.Q_min*np.imag(initial_guess)))
-        initial_guess = initial_guess[relevant_guesses][:, 0]
 
         # Sort solutions with increasing frequency
         order = np.argsort(np.real(ws_cpx))
@@ -1693,10 +1695,8 @@ class Admittance(Component):
 if __name__ == '__main__':
        
     c = Qcircuit_GUI('test.txt', edit=False, plot=False, print_network=True)
-    wlist = np.linspace(-0.2,0.2,102)
-    plt.plot(wlist,np.imag(c.Y_lambdified(wlist)))
-    plt.plot(wlist,np.imag([c.dY(w) for w in wlist]))
-    plt.plot(wlist,np.imag([c.d2Y(w) for w in wlist]))
+    wlist = np.linspace(-0.5,1.,10001)
+    plt.plot(wlist,np.imag(c.Y_lambdified(wlist)),'o')
     plt.show()
     # c.w_k_A_chi(pretty_print=True)
     # c.show_normal_mode(1,L_J=10e-9,unit = 'current')
