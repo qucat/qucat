@@ -12,6 +12,7 @@ import os
 from Qcircuits.constants import *
 from Qcircuits.utility import pretty_value,\
     check_there_are_no_iterables_in_kwarg, shift, to_string
+from scipy import optimize
 
 
 def string_to_component(s, *arg, **kwarg):
@@ -132,6 +133,7 @@ class _Qcircuit(object):
                 "There should be at least one junction or inductor in the circuit")
 
         self.Q_min = 1.
+        self.delta_f_min = 1
         self.Y = self.network.admittance(self.ref_elt.node_minus, self.ref_elt.node_plus)
         self.Y_lambdified = lambdify(['w']+self.no_value_components, self.Y, 'numpy')
         Y_together = sp.together(self.Y)
@@ -168,6 +170,15 @@ class _Qcircuit(object):
 
     def dY(self, w, **kwargs):
 
+        # to divide to numerator and denomenator 
+        # to avoid having too large numbers
+        # and OverflowErrors
+        # n=1
+        # while self.Y_denom_poly_coeffs(**kwargs)[-n]==0:
+        #     n+=1
+        # norm = self.Y_denom_poly_coeffs(**kwargs)[-n]*w**n
+        norm = 1.
+
         # test if w is an iterable
         try:
             iter(w)
@@ -175,29 +186,55 @@ class _Qcircuit(object):
             # iterable = False
 
             # derivative of u/v is (du*v-dv*u)/v^2
-            u = sum([complex(a*w**(self.Y_numer_poly_order-n))
+            u = sum([complex(a*w**(self.Y_numer_poly_order-n))/norm
                      for n, a in enumerate(self.Y_numer_poly_coeffs(**kwargs))])
-            v = sum([complex(a*w**(self.Y_denom_poly_order-n))
+            v = sum([complex(a*w**(self.Y_denom_poly_order-n))/norm
                      for n, a in enumerate(self.Y_denom_poly_coeffs(**kwargs))])
-            du = sum([complex((self.Y_numer_poly_order-n)*a*w**(self.Y_numer_poly_order-n-1))
+            du = sum([complex((self.Y_numer_poly_order-n)*a*w**(self.Y_numer_poly_order-n-1))/norm
                       for n, a in enumerate(self.Y_numer_poly_coeffs(**kwargs))])
-            dv = sum([complex((self.Y_denom_poly_order-n)*a*w**(self.Y_denom_poly_order-n-1))
+            dv = sum([complex((self.Y_denom_poly_order-n)*a*w**(self.Y_denom_poly_order-n-1))/norm
                       for n, a in enumerate(self.Y_denom_poly_coeffs(**kwargs))])
 
         else:
             # iterable = True
 
             # derivative of u/v is (du*v-dv*u)/v^2
-            u = sum([np.array([complex(a*_w**(self.Y_numer_poly_order-n)) for _w in w])
+            u = sum([np.array([complex(a*_w**(self.Y_numer_poly_order-n)) for _w in w])/norm
                      for n, a in enumerate(self.Y_numer_poly_coeffs(**kwargs))])
-            v = sum([np.array([complex(a*_w**(self.Y_denom_poly_order-n)) for _w in w])
+            v = sum([np.array([complex(a*_w**(self.Y_denom_poly_order-n)) for _w in w])/norm
                      for n, a in enumerate(self.Y_denom_poly_coeffs(**kwargs))])
-            du = sum([np.array([complex((self.Y_numer_poly_order-n)*a*_w**(self.Y_numer_poly_order-n-1))
+            du = sum([np.array([complex((self.Y_numer_poly_order-n)*a*_w**(self.Y_numer_poly_order-n-1))/norm
                                 for _w in w]) for n, a in enumerate(self.Y_numer_poly_coeffs(**kwargs))])
-            dv = sum([np.array([complex((self.Y_denom_poly_order-n)*a*_w**(self.Y_denom_poly_order-n-1))
+            dv = sum([np.array([complex((self.Y_denom_poly_order-n)*a*_w**(self.Y_denom_poly_order-n-1))/norm
                                 for _w in w]) for n, a in enumerate(self.Y_denom_poly_coeffs(**kwargs))])
 
         return (du*v-dv*u)/v**2
+
+    def d2Y(self, w, **kwargs):
+
+        # to divide to numerator and denomenator 
+        # to avoid having too large numbers
+        # and OverflowErrors
+        # n=1
+        # while self.Y_denom_poly_coeffs(**kwargs)[-n]==0:
+        #     n+=1
+        # norm = self.Y_denom_poly_coeffs(**kwargs)[-n]*w**n
+        norm = 1.
+
+        # w should be a single complex number
+        u = sum([complex(a*w**(self.Y_numer_poly_order-n))/norm
+                    for n, a in enumerate(self.Y_numer_poly_coeffs(**kwargs))])
+        v = sum([complex(a*w**(self.Y_denom_poly_order-n))/norm
+                    for n, a in enumerate(self.Y_denom_poly_coeffs(**kwargs))])
+        du = sum([complex((self.Y_numer_poly_order-n)*a*w**(self.Y_numer_poly_order-n-1))/norm
+                    for n, a in enumerate(self.Y_numer_poly_coeffs(**kwargs))])
+        dv = sum([complex((self.Y_denom_poly_order-n)*a*w**(self.Y_denom_poly_order-n-1))/norm
+                    for n, a in enumerate(self.Y_denom_poly_coeffs(**kwargs))])
+        d2u = sum([complex((self.Y_numer_poly_order-n-1)*(self.Y_numer_poly_order-n)*a*w**(self.Y_numer_poly_order-n-2))/norm
+                    for n, a in enumerate(self.Y_numer_poly_coeffs(**kwargs))])
+        d2v = sum([complex((self.Y_denom_poly_order-n-1)*(self.Y_denom_poly_order-n)*a*w**(self.Y_denom_poly_order-n-2))/norm
+                    for n, a in enumerate(self.Y_denom_poly_coeffs(**kwargs))])
+        return (v**2*d2u-v*(2*du*dv+u*d2v)+2*u*dv**2)/v**3
 
     def Y_numer_poly_coeffs(self, **kwargs):
         return [complex(coeff(**kwargs)) for coeff in self.Y_numer_poly_coeffs_analytical]
@@ -310,12 +347,11 @@ class _Qcircuit(object):
 
     def set_w_cpx(self, **kwargs):
         self.check_kwargs(**kwargs)
-        ws_cpx = np.roots(self.Y_numer_poly_coeffs(**kwargs))
-        print(self.Y_numer_lambdified(ws_cpx,**kwargs))
+        initial_guess = np.roots(self.Y_numer_poly_coeffs(**kwargs))
         
         # take only roots with:
-        #  a positive real part (i.e. freq)
-        #  significant Q factors (>self.Q_min)
+        #  a positive real part (i.e. a positive frequqncy)
+        #  significant Q factors ( > self.Q_min)
         #  roots of the numerator which are actually zeros of the whole admittance 
         #       (this is not the case if numerator and denominator share a root)
         #       Sympy evaluates expressions to 15 decimal digit accuracy, 
@@ -324,11 +360,40 @@ class _Qcircuit(object):
         # Keep solutions with negative imaginary parts
         # for example if there are no resistors in the circuit, numerical
         # errors can result in a small negative imaginary part for a valid solution
-        relevant_sols = np.argwhere(
-            (np.real(ws_cpx) > 0.) & 
-            ((np.real(ws_cpx) > self.Q_min*np.imag(ws_cpx)) &
-            (np.absolute(self.Y_lambdified(ws_cpx,**kwargs))<1e-14)))
-        ws_cpx = ws_cpx[relevant_sols][:, 0]
+        relevant_guesses = np.argwhere(
+            (np.real(initial_guess) > 0.) & 
+            (np.real(initial_guess) > self.Q_min*np.imag(initial_guess)))
+        initial_guess = initial_guess[relevant_guesses][:, 0]
+
+        # We check which of these initial guesses are actually zeros of Y.
+        # Indeed, if a root of the numerator is also a root of the denominator 
+        # with equal or higher multiplicity, then that solution should be discarded.
+        # We run Halley’s method (an extension of Newton's root-finding method)
+        # which makes use of our knowledge of the first and second derivative of Y
+        # to find a zero of Y based on our initial guesses.
+        # If convergence fails, we discard the guess, if two guesses 
+        # converge to the same number (within self.delta_f_min of each other)
+        # they are merged into a single solution.
+
+        tol = self.delta_f_min*2.*pi
+        ws_cpx = np.array([])
+        for w0 in initial_guess:
+            try:
+                sol = optimize.newton(lambda x: self.Y_lambdified(x,**kwargs),
+                                x0=w0+tol*1j,
+                                tol = tol,
+                                fprime  = lambda x: self.dY(x,**kwargs), 
+                                fprime2 = lambda x: self.d2Y(x,**kwargs))
+            except RuntimeError as e:
+                # Did not converge, guess discarded
+                pass
+            else:
+                # Solution found, solution kept
+                if len(ws_cpx)==0:
+                    ws_cpx = np.append(ws_cpx,[sol])
+                else:
+                    if np.amin(np.absolute(ws_cpx-sol))>tol:
+                        ws_cpx = np.append(ws_cpx,[sol])
 
         # In case there are no resistors in the circuit, 
         # set the losses to 0

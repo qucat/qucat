@@ -1,5 +1,5 @@
 import os
-import Qcircuits.core_net as core
+import Qcircuits.core
 from Qcircuits.core_net import string_to_component
 from Qcircuits.constants import *
 import matplotlib.pyplot as plt

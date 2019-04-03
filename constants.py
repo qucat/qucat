@@ -7,7 +7,7 @@ lighter_blue = '#cfdbf7'
 orange = '#ee8467'
 
 # ANGLES (negative = clock-wise rotation)
-EAST = 0.  # as generated in core_net
+EAST = 0.  # as generated in core.py
 NORTH = 90.
 WEST = 180.
 SOUTH = 270.
