@@ -132,18 +132,19 @@ class _Qcircuit(object):
             raise ValueError(
                 "There should be at least one junction or inductor in the circuit")
 
-        self.Q_min = 1.
-        self.delta_f_min = 1
+        self.flux_transformation_dict = {}
+        for node in self.network.nodes:
+            self.flux_transformation_dict[node] = {}
+
+        self.compute_Y()
+        self.char_poly_coeffs_analytical = [lambdify(
+            self.no_value_components, c, 'numpy') for c in self.network.char_poly_coeffs_analytical]
+
+    def compute_Y(self):
         self.Y = self.network.admittance(self.ref_elt.node_minus, self.ref_elt.node_plus)
         self.Y_lambdified = lambdify(['w']+self.no_value_components, self.Y, 'numpy')
         Y_together = sp.together(self.Y)    # Puts everything on a single fraction with the numerator and denomenator as polynomials
-                                            # So it combines but also denests
-        self.Y_together_lambdified = lambdify(['w']+self.no_value_components, Y_together, 'numpy')
-        Y_numer = sp.numer(Y_together)       # Extract the numerator of Y(w)
-        self.Y_numer_lambdified = lambdify(['w']+self.no_value_components, Y_numer, 'numpy')
-        Y_denom = sp.denom(Y_together)       # Extract the numerator of Y(w)
-        self.Y_denom_lambdified = lambdify(['w']+self.no_value_components, Y_denom, 'numpy')
-
+                                            # So it combines but also "de-nests"
 
         w = sp.Symbol('w')
         # Write numerator as polynomial in omega
@@ -164,10 +165,6 @@ class _Qcircuit(object):
             self.Y_denom_poly_order+1)[::-1]]  # Get polynomial coefficients
         self.Y_denom_poly_coeffs_analytical = [lambdify(
             self.no_value_components, c, 'numpy') for c in self.Y_denom_poly_coeffs_analytical]
-
-        self.flux_transformation_dict = {}
-        for node in self.network.nodes:
-            self.flux_transformation_dict[node] = {}
 
     def dY(self, w, **kwargs):
         
@@ -211,58 +208,14 @@ class _Qcircuit(object):
 
         return (du*v-dv*u)/v**2
 
-    def d2Y(self, w, **kwargs):
-
-        # to divide to numerator and denomenator 
-        # to avoid having too large numbers
-        # and OverflowErrors
-        # n=1
-        # while self.Y_denom_poly_coeffs(**kwargs)[-n]==0:
-        #     n+=1
-        # norm = self.Y_denom_poly_coeffs(**kwargs)[-n]*w**n
-        norm = 1.
-
-        # test if w is an iterable
-        try:
-            iter(w)
-        except TypeError:
-            # iterable = False
-            u = sum([complex(a*w**(self.Y_numer_poly_order-n))/norm
-                        for n, a in enumerate(self.Y_numer_poly_coeffs(**kwargs))])
-            v = sum([complex(a*w**(self.Y_denom_poly_order-n))/norm
-                        for n, a in enumerate(self.Y_denom_poly_coeffs(**kwargs))])
-            du = sum([complex((self.Y_numer_poly_order-n)*a*w**(self.Y_numer_poly_order-n-1))/norm
-                        for n, a in enumerate(self.Y_numer_poly_coeffs(**kwargs))])
-            dv = sum([complex((self.Y_denom_poly_order-n)*a*w**(self.Y_denom_poly_order-n-1))/norm
-                        for n, a in enumerate(self.Y_denom_poly_coeffs(**kwargs))])
-            d2u = sum([complex((self.Y_numer_poly_order-n-1)*(self.Y_numer_poly_order-n)*a*w**(self.Y_numer_poly_order-n-2))/norm
-                        for n, a in enumerate(self.Y_numer_poly_coeffs(**kwargs))])
-            d2v = sum([complex((self.Y_denom_poly_order-n-1)*(self.Y_denom_poly_order-n)*a*w**(self.Y_denom_poly_order-n-2))/norm
-                        for n, a in enumerate(self.Y_denom_poly_coeffs(**kwargs))])
-            return (v**2*d2u-v*(2*du*dv+u*d2v)+2*u*dv**2)/v**3
-        else:
-            # iterable = True
-            u = sum([np.array([complex(a*_w**(self.Y_numer_poly_order-n)) for _w in w])/norm
-                        for n, a in enumerate(self.Y_numer_poly_coeffs(**kwargs))])
-            v = sum([np.array([complex(a*w**(self.Y_denom_poly_order-n)) for _w in w])/norm
-                        for n, a in enumerate(self.Y_denom_poly_coeffs(**kwargs))])
-            du = sum([np.array([complex((self.Y_numer_poly_order-n)*a*w**(self.Y_numer_poly_order-n-1)) for _w in w])/norm
-                        for n, a in enumerate(self.Y_numer_poly_coeffs(**kwargs))])
-            dv = sum([np.array([complex((self.Y_denom_poly_order-n)*a*w**(self.Y_denom_poly_order-n-1)) for _w in w])/norm
-                        for n, a in enumerate(self.Y_denom_poly_coeffs(**kwargs))])
-            d2u = sum([np.array([complex((self.Y_numer_poly_order-n-1)*(self.Y_numer_poly_order-n)*a*w**(self.Y_numer_poly_order-n-2)) for _w in w])/norm
-                        for n, a in enumerate(self.Y_numer_poly_coeffs(**kwargs))])
-            d2v = sum([np.array([complex((self.Y_denom_poly_order-n-1)*(self.Y_denom_poly_order-n)*a*w**(self.Y_denom_poly_order-n-2)) for _w in w])/norm
-                        for n, a in enumerate(self.Y_denom_poly_coeffs(**kwargs))])
-            return (v**2*d2u-v*(2*du*dv+u*d2v)+2*u*dv**2)/v**3
-
-
-
     def Y_numer_poly_coeffs(self, **kwargs):
         return [complex(coeff(**kwargs)) for coeff in self.Y_numer_poly_coeffs_analytical]
 
     def Y_denom_poly_coeffs(self, **kwargs):
         return [complex(coeff(**kwargs)) for coeff in self.Y_denom_poly_coeffs_analytical]
+
+    def char_poly_coeffs(self, **kwargs):
+        return [complex(coeff(**kwargs)) for coeff in self.char_poly_coeffs_analytical]
 
     def w_k_A_chi(self, pretty_print=False, **kwargs):
 
@@ -369,65 +322,8 @@ class _Qcircuit(object):
 
     def set_w_cpx(self, **kwargs):
         self.check_kwargs(**kwargs)
-        initial_guess = np.roots(self.Y_numer_poly_coeffs(**kwargs))
+        self.w_cpx = np.roots(self.char_poly_coeffs(**kwargs))
         
-        # take only roots with:
-        #  a positive real part (i.e. a positive frequqncy)
-        #  significant Q factors ( > self.Q_min)
-        #  roots of the numerator which are actually zeros of the whole admittance 
-        #       (this is not the case if numerator and denominator share a root)
-        #       Sympy evaluates expressions to 15 decimal digit accuracy, 
-        #       therefore we test ==0 using <1e-14
-
-        # Keep solutions with negative imaginary parts
-        # for example if there are no resistors in the circuit, numerical
-        # errors can result in a small negative imaginary part for a valid solution
-        relevant_guesses = np.argwhere(
-            (np.real(initial_guess) > 0.) & 
-            (np.real(initial_guess) > self.Q_min*np.imag(initial_guess)))
-        initial_guess = initial_guess[relevant_guesses][:, 0]
-
-        # We check which of these initial guesses are actually zeros of Y.
-        # Indeed, if a root of the numerator is also a root of the denominator 
-        # with equal or higher multiplicity, then that solution should be discarded.
-        # We run Halley’s method (an extension of Newton's root-finding method)
-        # which makes use of our knowledge of the first and second derivative of Y
-        # to find a zero of Y based on our initial guesses.
-        # If convergence fails, we discard the guess, if two guesses 
-        # converge to the same number (within self.delta_f_min of each other)
-        # they are merged into a single solution.
-
-        tol = self.delta_f_min*2.*pi
-        # ws_cpx = np.array([])
-        # for w0 in initial_guess:
-        #     try:
-        #         sol = optimize.newton(lambda x: self.Y_lambdified(x,**kwargs),
-        #                         x0=w0+tol*1j,
-        #                         tol = tol,
-        #                         fprime  = lambda x: self.dY(x,**kwargs), 
-        #                         fprime2 = lambda x: self.d2Y(x,**kwargs))
-        #     except RuntimeError as e:
-        #         # Did not converge, guess discarded
-        #         pass
-        #     else:
-        #         # Solution found, solution kept
-        #         if len(ws_cpx)==0:
-        #             ws_cpx = np.append(ws_cpx,[sol])
-        #         else:
-        #             if np.amin(np.absolute(ws_cpx-sol))>tol:
-        #                 ws_cpx = np.append(ws_cpx,[sol])
-
-        ws_cpx = optimize.newton(lambda x: self.Y_lambdified(x,**kwargs),
-                                x0=initial_guess+tol*1j,
-                                tol = tol,
-                                fprime  = lambda x: self.dY(x,**kwargs), 
-                                fprime2 = lambda x: self.d2Y(x,**kwargs))
-
-        # In case there are no resistors in the circuit, 
-        # set the losses to 0
-        if len(self.resistors) == 0:
-            ws_cpx = np.real(ws_cpx)
-
         # Sort solutions with increasing frequency
         order = np.argsort(np.real(ws_cpx))
         self.w_cpx = ws_cpx[order]
@@ -774,6 +670,12 @@ class Network(object):
 
     def __init__(self, netlist):
 
+        self.netlist = netlist
+        self.parse_netlist()
+        self.compute_char_poly_coeffs()
+
+    def parse_netlist(self):
+
         def merge_chains(chains, i, j):
             '''Merges two chains (two arrays)'''
             to_add = chains[j]
@@ -789,7 +691,7 @@ class Network(object):
         # We start by grouping all nodes which are connected by wires 
         # into chains of nodes indexed by a integer which is to become 
         # the new node names  for future calculations
-        for el in netlist:
+        for el in self.netlist:
 
             # Go through all the wires (note: grounds are instances of wires)
             if isinstance(el,W):
@@ -877,7 +779,7 @@ class Network(object):
         # for all non-wire elements
         # and make a list of all nodes
         self.nodes = []
-        for el in netlist:
+        for el in self.netlist:
             el.node_minus_plot = el.node_minus
             el.node_plus_plot = el.node_plus
             if not isinstance(el,W):
@@ -896,9 +798,53 @@ class Network(object):
         self.net_dict = {}
         for n in self.nodes:
             self.net_dict[n] = {}
-        for el in netlist:
+        for el in self.netlist:
             if not isinstance(el,W):
                 self.connect(el, el.node_minus, el.node_plus)
+
+    def compute_char_poly_coeffs(self)
+    
+        ntr = deepcopy(self) # ntr stands for Network To Reduce
+
+        # remove resistors: series resistors become shorts, parallel resistors become opens
+        # TODO: have a verification that this is a good approximation each time ws are computed
+        ntr.remove_resistors()
+
+        # turn all junctions into inductors
+        ntr.turn_junctions_into_inductors()
+
+        # remove nodes which only have inductive or only capacitive
+        # connections to other nodes
+        ntr.reduce_L_and_C_stars()
+
+        # calculate the L and C matrices
+        self.compute_LC_matrices()
+
+        # TODO
+        w2 = sp.Symbol('w2')
+        char_poly = (Lm-w2*C).det()
+
+        char_poly = sp.collect(sp.expand(char_poly), w2)
+        self.char_poly_order = sp.polys.polytools.degree(
+            char_poly, gen=w2)  # Order of the polynomial
+        self.char_poly_coeffs_analytical = [char_poly.coeff(w2, n) for n in range(
+            self.char_poly_order+1)[::-1]]  # Get polynomial coefficients
+
+    def remove_resistors(self):
+        # TODO
+        pass
+
+    def turn_junctions_into_inductors(self):
+        # TODO
+        pass
+
+    def reduce_L_and_C_stars(self):
+        # TODO
+        pass
+
+    def compute_LC_matrices(self):
+        # TODO
+        pass
 
     def connect(self, element, node_minus, node_plus):
         '''
