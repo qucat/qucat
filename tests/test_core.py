@@ -6,7 +6,53 @@ from scipy.constants import e, pi, h, hbar
 
 class TestCaseAppended(unittest.TestCase):
     def assertRelativelyClose(self,a,b):
-        self.assertEquals(float('%.13e'%(a)),float('%.13e'%(b)))
+        a = float('%.13e'%(np.real(a))) + 1j*float('%.13e'%(np.imag(a)))
+        b = float('%.13e'%(np.real(b))) + 1j*float('%.13e'%(np.imag(b)))
+        self.assertEquals(a,b)
+
+class SymbolicOperations(TestCaseAppended):
+
+    def test_calculating_Y(self):
+        C = 1.1e-14
+        L = 1.3e-8
+        Lj = 1.33e-9
+        w = 33e9
+        circuit = core.Qcircuit_NET([
+            core.C(0,1,C),
+            core.L(1,2,L),
+            core.J(0,2,Lj)
+        ])
+        self.assertRelativelyClose(
+            1j*(-1/Lj/w + 1/(-L*w + 1/(C*w))),
+            circuit.Y_lambdified(w))
+
+    def test_calculating_dY(self):
+        C = 1.1e-14
+        L = 1.3e-8
+        Lj = 1.33e-9
+        w = 33e9
+        circuit = core.Qcircuit_NET([
+            core.C(0,1,C),
+            core.L(1,2,L),
+            core.J(0,2,Lj)
+        ])
+        self.assertRelativelyClose(
+            1j*(1/(Lj*w**2) - (-L - 1/(C*w**2))/(1/(C*w) - L*w)**2),
+            circuit.dY(w))
+
+    def test_calculating_d2Y(self):
+        C = 1.1e-14
+        L = 1.3e-8
+        Lj = 1.33e-9
+        w = 33e9
+        circuit = core.Qcircuit_NET([
+            core.C(0,1,C),
+            core.L(1,2,L),
+            core.J(0,2,Lj)
+        ])
+        self.assertRelativelyClose(
+            1j*(-2/(Lj*w**3) + (2*(-L - 1/(C*w**2))**2)/(1/(C*w) - L*w)**3 - 2/(C*w**3*(1/(C*w) - L*w)**2)),
+            circuit.d2Y(w))
 
 
 
@@ -34,6 +80,34 @@ class StandardQuantumCircuits(TestCaseAppended):
         Lj = 10e-9
         w,k,A,chi = self.transmon_parameters(C,Lj)
         self.assertRelativelyClose(e**2/2./C/h,A[0])
+
+    '''
+    Shunted Josephson ring
+    '''
+    
+    def shunted_josephson_ring_parameters(self,C,L):
+        circuit = core.Qcircuit_NET([
+            core.C(0,2,C),
+            core.C(1,3,C),
+            core.J(0,1,L),
+            core.J(1,2,L),
+            core.J(2,3,L),
+            core.J(3,0,L)
+        ])
+        return circuit.w_k_A_chi()
+
+    def test_shunted_josephson_ring_number_of_modes_Hz(self):
+        C = 2.
+        L = 3. 
+        w,k,A,chi = self.shunted_josephson_ring_parameters(C,L)
+        self.assertEqual(len(w),1,msg = f"f_res = {w}")
+
+    def test_shunted_josephson_ring_number_of_modes_GHz(self):
+        C = 1e-13
+        L = 1e-8
+        w,k,A,chi = self.shunted_josephson_ring_parameters(C,L)
+        self.assertEqual(len(w),1,msg = f"f_res = {w}")
+
 
 class TestTesting(TestCaseAppended):
     def test_test(self):

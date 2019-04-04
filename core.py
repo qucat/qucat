@@ -136,7 +136,8 @@ class _Qcircuit(object):
         self.delta_f_min = 1
         self.Y = self.network.admittance(self.ref_elt.node_minus, self.ref_elt.node_plus)
         self.Y_lambdified = lambdify(['w']+self.no_value_components, self.Y, 'numpy')
-        Y_together = sp.together(self.Y)
+        Y_together = sp.together(self.Y)    # Puts everything on a single fraction with the numerator and denomenator as polynomials
+                                            # So it combines but also denests
         self.Y_together_lambdified = lambdify(['w']+self.no_value_components, Y_together, 'numpy')
         Y_numer = sp.numer(Y_together)       # Extract the numerator of Y(w)
         self.Y_numer_lambdified = lambdify(['w']+self.no_value_components, Y_numer, 'numpy')
@@ -169,7 +170,7 @@ class _Qcircuit(object):
             self.flux_transformation_dict[node] = {}
 
     def dY(self, w, **kwargs):
-
+        
         # to divide to numerator and denomenator 
         # to avoid having too large numbers
         # and OverflowErrors
@@ -221,20 +222,41 @@ class _Qcircuit(object):
         # norm = self.Y_denom_poly_coeffs(**kwargs)[-n]*w**n
         norm = 1.
 
-        # w should be a single complex number
-        u = sum([complex(a*w**(self.Y_numer_poly_order-n))/norm
-                    for n, a in enumerate(self.Y_numer_poly_coeffs(**kwargs))])
-        v = sum([complex(a*w**(self.Y_denom_poly_order-n))/norm
-                    for n, a in enumerate(self.Y_denom_poly_coeffs(**kwargs))])
-        du = sum([complex((self.Y_numer_poly_order-n)*a*w**(self.Y_numer_poly_order-n-1))/norm
-                    for n, a in enumerate(self.Y_numer_poly_coeffs(**kwargs))])
-        dv = sum([complex((self.Y_denom_poly_order-n)*a*w**(self.Y_denom_poly_order-n-1))/norm
-                    for n, a in enumerate(self.Y_denom_poly_coeffs(**kwargs))])
-        d2u = sum([complex((self.Y_numer_poly_order-n-1)*(self.Y_numer_poly_order-n)*a*w**(self.Y_numer_poly_order-n-2))/norm
-                    for n, a in enumerate(self.Y_numer_poly_coeffs(**kwargs))])
-        d2v = sum([complex((self.Y_denom_poly_order-n-1)*(self.Y_denom_poly_order-n)*a*w**(self.Y_denom_poly_order-n-2))/norm
-                    for n, a in enumerate(self.Y_denom_poly_coeffs(**kwargs))])
-        return (v**2*d2u-v*(2*du*dv+u*d2v)+2*u*dv**2)/v**3
+        # test if w is an iterable
+        try:
+            iter(w)
+        except TypeError:
+            # iterable = False
+            u = sum([complex(a*w**(self.Y_numer_poly_order-n))/norm
+                        for n, a in enumerate(self.Y_numer_poly_coeffs(**kwargs))])
+            v = sum([complex(a*w**(self.Y_denom_poly_order-n))/norm
+                        for n, a in enumerate(self.Y_denom_poly_coeffs(**kwargs))])
+            du = sum([complex((self.Y_numer_poly_order-n)*a*w**(self.Y_numer_poly_order-n-1))/norm
+                        for n, a in enumerate(self.Y_numer_poly_coeffs(**kwargs))])
+            dv = sum([complex((self.Y_denom_poly_order-n)*a*w**(self.Y_denom_poly_order-n-1))/norm
+                        for n, a in enumerate(self.Y_denom_poly_coeffs(**kwargs))])
+            d2u = sum([complex((self.Y_numer_poly_order-n-1)*(self.Y_numer_poly_order-n)*a*w**(self.Y_numer_poly_order-n-2))/norm
+                        for n, a in enumerate(self.Y_numer_poly_coeffs(**kwargs))])
+            d2v = sum([complex((self.Y_denom_poly_order-n-1)*(self.Y_denom_poly_order-n)*a*w**(self.Y_denom_poly_order-n-2))/norm
+                        for n, a in enumerate(self.Y_denom_poly_coeffs(**kwargs))])
+            return (v**2*d2u-v*(2*du*dv+u*d2v)+2*u*dv**2)/v**3
+        else:
+            # iterable = True
+            u = sum([np.array([complex(a*_w**(self.Y_numer_poly_order-n)) for _w in w])/norm
+                        for n, a in enumerate(self.Y_numer_poly_coeffs(**kwargs))])
+            v = sum([np.array([complex(a*w**(self.Y_denom_poly_order-n)) for _w in w])/norm
+                        for n, a in enumerate(self.Y_denom_poly_coeffs(**kwargs))])
+            du = sum([np.array([complex((self.Y_numer_poly_order-n)*a*w**(self.Y_numer_poly_order-n-1)) for _w in w])/norm
+                        for n, a in enumerate(self.Y_numer_poly_coeffs(**kwargs))])
+            dv = sum([np.array([complex((self.Y_denom_poly_order-n)*a*w**(self.Y_denom_poly_order-n-1)) for _w in w])/norm
+                        for n, a in enumerate(self.Y_denom_poly_coeffs(**kwargs))])
+            d2u = sum([np.array([complex((self.Y_numer_poly_order-n-1)*(self.Y_numer_poly_order-n)*a*w**(self.Y_numer_poly_order-n-2)) for _w in w])/norm
+                        for n, a in enumerate(self.Y_numer_poly_coeffs(**kwargs))])
+            d2v = sum([np.array([complex((self.Y_denom_poly_order-n-1)*(self.Y_denom_poly_order-n)*a*w**(self.Y_denom_poly_order-n-2)) for _w in w])/norm
+                        for n, a in enumerate(self.Y_denom_poly_coeffs(**kwargs))])
+            return (v**2*d2u-v*(2*du*dv+u*d2v)+2*u*dv**2)/v**3
+
+
 
     def Y_numer_poly_coeffs(self, **kwargs):
         return [complex(coeff(**kwargs)) for coeff in self.Y_numer_poly_coeffs_analytical]
@@ -376,24 +398,30 @@ class _Qcircuit(object):
         # they are merged into a single solution.
 
         tol = self.delta_f_min*2.*pi
-        ws_cpx = np.array([])
-        for w0 in initial_guess:
-            try:
-                sol = optimize.newton(lambda x: self.Y_lambdified(x,**kwargs),
-                                x0=w0+tol*1j,
+        # ws_cpx = np.array([])
+        # for w0 in initial_guess:
+        #     try:
+        #         sol = optimize.newton(lambda x: self.Y_lambdified(x,**kwargs),
+        #                         x0=w0+tol*1j,
+        #                         tol = tol,
+        #                         fprime  = lambda x: self.dY(x,**kwargs), 
+        #                         fprime2 = lambda x: self.d2Y(x,**kwargs))
+        #     except RuntimeError as e:
+        #         # Did not converge, guess discarded
+        #         pass
+        #     else:
+        #         # Solution found, solution kept
+        #         if len(ws_cpx)==0:
+        #             ws_cpx = np.append(ws_cpx,[sol])
+        #         else:
+        #             if np.amin(np.absolute(ws_cpx-sol))>tol:
+        #                 ws_cpx = np.append(ws_cpx,[sol])
+
+        ws_cpx = optimize.newton(lambda x: self.Y_lambdified(x,**kwargs),
+                                x0=initial_guess+tol*1j,
                                 tol = tol,
                                 fprime  = lambda x: self.dY(x,**kwargs), 
                                 fprime2 = lambda x: self.d2Y(x,**kwargs))
-            except RuntimeError as e:
-                # Did not converge, guess discarded
-                pass
-            else:
-                # Solution found, solution kept
-                if len(ws_cpx)==0:
-                    ws_cpx = np.append(ws_cpx,[sol])
-                else:
-                    if np.amin(np.absolute(ws_cpx-sol))>tol:
-                        ws_cpx = np.append(ws_cpx,[sol])
 
         # In case there are no resistors in the circuit, 
         # set the losses to 0
