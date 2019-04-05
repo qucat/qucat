@@ -671,6 +671,7 @@ class Network(object):
     def __init__(self, netlist):
 
         self.netlist = netlist
+        self.is_lossy = False # will be true if the circuit contains a resistor
         self.parse_netlist()
         self.compute_char_poly_coeffs()
 
@@ -802,23 +803,16 @@ class Network(object):
             if not isinstance(el,W):
                 self.connect(el, el.node_minus, el.node_plus)
 
-    def compute_char_poly_coeffs(self)
+    def compute_char_poly_coeffs(self):
     
         ntr = deepcopy(self) # ntr stands for Network To Reduce
 
-        # remove resistors: series resistors become shorts, parallel resistors become opens
-        # TODO: have a verification that this is a good approximation each time ws are computed
-        ntr.remove_resistors()
-
-        # turn all junctions into inductors
-        ntr.turn_junctions_into_inductors()
-
-        # remove nodes which only have inductive or only capacitive
+        # remove nodes which only have on type of element
         # connections to other nodes
-        ntr.reduce_L_and_C_stars()
+        ntr.simplify()
 
-        # calculate the L and C matrices
-        self.compute_LC_matrices()
+        # compute conductance matrix
+        self.compute_conductance_matrix()
 
         # TODO
         w2 = sp.Symbol('w2')
@@ -830,19 +824,11 @@ class Network(object):
         self.char_poly_coeffs_analytical = [char_poly.coeff(w2, n) for n in range(
             self.char_poly_order+1)[::-1]]  # Get polynomial coefficients
 
-    def remove_resistors(self):
+    def simplify(self):
         # TODO
         pass
 
-    def turn_junctions_into_inductors(self):
-        # TODO
-        pass
-
-    def reduce_L_and_C_stars(self):
-        # TODO
-        pass
-
-    def compute_LC_matrices(self):
+    def compute_conductance_matrix(self):
         # TODO
         pass
 
