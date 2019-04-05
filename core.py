@@ -322,8 +322,14 @@ class _Qcircuit(object):
 
     def set_w_cpx(self, **kwargs):
         self.check_kwargs(**kwargs)
-        self.w_cpx = np.roots(self.char_poly_coeffs(**kwargs))
-        
+
+        if len(resistors) == 0:
+            # The variable of the characteristic polynomial is w^2
+            self.w_cpx = np.sqrt(np.roots(self.char_poly_coeffs(**kwargs)))
+        else:
+            self.w_cpx = np.roots(self.char_poly_coeffs(**kwargs))
+            np.where(np.real(self.w_cpx) > 0.)
+                    
         # Sort solutions with increasing frequency
         order = np.argsort(np.real(ws_cpx))
         self.w_cpx = ws_cpx[order]
@@ -822,17 +828,30 @@ class Network(object):
         ntr.simplify()
 
         # compute conductance matrix
-        self.compute_LCR_matrices()
+        ntr.compute_LCR_matrices()
 
-        # TODO
-        w2 = sp.Symbol('w2')
-        char_poly = (self.Lm_matrix-w2*self.C_matrix).det()
-
-        char_poly = sp.collect(sp.expand(char_poly), w2)
-        self.char_poly_order = sp.polys.polytools.degree(
-            char_poly, gen=w2)  # Order of the polynomial
-        self.char_poly_coeffs_analytical = [char_poly.coeff(w2, n) for n in range(
-            self.char_poly_order+1)[::-1]]  # Get polynomial coefficients
+        if self.is_lossy:
+            w = sp.Symbol('w')
+            char_poly = (-ntr.Lm_matrix+1j*w*ntr.Rm_matrix+w**2*ntr.C_matrix).det()
+            char_poly = sp.collect(sp.expand(char_poly), w)
+            self.char_poly_order = sp.polys.polytools.degree(
+                char_poly, gen=w)  # Order of the polynomial
+            self.char_poly_coeffs_analytical = [char_poly.coeff(w, n) for n in range(
+                self.char_poly_order+1)[::-1]]  # Get polynomial coefficients
+        else:
+            w2 = sp.Symbol('w2')
+            char_poly = (-ntr.Lm_matrix+w2*ntr.C_matrix).det()
+            char_poly = sp.collect(sp.expand(char_poly), w2)
+            self.char_poly_order = sp.polys.polytools.degree(
+                char_poly, gen=w2)  # Order of the polynomial
+            self.char_poly_coeffs_analytical = [char_poly.coeff(w2, n) for n in range(
+                self.char_poly_order+1)[::-1]]  # Get polynomial coefficients
+        
+        # Divide by w if possible
+        n=1
+        while self.char_poly_coeffs_analytical[-n]==0:
+            n+=1
+        self.char_poly_order = self.char_poly_order[:self.char_poly_order-n]
 
     def simplify(self):
         # TODO
@@ -842,12 +861,45 @@ class Network(object):
         N_nodes = len(self.net_dict)
         self.Lm_matrix = sp.zeros(N_nodes)
         self.C_matrix = sp.zeros(N_nodes)
-        if self.is_lossy:
-            self.Rm_matrix = sp.zeros(N_nodes)
+        self.Rm_matrix = sp.zeros(N_nodes)
 
-        # for i in N_nodes:
-        #     for 
+        for i in range(N_nodes):
+            
+            # initialize diagonal elements
+            Lm_total = 0
+            Rm_total = 0
+            C_total = 0
 
+            for j, el in self.net_dict[i].items():
+                if j>i:
+
+                    # off-diagonal elements
+                    if isinstance(el,L):
+                        # inductors and junctions
+                        v = 1/el.get_value()
+                        self.Lm_matrix[i,j] = -v
+                        self.Lm_matrix[j,i] = -v
+                        Lm_total += v
+                    if isinstance(el,R):
+                        v = 1/el.get_value()
+                        self.Rm_matrix[i,j] = -v
+                        self.Rm_matrix[j,i] = -v
+                        Rm_total += v
+                    if isinstance(el,C):
+                        v = el.get_value()
+                        self.C_matrix[i,j] = -v
+                        self.C_matrix[j,i] = -v
+                        C_total += v
+
+            # fill in diagonal elements
+            self.Lm_matrix[i,i] = Lm_total
+            self.Rm_matrix[i,i] = Rm_total
+            self.C_matrix[i,i] = C_total
+
+            # set a ground 
+            self.Lm_matrix = Lm_matrix[1:][1:]
+            self.Rm_matrix = Lm_matrix[1:][1:]
+            self.C_matrix = Lm_matrix[1:][1:]
 
     def connect(self, element, node_minus, node_plus):
         '''
@@ -1662,11 +1714,9 @@ class Admittance(Component):
         return self.Y
 
 if __name__ == '__main__':
-    pass
-    # c = Qcircuit_GUI('test.txt', edit=False, plot=False, print_network=True)
-    # wlist = np.linspace(-0.5,1.,10001)
-    # plt.plot(wlist,np.imag(c.Y_lambdified(wlist)),'o')
-    # plt.show()
-    # c.w_k_A_chi(pretty_print=True)
-    # c.show_normal_mode(1,L_J=10e-9,unit = 'current')
-    # c.hamiltonian(L_J=10e-9)
+    circuit = Qcircuit_NET([
+        C(0,1,100e-15),
+        J(0,1,10e-9)
+    ])
+    w,k,A,chi = circuit.w_k_A_chi()
+    print(1/(np.sqrt(C*Lj)*2.*pi)==w)
