@@ -40,20 +40,6 @@ class SymbolicOperations(TestCaseAppended):
             1j*(1/(Lj*w**2) - (-L - 1/(C*w**2))/(1/(C*w) - L*w)**2),
             circuit.dY(w))
 
-    def test_calculating_d2Y(self):
-        C = 1.1e-14
-        L = 1.3e-8
-        Lj = 1.33e-9
-        w = 33e9
-        circuit = core.Qcircuit_NET([
-            core.C(0,1,C),
-            core.L(1,2,L),
-            core.J(0,2,Lj)
-        ])
-        self.assertRelativelyClose(
-            1j*(-2/(Lj*w**3) + (2*(-L - 1/(C*w**2))**2)/(1/(C*w) - L*w)**3 - 2/(C*w**3*(1/(C*w) - L*w)**2)),
-            circuit.d2Y(w))
-
 
 
 class StandardQuantumCircuits(TestCaseAppended):

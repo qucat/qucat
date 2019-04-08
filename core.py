@@ -132,11 +132,16 @@ class _Qcircuit(object):
             raise ValueError(
                 "There should be at least one junction or inductor in the circuit")
 
+        if len(self.capacitors) == 0:
+            raise ValueError(
+                "There should be at least one capacitor in the circuit")
+
         self.flux_transformation_dict = {}
         for node in self.network.nodes:
             self.flux_transformation_dict[node] = {}
 
         self.compute_Y()
+        self.compute_char_poly_coeffs(is_lossy = (len(resistors)>0))
         self.char_poly_coeffs_analytical = [lambdify(
             self.no_value_components, c, 'numpy') for c in self.network.char_poly_coeffs_analytical]
 
@@ -148,8 +153,10 @@ class _Qcircuit(object):
 
         w = sp.Symbol('w')
         # Write numerator as polynomial in omega
+        Y_numer = sp.numer(Y_together)
         Y_numer_poly = sp.collect(sp.expand(Y_numer), w)
         # Write numerator as polynomial in omega
+        Y_denom = sp.denom(Y_together)
         Y_denom_poly = sp.collect(sp.expand(Y_denom), w)
         self.Y_numer_poly_order = sp.polys.polytools.degree(
             Y_numer_poly, gen=w)  # Order of the polynomial
@@ -323,16 +330,16 @@ class _Qcircuit(object):
     def set_w_cpx(self, **kwargs):
         self.check_kwargs(**kwargs)
 
-        if len(resistors) == 0:
+        if len(self.resistors) == 0:
             # The variable of the characteristic polynomial is w^2
             self.w_cpx = np.sqrt(np.roots(self.char_poly_coeffs(**kwargs)))
         else:
             self.w_cpx = np.roots(self.char_poly_coeffs(**kwargs))
-            np.where(np.real(self.w_cpx) > 0.)
+            self.w_cpx = self.w_cpx[np.argwhere(np.real(self.w_cpx) > 0.)]
                     
         # Sort solutions with increasing frequency
-        order = np.argsort(np.real(ws_cpx))
-        self.w_cpx = ws_cpx[order]
+        order = np.argsort(np.real(self.w_cpx))
+        self.w_cpx = self.w_cpx[order]
 
     def eigenfrequencies(self, **kwargs):
         self.set_w_cpx(**kwargs)
@@ -674,20 +681,7 @@ class Network(object):
     def __init__(self, netlist):
 
         self.netlist = netlist
-        self.determine_if_lossy()
         self.parse_netlist()
-        self.compute_char_poly_coeffs()
-
-    def determine_if_lossy(self):
-        '''
-        Determines if the circuit is lossy by
-        checking if one of it's components is a resistor
-        '''
-
-        self.is_lossy = False
-        for el in self.netlist:
-            if isinstance(el,R):
-                self.is_lossy = True
 
     def parse_netlist(self):
 
@@ -819,7 +813,7 @@ class Network(object):
             if not isinstance(el,W):
                 self.connect(el, el.node_minus, el.node_plus)
 
-    def compute_char_poly_coeffs(self):
+    def compute_char_poly_coeffs(self, is_lossy = True):
     
         ntr = deepcopy(self) # ntr stands for Network To Reduce
 
@@ -828,78 +822,60 @@ class Network(object):
         ntr.simplify()
 
         # compute conductance matrix
-        ntr.compute_LCR_matrices()
+        ntr.compute_RLC_matrices()
 
         if self.is_lossy:
             w = sp.Symbol('w')
-            char_poly = (-ntr.Lm_matrix+1j*w*ntr.Rm_matrix+w**2*ntr.C_matrix).det()
+            char_poly = (-ntr.RLC_matrices['L']+1j*w*ntr.RLC_matrices['R']+w**2*ntr.RLC_matrices['C']).det()
             char_poly = sp.collect(sp.expand(char_poly), w)
             self.char_poly_order = sp.polys.polytools.degree(
                 char_poly, gen=w)  # Order of the polynomial
-            self.char_poly_coeffs_analytical = [char_poly.coeff(w, n) for n in range(
-                self.char_poly_order+1)[::-1]]  # Get polynomial coefficients
+            # Get polynomial coefficients, index 0 = highest order term
+            self.char_poly_coeffs_analytical =\
+                [char_poly.coeff(w, n) for n in range(self.char_poly_order+1)[::-1]] 
         else:
             w2 = sp.Symbol('w2')
-            char_poly = (-ntr.Lm_matrix+w2*ntr.C_matrix).det()
+            char_poly = (-ntr.RLC_matrices['L']+w2*ntr.RLC_matrices['C']).det()
             char_poly = sp.collect(sp.expand(char_poly), w2)
-            self.char_poly_order = sp.polys.polytools.degree(
-                char_poly, gen=w2)  # Order of the polynomial
-            self.char_poly_coeffs_analytical = [char_poly.coeff(w2, n) for n in range(
-                self.char_poly_order+1)[::-1]]  # Get polynomial coefficients
+            self.char_poly_order = sp.polys.polytools.degree(char_poly, gen=w2)  # Order of the polynomial
+            # Get polynomial coefficients, index 0 = highest order term
+            self.char_poly_coeffs_analytical =\
+                [char_poly.coeff(w2, n) for n in range(self.char_poly_order+1)[::-1]]  
+                
         
         # Divide by w if possible
         n=1
         while self.char_poly_coeffs_analytical[-n]==0:
             n+=1
-        self.char_poly_order = self.char_poly_order[:self.char_poly_order-n]
+        self.char_poly_coeffs_analytical = self.char_poly_coeffs_analytical[:self.char_poly_order+2-n]
 
     def simplify(self):
         # TODO
         pass
 
-    def compute_LCR_matrices(self):
+    def compute_RLC_matrices(self):
         N_nodes = len(self.net_dict)
-        self.Lm_matrix = sp.zeros(N_nodes)
-        self.C_matrix = sp.zeros(N_nodes)
-        self.Rm_matrix = sp.zeros(N_nodes)
+        self.RLC_matrices = {
+            'R':sp.zeros(N_nodes),
+            'L':sp.zeros(N_nodes),
+            'C':sp.zeros(N_nodes)
+        }
 
         for i in range(N_nodes):
-            
-            # initialize diagonal elements
-            Lm_total = 0
-            Rm_total = 0
-            C_total = 0
-
             for j, el in self.net_dict[i].items():
                 if j>i:
+                    RLC_matrix_components = el.get_RLC_matrix_components()
+                    for k in self.RLC_matrices:
+                        self.RLC_matrices[k][i,j] = -RLC_matrix_components[k]
+                        self.RLC_matrices[k][j,i] = -RLC_matrix_components[k]
+                        self.RLC_matrices[k][i,i] += RLC_matrix_components[k]
+                        self.RLC_matrices[k][j,j] += RLC_matrix_components[k]
 
-                    # off-diagonal elements
-                    if isinstance(el,L):
-                        # inductors and junctions
-                        v = 1/el.get_value()
-                        self.Lm_matrix[i,j] = -v
-                        self.Lm_matrix[j,i] = -v
-                        Lm_total += v
-                    if isinstance(el,R):
-                        v = 1/el.get_value()
-                        self.Rm_matrix[i,j] = -v
-                        self.Rm_matrix[j,i] = -v
-                        Rm_total += v
-                    if isinstance(el,C):
-                        v = el.get_value()
-                        self.C_matrix[i,j] = -v
-                        self.C_matrix[j,i] = -v
-                        C_total += v
 
-            # fill in diagonal elements
-            self.Lm_matrix[i,i] = Lm_total
-            self.Rm_matrix[i,i] = Rm_total
-            self.C_matrix[i,i] = C_total
-
-            # set a ground 
-            self.Lm_matrix = Lm_matrix[1:][1:]
-            self.Rm_matrix = Lm_matrix[1:][1:]
-            self.C_matrix = Lm_matrix[1:][1:]
+        # set a ground 
+        for k in self.RLC_matrices:
+            self.RLC_matrices[k].row_del(0)
+            self.RLC_matrices[k].col_del(0)
 
     def connect(self, element, node_minus, node_plus):
         '''
@@ -1244,7 +1220,6 @@ class Circuit(object):
                 ha=ha, va=va)
 
 class Parallel(Circuit):
-    """docstring for Connection"""
 
     def __init__(self, left, right):
         super(Parallel, self).__init__(node_minus=None, node_plus=None)
@@ -1258,6 +1233,18 @@ class Parallel(Circuit):
             self.left.admittance(),
             self.right.admittance())
     
+    def get_RLC_matrix_components(self):
+        RLC_matrix_components = {
+            'R':0,
+            'L':0,
+            'C':0
+        }
+        for el in [self.left,self.right]:
+            values_to_add = el.get_RLC_matrix_components()
+            for k in RLC_matrix_components:
+                RLC_matrix_components[k] += values_to_add[k]
+        return RLC_matrix_components
+
 class Component(Circuit):
     """docstring for Component"""
 
@@ -1418,68 +1405,6 @@ class G(W):
         elif self.angle == SOUTH:
             return shift(y, self.x_plot_center), shift(x, self.y_plot_center), line_type
 
-class R(Component):
-    def __init__(self, node_minus, node_plus, arg1=None, arg2=None):
-        super(R, self).__init__(node_minus, node_plus, arg1, arg2)
-        self.unit = r'$\Omega$'
-
-    def admittance(self):
-        return 1/self.get_value()
-
-    def set_component_lists(self):
-        super(R, self).set_component_lists()
-        self.head.resistors.append(self)
-
-    def draw(self):
-
-        x = np.linspace(-0.25, 0.25 +
-                        float(self.head.pp['R']['N_ridges']), self.head.pp['R']['N_points'])
-        height = 1.
-        period = 1.
-        a = height*2.*(-1.+2.*np.mod(np.floor(2.*x/period), 2.))
-        b = -height*2.*np.mod(np.floor(2.*x/period), 2.)
-        y = (2.*x/period - np.floor(2.*x/period))*a+b+height
-
-        line_type = []
-        line_type.append('R')
-
-        # reset leftmost point to 0
-        x_min = x[0]
-        x -= x_min
-
-        # set width inductor width
-        x_max = x[-1]
-        x *= self.head.pp['R']['width']/x_max
-
-        # set leftmost point to the length of
-        # the side connection wires
-        x += (1.-self.head.pp['R']['width'])/2.
-
-        # add side wire connections
-        x_min = x[0]
-        x_max = x[-1]
-        x_list = [x]
-        x_list += [np.array([0., x_min])]
-        x_list += [np.array([x_max, 1.])]
-        line_type.append('W')
-        line_type.append('W')
-
-        # center in x
-        x_list = shift(x_list-1./2.)
-
-        # set height of inductor
-        y *= self.head.pp['R']['height']/2.
-
-        # add side wire connections
-        y_list = [y]
-        y_list += [np.array([0., 0.])]
-        y_list += [np.array([0., 0.])]
-
-        if self.angle%180. == 0.:
-            return shift(x_list, self.x_plot_center), shift(y_list, self.y_plot_center), line_type
-        if self.angle%180. == 90.:
-            return shift(y_list, self.x_plot_center), shift(x_list, self.y_plot_center), line_type
-
 class L(Component):
     def __init__(self, node_minus, node_plus, arg1=None, arg2=None):
         super(L, self).__init__(node_minus, node_plus, arg1, arg2)
@@ -1538,6 +1463,13 @@ class L(Component):
             return shift(x_list, self.x_plot_center), shift(y_list, self.y_plot_center), line_type
         if self.angle%180. == 90.:
             return shift(y_list, self.x_plot_center), shift(x_list, self.y_plot_center), line_type
+
+    def get_RLC_matrix_components(self):
+        return {
+            'R':0,
+            'L':1/self.get_value(),
+            'C':0
+        }
 
 class J(L):
     def __init__(self, node_minus, node_plus, arg1=None, arg2=None, use_E=False, use_I=False):
@@ -1611,7 +1543,12 @@ class R(Component):
     def set_component_lists(self):
         super(R, self).set_component_lists()
         self.head.resistors.append(self)
-
+    def get_RLC_matrix_components(self):
+        return {
+            'R':1/self.get_value(),
+            'L':0,
+            'C':0
+        }
     def draw(self):
 
         x = np.linspace(-0.25, 0.25 +
@@ -1704,6 +1641,13 @@ class C(Component):
         if self.angle%180. == 90.:
             return shift(y, self.x_plot_center), shift(x, self.y_plot_center), line_type
 
+    def get_RLC_matrix_components(self):
+        return {
+            'R':0,
+            'L':0,
+            'C':self.get_value()
+        }
+
 class Admittance(Component):
     def __init__(self, node_minus, node_plus, Y):
         self.node_minus = node_minus
@@ -1714,9 +1658,12 @@ class Admittance(Component):
         return self.Y
 
 if __name__ == '__main__':
-    circuit = Qcircuit_NET([
-        C(0,1,100e-15),
-        J(0,1,10e-9)
-    ])
-    w,k,A,chi = circuit.w_k_A_chi()
-    print(1/(np.sqrt(C*Lj)*2.*pi)==w)
+    net = Network([])
+    # circuit = Qcircuit_NET([
+    #     C(0,1,100e-15),
+    #     J(0,1,10e-9),
+    #     R(0,1,1e6)
+    # ])
+    # w,k,A,chi = circuit.w_k_A_chi()
+    # print (w)
+    # print(1/(np.sqrt(100e-15*10e-9)*2.*pi))
