@@ -141,9 +141,10 @@ class _Qcircuit(object):
             self.flux_transformation_dict[node] = {}
 
         self.compute_Y()
-        self.compute_char_poly_coeffs(is_lossy = (len(resistors)>0))
+        self.char_poly_coeffs_analytical = \
+            self.network.compute_char_poly_coeffs(is_lossy = (len(self.resistors)>0))
         self.char_poly_coeffs_analytical = [lambdify(
-            self.no_value_components, c, 'numpy') for c in self.network.char_poly_coeffs_analytical]
+            self.no_value_components, c, 'numpy') for c in self.char_poly_coeffs_analytical]
 
     def compute_Y(self):
         self.Y = self.network.admittance(self.ref_elt.node_minus, self.ref_elt.node_plus)
@@ -332,7 +333,7 @@ class _Qcircuit(object):
 
         if len(self.resistors) == 0:
             # The variable of the characteristic polynomial is w^2
-            self.w_cpx = np.sqrt(np.roots(self.char_poly_coeffs(**kwargs)))
+            self.w_cpx = np.sqrt(np.real(np.roots(self.char_poly_coeffs(**kwargs))))
         else:
             self.w_cpx = np.roots(self.char_poly_coeffs(**kwargs))
             self.w_cpx = self.w_cpx[np.argwhere(np.real(self.w_cpx) > 0.)]
@@ -814,7 +815,8 @@ class Network(object):
                 self.connect(el, el.node_minus, el.node_plus)
 
     def compute_char_poly_coeffs(self, is_lossy = True):
-    
+
+        self.is_lossy = is_lossy
         ntr = deepcopy(self) # ntr stands for Network To Reduce
 
         # remove nodes which only have on type of element
@@ -848,6 +850,7 @@ class Network(object):
         while self.char_poly_coeffs_analytical[-n]==0:
             n+=1
         self.char_poly_coeffs_analytical = self.char_poly_coeffs_analytical[:self.char_poly_order+2-n]
+        return self.char_poly_coeffs_analytical
 
     def simplify(self):
         # TODO
@@ -1658,12 +1661,13 @@ class Admittance(Component):
         return self.Y
 
 if __name__ == '__main__':
-    net = Network([])
-    # circuit = Qcircuit_NET([
-    #     C(0,1,100e-15),
-    #     J(0,1,10e-9),
-    #     R(0,1,1e6)
-    # ])
-    # w,k,A,chi = circuit.w_k_A_chi()
-    # print (w)
-    # print(1/(np.sqrt(100e-15*10e-9)*2.*pi))
+    circuit = Qcircuit_NET([
+            C(0,2,1.04e-13),
+            C(1,3,1e-13),
+            J(0,1,10.1e-9),
+            J(1,2,10e-9),
+            J(2,3,10.3e-9),
+            J(3,0,10e-9)
+        ])
+    circuit.set_w_cpx()
+    w,k,A,chi = circuit.w_k_A_chi(pretty_print=True)
