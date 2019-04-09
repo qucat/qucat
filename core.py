@@ -176,6 +176,9 @@ class _Qcircuit(object):
 
     def dY(self, w, **kwargs):
         
+        # Add small perturbation to avoid infinities
+        w *= (1.+1e-20)
+
         # test if w is an iterable
         try:
             iter(w)
