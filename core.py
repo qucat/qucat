@@ -1288,8 +1288,7 @@ class Component(Circuit):
     def set_component_lists(self):
         if self.value is None and self.label not in ['', ' ', 'None', None]:
             if self.label in self.head.no_value_components:
-                raise ValueError(
-                    "Two components may not have the same name %s" % self.label)
+                pass
             else:
                 self.head.no_value_components.append(self.label)
 
@@ -1662,12 +1661,12 @@ class Admittance(Component):
 
 if __name__ == '__main__':
     circuit = Qcircuit_NET([
-            C(0,2,1.04e-13),
-            C(1,3,1e-13),
-            J(0,1,10.1e-9),
-            J(1,2,10e-9),
-            J(2,3,10.3e-9),
-            J(3,0,10e-9)
+            C(0,2,'C'),
+            C(1,3,'C'),
+            J(0,1,'L'),
+            J(1,2,'L'),
+            J(2,3,'L'),
+            J(3,0,'L')
         ])
-    circuit.set_w_cpx()
-    w,k,A,chi = circuit.w_k_A_chi(pretty_print=True)
+    print(circuit.Y)
+    print(sp.together(circuit.Y))
