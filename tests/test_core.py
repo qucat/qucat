@@ -82,17 +82,22 @@ class StandardQuantumCircuits(TestCaseAppended):
         ])
         return circuit.w_k_A_chi()
 
+    def test_shunted_josephson_ring_number_of_modes_nHz(self):
+        C = 2.e9
+        L = 3.e11
+        w,k,A,chi = self.shunted_josephson_ring_parameters(C,L)
+        self.assertEqual(len(w),2,msg = f"f_res = {w}")
     def test_shunted_josephson_ring_number_of_modes_Hz(self):
         C = 2.
         L = 3. 
         w,k,A,chi = self.shunted_josephson_ring_parameters(C,L)
-        self.assertEqual(len(w),1,msg = f"f_res = {w}")
+        self.assertEqual(len(w),2,msg = f"f_res = {w}")
 
     def test_shunted_josephson_ring_number_of_modes_GHz(self):
         C = 1e-13
         L = 1e-8
         w,k,A,chi = self.shunted_josephson_ring_parameters(C,L)
-        self.assertEqual(len(w),1,msg = f"f_res = {w}")
+        self.assertEqual(len(w),2,msg = f"f_res = {w}")
 
 
 class TestTesting(TestCaseAppended):
