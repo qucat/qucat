@@ -176,45 +176,28 @@ class _Qcircuit(object):
 
     def dY(self, w, **kwargs):
         
-        # to divide to numerator and denomenator 
-        # to avoid having too large numbers
-        # and OverflowErrors
-        # n=1
-        # while self.Y_denom_poly_coeffs(**kwargs)[-n]==0:
-        #     n+=1
-        # norm = self.Y_denom_poly_coeffs(**kwargs)[-n]*w**n
-        norm = 1.
-
         # test if w is an iterable
         try:
             iter(w)
         except TypeError:
             # iterable = False
 
-            # derivative of u/v is (du*v-dv*u)/v^2
-            u = sum([complex(a*w**(self.Y_numer_poly_order-n))/norm
-                     for n, a in enumerate(self.Y_numer_poly_coeffs(**kwargs))])
-            v = sum([complex(a*w**(self.Y_denom_poly_order-n))/norm
+            # derivative of u/v is (du*v-dv*u)/v^2 = du/v if u=0
+            v = sum([complex(a*w**(self.Y_denom_poly_order-n))
                      for n, a in enumerate(self.Y_denom_poly_coeffs(**kwargs))])
-            du = sum([complex((self.Y_numer_poly_order-n)*a*w**(self.Y_numer_poly_order-n-1))/norm
+            du = sum([complex((self.Y_numer_poly_order-n)*a*w**(self.Y_numer_poly_order-n-1))
                       for n, a in enumerate(self.Y_numer_poly_coeffs(**kwargs))])
-            dv = sum([complex((self.Y_denom_poly_order-n)*a*w**(self.Y_denom_poly_order-n-1))/norm
-                      for n, a in enumerate(self.Y_denom_poly_coeffs(**kwargs))])
 
         else:
             # iterable = True
 
-            # derivative of u/v is (du*v-dv*u)/v^2
-            u = sum([np.array([complex(a*_w**(self.Y_numer_poly_order-n)) for _w in w])/norm
-                     for n, a in enumerate(self.Y_numer_poly_coeffs(**kwargs))])
-            v = sum([np.array([complex(a*_w**(self.Y_denom_poly_order-n)) for _w in w])/norm
+            # derivative of u/v is (du*v-dv*u)/v^2 = du/v if u=0
+            v = sum([np.array([complex(a*_w**(self.Y_denom_poly_order-n)) for _w in w])
                      for n, a in enumerate(self.Y_denom_poly_coeffs(**kwargs))])
-            du = sum([np.array([complex((self.Y_numer_poly_order-n)*a*_w**(self.Y_numer_poly_order-n-1))/norm
+            du = sum([np.array([complex((self.Y_numer_poly_order-n)*a*_w**(self.Y_numer_poly_order-n-1))
                                 for _w in w]) for n, a in enumerate(self.Y_numer_poly_coeffs(**kwargs))])
-            dv = sum([np.array([complex((self.Y_denom_poly_order-n)*a*_w**(self.Y_denom_poly_order-n-1))/norm
-                                for _w in w]) for n, a in enumerate(self.Y_denom_poly_coeffs(**kwargs))])
 
-        return (du*v-dv*u)/v**2
+        return du/v
 
     def Y_numer_poly_coeffs(self, **kwargs):
         return [complex(coeff(**kwargs)) for coeff in self.Y_numer_poly_coeffs_analytical]
@@ -1288,6 +1271,8 @@ class Component(Circuit):
     def set_component_lists(self):
         if self.value is None and self.label not in ['', ' ', 'None', None]:
             if self.label in self.head.no_value_components:
+                # raise ValueError(
+                #     "Two components may not have the same name %s" % self.label)
                 pass
             else:
                 self.head.no_value_components.append(self.label)

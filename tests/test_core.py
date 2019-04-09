@@ -27,10 +27,11 @@ class SymbolicOperations(TestCaseAppended):
             circuit.Y_lambdified(w))
 
     def test_calculating_dY(self):
+        # only works on resonance
         C = 1.1e-14
         L = 1.3e-8
         Lj = 1.33e-9
-        w = 33e9
+        w = np.sqrt(1/C/(L+Lj))
         circuit = core.Qcircuit_NET([
             core.C(0,1,C),
             core.L(1,2,L),
