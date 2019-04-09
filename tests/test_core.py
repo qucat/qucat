@@ -5,9 +5,10 @@ import numpy as np
 from scipy.constants import e, pi, h, hbar
 
 class TestCaseAppended(unittest.TestCase):
-    def assertRelativelyClose(self,a,b):
-        a = float('%.13e'%(np.real(a))) + 1j*float('%.13e'%(np.imag(a)))
-        b = float('%.13e'%(np.real(b))) + 1j*float('%.13e'%(np.imag(b)))
+    def assertRelativelyClose(self,a,b,digits = 10):
+        float_format = '%%.%de'%digits
+        a = float(float_format%(np.real(a))) + 1j*float(float_format%(np.imag(a)))
+        b = float(float_format%(np.real(b))) + 1j*float(float_format%(np.imag(b)))
         self.assertEquals(a,b)
 
 class SymbolicOperations(TestCaseAppended):
@@ -40,8 +41,6 @@ class SymbolicOperations(TestCaseAppended):
         self.assertRelativelyClose(
             1j*(1/(Lj*w**2) - (-L - 1/(C*w**2))/(1/(C*w) - L*w)**2),
             circuit.dY(w))
-
-
 
 class StandardQuantumCircuits(TestCaseAppended):
 
@@ -99,6 +98,24 @@ class StandardQuantumCircuits(TestCaseAppended):
         L = 1e-8
         w,k,A,chi = self.shunted_josephson_ring_parameters(C,L)
         self.assertEqual(len(w),2,msg = f"f_res = {w}")
+
+    def test_shunted_josephson_ring_frequency_0(self):
+        C = 1e-13
+        L = 1e-8
+        w,k,A,chi = self.shunted_josephson_ring_parameters(C,L)
+        self.assertRelativelyClose(w[0],1/np.sqrt(L*C)/2./np.pi,digits = 6)
+
+    def test_shunted_josephson_ring_frequency_1(self):
+        C = 1e-13
+        L = 1e-8
+        w,k,A,chi = self.shunted_josephson_ring_parameters(C,L)
+        self.assertRelativelyClose(w[1],1/np.sqrt(L*C)/2./np.pi,digits = 6)
+
+    def test_shunted_josephson_ring_anharmonicity_0(self):
+        C = 1e-13
+        L = 1e-8
+        w,k,A,chi = self.shunted_josephson_ring_parameters(C,L)
+        self.assertRelativelyClose(A[0],e**2/2./(4*C)/h,digits = 6)
 
 
 class TestTesting(TestCaseAppended):

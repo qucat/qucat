@@ -11,9 +11,12 @@ from Qcircuits import gui
 import os
 from Qcircuits.constants import *
 from Qcircuits.utility import pretty_value,\
-    check_there_are_no_iterables_in_kwarg, shift, to_string
+        check_there_are_no_iterables_in_kwarg,\
+        shift,\
+        to_string,\
+        safely_evaluate
 from scipy import optimize
-
+# np.seterr(divide='raise', invalid='raise')
 
 def string_to_component(s, *arg, **kwarg):
     if s == 'W':
@@ -141,9 +144,10 @@ class _Qcircuit(object):
             self.flux_transformation_dict[node] = {}
 
         self.compute_Y()
+        self.compute_dY_analytically()
         self.char_poly_coeffs_analytical = \
             self.network.compute_char_poly_coeffs(is_lossy = (len(self.resistors)>0))
-        self.char_poly_coeffs_analytical = [lambdify(
+        self.char_poly_coeffs = [lambdify(
             self.no_value_components, c, 'numpy') for c in self.char_poly_coeffs_analytical]
 
     def compute_Y(self):
@@ -166,51 +170,43 @@ class _Qcircuit(object):
 
         self.Y_numer_poly_coeffs_analytical = [Y_numer_poly.coeff(w, n) for n in range(
             self.Y_numer_poly_order+1)[::-1]]  # Get polynomial coefficients
-        self.Y_numer_poly_coeffs_analytical = [lambdify(
+        self.Y_numer_poly_coeffs = [lambdify(
             self.no_value_components, c, 'numpy') for c in self.Y_numer_poly_coeffs_analytical]
 
         self.Y_denom_poly_coeffs_analytical = [Y_denom_poly.coeff(w, n) for n in range(
             self.Y_denom_poly_order+1)[::-1]]  # Get polynomial coefficients
-        self.Y_denom_poly_coeffs_analytical = [lambdify(
+        self.Y_denom_poly_coeffs = [lambdify(
             self.no_value_components, c, 'numpy') for c in self.Y_denom_poly_coeffs_analytical]
 
-    def dY(self, w, **kwargs):
-        
-        # Add small perturbation to avoid infinities
-        w *= (1.+1e-20)
+    def compute_dY_analytically(self):
+        # derivative of u/v is (du*v-dv*u)/v^2 = du/v since u=0 everywhere we 
+        # want this evaluated
+        w = sp.Symbol('w')
+        v = sum([a*w**(self.Y_denom_poly_order-n)
+                     for n, a in enumerate(self.Y_denom_poly_coeffs_analytical)])
+        du = sum([(self.Y_numer_poly_order-n)*a*w**(self.Y_numer_poly_order-n-1)
+                      for n, a in enumerate(self.Y_numer_poly_coeffs_analytical)])
+        self.dY_analytical = du/v
 
+    def dY(self, w, **kwargs):
+
+        @safely_evaluate
+        def dY_single(w,**kwargs):
+            # derivative of u/v is (du*v-dv*u)/v^2 = du/v since u=0
+            v = np.polyval([complex(coeff(**kwargs)) for coeff in self.Y_denom_poly_coeffs],w)
+            du = np.polyval(np.polyder([complex(coeff(**kwargs)) for coeff in self.Y_numer_poly_coeffs]),w)
+            return du/v
+        
         # test if w is an iterable
         try:
             iter(w)
         except TypeError:
             # iterable = False
-
-            # derivative of u/v is (du*v-dv*u)/v^2 = du/v if u=0
-            v = sum([complex(a*w**(self.Y_denom_poly_order-n))
-                     for n, a in enumerate(self.Y_denom_poly_coeffs(**kwargs))])
-            du = sum([complex((self.Y_numer_poly_order-n)*a*w**(self.Y_numer_poly_order-n-1))
-                      for n, a in enumerate(self.Y_numer_poly_coeffs(**kwargs))])
-
+            return dY_single(w,**kwargs)
         else:
             # iterable = True
-
-            # derivative of u/v is (du*v-dv*u)/v^2 = du/v if u=0
-            v = sum([np.array([complex(a*_w**(self.Y_denom_poly_order-n)) for _w in w])
-                     for n, a in enumerate(self.Y_denom_poly_coeffs(**kwargs))])
-            du = sum([np.array([complex((self.Y_numer_poly_order-n)*a*_w**(self.Y_numer_poly_order-n-1))
-                                for _w in w]) for n, a in enumerate(self.Y_numer_poly_coeffs(**kwargs))])
-
-        return du/v
-
-    def Y_numer_poly_coeffs(self, **kwargs):
-        return [complex(coeff(**kwargs)) for coeff in self.Y_numer_poly_coeffs_analytical]
-
-    def Y_denom_poly_coeffs(self, **kwargs):
-        return [complex(coeff(**kwargs)) for coeff in self.Y_denom_poly_coeffs_analytical]
-
-    def char_poly_coeffs(self, **kwargs):
-        return [complex(coeff(**kwargs)) for coeff in self.char_poly_coeffs_analytical]
-
+            return np.array([dY_single(w_single,**kwargs) for w_single in w])
+  
     def w_k_A_chi(self, pretty_print=False, **kwargs):
 
         list_element = None
@@ -317,11 +313,12 @@ class _Qcircuit(object):
     def set_w_cpx(self, **kwargs):
         self.check_kwargs(**kwargs)
 
+        char_poly_coeffs = [complex(coeff(**kwargs)) for coeff in self.char_poly_coeffs]
         if len(self.resistors) == 0:
             # The variable of the characteristic polynomial is w^2
-            self.w_cpx = np.sqrt(np.real(np.roots(self.char_poly_coeffs(**kwargs))))
+            self.w_cpx = np.sqrt(np.real(np.roots(char_poly_coeffs)))
         else:
-            self.w_cpx = np.roots(self.char_poly_coeffs(**kwargs))
+            self.w_cpx = np.roots(char_poly_coeffs)
             self.w_cpx = self.w_cpx[np.argwhere(np.real(self.w_cpx) > 0.)]
                     
         # Sort solutions with increasing frequency
@@ -1241,7 +1238,7 @@ class Component(Circuit):
         super(Component, self).__init__(node_minus, node_plus)
         self.label = None
         self.value = None
-        self._flux_wr_ref = None
+        self._flux = None
 
         if arg1 is None and arg2 is None:
             raise ValueError("Specify either a value or a label")
@@ -1281,8 +1278,8 @@ class Component(Circuit):
                 self.head.no_value_components.append(self.label)
 
     @property
-    def flux_wr_ref(self):
-        if self._flux_wr_ref is None:
+    def flux(self):
+        if self._flux is None:
             try:
                 tr = self.head.flux_transformation_dict[self.node_minus,
                                                         self.node_plus]
@@ -1294,14 +1291,28 @@ class Component(Circuit):
                 self.head.flux_transformation_dict[self.node_plus,
                                                    self.node_minus] = -tr
 
-            self._flux_wr_ref = lambdify(
-                ['w']+self.head.no_value_components, tr, "numpy")
-        return self._flux_wr_ref
+            _flux_undecorated = lambdify(
+                ['w']+self.head.no_value_components,
+                tr*sp.sqrt(hbar/sp.Symbol('w')/self.head.dY_analytical), 
+                "numpy")
 
-    def flux(self, w, **kwargs):
-        ImdY = np.imag(self.head.dY(w, **kwargs))
-        flux_ref = sp.sqrt(hbar/w/ImdY)
-        return complex(self.flux_wr_ref(w, **kwargs)*flux_ref)
+            @safely_evaluate
+            def _flux_single(w,**kwargs):
+                return _flux_undecorated(w,**kwargs)
+            
+            def _flux(w,**kwargs):
+                # test if w is an iterable
+                try:
+                    iter(w)
+                except TypeError:
+                    # iterable = False
+                    return _flux_single(w,**kwargs)
+                else:
+                    # iterable = True
+                    return np.array([_flux_single(w_single,**kwargs) for w_single in w])
+
+            self._flux = _flux
+        return self._flux
 
     def voltage(self, w, **kwargs):
         return complex(self.flux(w, **kwargs)*1j*w)
@@ -1492,8 +1503,7 @@ class J(L):
         self.head.junctions.append(self)
 
     def anharmonicity(self, w, **kwargs):
-        ImdY = np.imag(self.head.dY(w, **kwargs))
-        return self.flux_wr_ref(w, **kwargs)**4*2.*e**2/self.get_value(**kwargs)/w**2/ImdY**2
+        return self.flux(w, **kwargs)**4/hbar**2*2.*e**2/self.get_value(**kwargs)
 
     def draw(self):
 
@@ -1656,5 +1666,9 @@ if __name__ == '__main__':
             J(2,3,'L'),
             J(3,0,'L')
         ])
-    print(circuit.Y)
-    print(sp.together(circuit.Y))
+    # circuit = Qcircuit_GUI(filename = 'test.txt',edit=False,plot=False)
+    # print(circuit.Y)
+    # print(sp.together(circuit.Y))
+    circuit.w_k_A_chi(C=1,L=1,pretty_print=True)
+    # circuit.show_normal_mode(0)
+    # circuit.show_normal_mode(1)
