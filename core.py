@@ -16,7 +16,7 @@ from Qcircuits.utility import pretty_value,\
         to_string,\
         safely_evaluate
 from scipy import optimize
-# np.seterr(divide='raise', invalid='raise')
+np.seterr(divide='raise', invalid='raise')
 
 def string_to_component(s, *arg, **kwarg):
     if s == 'W':
@@ -1664,7 +1664,14 @@ if __name__ == '__main__':
             J(0,1,'L'),
             J(1,2,'L'),
             J(2,3,'L'),
-            J(3,0,'L')
+            J(3,0,'L'),
+            C(0,6,'C'),
+            C(1,5,'C'),
+            J(6,4,'L'),
+            J(1,2,'L'),
+            J(4,7,'L'),
+            J(5,0,'L'),
+            J(7,2,'L')
         ])
     # circuit = Qcircuit_GUI(filename = 'test.txt',edit=False,plot=False)
     # print(circuit.Y)

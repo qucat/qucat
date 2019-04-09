@@ -115,7 +115,13 @@ class StandardQuantumCircuits(TestCaseAppended):
         C = 1e-13
         L = 1e-8
         w,k,A,chi = self.shunted_josephson_ring_parameters(C,L)
-        self.assertRelativelyClose(A[0],e**2/2./(4*C)/h,digits = 6)
+        self.assertRelativelyClose(A[0],e**2/2./(8*C)/h,digits = 6)
+
+    def test_shunted_josephson_ring_anharmonicity_1(self):
+        C = 1e-13
+        L = 1e-8
+        w,k,A,chi = self.shunted_josephson_ring_parameters(C,L)
+        self.assertRelativelyClose(A[1],e**2/2./(8*C)/h,digits = 6)
 
 
 class TestTesting(TestCaseAppended):
