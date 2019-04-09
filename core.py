@@ -16,7 +16,6 @@ from Qcircuits.utility import pretty_value,\
         to_string,\
         safely_evaluate
 from scipy import optimize
-np.seterr(divide='raise', invalid='raise')
 
 def string_to_component(s, *arg, **kwarg):
     if s == 'W':
@@ -1676,6 +1675,6 @@ if __name__ == '__main__':
     # circuit = Qcircuit_GUI(filename = 'test.txt',edit=False,plot=False)
     # print(circuit.Y)
     # print(sp.together(circuit.Y))
-    circuit.w_k_A_chi(C=1,L=1,pretty_print=True)
+    circuit.w_k_A_chi(C=1e-13,L=1e-8,pretty_print=True)
     # circuit.show_normal_mode(0)
     # circuit.show_normal_mode(1)
