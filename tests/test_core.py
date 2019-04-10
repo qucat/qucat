@@ -4,12 +4,26 @@ from math import isclose
 import numpy as np
 from scipy.constants import e, pi, h, hbar
 
+def cutoff_digits(f,digits):
+    float_format = '%%.%de'%digits
+    return float(float_format%(np.real(f))) + 1j*float(float_format%(np.imag(f)))
+
 class TestCaseAppended(unittest.TestCase):
+
     def assertRelativelyClose(self,a,b,digits = 10):
-        float_format = '%%.%de'%digits
-        a = float(float_format%(np.real(a))) + 1j*float(float_format%(np.imag(a)))
-        b = float(float_format%(np.real(b))) + 1j*float(float_format%(np.imag(b)))
+        a = cutoff_digits(a,digits)
+        b = cutoff_digits(b,digits)
         self.assertEquals(a,b)
+
+    def assertArrayRelativelyClose(self,a,b,digits = 10):
+        a = np.array(a)
+        b = np.array(b)
+        self.assertTrue(a.shape==b.shape,msg = f'Arrays do not have the same dimension {a.shape}!={b.shape}')
+        for index,_ in np.ndenumerate(a):
+            a_comp = cutoff_digits(a[index],digits)
+            b_comp = cutoff_digits(b[index],digits)
+            self.assertEquals(a_comp,b_comp,
+                    msg = f'Components with index {index} do not match {a_comp}!={b_comp}')
 
 class SymbolicOperations(TestCaseAppended):
 
@@ -60,6 +74,15 @@ class StandardQuantumCircuits(TestCaseAppended):
         Lj = 10e-9
         w,k,A,chi = self.transmon_parameters(C,Lj)
         self.assertRelativelyClose(1/(np.sqrt(C*Lj)*2.*pi),w)
+
+    def test_transmon_frequency_L_sweep(self):
+        circuit = core.Qcircuit_NET([
+            core.C(0,1,'C'),
+            core.J(0,1,'L')])
+        L_list = np.linspace(1e-8,2e-8,10)
+        C = 1e-13
+        w,k,A,chi = circuit.w_k_A_chi(C = C,L = L_list)
+        self.assertArrayRelativelyClose([1/(np.sqrt(C*L_list)*2.*pi)],w)
 
     def test_transmon_anharmonicity(self):
         C = 100e-15
@@ -277,5 +300,27 @@ class TestNetworkAnalysis(TestCaseAppended):
             transfer.evalf(subs = test_parameters),
             transfer_theory(**test_parameters))
 
-if __name__ == '__main__':
-    pass
+    def test_open_or_series_check(self):
+        with self.assertRaises(ValueError):
+            net = core.Network([
+                core.R(0,1,'Z'),
+                core.C(1,2,'Z'),
+                core.J(2,3,'Z'),
+                ])
+
+    def test_connectivity_check_single_element_not_connected(self):
+        with self.assertRaises(ValueError):
+            net = core.Network([
+                core.R(0,1,'Z'),
+                core.C(1,2,'Z'),
+                core.J(3,4,'Z'),
+                ])
+    def test_connectivity_check_subcircuit_not_connected(self):
+        with self.assertRaises(ValueError):
+            net = core.Network([
+                core.R(0,1,'Z'),
+                core.C(1,2,'Z'),
+                core.J(3,4,'Z'),
+                core.J(3,4,'Z'),
+                core.J(4,5,'Z'),
+                ])

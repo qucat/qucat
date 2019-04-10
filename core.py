@@ -17,7 +17,7 @@ from Qcircuits.utility import pretty_value,\
         safely_evaluate
 from scipy import optimize
 import time
-PROFILING = True
+PROFILING = False
 
 def timeit(method):
     def timed(*args, **kw):
@@ -683,7 +683,9 @@ class Network(object):
         self.parse_netlist()
         if not self.is_connected():
             raise ValueError("There are two sub-circuits which are not connected")
-        self.remove_opens()
+        if self.has_opens():
+            raise ValueError("Analyzing an open/series circuit is impossible |"+\
+             " in the language of graphs, there is a dangling vertex in the electrical network")
 
     @timeit
     def is_connected(self, 
@@ -709,9 +711,10 @@ class Network(object):
             return True
         return False    
 
-    def remove_opens(self):
-        #TODO
-        pass
+    def has_opens(self):
+        for node, connections in self.net_dict.items():
+            if len(connections) == 1 and len(self.net_dict)>2:
+                return True
 
     def parse_netlist(self):
 
@@ -1716,20 +1719,12 @@ def main():
             J(0,1,'L'),
             J(1,2,'L'),
             J(2,3,'L'),
-            J(3,0,'L'),
-            C(0,6,'C'),
-            C(1,5,'C'),
-            J(6,4,'L'),
-            J(1,2,'L'),
-            J(4,7,'L'),
-            J(5,0,'L'),
-            J(7,2,'L'),
-            R(7,2,1e6)
+            J(3,0,'L')
         ])
     # circuit = Qcircuit_GUI(filename = '.txt',edit=False,plot=False)
     # print(circuit.Y)
     # print(sp.together(circuit.Y))
-    circuit.w_k_A_chi(C=1e-13,L=1e-8,pretty_print=True)
+    circuit.w_k_A_chi(C=1e-13,pretty_print=True,L=1e-8)
     # circuit.show_normal_mode(0)
     # circuit.show_normal_mode(1)
 
