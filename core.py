@@ -25,7 +25,7 @@ def timeit(method):
         result = method(*args, **kw)
         te = time.time()
         if PROFILING:
-            print('%r  %2.2f ms' % \
+            print('calling %r took %2.2f ms' % \
                     (method.__name__, (te - ts) * 1000))
         return result
     return timed
@@ -162,6 +162,7 @@ class _Qcircuit(object):
         self.char_poly_coeffs = [lambdify(
             self.no_value_components, c, 'numpy') for c in self.char_poly_coeffs_analytical]
 
+    @timeit
     def compute_Y(self):
         self.Y = self.network.admittance(self.ref_elt.node_minus, self.ref_elt.node_plus)
         self.Y_lambdified = lambdify(['w']+self.no_value_components, self.Y, 'numpy')
@@ -190,6 +191,7 @@ class _Qcircuit(object):
         self.Y_denom_poly_coeffs = [lambdify(
             self.no_value_components, c, 'numpy') for c in self.Y_denom_poly_coeffs_analytical]
 
+    @timeit
     def compute_dY_analytically(self):
         # derivative of u/v is (du*v-dv*u)/v^2 = du/v since u=0 everywhere we 
         # want this evaluated
@@ -322,6 +324,7 @@ class _Qcircuit(object):
                 raise ValueError(
                     'The value of %s should be specified with the keyword argument %s=... ' % (label, label))
 
+    @timeit
     def set_w_cpx(self, **kwargs):
         self.check_kwargs(**kwargs)
 
@@ -678,7 +681,8 @@ class Network(object):
 
         self.netlist = netlist
         self.parse_netlist()
-        self.check_if_connected()
+        if not self.is_connected():
+            raise ValueError("There are two sub-circuits which are not connected")
         self.remove_opens()
 
     @timeit
@@ -841,6 +845,10 @@ class Network(object):
 
     @timeit
     def compute_char_poly_coeffs(self, is_lossy = True):
+        
+        @timeit
+        def determinant(matrix):
+            return matrix.berkowitz_det()
 
         self.is_lossy = is_lossy
         ntr = deepcopy(self) # ntr stands for Network To Reduce
@@ -854,7 +862,7 @@ class Network(object):
 
         if self.is_lossy:
             w = sp.Symbol('w')
-            char_poly = (-ntr.RLC_matrices['L']+1j*w*ntr.RLC_matrices['R']+w**2*ntr.RLC_matrices['C']).berkowitz_det()
+            char_poly = determinant((-ntr.RLC_matrices['L']+1j*w*ntr.RLC_matrices['R']+w**2*ntr.RLC_matrices['C']))
             char_poly = sp.collect(sp.expand(char_poly), w)
             self.char_poly_order = sp.polys.polytools.degree(
                 char_poly, gen=w)  # Order of the polynomial
@@ -863,7 +871,7 @@ class Network(object):
                 [char_poly.coeff(w, n) for n in range(self.char_poly_order+1)[::-1]] 
         else:
             w2 = sp.Symbol('w2')
-            char_poly = (-ntr.RLC_matrices['L']+w2*ntr.RLC_matrices['C']).berkowitz_det()
+            char_poly = determinant((-ntr.RLC_matrices['L']+w2*ntr.RLC_matrices['C']))
             char_poly = sp.collect(sp.expand(char_poly), w2)
             self.char_poly_order = sp.polys.polytools.degree(char_poly, gen=w2)  # Order of the polynomial
             # Get polynomial coefficients, index 0 = highest order term
@@ -1718,7 +1726,7 @@ def main():
             J(7,2,'L'),
             R(7,2,1e6)
         ])
-    # circuit = Qcircuit_GUI(filename = 'test.txt',edit=False,plot=False)
+    # circuit = Qcircuit_GUI(filename = '.txt',edit=False,plot=False)
     # print(circuit.Y)
     # print(sp.together(circuit.Y))
     circuit.w_k_A_chi(C=1e-13,L=1e-8,pretty_print=True)
