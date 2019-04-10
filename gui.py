@@ -41,7 +41,6 @@ def string_to_component(s, *arg, **kwarg):
 
 
 class AutoScrollbar(ttk.Scrollbar):
-    """ A scrollbar that hides itself if it's not needed. """
 
     def set(self, lo, hi):
         # uncomment for auto-hiding scroll bars
@@ -61,114 +60,348 @@ class AutoScrollbar(ttk.Scrollbar):
 
 
 class SnappingCanvas(tk.Canvas):
-    def __init__(self, master, grid_unit, netlist_file, **kw):
+    def __init__(self, master, grid_unit, netlist_filename, **kw):
         """ Initialize the ImageFrame """
+        
+        self.netlist_filename = netlist_filename
+        '''In the netlist file is stored at all times 
+        (except whilst drag/dropping elements)
+        all the information necessary to re-construct 
+        the circuit as the user sees it.'''
+
+        self.grid_unit = int(grid_unit)
+        '''Sets the size, in pixels of the 
+        grid initially displayed upon opening 
+        the editor. This variable'''
+
+        self.elements = []
+        '''List which stores all the circuit elements 
+        currently placed on the canvas'''
+
+        self.in_creation = None
+        '''in_creation is None if no element is being created.
+        It is equal to a circuit element if that 
+        particular element is under creation.
+        This allows us to handle zooming in/out 
+        during the creation of a component'''
+
+        self.copied_elements = []
+        '''When elements are copied (or cut), 
+        deepcopies of these elements are made and
+        they are stored without being displayed 
+        in this list'''
+
+        self.history = []
+        '''Everytime the user makes a change to the circuit, 
+        this list is appended with the self.elements variable
+        hence allowing us to undo an arbitrary number of user actions '''
+
+        self.history_location = -1
+        '''Informs us of what index of the self.history variable
+        the current circuit seen on the canvas corresponds'''
+
+        self.track_changes = False
+        '''We can cancel the appending of changes to the self.history
+        variable as well as the saving of changes to the netlist file
+        by setting this variable to True.
+        This is useful for example '''
+
+        self.initialize_user_knowledge_tracking_variables()
+        
+        self.build_gridframe()
+        self.build_menubar(master)
+        self.build_scrollbars()
+        self.build_canvas()
+        
+        self.configure_scrollbars()
+        self.set_canvas_center()
+        self.configure_canvas()
+        
+        self.set_keyboard_shortcuts_element_creation()
+        self.set_keyboard_shortcuts_other()
+
+        self.load_or_create_netlist_file()
+        self.center_window_on_circuit()
+
+        # start tracking changes and save once
+        # to initialize self.history
+        self.track_changes = True
+        self.save()
+
+        # Sets the "active window" in your OS, 
+        # the one towards which key strokes will be 
+        # directed to be this circuit editor
+        self.focus_set()
+        
+
+
+    def build_menubar(self,master):
+        '''
+        Builds the File, Edit, ... menu bar situated at the top of
+        the window.
+        '''
+
+        # initialize the menubar object
+        self.menubar = tk.Menu(self.frame)
+
+        ####################################
+        # Define the label formatting
+        ####################################
+
+        # File, Edit, ... are defined to have a width of 6 characters
+        menu_label_template = "{:<6}"
+
+        # The items appearing in the cascade menu that appears when 
+        # clicking on File for example will have 15 characters width on the 
+        # left where the name of the functionality is provided and
+        # 6 characters on the right where the keyboard shortcut is provided
+        label_template = "{:<15}{:>6}"
+
+        # The font for the cascading items is defined
+        # Note: for everything to be aligned the chosen font should 
+        # have a constant character width, the only one satisfying this 
+        # condition is Courier new.
+        #TODO use images as cascade menu items with an aligned and pretty font
+        menu_font = Font(family="Courier New", size=9, weight='normal')
+
+        ####################################
+        # FILE cascade menu build
+        ####################################
+
+        # add new item to the menubar
+        menu = tk.Menu(self.menubar, tearoff=0)
+        self.menubar.add_cascade(
+            label=menu_label_template.format("File"), 
+            menu=menu)
+
+        # add cascade menu items
+        menu.add_command(
+            label=label_template.format("Open", ""), 
+            command=self.open, 
+            font=menu_font)
+        menu.add_command(
+            label=label_template.format("Save", "Ctrl+S"), 
+            command=self.save, 
+            font=menu_font)
+        menu.add_command(
+            label=label_template.format("Exit", ""), 
+            command=master.destroy, 
+            font=menu_font)
+
+        ####################################
+        # EDIT cascade menu build
+        ####################################
+
+        # add new item to the menubar
+        menu = tk.Menu(self.menubar, tearoff=0)
+        self.menubar.add_cascade(
+            label=menu_label_template.format("Edit"), 
+            menu=menu)
+
+        # add cascade menu items
+        menu.add_command(
+            label=label_template.format("Undo", "Ctrl+Z"), 
+            command=self.ctrl_z, 
+            font=menu_font)
+        menu.add_command(
+            label=label_template.format("Redo", "Ctrl+Y"), 
+            command=self.ctrl_y, 
+            font=menu_font)
+        menu.add_separator()
+        menu.add_command(
+            label=label_template.format("Cut", "Ctrl+X"), 
+            command=self.cut_selection, 
+            font=menu_font)
+        menu.add_command(
+            label=label_template.format("Copy", "Ctrl+C"), 
+            command=self.copy_selection, 
+            font=menu_font)
+        menu.add_command(
+            label=label_template.format("Paste", "Ctrl+V"), 
+            command=(lambda :self.event_generate('<Control-v>')), 
+            font=menu_font)
+        menu.add_separator()
+        menu.add_command(
+            label=label_template.format("Select all", "Ctrl+A"), 
+            command=self.select_all, 
+            font=menu_font)
+        menu.add_separator()
+        menu.add_command(
+            label=label_template.format("Delete", "Del"), 
+            command=self.delete_selection, 
+            font=menu_font)
+        menu.add_command(
+            label=label_template.format("Delete all", ""), 
+            command=self.delete_all, 
+            font=menu_font)
+
+
+        ####################################
+        # INSERT cascade menu build
+        ####################################
+        
+        # add new item to the menubar
+        menu = tk.Menu(self.menubar, tearoff=0)
+        self.menubar.add_cascade(
+            label=menu_label_template.format("Insert"), 
+            menu=menu)
+
+        # add cascade menu items
+        menu.add_command(
+            label=label_template.format("Wire", "W"), 
+            command=(lambda: self.event_generate('w')), 
+            font=menu_font)
+        menu.add_command(
+            label=label_template.format("Junction", "J"), 
+            command=(lambda: self.event_generate('j')), 
+            font=menu_font)
+        menu.add_command(
+            label=label_template.format("Inductor", "L"), 
+            command=(lambda: self.event_generate('l')), 
+            font=menu_font)
+        menu.add_command(
+            label=label_template.format("Capacitor", "C"), 
+            command=(lambda: self.event_generate('c')), 
+            font=menu_font)
+        menu.add_command(
+            label=label_template.format("Resistor", "R"), 
+            command=(lambda: self.event_generate('r')), 
+            font=menu_font)
+        menu.add_command(
+            label=label_template.format("Ground", "G"), 
+            command=(lambda: self.event_generate('g')), 
+            font=menu_font)
+
+        
+        ####################################
+        # VIEW cascade menu build
+        ####################################
+        
+        # add new item to the menubar
+        menu = tk.Menu(self.menubar, tearoff=0)
+        self.menubar.add_cascade(
+            label=menu_label_template.format("View"), 
+            menu=menu)
+
+        # add cascade menu items
+        menu.add_command(
+            label=label_template.format("Zoom in", "Ctrl+scroll"), 
+            command=(lambda: self.zoom('in')), 
+            font=menu_font)
+        menu.add_command(
+            label=label_template.format("Zoom out", "Ctrl+scroll"), 
+            command=(lambda: self.zoom('out')), 
+            font=menu_font)
+        menu.add_separator()
+        menu.add_command(
+            label=label_template.format("Re-center", ""), 
+            command=(self.center_window_on_circuit), 
+            font=menu_font)
+
+        # Add the menubar to the application
+        master.config(menu=self.menubar)
+    def build_gridframe(self):
+        '''
+        Builds the main area of the window (called a frame), 
+        which should stick to the edges of the window and 
+        expand as a user expands the window.
+        '''
 
         self.frame = ttk.Frame()
         self.frame.grid()  # place Canvas widget on the grid
         self.frame.grid(sticky='nswe')  # make frame container sticky
-        self.frame.rowconfigure(0, weight=1)  # make canvas expandable
-        self.frame.columnconfigure(0, weight=1)
-
-        menu_label_template = "{:<6}"
-        # TODO make this pretty?
-        menu_font = Font(family="Courier New", size=9, weight='normal')
-
-        self.menubar = tk.Menu(self.frame)
-        menu = tk.Menu(self.menubar, tearoff=0)
-        self.menubar.add_cascade(
-            label=menu_label_template.format("File"), menu=menu)
-
-        label_template = "{:<15}{:>6}"
-        menu.add_command(label=label_template.format(
-            "Open", ""), command=self.open, font=menu_font)
-        menu.add_command(label=label_template.format(
-            "Save", "Ctrl+S"), command=self.save, font=menu_font)
-        menu.add_command(label=label_template.format(
-            "Exit", ""), command=master.destroy, font=menu_font)
-
-        menu = tk.Menu(self.menubar, tearoff=0)
-        self.menubar.add_cascade(
-            label=menu_label_template.format("Edit"), menu=menu)
-
-        menu.add_command(label=label_template.format(
-            "Undo", "Ctrl+Z"), command=self.ctrl_z, font=menu_font)
-        menu.add_command(label=label_template.format(
-            "Redo", "Ctrl+Y"), command=self.ctrl_y, font=menu_font)
-        menu.add_separator()
-        menu.add_command(label=label_template.format(
-            "Cut", "Ctrl+X"), command=self.cut_selection, font=menu_font)
-        menu.add_command(label=label_template.format(
-            "Copy", "Ctrl+C"), command=self.copy_selection, font=menu_font)
-        menu.add_command(label=label_template.format(
-            "Paste", "Ctrl+V"), command=(lambda :self.event_generate('<Control-v>')), font=menu_font)
-        menu.add_separator()
-        menu.add_command(label=label_template.format(
-            "Select all", "Ctrl+A"), command=self.select_all, font=menu_font)
-        menu.add_separator()
-        menu.add_command(label=label_template.format(
-            "Delete", "Del"), command=self.delete_selection, font=menu_font)
-        menu.add_command(label=label_template.format(
-            "Delete all", ""), command=self.delete_all, font=menu_font)
-        master.config(menu=self.menubar)
-
-        menu = tk.Menu(self.menubar, tearoff=0)
-        self.menubar.add_cascade(
-            label=menu_label_template.format("Insert"), menu=menu)
-
-        menu.add_command(label=label_template.format("Wire", "W"), command=(
-            lambda: self.event_generate('w')), font=menu_font)
-        menu.add_command(label=label_template.format("Junction", "J"), command=(
-            lambda: self.event_generate('j')), font=menu_font)
-        menu.add_command(label=label_template.format("Inductor", "L"), command=(
-            lambda: self.event_generate('l')), font=menu_font)
-        menu.add_command(label=label_template.format("Capacitor", "C"), command=(
-            lambda: self.event_generate('c')), font=menu_font)
-        menu.add_command(label=label_template.format("Resistor", "R"), command=(
-            lambda: self.event_generate('r')), font=menu_font)
-        menu.add_command(label=label_template.format("Ground", "G"), command=(
-            lambda: self.event_generate('g')), font=menu_font)
-        master.config(menu=self.menubar)
-
+        self.frame.rowconfigure(0, weight=1)  # make canvas expandable in x
+        self.frame.columnconfigure(0, weight=1)  # make canvas expandable in y
+    def build_scrollbars(self):
+        '''
+        Builds horizontal and vertical scrollbars and places
+        them in the window
+        '''
         
-        menu = tk.Menu(self.menubar, tearoff=0)
-        self.menubar.add_cascade(
-            label=menu_label_template.format("View"), menu=menu)
-
-        menu.add_command(label=label_template.format("Zoom in", "Ctrl+scroll"), command=(
-            lambda: self.zoom('in')), font=menu_font)
-        menu.add_command(label=label_template.format("Zoom out", "Ctrl+scroll"), command=(
-            lambda: self.zoom('out')), font=menu_font)
-        menu.add_separator()
-        menu.add_command(label=label_template.format("Re-center", ""), command=(
-            self.center_window_on_circuit), font=menu_font)
-        master.config(menu=self.menubar)
-
         # Vertical and horizontal scrollbars for canvas
-        hbar = AutoScrollbar(self.frame, orient='horizontal')
-        vbar = AutoScrollbar(self.frame, orient='vertical')
-        hbar.grid(row=1, column=0, sticky='we')
-        vbar.grid(row=0, column=1, sticky='ns')
+        self.hbar = AutoScrollbar(self.frame, orient='horizontal')
+        self.vbar = AutoScrollbar(self.frame, orient='vertical')
+        self.hbar.grid(row=1, column=0, sticky='we')
+        self.vbar.grid(row=0, column=1, sticky='ns')
+    def build_canvas(self):
+        '''
+        Initializes the canvas from which this object inherits and 
+        places it in the grid of our window
 
-        tk.Canvas.__init__(self, self.frame, bd=0, highlightthickness=0,
-                           xscrollcommand=hbar.set, yscrollcommand=vbar.set, confine=False, bg="white")
-
+        Actually in the previously called build_* functions, we have
+        defined frames, menubars, etc.. which are seperate from the canvas.
+        It is however convinient to do so since most of these definied buttons
+        or scrollbars will be acting on the canvas itself.
+        '''
+        tk.Canvas.__init__(
+            self, 
+            self.frame, 
+            bd=0, 
+            highlightthickness=0,
+            xscrollcommand=self.hbar.set, 
+            yscrollcommand=self.vbar.set, 
+            confine=False, 
+            bg="white")
         self.grid(row=0, column=0, sticky='nswe')
+    def configure_scrollbars(self):
+        '''
+        Define what functions the scrollbars should call
+        when we interact with them.
+        '''
+        self.hbar.configure(command=self.scroll_x)  # bind scrollbars to the canvas
+        self.vbar.configure(command=self.scroll_y)
+    def set_canvas_center(self):
+        '''
+        Calculate the center of the canvas in 
+        canvas coordinates. This information is necessary to 
+        convert grid units to canvas units
 
-        hbar.configure(command=self.scroll_x)  # bind scrollbars to the canvas
-        vbar.configure(command=self.scroll_y)
-        self.update()  # Waits for the canvas to pop up before asking for its window size below
+        '''
+        # Wait for the canvas to pop up before asking 
+        # for its window size below
+        self.update()  
 
+        # winfo_width/height gives the 
+        # width/height of the window in window units
+        # canvasx/y converts window units to 
+        # canvas units
         self.canvas_center = [
             self.canvasx(self.winfo_width()/2.),
             self.canvasy(self.winfo_height()/2.)]
-        self.netlist_file = netlist_file
-        self.grid_unit = int(grid_unit)
-
-        self.focus_set()
-        self.set_element_creation_bindings()
-        self.bind('<Control-s>', self.save)
+    def configure_canvas(self):
+        '''
+        Ensure that the function "on_resize"
+        is called each time the user resizes
+        the window. 
+        '''
         self.bind("<Configure>", self.on_resize)
+    def set_keyboard_shortcuts_element_creation(self):
+        '''
+            Assign key R to the creation of a resistor, 
+            C to a capacitor, etc...
+        '''
+        self.bind('r', lambda event: R(self, event))
+        self.bind('l', lambda event: L(self, event))
+        self.bind('c', lambda event: C(self, event))
+        self.bind('j', lambda event: J(self, event))
+        self.bind('w', lambda event: W(self, event))
+        self.bind('g', lambda event: G(self, event))
+    def set_keyboard_shortcuts_other(self):
+        '''
+            Assign keystrokes to functionalities
+            accessible in the FILE and EDIT menus, 
+            as well as configure what happens when the 
+            user scrolls in combination with CTRL/SHIFT.
+        '''
+        
+        #############################
+        # FILE menu functionalities
+        #############################
+        self.bind('<Control-s>', self.save)
+
+        #############################
+        # EDIT menu functionalities
+        #############################
         self.bind('<Delete>', self.delete_selection)
         self.bind('<Control-c>', self.copy_selection)
         self.bind('<Control-x>', self.cut_selection)
@@ -176,6 +409,13 @@ class SnappingCanvas(tk.Canvas):
         self.bind('<Control-a>', self.select_all)
         self.bind('<Control-y>', self.ctrl_y)
         self.bind('<Control-z>', self.ctrl_z)
+
+        
+
+        #############################
+        # Mouse wheel functionalities
+        #############################
+
         # zoom for Windows and MacOS, but not Linux
         self.bind('<Control-MouseWheel>', self.wheel)
         # zoom for Linux, wheel scroll down
@@ -194,43 +434,41 @@ class SnappingCanvas(tk.Canvas):
         self.bind('<Button-5>',   self.scroll_y_wheel)
         # zoom for Linux, wheel scroll up
         self.bind('<Button-4>',   self.scroll_y_wheel)
+    def load_or_create_netlist_file(self):
+        '''
+        If the file called "self.netlist_filename" is found, load it, if not, create 
+        a blank one and load that.
+        '''
 
-        self.elements = []
-        self.in_creation = None
-        self.copied_elements = []
-        self.history = []
-        self.history_location = -1
-        self.track_changes = False
         try:
-            with open(netlist_file, 'r') as f:
+            with open(self.netlist_filename, 'r') as f:
                 netlist_file_string = [line for line in f]
         except FileNotFoundError:
             netlist_file_string = []
-            with open(netlist_file, 'w') as f:
+            with open(self.netlist_filename, 'w') as f:
                 pass
         self.load_netlist(netlist_file_string)
-        self.center_window_on_circuit()
-        self.track_changes = True
-        self.save()
-
-        # Keep track of what the user knows what to do
+    def initialize_user_knowledge_tracking_variables(self):
+        '''
+        Initialize a set of variables which will allow us
+        track what functionalities the user has employed so far.
+        This will allow us to provide hints telling the user 
+        how to do stuff that he hasnt done yet.
+        '''
+        
         self.used_arrows = False
-
-    def set_element_creation_bindings(self):
-        self.bind('r', lambda event: R(self, event))
-        self.bind('l', lambda event: L(self, event))
-        self.bind('c', lambda event: C(self, event))
-        self.bind('j', lambda event: J(self, event))
-        self.bind('w', lambda event: W(self, event))
-        self.bind('g', lambda event: G(self, event))
+        '''If the user uses arrows to rotate an 
+        element whilst creating it, we set this variable 
+        to True, and hence stop hinting that he can do that.
+        '''
 
     def open(self):
-        netlist_file = filedialog.askopenfilename(initialdir = os.getcwd())
-        if netlist_file == '':
+        netlist_filename = filedialog.askopenfilename(initialdir = os.getcwd())
+        if netlist_filename == '':
             # User cancelled
             pass
         else:
-            with open(netlist_file, 'r') as f:
+            with open(netlist_filename, 'r') as f:
                 netlist_file_string = [line for line in f]
                 
             self.track_changes = False
@@ -244,7 +482,6 @@ class SnappingCanvas(tk.Canvas):
                 self.save()
             self.track_changes = True
             
-
     def get_mouse_location(self):
         return [self.canvasx(self.winfo_pointerx())-self.winfo_rootx(), 
             self.canvasy(self.winfo_pointery())-self.winfo_rooty()]
@@ -292,7 +529,6 @@ class SnappingCanvas(tk.Canvas):
             else:
                 self.bind("<ButtonPress-1>", el.release_motion_paste)
 
-
     def copy_selection(self, event=None):
         self.track_changes = False
         self.copied_elements = [deepcopy(el)
@@ -315,7 +551,6 @@ class SnappingCanvas(tk.Canvas):
 
         self.configure_scrollregion()
         self.draw_grid()
-
 
     def scroll_y_wheel(self, event):
         if event.num == 5 or event.delta < 0:
@@ -399,7 +634,6 @@ class SnappingCanvas(tk.Canvas):
 
             self.draw_grid(event)
             self.configure_scrollregion()
-
             
     def zoom(self, direction = 'in'):
         args = ['<Control-MouseWheel>']
@@ -458,7 +692,6 @@ class SnappingCanvas(tk.Canvas):
     def on_resize(self, event=None):
         self.configure_scrollregion()
         self.draw_grid(event)
-
 
     def draw_grid(self, event=None):
 
@@ -571,7 +804,7 @@ class SnappingCanvas(tk.Canvas):
                 el.grid_to_node_string(el.x_plus, el.y_plus),
                 v, l))
 
-        with open(self.netlist_file, 'w') as f:
+        with open(self.netlist_filename, 'w') as f:
             f.write(netlist_string)
 
         if self.track_changes:
@@ -675,7 +908,7 @@ class TwoNodeElement(object):
 
     def abort_creation(self,event = None, rerun_command = True):
         self.canvas.in_creation = None
-        self.canvas.set_element_creation_bindings()
+        self.canvas.set_keyboard_shortcuts_element_creation()
         if event.type == tk.EventType.KeyPress and rerun_command:
             self.canvas.event_generate(event.char)
         del self
@@ -1038,7 +1271,7 @@ class W(TwoNodeElement):
         self.canvas.config(cursor='arrow')
 
         self.init_plus_snap_to_grid(event)
-        self.canvas.set_element_creation_bindings()
+        self.canvas.set_keyboard_shortcuts_element_creation()
         self.canvas.in_creation = None
         self.create()
         self.track_changes = False
@@ -1362,7 +1595,7 @@ class Component(TwoNodeElement):
         self.unset_initialization_bindings()
         self.canvas.track_changes = False
         self.snap_to_grid()
-        self.canvas.set_element_creation_bindings()
+        self.canvas.set_keyboard_shortcuts_element_creation()
         self.request_value_label()
         self.canvas.in_creation = None
         if self.prop[0] is None and self.prop[1] is None:
@@ -1385,7 +1618,6 @@ class Component(TwoNodeElement):
 
         if xm<x<xp and ym<y<yp:
             self.hover_enter(event)
-
 
     def open_right_click_menu(self, event):
         menu = tk.Menu(self.canvas, tearoff=0)
@@ -1445,7 +1677,6 @@ class Component(TwoNodeElement):
                 self.canvas.delete(self.dot_plus)
                 self.dot_plus = None
             self.was_rotated = True
-
 
     def delete(self, event=None):
         self.canvas.elements.remove(self)
@@ -1654,28 +1885,33 @@ class RequestValueLabelWindow(tk.Toplevel):
         self.destroy()
 
 
-def open_canvas(netlist_file):
+def open_canvas(netlist_filename):
     # root = tk.Tk()
     # canvas = SnappingCanvas(root,
-    #                         netlist_file=netlist_file, grid_unit=60, bg="white")
+    #                         netlist_filename=netlist_filename, grid_unit=60, bg="white")
     # root.focus_force()
     # root.mainloop()
-    app = MainWindow(tk.Tk(), netlist_file)
+    app = MainWindow(tk.Tk(), netlist_filename)
     app.mainloop()
 
 
 class MainWindow(ttk.Frame):
     """ Main window class """
 
-    def __init__(self, mainframe, netlist_file):
+    def __init__(self, mainframe, netlist_filename):
         """ Initialize the main Frame """
         ttk.Frame.__init__(self, master=mainframe)
         self.master.title('Circuit Editor')
         self.master.geometry('800x600')  # size of the main window
+        try:
+            self.master.iconbitmap(r'C:\ProgramData\Anaconda3\Lib\site-packages\Qcircuits\artwork\logo.ico')
+        except Exception as e:
+            # Anticipating possible non-Windows related issues
+            print("There has been an error loading the applications icon:\n"+str(e))
         self.master.rowconfigure(0, weight=1)  # make canvas expandable
         self.master.columnconfigure(0, weight=1)
         self.canvas = SnappingCanvas(
-            self.master, netlist_file=netlist_file, grid_unit=60)
+            self.master, netlist_filename=netlist_filename, grid_unit=60)
 
 
 if __name__ == '__main__':

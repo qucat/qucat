@@ -163,7 +163,7 @@
 <col width="90%" />
 </colgroup>
 <tbody valign="top">
-<tr class="row-odd"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">open_canvas</span></code>(netlist_file)</td>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">open_canvas</span></code>(netlist_filename)</td>
 <td></td>
 </tr>
 <tr class="row-even"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">string_to_component</span></code>(s,&nbsp;*arg,&nbsp;**kwarg)</td>
@@ -179,7 +179,7 @@
 </colgroup>
 <tbody valign="top">
 <tr class="row-odd"><td><a class="reference internal" href="#Qcircuits.gui.AutoScrollbar" title="Qcircuits.gui.AutoScrollbar"><code class="xref py py-obj docutils literal notranslate"><span class="pre">AutoScrollbar</span></code></a>([master])</td>
-<td>A scrollbar that hides itself if it’s not needed.</td>
+<td>Construct a Ttk Scrollbar with parent master.</td>
 </tr>
 <tr class="row-even"><td><a class="reference internal" href="#Qcircuits.gui.C" title="Qcircuits.gui.C"><code class="xref py py-obj docutils literal notranslate"><span class="pre">C</span></code></a>(canvas[,&nbsp;event,&nbsp;auto_place])</td>
 <td>docstring for C</td>
@@ -196,7 +196,7 @@
 <tr class="row-even"><td><a class="reference internal" href="#Qcircuits.gui.L" title="Qcircuits.gui.L"><code class="xref py py-obj docutils literal notranslate"><span class="pre">L</span></code></a>(canvas[,&nbsp;event,&nbsp;auto_place])</td>
 <td>docstring for L</td>
 </tr>
-<tr class="row-odd"><td><a class="reference internal" href="#Qcircuits.gui.MainWindow" title="Qcircuits.gui.MainWindow"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MainWindow</span></code></a>(mainframe,&nbsp;netlist_file)</td>
+<tr class="row-odd"><td><a class="reference internal" href="#Qcircuits.gui.MainWindow" title="Qcircuits.gui.MainWindow"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MainWindow</span></code></a>(mainframe,&nbsp;netlist_filename)</td>
 <td>Main window class</td>
 </tr>
 <tr class="row-even"><td><a class="reference internal" href="#Qcircuits.gui.R" title="Qcircuits.gui.R"><code class="xref py py-obj docutils literal notranslate"><span class="pre">R</span></code></a>(canvas[,&nbsp;event,&nbsp;auto_place])</td>
@@ -220,7 +220,6 @@
 <dt id="Qcircuits.gui.AutoScrollbar">
 <em class="property">class </em><code class="descclassname">Qcircuits.gui.</code><code class="descname">AutoScrollbar</code><span class="sig-paren">(</span><em>master=None</em>, <em>**kw</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/Qcircuits/gui.html#AutoScrollbar"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#Qcircuits.gui.AutoScrollbar" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">tkinter.ttk.Scrollbar</span></code></p>
-<p>A scrollbar that hides itself if it’s not needed.</p>
 <p>Construct a Ttk Scrollbar with parent master.</p>
 <p>STANDARD OPTIONS</p>
 <blockquote>
@@ -1718,7 +1717,7 @@ in the parent.</p>
 
 <dl class="class">
 <dt id="Qcircuits.gui.MainWindow">
-<em class="property">class </em><code class="descclassname">Qcircuits.gui.</code><code class="descname">MainWindow</code><span class="sig-paren">(</span><em>mainframe</em>, <em>netlist_file</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/Qcircuits/gui.html#MainWindow"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#Qcircuits.gui.MainWindow" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">Qcircuits.gui.</code><code class="descname">MainWindow</code><span class="sig-paren">(</span><em>mainframe</em>, <em>netlist_filename</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/Qcircuits/gui.html#MainWindow"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#Qcircuits.gui.MainWindow" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">tkinter.ttk.Frame</span></code></p>
 <p>Main window class</p>
 <p>Initialize the main Frame</p>
@@ -4817,7 +4816,7 @@ and forgotten by the window manager. Re-draw it with wm_deiconify.</p>
 
 <dl class="class">
 <dt id="Qcircuits.gui.SnappingCanvas">
-<em class="property">class </em><code class="descclassname">Qcircuits.gui.</code><code class="descname">SnappingCanvas</code><span class="sig-paren">(</span><em>master</em>, <em>grid_unit</em>, <em>netlist_file</em>, <em>**kw</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/Qcircuits/gui.html#SnappingCanvas"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#Qcircuits.gui.SnappingCanvas" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">Qcircuits.gui.</code><code class="descname">SnappingCanvas</code><span class="sig-paren">(</span><em>master</em>, <em>grid_unit</em>, <em>netlist_filename</em>, <em>**kw</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/Qcircuits/gui.html#SnappingCanvas"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#Qcircuits.gui.SnappingCanvas" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">tkinter.Canvas</span></code></p>
 <p>Initialize the ImageFrame</p>
 <dl class="method">
@@ -5107,6 +5106,39 @@ processed (see bind).</p>
 </dd></dl>
 
 <dl class="method">
+<dt id="Qcircuits.gui.SnappingCanvas.build_canvas">
+<code class="descname">build_canvas</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/Qcircuits/gui.html#SnappingCanvas.build_canvas"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#Qcircuits.gui.SnappingCanvas.build_canvas" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initializes the canvas from which this object inherits and
+places it in the grid of our window</p>
+<p>Actually in the previously called build_* functions, we have
+defined frames, menubars, etc.. which are seperate from the canvas.
+It is however convinient to do so since most of these definied buttons
+or scrollbars will be acting on the canvas itself.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="Qcircuits.gui.SnappingCanvas.build_gridframe">
+<code class="descname">build_gridframe</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/Qcircuits/gui.html#SnappingCanvas.build_gridframe"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#Qcircuits.gui.SnappingCanvas.build_gridframe" title="Permalink to this definition">¶</a></dt>
+<dd><p>Builds the main area of the window (called a frame),
+which should stick to the edges of the window and
+expand as a user expands the window.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="Qcircuits.gui.SnappingCanvas.build_menubar">
+<code class="descname">build_menubar</code><span class="sig-paren">(</span><em>master</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/Qcircuits/gui.html#SnappingCanvas.build_menubar"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#Qcircuits.gui.SnappingCanvas.build_menubar" title="Permalink to this definition">¶</a></dt>
+<dd><p>Builds the File, Edit, … menu bar situated at the top of
+the window.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="Qcircuits.gui.SnappingCanvas.build_scrollbars">
+<code class="descname">build_scrollbars</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/Qcircuits/gui.html#SnappingCanvas.build_scrollbars"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#Qcircuits.gui.SnappingCanvas.build_scrollbars" title="Permalink to this definition">¶</a></dt>
+<dd><p>Builds horizontal and vertical scrollbars and places
+them in the window</p>
+</dd></dl>
+
+<dl class="method">
 <dt id="Qcircuits.gui.SnappingCanvas.canvasx">
 <code class="descname">canvasx</code><span class="sig-paren">(</span><em>screenx</em>, <em>gridspacing=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Qcircuits.gui.SnappingCanvas.canvasx" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return the canvas x coordinate of pixel position SCREENX rounded
@@ -5182,6 +5214,21 @@ the allowed keyword arguments call the method keys.</p>
 <p>The values for resources are specified as keyword
 arguments. To get an overview about
 the allowed keyword arguments call the method keys.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="Qcircuits.gui.SnappingCanvas.configure_canvas">
+<code class="descname">configure_canvas</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/Qcircuits/gui.html#SnappingCanvas.configure_canvas"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#Qcircuits.gui.SnappingCanvas.configure_canvas" title="Permalink to this definition">¶</a></dt>
+<dd><p>Ensure that the function “on_resize”
+is called each time the user resizes
+the window.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="Qcircuits.gui.SnappingCanvas.configure_scrollbars">
+<code class="descname">configure_scrollbars</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/Qcircuits/gui.html#SnappingCanvas.configure_scrollbars"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#Qcircuits.gui.SnappingCanvas.configure_scrollbars" title="Permalink to this definition">¶</a></dt>
+<dd><p>Define what functions the scrollbars should call
+when we interact with them.</p>
 </dd></dl>
 
 <dl class="method">
@@ -5704,6 +5751,15 @@ widget is located.</p>
 its Tcl name NAME.</p>
 </dd></dl>
 
+<dl class="attribute">
+<dt id="Qcircuits.gui.SnappingCanvas.netlist_filename">
+<code class="descname">netlist_filename</code><em class="property"> = None</em><a class="headerlink" href="#Qcircuits.gui.SnappingCanvas.netlist_filename" title="Permalink to this definition">¶</a></dt>
+<dd><p>In the netlist file is stored at all times
+(except whilst drag/dropping elements)
+all the information necessary to re-construct
+the circuit as the user sees it</p>
+</dd></dl>
+
 <dl class="method">
 <dt id="Qcircuits.gui.SnappingCanvas.option_add">
 <code class="descname">option_add</code><span class="sig-paren">(</span><em>pattern</em>, <em>value</em>, <em>priority=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Qcircuits.gui.SnappingCanvas.option_add" title="Permalink to this definition">¶</a></dt>
@@ -6046,6 +6102,14 @@ type - type of the selection (e.g. STRING, FILE_NAME).</p>
 <dt id="Qcircuits.gui.SnappingCanvas.send">
 <code class="descname">send</code><span class="sig-paren">(</span><em>interp</em>, <em>cmd</em>, <em>*args</em><span class="sig-paren">)</span><a class="headerlink" href="#Qcircuits.gui.SnappingCanvas.send" title="Permalink to this definition">¶</a></dt>
 <dd><p>Send Tcl command CMD to different interpreter INTERP to be executed.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="Qcircuits.gui.SnappingCanvas.set_canvas_center">
+<code class="descname">set_canvas_center</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/Qcircuits/gui.html#SnappingCanvas.set_canvas_center"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#Qcircuits.gui.SnappingCanvas.set_canvas_center" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate the center of the canvas in
+canvas coordinates. This information is necessary to
+convert grid units to canvas units</p>
 </dd></dl>
 
 <dl class="method">

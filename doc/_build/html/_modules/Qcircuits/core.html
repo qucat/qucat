@@ -159,9 +159,24 @@
 <span class="kn">import</span> <span class="nn">os</span>
 <span class="kn">from</span> <span class="nn">Qcircuits.constants</span> <span class="k">import</span> <span class="o">*</span>
 <span class="kn">from</span> <span class="nn">Qcircuits.utility</span> <span class="k">import</span> <span class="n">pretty_value</span><span class="p">,</span>\
-    <span class="n">check_there_are_no_iterables_in_kwarg</span><span class="p">,</span> <span class="n">shift</span><span class="p">,</span> <span class="n">to_string</span>
+        <span class="n">check_there_are_no_iterables_in_kwarg</span><span class="p">,</span>\
+        <span class="n">shift</span><span class="p">,</span>\
+        <span class="n">to_string</span><span class="p">,</span>\
+        <span class="n">safely_evaluate</span>
 <span class="kn">from</span> <span class="nn">scipy</span> <span class="k">import</span> <span class="n">optimize</span>
+<span class="kn">import</span> <span class="nn">time</span>
+<span class="n">PROFILING</span> <span class="o">=</span> <span class="kc">False</span>
 
+<span class="k">def</span> <span class="nf">timeit</span><span class="p">(</span><span class="n">method</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">timed</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">):</span>
+        <span class="n">ts</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">method</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">)</span>
+        <span class="n">te</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">PROFILING</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;calling </span><span class="si">%r</span><span class="s1"> took </span><span class="si">%2.2f</span><span class="s1"> ms&#39;</span> <span class="o">%</span> \
+                    <span class="p">(</span><span class="n">method</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span> <span class="p">(</span><span class="n">te</span> <span class="o">-</span> <span class="n">ts</span><span class="p">)</span> <span class="o">*</span> <span class="mi">1000</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">result</span>
+    <span class="k">return</span> <span class="n">timed</span>
 
 <span class="k">def</span> <span class="nf">string_to_component</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="o">*</span><span class="n">arg</span><span class="p">,</span> <span class="o">**</span><span class="n">kwarg</span><span class="p">):</span>
     <span class="k">if</span> <span class="n">s</span> <span class="o">==</span> <span class="s1">&#39;W&#39;</span><span class="p">:</span>
@@ -280,14 +295,22 @@
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
                 <span class="s2">&quot;There should be at least one junction or inductor in the circuit&quot;</span><span class="p">)</span>
 
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">capacitors</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;There should be at least one capacitor in the circuit&quot;</span><span class="p">)</span>
+
         <span class="bp">self</span><span class="o">.</span><span class="n">flux_transformation_dict</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">network</span><span class="o">.</span><span class="n">nodes</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">flux_transformation_dict</span><span class="p">[</span><span class="n">node</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">compute_Y</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">char_poly_coeffs_analytical</span> <span class="o">=</span> <span class="p">[</span><span class="n">lambdify</span><span class="p">(</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">no_value_components</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="s1">&#39;numpy&#39;</span><span class="p">)</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">network</span><span class="o">.</span><span class="n">char_poly_coeffs_analytical</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">compute_dY_analytically</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">char_poly_coeffs_analytical</span> <span class="o">=</span> \
+            <span class="bp">self</span><span class="o">.</span><span class="n">network</span><span class="o">.</span><span class="n">compute_char_poly_coeffs</span><span class="p">(</span><span class="n">is_lossy</span> <span class="o">=</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">resistors</span><span class="p">)</span><span class="o">&gt;</span><span class="mi">0</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">char_poly_coeffs</span> <span class="o">=</span> <span class="p">[</span><span class="n">lambdify</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">no_value_components</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="s1">&#39;numpy&#39;</span><span class="p">)</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">char_poly_coeffs_analytical</span><span class="p">]</span>
 
+    <span class="nd">@timeit</span>
     <span class="k">def</span> <span class="nf">compute_Y</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">Y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">network</span><span class="o">.</span><span class="n">admittance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ref_elt</span><span class="o">.</span><span class="n">node_minus</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ref_elt</span><span class="o">.</span><span class="n">node_plus</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">Y_lambdified</span> <span class="o">=</span> <span class="n">lambdify</span><span class="p">([</span><span class="s1">&#39;w&#39;</span><span class="p">]</span><span class="o">+</span><span class="bp">self</span><span class="o">.</span><span class="n">no_value_components</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">Y</span><span class="p">,</span> <span class="s1">&#39;numpy&#39;</span><span class="p">)</span>
@@ -296,8 +319,10 @@
 
         <span class="n">w</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">Symbol</span><span class="p">(</span><span class="s1">&#39;w&#39;</span><span class="p">)</span>
         <span class="c1"># Write numerator as polynomial in omega</span>
+        <span class="n">Y_numer</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">numer</span><span class="p">(</span><span class="n">Y_together</span><span class="p">)</span>
         <span class="n">Y_numer_poly</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">collect</span><span class="p">(</span><span class="n">sp</span><span class="o">.</span><span class="n">expand</span><span class="p">(</span><span class="n">Y_numer</span><span class="p">),</span> <span class="n">w</span><span class="p">)</span>
         <span class="c1"># Write numerator as polynomial in omega</span>
+        <span class="n">Y_denom</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">denom</span><span class="p">(</span><span class="n">Y_together</span><span class="p">)</span>
         <span class="n">Y_denom_poly</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">collect</span><span class="p">(</span><span class="n">sp</span><span class="o">.</span><span class="n">expand</span><span class="p">(</span><span class="n">Y_denom</span><span class="p">),</span> <span class="n">w</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">Y_numer_poly_order</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">polys</span><span class="o">.</span><span class="n">polytools</span><span class="o">.</span><span class="n">degree</span><span class="p">(</span>
             <span class="n">Y_numer_poly</span><span class="p">,</span> <span class="n">gen</span><span class="o">=</span><span class="n">w</span><span class="p">)</span>  <span class="c1"># Order of the polynomial</span>
@@ -306,65 +331,44 @@
 
         <span class="bp">self</span><span class="o">.</span><span class="n">Y_numer_poly_coeffs_analytical</span> <span class="o">=</span> <span class="p">[</span><span class="n">Y_numer_poly</span><span class="o">.</span><span class="n">coeff</span><span class="p">(</span><span class="n">w</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">Y_numer_poly_order</span><span class="o">+</span><span class="mi">1</span><span class="p">)[::</span><span class="o">-</span><span class="mi">1</span><span class="p">]]</span>  <span class="c1"># Get polynomial coefficients</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">Y_numer_poly_coeffs_analytical</span> <span class="o">=</span> <span class="p">[</span><span class="n">lambdify</span><span class="p">(</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">Y_numer_poly_coeffs</span> <span class="o">=</span> <span class="p">[</span><span class="n">lambdify</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">no_value_components</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="s1">&#39;numpy&#39;</span><span class="p">)</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">Y_numer_poly_coeffs_analytical</span><span class="p">]</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">Y_denom_poly_coeffs_analytical</span> <span class="o">=</span> <span class="p">[</span><span class="n">Y_denom_poly</span><span class="o">.</span><span class="n">coeff</span><span class="p">(</span><span class="n">w</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">Y_denom_poly_order</span><span class="o">+</span><span class="mi">1</span><span class="p">)[::</span><span class="o">-</span><span class="mi">1</span><span class="p">]]</span>  <span class="c1"># Get polynomial coefficients</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">Y_denom_poly_coeffs_analytical</span> <span class="o">=</span> <span class="p">[</span><span class="n">lambdify</span><span class="p">(</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">Y_denom_poly_coeffs</span> <span class="o">=</span> <span class="p">[</span><span class="n">lambdify</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">no_value_components</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="s1">&#39;numpy&#39;</span><span class="p">)</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">Y_denom_poly_coeffs_analytical</span><span class="p">]</span>
 
-    <span class="k">def</span> <span class="nf">dY</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">w</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        
-        <span class="c1"># to divide to numerator and denomenator </span>
-        <span class="c1"># to avoid having too large numbers</span>
-        <span class="c1"># and OverflowErrors</span>
-        <span class="c1"># n=1</span>
-        <span class="c1"># while self.Y_denom_poly_coeffs(**kwargs)[-n]==0:</span>
-        <span class="c1">#     n+=1</span>
-        <span class="c1"># norm = self.Y_denom_poly_coeffs(**kwargs)[-n]*w**n</span>
-        <span class="n">norm</span> <span class="o">=</span> <span class="mf">1.</span>
+    <span class="nd">@timeit</span>
+    <span class="k">def</span> <span class="nf">compute_dY_analytically</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># derivative of u/v is (du*v-dv*u)/v^2 = du/v since u=0 everywhere we </span>
+        <span class="c1"># want this evaluated</span>
+        <span class="n">w</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">Symbol</span><span class="p">(</span><span class="s1">&#39;w&#39;</span><span class="p">)</span>
+        <span class="n">v</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">([</span><span class="n">a</span><span class="o">*</span><span class="n">w</span><span class="o">**</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Y_denom_poly_order</span><span class="o">-</span><span class="n">n</span><span class="p">)</span>
+                     <span class="k">for</span> <span class="n">n</span><span class="p">,</span> <span class="n">a</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Y_denom_poly_coeffs_analytical</span><span class="p">)])</span>
+        <span class="n">du</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">([(</span><span class="bp">self</span><span class="o">.</span><span class="n">Y_numer_poly_order</span><span class="o">-</span><span class="n">n</span><span class="p">)</span><span class="o">*</span><span class="n">a</span><span class="o">*</span><span class="n">w</span><span class="o">**</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Y_numer_poly_order</span><span class="o">-</span><span class="n">n</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+                      <span class="k">for</span> <span class="n">n</span><span class="p">,</span> <span class="n">a</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Y_numer_poly_coeffs_analytical</span><span class="p">)])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dY_analytical</span> <span class="o">=</span> <span class="n">du</span><span class="o">/</span><span class="n">v</span>
 
+    <span class="k">def</span> <span class="nf">dY</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">w</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+
+        <span class="nd">@safely_evaluate</span>
+        <span class="k">def</span> <span class="nf">dY_single</span><span class="p">(</span><span class="n">w</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+            <span class="c1"># derivative of u/v is (du*v-dv*u)/v^2 = du/v since u=0</span>
+            <span class="n">v</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">polyval</span><span class="p">([</span><span class="nb">complex</span><span class="p">(</span><span class="n">coeff</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">))</span> <span class="k">for</span> <span class="n">coeff</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">Y_denom_poly_coeffs</span><span class="p">],</span><span class="n">w</span><span class="p">)</span>
+            <span class="n">du</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">polyval</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">polyder</span><span class="p">([</span><span class="nb">complex</span><span class="p">(</span><span class="n">coeff</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">))</span> <span class="k">for</span> <span class="n">coeff</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">Y_numer_poly_coeffs</span><span class="p">]),</span><span class="n">w</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">du</span><span class="o">/</span><span class="n">v</span>
+        
         <span class="c1"># test if w is an iterable</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="nb">iter</span><span class="p">(</span><span class="n">w</span><span class="p">)</span>
         <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
             <span class="c1"># iterable = False</span>
-
-            <span class="c1"># derivative of u/v is (du*v-dv*u)/v^2</span>
-            <span class="n">u</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">([</span><span class="nb">complex</span><span class="p">(</span><span class="n">a</span><span class="o">*</span><span class="n">w</span><span class="o">**</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Y_numer_poly_order</span><span class="o">-</span><span class="n">n</span><span class="p">))</span><span class="o">/</span><span class="n">norm</span>
-                     <span class="k">for</span> <span class="n">n</span><span class="p">,</span> <span class="n">a</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Y_numer_poly_coeffs</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">))])</span>
-            <span class="n">v</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">([</span><span class="nb">complex</span><span class="p">(</span><span class="n">a</span><span class="o">*</span><span class="n">w</span><span class="o">**</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Y_denom_poly_order</span><span class="o">-</span><span class="n">n</span><span class="p">))</span><span class="o">/</span><span class="n">norm</span>
-                     <span class="k">for</span> <span class="n">n</span><span class="p">,</span> <span class="n">a</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Y_denom_poly_coeffs</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">))])</span>
-            <span class="n">du</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">([</span><span class="nb">complex</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">Y_numer_poly_order</span><span class="o">-</span><span class="n">n</span><span class="p">)</span><span class="o">*</span><span class="n">a</span><span class="o">*</span><span class="n">w</span><span class="o">**</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Y_numer_poly_order</span><span class="o">-</span><span class="n">n</span><span class="o">-</span><span class="mi">1</span><span class="p">))</span><span class="o">/</span><span class="n">norm</span>
-                      <span class="k">for</span> <span class="n">n</span><span class="p">,</span> <span class="n">a</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Y_numer_poly_coeffs</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">))])</span>
-            <span class="n">dv</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">([</span><span class="nb">complex</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">Y_denom_poly_order</span><span class="o">-</span><span class="n">n</span><span class="p">)</span><span class="o">*</span><span class="n">a</span><span class="o">*</span><span class="n">w</span><span class="o">**</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Y_denom_poly_order</span><span class="o">-</span><span class="n">n</span><span class="o">-</span><span class="mi">1</span><span class="p">))</span><span class="o">/</span><span class="n">norm</span>
-                      <span class="k">for</span> <span class="n">n</span><span class="p">,</span> <span class="n">a</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Y_denom_poly_coeffs</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">))])</span>
-
+            <span class="k">return</span> <span class="n">dY_single</span><span class="p">(</span><span class="n">w</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="c1"># iterable = True</span>
-
-            <span class="c1"># derivative of u/v is (du*v-dv*u)/v^2</span>
-            <span class="n">u</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="nb">complex</span><span class="p">(</span><span class="n">a</span><span class="o">*</span><span class="n">_w</span><span class="o">**</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Y_numer_poly_order</span><span class="o">-</span><span class="n">n</span><span class="p">))</span> <span class="k">for</span> <span class="n">_w</span> <span class="ow">in</span> <span class="n">w</span><span class="p">])</span><span class="o">/</span><span class="n">norm</span>
-                     <span class="k">for</span> <span class="n">n</span><span class="p">,</span> <span class="n">a</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Y_numer_poly_coeffs</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">))])</span>
-            <span class="n">v</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="nb">complex</span><span class="p">(</span><span class="n">a</span><span class="o">*</span><span class="n">_w</span><span class="o">**</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Y_denom_poly_order</span><span class="o">-</span><span class="n">n</span><span class="p">))</span> <span class="k">for</span> <span class="n">_w</span> <span class="ow">in</span> <span class="n">w</span><span class="p">])</span><span class="o">/</span><span class="n">norm</span>
-                     <span class="k">for</span> <span class="n">n</span><span class="p">,</span> <span class="n">a</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Y_denom_poly_coeffs</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">))])</span>
-            <span class="n">du</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="nb">complex</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">Y_numer_poly_order</span><span class="o">-</span><span class="n">n</span><span class="p">)</span><span class="o">*</span><span class="n">a</span><span class="o">*</span><span class="n">_w</span><span class="o">**</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Y_numer_poly_order</span><span class="o">-</span><span class="n">n</span><span class="o">-</span><span class="mi">1</span><span class="p">))</span><span class="o">/</span><span class="n">norm</span>
-                                <span class="k">for</span> <span class="n">_w</span> <span class="ow">in</span> <span class="n">w</span><span class="p">])</span> <span class="k">for</span> <span class="n">n</span><span class="p">,</span> <span class="n">a</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Y_numer_poly_coeffs</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">))])</span>
-            <span class="n">dv</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="nb">complex</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">Y_denom_poly_order</span><span class="o">-</span><span class="n">n</span><span class="p">)</span><span class="o">*</span><span class="n">a</span><span class="o">*</span><span class="n">_w</span><span class="o">**</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Y_denom_poly_order</span><span class="o">-</span><span class="n">n</span><span class="o">-</span><span class="mi">1</span><span class="p">))</span><span class="o">/</span><span class="n">norm</span>
-                                <span class="k">for</span> <span class="n">_w</span> <span class="ow">in</span> <span class="n">w</span><span class="p">])</span> <span class="k">for</span> <span class="n">n</span><span class="p">,</span> <span class="n">a</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Y_denom_poly_coeffs</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">))])</span>
-
-        <span class="k">return</span> <span class="p">(</span><span class="n">du</span><span class="o">*</span><span class="n">v</span><span class="o">-</span><span class="n">dv</span><span class="o">*</span><span class="n">u</span><span class="p">)</span><span class="o">/</span><span class="n">v</span><span class="o">**</span><span class="mi">2</span>
-
-    <span class="k">def</span> <span class="nf">Y_numer_poly_coeffs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="k">return</span> <span class="p">[</span><span class="nb">complex</span><span class="p">(</span><span class="n">coeff</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">))</span> <span class="k">for</span> <span class="n">coeff</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">Y_numer_poly_coeffs_analytical</span><span class="p">]</span>
-
-    <span class="k">def</span> <span class="nf">Y_denom_poly_coeffs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="k">return</span> <span class="p">[</span><span class="nb">complex</span><span class="p">(</span><span class="n">coeff</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">))</span> <span class="k">for</span> <span class="n">coeff</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">Y_denom_poly_coeffs_analytical</span><span class="p">]</span>
-
-    <span class="k">def</span> <span class="nf">char_poly_coeffs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="k">return</span> <span class="p">[</span><span class="nb">complex</span><span class="p">(</span><span class="n">coeff</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">))</span> <span class="k">for</span> <span class="n">coeff</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">char_poly_coeffs_analytical</span><span class="p">]</span>
-
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">dY_single</span><span class="p">(</span><span class="n">w_single</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="k">for</span> <span class="n">w_single</span> <span class="ow">in</span> <span class="n">w</span><span class="p">])</span>
+  
     <span class="k">def</span> <span class="nf">w_k_A_chi</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pretty_print</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 
         <span class="n">list_element</span> <span class="o">=</span> <span class="kc">None</span>
@@ -468,13 +472,21 @@
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
                     <span class="s1">&#39;The value of </span><span class="si">%s</span><span class="s1"> should be specified with the keyword argument </span><span class="si">%s</span><span class="s1">=... &#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">label</span><span class="p">,</span> <span class="n">label</span><span class="p">))</span>
 
+    <span class="nd">@timeit</span>
     <span class="k">def</span> <span class="nf">set_w_cpx</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">check_kwargs</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">w_cpx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">roots</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">char_poly_coeffs</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">))</span>
-        
+
+        <span class="n">char_poly_coeffs</span> <span class="o">=</span> <span class="p">[</span><span class="nb">complex</span><span class="p">(</span><span class="n">coeff</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">))</span> <span class="k">for</span> <span class="n">coeff</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">char_poly_coeffs</span><span class="p">]</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">resistors</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="c1"># The variable of the characteristic polynomial is w^2</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">w_cpx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">roots</span><span class="p">(</span><span class="n">char_poly_coeffs</span><span class="p">)))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">w_cpx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">roots</span><span class="p">(</span><span class="n">char_poly_coeffs</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">w_cpx</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">w_cpx</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">argwhere</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">w_cpx</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mf">0.</span><span class="p">)]</span>
+                    
         <span class="c1"># Sort solutions with increasing frequency</span>
-        <span class="n">order</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">ws_cpx</span><span class="p">))</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">w_cpx</span> <span class="o">=</span> <span class="n">ws_cpx</span><span class="p">[</span><span class="n">order</span><span class="p">]</span>
+        <span class="n">order</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">w_cpx</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">w_cpx</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">w_cpx</span><span class="p">[</span><span class="n">order</span><span class="p">]</span>
 
     <span class="k">def</span> <span class="nf">eigenfrequencies</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">set_w_cpx</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
@@ -813,23 +825,44 @@
 <span class="sd">        list of Component objects</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-<div class="viewcode-block" id="Network.__init__"><a class="viewcode-back" href="../../stubs/Qcircuits.core.Network.html#Qcircuits.core.Network.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">netlist</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">netlist</span><span class="p">):</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">netlist</span> <span class="o">=</span> <span class="n">netlist</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">determine_if_lossy</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">parse_netlist</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">compute_char_poly_coeffs</span><span class="p">()</span></div>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_connected</span><span class="p">():</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;There are two sub-circuits which are not connected&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">has_opens</span><span class="p">():</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Analyzing an open/series circuit is impossible |&quot;</span><span class="o">+</span>\
+             <span class="s2">&quot; in the language of graphs, there is a dangling vertex in the electrical network&quot;</span><span class="p">)</span>
 
-<div class="viewcode-block" id="Network.determine_if_lossy"><a class="viewcode-back" href="../../_autosummary/Qcircuits.core.html#Qcircuits.core.Network.determine_if_lossy">[docs]</a>    <span class="k">def</span> <span class="nf">determine_if_lossy</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="nd">@timeit</span>
+    <span class="k">def</span> <span class="nf">is_connected</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> 
+        <span class="n">nodes_encountered</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> 
+        <span class="n">start_node</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
         <span class="sd">&#39;&#39;&#39;</span>
-<span class="sd">        Determines if the circuit is lossy by</span>
-<span class="sd">        checking if one of it&#39;s components is a resistor</span>
+<span class="sd">        Adapted from https://www.python-course.eu/graphs_python.php</span>
 <span class="sd">        &#39;&#39;&#39;</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">is_lossy</span> <span class="o">=</span> <span class="kc">False</span>
-        <span class="k">for</span> <span class="n">el</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">netlist</span><span class="p">:</span>
-            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">el</span><span class="p">,</span><span class="n">R</span><span class="p">):</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">is_lossy</span> <span class="o">=</span> <span class="kc">True</span></div>
+        <span class="k">if</span> <span class="n">nodes_encountered</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">nodes_encountered</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+        <span class="n">nodes</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">net_dict</span><span class="p">)</span> <span class="c1"># &quot;list&quot; necessary in Python 3 </span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">start_node</span><span class="p">:</span>
+            <span class="c1"># chosse a node from graph as a starting point</span>
+            <span class="n">start_node</span> <span class="o">=</span> <span class="n">nodes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">nodes_encountered</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">start_node</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">nodes_encountered</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">nodes</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">net_dict</span><span class="p">[</span><span class="n">start_node</span><span class="p">]:</span>
+                <span class="k">if</span> <span class="n">node</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">nodes_encountered</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_connected</span><span class="p">(</span><span class="n">nodes_encountered</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+                        <span class="k">return</span> <span class="kc">True</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">True</span>
+        <span class="k">return</span> <span class="kc">False</span>    
+
+    <span class="k">def</span> <span class="nf">has_opens</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">node</span><span class="p">,</span> <span class="n">connections</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">net_dict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">connections</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">net_dict</span><span class="p">)</span><span class="o">&gt;</span><span class="mi">2</span><span class="p">:</span>
+                <span class="k">return</span> <span class="kc">True</span>
 
     <span class="k">def</span> <span class="nf">parse_netlist</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 
@@ -961,8 +994,14 @@
             <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">el</span><span class="p">,</span><span class="n">W</span><span class="p">):</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">el</span><span class="p">,</span> <span class="n">el</span><span class="o">.</span><span class="n">node_minus</span><span class="p">,</span> <span class="n">el</span><span class="o">.</span><span class="n">node_plus</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">compute_char_poly_coeffs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-    
+    <span class="nd">@timeit</span>
+    <span class="k">def</span> <span class="nf">compute_char_poly_coeffs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">is_lossy</span> <span class="o">=</span> <span class="kc">True</span><span class="p">):</span>
+        
+        <span class="nd">@timeit</span>
+        <span class="k">def</span> <span class="nf">determinant</span><span class="p">(</span><span class="n">matrix</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">matrix</span><span class="o">.</span><span class="n">berkowitz_det</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">is_lossy</span> <span class="o">=</span> <span class="n">is_lossy</span>
         <span class="n">ntr</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="c1"># ntr stands for Network To Reduce</span>
 
         <span class="c1"># remove nodes which only have on type of element</span>
@@ -970,32 +1009,61 @@
         <span class="n">ntr</span><span class="o">.</span><span class="n">simplify</span><span class="p">()</span>
 
         <span class="c1"># compute conductance matrix</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">compute_LCR_matrices</span><span class="p">()</span>
+        <span class="n">ntr</span><span class="o">.</span><span class="n">compute_RLC_matrices</span><span class="p">()</span>
 
-        <span class="c1"># TODO</span>
-        <span class="n">w2</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">Symbol</span><span class="p">(</span><span class="s1">&#39;w2&#39;</span><span class="p">)</span>
-        <span class="n">char_poly</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Lm_matrix</span><span class="o">-</span><span class="n">w2</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">C_matrix</span><span class="p">)</span><span class="o">.</span><span class="n">det</span><span class="p">()</span>
-
-        <span class="n">char_poly</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">collect</span><span class="p">(</span><span class="n">sp</span><span class="o">.</span><span class="n">expand</span><span class="p">(</span><span class="n">char_poly</span><span class="p">),</span> <span class="n">w2</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">char_poly_order</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">polys</span><span class="o">.</span><span class="n">polytools</span><span class="o">.</span><span class="n">degree</span><span class="p">(</span>
-            <span class="n">char_poly</span><span class="p">,</span> <span class="n">gen</span><span class="o">=</span><span class="n">w2</span><span class="p">)</span>  <span class="c1"># Order of the polynomial</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">char_poly_coeffs_analytical</span> <span class="o">=</span> <span class="p">[</span><span class="n">char_poly</span><span class="o">.</span><span class="n">coeff</span><span class="p">(</span><span class="n">w2</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">char_poly_order</span><span class="o">+</span><span class="mi">1</span><span class="p">)[::</span><span class="o">-</span><span class="mi">1</span><span class="p">]]</span>  <span class="c1"># Get polynomial coefficients</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_lossy</span><span class="p">:</span>
+            <span class="n">w</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">Symbol</span><span class="p">(</span><span class="s1">&#39;w&#39;</span><span class="p">)</span>
+            <span class="n">char_poly</span> <span class="o">=</span> <span class="n">determinant</span><span class="p">((</span><span class="o">-</span><span class="n">ntr</span><span class="o">.</span><span class="n">RLC_matrices</span><span class="p">[</span><span class="s1">&#39;L&#39;</span><span class="p">]</span><span class="o">+</span><span class="mi">1</span><span class="n">j</span><span class="o">*</span><span class="n">w</span><span class="o">*</span><span class="n">ntr</span><span class="o">.</span><span class="n">RLC_matrices</span><span class="p">[</span><span class="s1">&#39;R&#39;</span><span class="p">]</span><span class="o">+</span><span class="n">w</span><span class="o">**</span><span class="mi">2</span><span class="o">*</span><span class="n">ntr</span><span class="o">.</span><span class="n">RLC_matrices</span><span class="p">[</span><span class="s1">&#39;C&#39;</span><span class="p">]))</span>
+            <span class="n">char_poly</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">collect</span><span class="p">(</span><span class="n">sp</span><span class="o">.</span><span class="n">expand</span><span class="p">(</span><span class="n">char_poly</span><span class="p">),</span> <span class="n">w</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">char_poly_order</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">polys</span><span class="o">.</span><span class="n">polytools</span><span class="o">.</span><span class="n">degree</span><span class="p">(</span>
+                <span class="n">char_poly</span><span class="p">,</span> <span class="n">gen</span><span class="o">=</span><span class="n">w</span><span class="p">)</span>  <span class="c1"># Order of the polynomial</span>
+            <span class="c1"># Get polynomial coefficients, index 0 = highest order term</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">char_poly_coeffs_analytical</span> <span class="o">=</span>\
+                <span class="p">[</span><span class="n">char_poly</span><span class="o">.</span><span class="n">coeff</span><span class="p">(</span><span class="n">w</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">char_poly_order</span><span class="o">+</span><span class="mi">1</span><span class="p">)[::</span><span class="o">-</span><span class="mi">1</span><span class="p">]]</span> 
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">w2</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">Symbol</span><span class="p">(</span><span class="s1">&#39;w2&#39;</span><span class="p">)</span>
+            <span class="n">char_poly</span> <span class="o">=</span> <span class="n">determinant</span><span class="p">((</span><span class="o">-</span><span class="n">ntr</span><span class="o">.</span><span class="n">RLC_matrices</span><span class="p">[</span><span class="s1">&#39;L&#39;</span><span class="p">]</span><span class="o">+</span><span class="n">w2</span><span class="o">*</span><span class="n">ntr</span><span class="o">.</span><span class="n">RLC_matrices</span><span class="p">[</span><span class="s1">&#39;C&#39;</span><span class="p">]))</span>
+            <span class="n">char_poly</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">collect</span><span class="p">(</span><span class="n">sp</span><span class="o">.</span><span class="n">expand</span><span class="p">(</span><span class="n">char_poly</span><span class="p">),</span> <span class="n">w2</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">char_poly_order</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">polys</span><span class="o">.</span><span class="n">polytools</span><span class="o">.</span><span class="n">degree</span><span class="p">(</span><span class="n">char_poly</span><span class="p">,</span> <span class="n">gen</span><span class="o">=</span><span class="n">w2</span><span class="p">)</span>  <span class="c1"># Order of the polynomial</span>
+            <span class="c1"># Get polynomial coefficients, index 0 = highest order term</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">char_poly_coeffs_analytical</span> <span class="o">=</span>\
+                <span class="p">[</span><span class="n">char_poly</span><span class="o">.</span><span class="n">coeff</span><span class="p">(</span><span class="n">w2</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">char_poly_order</span><span class="o">+</span><span class="mi">1</span><span class="p">)[::</span><span class="o">-</span><span class="mi">1</span><span class="p">]]</span>  
+                
+        
+        <span class="c1"># Divide by w if possible</span>
+        <span class="n">n</span><span class="o">=</span><span class="mi">1</span>
+        <span class="k">while</span> <span class="bp">self</span><span class="o">.</span><span class="n">char_poly_coeffs_analytical</span><span class="p">[</span><span class="o">-</span><span class="n">n</span><span class="p">]</span><span class="o">==</span><span class="mi">0</span><span class="p">:</span>
+            <span class="n">n</span><span class="o">+=</span><span class="mi">1</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">char_poly_coeffs_analytical</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">char_poly_coeffs_analytical</span><span class="p">[:</span><span class="bp">self</span><span class="o">.</span><span class="n">char_poly_order</span><span class="o">+</span><span class="mi">2</span><span class="o">-</span><span class="n">n</span><span class="p">]</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">char_poly_coeffs_analytical</span>
 
     <span class="k">def</span> <span class="nf">simplify</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="c1"># TODO</span>
         <span class="k">pass</span>
 
-    <span class="k">def</span> <span class="nf">compute_LCR_matrices</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">compute_RLC_matrices</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">N_nodes</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">net_dict</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">Lm_matrix</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">N_nodes</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">C_matrix</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">N_nodes</span><span class="p">)</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_lossy</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">Rm_matrix</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">N_nodes</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">RLC_matrices</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s1">&#39;R&#39;</span><span class="p">:</span><span class="n">sp</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">N_nodes</span><span class="p">),</span>
+            <span class="s1">&#39;L&#39;</span><span class="p">:</span><span class="n">sp</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">N_nodes</span><span class="p">),</span>
+            <span class="s1">&#39;C&#39;</span><span class="p">:</span><span class="n">sp</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">N_nodes</span><span class="p">)</span>
+        <span class="p">}</span>
 
-        <span class="c1"># for i in N_nodes:</span>
-        <span class="c1">#     for </span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">N_nodes</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">j</span><span class="p">,</span> <span class="n">el</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">net_dict</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="k">if</span> <span class="n">j</span><span class="o">&gt;</span><span class="n">i</span><span class="p">:</span>
+                    <span class="n">RLC_matrix_components</span> <span class="o">=</span> <span class="n">el</span><span class="o">.</span><span class="n">get_RLC_matrix_components</span><span class="p">()</span>
+                    <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">RLC_matrices</span><span class="p">:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">RLC_matrices</span><span class="p">[</span><span class="n">k</span><span class="p">][</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="n">RLC_matrix_components</span><span class="p">[</span><span class="n">k</span><span class="p">]</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">RLC_matrices</span><span class="p">[</span><span class="n">k</span><span class="p">][</span><span class="n">j</span><span class="p">,</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="n">RLC_matrix_components</span><span class="p">[</span><span class="n">k</span><span class="p">]</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">RLC_matrices</span><span class="p">[</span><span class="n">k</span><span class="p">][</span><span class="n">i</span><span class="p">,</span><span class="n">i</span><span class="p">]</span> <span class="o">+=</span> <span class="n">RLC_matrix_components</span><span class="p">[</span><span class="n">k</span><span class="p">]</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">RLC_matrices</span><span class="p">[</span><span class="n">k</span><span class="p">][</span><span class="n">j</span><span class="p">,</span><span class="n">j</span><span class="p">]</span> <span class="o">+=</span> <span class="n">RLC_matrix_components</span><span class="p">[</span><span class="n">k</span><span class="p">]</span>
 
+
+        <span class="c1"># set a ground </span>
+        <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">RLC_matrices</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">RLC_matrices</span><span class="p">[</span><span class="n">k</span><span class="p">]</span><span class="o">.</span><span class="n">row_del</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">RLC_matrices</span><span class="p">[</span><span class="n">k</span><span class="p">]</span><span class="o">.</span><span class="n">col_del</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
 
 <div class="viewcode-block" id="Network.connect"><a class="viewcode-back" href="../../_autosummary/Qcircuits.core.html#Qcircuits.core.Network.connect">[docs]</a>    <span class="k">def</span> <span class="nf">connect</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">element</span><span class="p">,</span> <span class="n">node_minus</span><span class="p">,</span> <span class="n">node_plus</span><span class="p">):</span>
         <span class="sd">&#39;&#39;&#39;</span>
@@ -1340,7 +1408,6 @@
                 <span class="n">ha</span><span class="o">=</span><span class="n">ha</span><span class="p">,</span> <span class="n">va</span><span class="o">=</span><span class="n">va</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="Parallel"><a class="viewcode-back" href="../../_autosummary/Qcircuits.core.html#Qcircuits.core.Parallel">[docs]</a><span class="k">class</span> <span class="nc">Parallel</span><span class="p">(</span><span class="n">Circuit</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;docstring for Connection&quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">left</span><span class="p">,</span> <span class="n">right</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">(</span><span class="n">Parallel</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">node_minus</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">node_plus</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
@@ -1352,8 +1419,20 @@
     <span class="k">def</span> <span class="nf">admittance</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">Add</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">left</span><span class="o">.</span><span class="n">admittance</span><span class="p">(),</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">right</span><span class="o">.</span><span class="n">admittance</span><span class="p">())</span></div>
+            <span class="bp">self</span><span class="o">.</span><span class="n">right</span><span class="o">.</span><span class="n">admittance</span><span class="p">())</span>
     
+    <span class="k">def</span> <span class="nf">get_RLC_matrix_components</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">RLC_matrix_components</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s1">&#39;R&#39;</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span>
+            <span class="s1">&#39;L&#39;</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span>
+            <span class="s1">&#39;C&#39;</span><span class="p">:</span><span class="mi">0</span>
+        <span class="p">}</span>
+        <span class="k">for</span> <span class="n">el</span> <span class="ow">in</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">left</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">right</span><span class="p">]:</span>
+            <span class="n">values_to_add</span> <span class="o">=</span> <span class="n">el</span><span class="o">.</span><span class="n">get_RLC_matrix_components</span><span class="p">()</span>
+            <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">RLC_matrix_components</span><span class="p">:</span>
+                <span class="n">RLC_matrix_components</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">+=</span> <span class="n">values_to_add</span><span class="p">[</span><span class="n">k</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">RLC_matrix_components</span></div>
+
 <div class="viewcode-block" id="Component"><a class="viewcode-back" href="../../_autosummary/Qcircuits.core.html#Qcircuits.core.Component">[docs]</a><span class="k">class</span> <span class="nc">Component</span><span class="p">(</span><span class="n">Circuit</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;docstring for Component&quot;&quot;&quot;</span>
 
@@ -1361,7 +1440,7 @@
         <span class="nb">super</span><span class="p">(</span><span class="n">Component</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">node_minus</span><span class="p">,</span> <span class="n">node_plus</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">label</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="kc">None</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_flux_wr_ref</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_flux</span> <span class="o">=</span> <span class="kc">None</span>
 
         <span class="k">if</span> <span class="n">arg1</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">arg2</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Specify either a value or a label&quot;</span><span class="p">)</span>
@@ -1394,14 +1473,15 @@
     <span class="k">def</span> <span class="nf">set_component_lists</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">label</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="s1">&#39; &#39;</span><span class="p">,</span> <span class="s1">&#39;None&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">]:</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">label</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">head</span><span class="o">.</span><span class="n">no_value_components</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                    <span class="s2">&quot;Two components may not have the same name </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">label</span><span class="p">)</span>
+                <span class="c1"># raise ValueError(</span>
+                <span class="c1">#     &quot;Two components may not have the same name %s&quot; % self.label)</span>
+                <span class="k">pass</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">head</span><span class="o">.</span><span class="n">no_value_components</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">label</span><span class="p">)</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">flux_wr_ref</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_flux_wr_ref</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">flux</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_flux</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">try</span><span class="p">:</span>
                 <span class="n">tr</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">head</span><span class="o">.</span><span class="n">flux_transformation_dict</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">node_minus</span><span class="p">,</span>
                                                         <span class="bp">self</span><span class="o">.</span><span class="n">node_plus</span><span class="p">]</span>
@@ -1413,14 +1493,28 @@
                 <span class="bp">self</span><span class="o">.</span><span class="n">head</span><span class="o">.</span><span class="n">flux_transformation_dict</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">node_plus</span><span class="p">,</span>
                                                    <span class="bp">self</span><span class="o">.</span><span class="n">node_minus</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="n">tr</span>
 
-            <span class="bp">self</span><span class="o">.</span><span class="n">_flux_wr_ref</span> <span class="o">=</span> <span class="n">lambdify</span><span class="p">(</span>
-                <span class="p">[</span><span class="s1">&#39;w&#39;</span><span class="p">]</span><span class="o">+</span><span class="bp">self</span><span class="o">.</span><span class="n">head</span><span class="o">.</span><span class="n">no_value_components</span><span class="p">,</span> <span class="n">tr</span><span class="p">,</span> <span class="s2">&quot;numpy&quot;</span><span class="p">)</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_flux_wr_ref</span>
+            <span class="n">_flux_undecorated</span> <span class="o">=</span> <span class="n">lambdify</span><span class="p">(</span>
+                <span class="p">[</span><span class="s1">&#39;w&#39;</span><span class="p">]</span><span class="o">+</span><span class="bp">self</span><span class="o">.</span><span class="n">head</span><span class="o">.</span><span class="n">no_value_components</span><span class="p">,</span>
+                <span class="n">tr</span><span class="o">*</span><span class="n">sp</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">hbar</span><span class="o">/</span><span class="n">sp</span><span class="o">.</span><span class="n">Symbol</span><span class="p">(</span><span class="s1">&#39;w&#39;</span><span class="p">)</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">head</span><span class="o">.</span><span class="n">dY_analytical</span><span class="p">),</span> 
+                <span class="s2">&quot;numpy&quot;</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">flux</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">w</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="n">ImdY</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">imag</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">head</span><span class="o">.</span><span class="n">dY</span><span class="p">(</span><span class="n">w</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">))</span>
-        <span class="n">flux_ref</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">hbar</span><span class="o">/</span><span class="n">w</span><span class="o">/</span><span class="n">ImdY</span><span class="p">)</span>
-        <span class="k">return</span> <span class="nb">complex</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">flux_wr_ref</span><span class="p">(</span><span class="n">w</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span><span class="o">*</span><span class="n">flux_ref</span><span class="p">)</span>
+            <span class="nd">@safely_evaluate</span>
+            <span class="k">def</span> <span class="nf">_flux_single</span><span class="p">(</span><span class="n">w</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+                <span class="k">return</span> <span class="n">_flux_undecorated</span><span class="p">(</span><span class="n">w</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+            
+            <span class="k">def</span> <span class="nf">_flux</span><span class="p">(</span><span class="n">w</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+                <span class="c1"># test if w is an iterable</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="nb">iter</span><span class="p">(</span><span class="n">w</span><span class="p">)</span>
+                <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
+                    <span class="c1"># iterable = False</span>
+                    <span class="k">return</span> <span class="n">_flux_single</span><span class="p">(</span><span class="n">w</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="c1"># iterable = True</span>
+                    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">_flux_single</span><span class="p">(</span><span class="n">w_single</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="k">for</span> <span class="n">w_single</span> <span class="ow">in</span> <span class="n">w</span><span class="p">])</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">_flux</span> <span class="o">=</span> <span class="n">_flux</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_flux</span>
 
     <span class="k">def</span> <span class="nf">voltage</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">w</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="k">return</span> <span class="nb">complex</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">flux</span><span class="p">(</span><span class="n">w</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span><span class="o">*</span><span class="mi">1</span><span class="n">j</span><span class="o">*</span><span class="n">w</span><span class="p">)</span>
@@ -1514,68 +1608,6 @@
         <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">angle</span> <span class="o">==</span> <span class="n">SOUTH</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">shift</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">x_plot_center</span><span class="p">),</span> <span class="n">shift</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">y_plot_center</span><span class="p">),</span> <span class="n">line_type</span></div>
 
-<span class="k">class</span> <span class="nc">R</span><span class="p">(</span><span class="n">Component</span><span class="p">):</span>
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node_minus</span><span class="p">,</span> <span class="n">node_plus</span><span class="p">,</span> <span class="n">arg1</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">arg2</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="nb">super</span><span class="p">(</span><span class="n">R</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">node_minus</span><span class="p">,</span> <span class="n">node_plus</span><span class="p">,</span> <span class="n">arg1</span><span class="p">,</span> <span class="n">arg2</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">unit</span> <span class="o">=</span> <span class="sa">r</span><span class="s1">&#39;$\Omega$&#39;</span>
-
-    <span class="k">def</span> <span class="nf">admittance</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="mi">1</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">get_value</span><span class="p">()</span>
-
-    <span class="k">def</span> <span class="nf">set_component_lists</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="nb">super</span><span class="p">(</span><span class="n">R</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">set_component_lists</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">head</span><span class="o">.</span><span class="n">resistors</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
-
-    <span class="k">def</span> <span class="nf">draw</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-
-        <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="o">-</span><span class="mf">0.25</span><span class="p">,</span> <span class="mf">0.25</span> <span class="o">+</span>
-                        <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">head</span><span class="o">.</span><span class="n">pp</span><span class="p">[</span><span class="s1">&#39;R&#39;</span><span class="p">][</span><span class="s1">&#39;N_ridges&#39;</span><span class="p">]),</span> <span class="bp">self</span><span class="o">.</span><span class="n">head</span><span class="o">.</span><span class="n">pp</span><span class="p">[</span><span class="s1">&#39;R&#39;</span><span class="p">][</span><span class="s1">&#39;N_points&#39;</span><span class="p">])</span>
-        <span class="n">height</span> <span class="o">=</span> <span class="mf">1.</span>
-        <span class="n">period</span> <span class="o">=</span> <span class="mf">1.</span>
-        <span class="n">a</span> <span class="o">=</span> <span class="n">height</span><span class="o">*</span><span class="mf">2.</span><span class="o">*</span><span class="p">(</span><span class="o">-</span><span class="mf">1.</span><span class="o">+</span><span class="mf">2.</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">mod</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="mf">2.</span><span class="o">*</span><span class="n">x</span><span class="o">/</span><span class="n">period</span><span class="p">),</span> <span class="mf">2.</span><span class="p">))</span>
-        <span class="n">b</span> <span class="o">=</span> <span class="o">-</span><span class="n">height</span><span class="o">*</span><span class="mf">2.</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">mod</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="mf">2.</span><span class="o">*</span><span class="n">x</span><span class="o">/</span><span class="n">period</span><span class="p">),</span> <span class="mf">2.</span><span class="p">)</span>
-        <span class="n">y</span> <span class="o">=</span> <span class="p">(</span><span class="mf">2.</span><span class="o">*</span><span class="n">x</span><span class="o">/</span><span class="n">period</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="mf">2.</span><span class="o">*</span><span class="n">x</span><span class="o">/</span><span class="n">period</span><span class="p">))</span><span class="o">*</span><span class="n">a</span><span class="o">+</span><span class="n">b</span><span class="o">+</span><span class="n">height</span>
-
-        <span class="n">line_type</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="n">line_type</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;R&#39;</span><span class="p">)</span>
-
-        <span class="c1"># reset leftmost point to 0</span>
-        <span class="n">x_min</span> <span class="o">=</span> <span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-        <span class="n">x</span> <span class="o">-=</span> <span class="n">x_min</span>
-
-        <span class="c1"># set width inductor width</span>
-        <span class="n">x_max</span> <span class="o">=</span> <span class="n">x</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
-        <span class="n">x</span> <span class="o">*=</span> <span class="bp">self</span><span class="o">.</span><span class="n">head</span><span class="o">.</span><span class="n">pp</span><span class="p">[</span><span class="s1">&#39;R&#39;</span><span class="p">][</span><span class="s1">&#39;width&#39;</span><span class="p">]</span><span class="o">/</span><span class="n">x_max</span>
-
-        <span class="c1"># set leftmost point to the length of</span>
-        <span class="c1"># the side connection wires</span>
-        <span class="n">x</span> <span class="o">+=</span> <span class="p">(</span><span class="mf">1.</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">head</span><span class="o">.</span><span class="n">pp</span><span class="p">[</span><span class="s1">&#39;R&#39;</span><span class="p">][</span><span class="s1">&#39;width&#39;</span><span class="p">])</span><span class="o">/</span><span class="mf">2.</span>
-
-        <span class="c1"># add side wire connections</span>
-        <span class="n">x_min</span> <span class="o">=</span> <span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-        <span class="n">x_max</span> <span class="o">=</span> <span class="n">x</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
-        <span class="n">x_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span><span class="p">]</span>
-        <span class="n">x_list</span> <span class="o">+=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">0.</span><span class="p">,</span> <span class="n">x_min</span><span class="p">])]</span>
-        <span class="n">x_list</span> <span class="o">+=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">x_max</span><span class="p">,</span> <span class="mf">1.</span><span class="p">])]</span>
-        <span class="n">line_type</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;W&#39;</span><span class="p">)</span>
-        <span class="n">line_type</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;W&#39;</span><span class="p">)</span>
-
-        <span class="c1"># center in x</span>
-        <span class="n">x_list</span> <span class="o">=</span> <span class="n">shift</span><span class="p">(</span><span class="n">x_list</span><span class="o">-</span><span class="mf">1.</span><span class="o">/</span><span class="mf">2.</span><span class="p">)</span>
-
-        <span class="c1"># set height of inductor</span>
-        <span class="n">y</span> <span class="o">*=</span> <span class="bp">self</span><span class="o">.</span><span class="n">head</span><span class="o">.</span><span class="n">pp</span><span class="p">[</span><span class="s1">&#39;R&#39;</span><span class="p">][</span><span class="s1">&#39;height&#39;</span><span class="p">]</span><span class="o">/</span><span class="mf">2.</span>
-
-        <span class="c1"># add side wire connections</span>
-        <span class="n">y_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">y</span><span class="p">]</span>
-        <span class="n">y_list</span> <span class="o">+=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">0.</span><span class="p">,</span> <span class="mf">0.</span><span class="p">])]</span>
-        <span class="n">y_list</span> <span class="o">+=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">0.</span><span class="p">,</span> <span class="mf">0.</span><span class="p">])]</span>
-
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">angle</span><span class="o">%</span><span class="mf">180.</span> <span class="o">==</span> <span class="mf">0.</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">shift</span><span class="p">(</span><span class="n">x_list</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">x_plot_center</span><span class="p">),</span> <span class="n">shift</span><span class="p">(</span><span class="n">y_list</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">y_plot_center</span><span class="p">),</span> <span class="n">line_type</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">angle</span><span class="o">%</span><span class="mf">180.</span> <span class="o">==</span> <span class="mf">90.</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">shift</span><span class="p">(</span><span class="n">y_list</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">x_plot_center</span><span class="p">),</span> <span class="n">shift</span><span class="p">(</span><span class="n">x_list</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">y_plot_center</span><span class="p">),</span> <span class="n">line_type</span>
-
 <div class="viewcode-block" id="L"><a class="viewcode-back" href="../../_autosummary/Qcircuits.core.html#Qcircuits.core.L">[docs]</a><span class="k">class</span> <span class="nc">L</span><span class="p">(</span><span class="n">Component</span><span class="p">):</span>
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node_minus</span><span class="p">,</span> <span class="n">node_plus</span><span class="p">,</span> <span class="n">arg1</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">arg2</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">(</span><span class="n">L</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">node_minus</span><span class="p">,</span> <span class="n">node_plus</span><span class="p">,</span> <span class="n">arg1</span><span class="p">,</span> <span class="n">arg2</span><span class="p">)</span>
@@ -1633,7 +1665,14 @@
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">angle</span><span class="o">%</span><span class="mf">180.</span> <span class="o">==</span> <span class="mf">0.</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">shift</span><span class="p">(</span><span class="n">x_list</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">x_plot_center</span><span class="p">),</span> <span class="n">shift</span><span class="p">(</span><span class="n">y_list</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">y_plot_center</span><span class="p">),</span> <span class="n">line_type</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">angle</span><span class="o">%</span><span class="mf">180.</span> <span class="o">==</span> <span class="mf">90.</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">shift</span><span class="p">(</span><span class="n">y_list</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">x_plot_center</span><span class="p">),</span> <span class="n">shift</span><span class="p">(</span><span class="n">x_list</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">y_plot_center</span><span class="p">),</span> <span class="n">line_type</span></div>
+            <span class="k">return</span> <span class="n">shift</span><span class="p">(</span><span class="n">y_list</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">x_plot_center</span><span class="p">),</span> <span class="n">shift</span><span class="p">(</span><span class="n">x_list</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">y_plot_center</span><span class="p">),</span> <span class="n">line_type</span>
+
+    <span class="k">def</span> <span class="nf">get_RLC_matrix_components</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s1">&#39;R&#39;</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span>
+            <span class="s1">&#39;L&#39;</span><span class="p">:</span><span class="mi">1</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">get_value</span><span class="p">(),</span>
+            <span class="s1">&#39;C&#39;</span><span class="p">:</span><span class="mi">0</span>
+        <span class="p">}</span></div>
 
 <div class="viewcode-block" id="J"><a class="viewcode-back" href="../../_autosummary/Qcircuits.core.html#Qcircuits.core.J">[docs]</a><span class="k">class</span> <span class="nc">J</span><span class="p">(</span><span class="n">L</span><span class="p">):</span>
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node_minus</span><span class="p">,</span> <span class="n">node_plus</span><span class="p">,</span> <span class="n">arg1</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">arg2</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">use_E</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">use_I</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
@@ -1666,8 +1705,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">head</span><span class="o">.</span><span class="n">junctions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">anharmonicity</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">w</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="n">ImdY</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">imag</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">head</span><span class="o">.</span><span class="n">dY</span><span class="p">(</span><span class="n">w</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">))</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">flux_wr_ref</span><span class="p">(</span><span class="n">w</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span><span class="o">**</span><span class="mi">4</span><span class="o">*</span><span class="mf">2.</span><span class="o">*</span><span class="n">e</span><span class="o">**</span><span class="mi">2</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">get_value</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span><span class="o">/</span><span class="n">w</span><span class="o">**</span><span class="mi">2</span><span class="o">/</span><span class="n">ImdY</span><span class="o">**</span><span class="mi">2</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">flux</span><span class="p">(</span><span class="n">w</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span><span class="o">**</span><span class="mi">4</span><span class="o">/</span><span class="n">hbar</span><span class="o">**</span><span class="mi">2</span><span class="o">*</span><span class="mf">2.</span><span class="o">*</span><span class="n">e</span><span class="o">**</span><span class="mi">2</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">get_value</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">draw</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 
@@ -1707,7 +1745,12 @@
     <span class="k">def</span> <span class="nf">set_component_lists</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">(</span><span class="n">R</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">set_component_lists</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">head</span><span class="o">.</span><span class="n">resistors</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
-
+    <span class="k">def</span> <span class="nf">get_RLC_matrix_components</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s1">&#39;R&#39;</span><span class="p">:</span><span class="mi">1</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">get_value</span><span class="p">(),</span>
+            <span class="s1">&#39;L&#39;</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span>
+            <span class="s1">&#39;C&#39;</span><span class="p">:</span><span class="mi">0</span>
+        <span class="p">}</span>
     <span class="k">def</span> <span class="nf">draw</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 
         <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="o">-</span><span class="mf">0.25</span><span class="p">,</span> <span class="mf">0.25</span> <span class="o">+</span>
@@ -1798,7 +1841,14 @@
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">angle</span><span class="o">%</span><span class="mf">180.</span> <span class="o">==</span> <span class="mf">0.</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">shift</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">x_plot_center</span><span class="p">),</span> <span class="n">shift</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">y_plot_center</span><span class="p">),</span> <span class="n">line_type</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">angle</span><span class="o">%</span><span class="mf">180.</span> <span class="o">==</span> <span class="mf">90.</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">shift</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">x_plot_center</span><span class="p">),</span> <span class="n">shift</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">y_plot_center</span><span class="p">),</span> <span class="n">line_type</span></div>
+            <span class="k">return</span> <span class="n">shift</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">x_plot_center</span><span class="p">),</span> <span class="n">shift</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">y_plot_center</span><span class="p">),</span> <span class="n">line_type</span>
+
+    <span class="k">def</span> <span class="nf">get_RLC_matrix_components</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s1">&#39;R&#39;</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span>
+            <span class="s1">&#39;L&#39;</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span>
+            <span class="s1">&#39;C&#39;</span><span class="p">:</span><span class="bp">self</span><span class="o">.</span><span class="n">get_value</span><span class="p">()</span>
+        <span class="p">}</span></div>
 
 <div class="viewcode-block" id="Admittance"><a class="viewcode-back" href="../../_autosummary/Qcircuits.core.html#Qcircuits.core.Admittance">[docs]</a><span class="k">class</span> <span class="nc">Admittance</span><span class="p">(</span><span class="n">Component</span><span class="p">):</span>
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node_minus</span><span class="p">,</span> <span class="n">node_plus</span><span class="p">,</span> <span class="n">Y</span><span class="p">):</span>
@@ -1809,15 +1859,25 @@
     <span class="k">def</span> <span class="nf">admittance</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">Y</span></div>
 
+<span class="nd">@timeit</span>
+<span class="k">def</span> <span class="nf">main</span><span class="p">():</span>
+    <span class="n">circuit</span> <span class="o">=</span> <span class="n">Qcircuit_NET</span><span class="p">([</span>
+            <span class="n">C</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="s1">&#39;C&#39;</span><span class="p">),</span>
+            <span class="n">C</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="s1">&#39;C&#39;</span><span class="p">),</span>
+            <span class="n">J</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="s1">&#39;L&#39;</span><span class="p">),</span>
+            <span class="n">J</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="s1">&#39;L&#39;</span><span class="p">),</span>
+            <span class="n">J</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="s1">&#39;L&#39;</span><span class="p">),</span>
+            <span class="n">J</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="s1">&#39;L&#39;</span><span class="p">)</span>
+        <span class="p">])</span>
+    <span class="c1"># circuit = Qcircuit_GUI(filename = &#39;.txt&#39;,edit=False,plot=False)</span>
+    <span class="c1"># print(circuit.Y)</span>
+    <span class="c1"># print(sp.together(circuit.Y))</span>
+    <span class="n">circuit</span><span class="o">.</span><span class="n">w_k_A_chi</span><span class="p">(</span><span class="n">C</span><span class="o">=</span><span class="mf">1e-13</span><span class="p">,</span><span class="n">pretty_print</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span><span class="n">L</span><span class="o">=</span><span class="mf">1e-8</span><span class="p">)</span>
+    <span class="c1"># circuit.show_normal_mode(0)</span>
+    <span class="c1"># circuit.show_normal_mode(1)</span>
+
 <span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
-    <span class="k">pass</span>
-    <span class="c1"># c = Qcircuit_GUI(&#39;test.txt&#39;, edit=False, plot=False, print_network=True)</span>
-    <span class="c1"># wlist = np.linspace(-0.5,1.,10001)</span>
-    <span class="c1"># plt.plot(wlist,np.imag(c.Y_lambdified(wlist)),&#39;o&#39;)</span>
-    <span class="c1"># plt.show()</span>
-    <span class="c1"># c.w_k_A_chi(pretty_print=True)</span>
-    <span class="c1"># c.show_normal_mode(1,L_J=10e-9,unit = &#39;current&#39;)</span>
-    <span class="c1"># c.hamiltonian(L_J=10e-9)</span>
+    <span class="n">main</span><span class="p">()</span>
 </pre></div>
 
            </div>
