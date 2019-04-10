@@ -157,14 +157,14 @@ class TestNetworkAnalysis(TestCaseAppended):
         '''
         Trivial cases
         '''
-        net = core.Network([])
+        net = core.Network([core.R(0,1,'Z2')])
         self.assertEqual(net.transfer(0,1,0,1),1)
 
     def test_transfer_left_right_port_indentical_inverted(self):
         '''
         Trivial cases
         '''
-        net = core.Network([])
+        net = core.Network([core.R(0,1,'Z2')])
         self.assertEqual(net.transfer(0,1,1,0),-1)
 
     def test_transfer_voltage_divider(self):
