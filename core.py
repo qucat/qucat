@@ -16,6 +16,19 @@ from Qcircuits.utility import pretty_value,\
         to_string,\
         safely_evaluate
 from scipy import optimize
+import time
+PROFILING = True
+
+def timeit(method):
+    def timed(*args, **kw):
+        ts = time.time()
+        result = method(*args, **kw)
+        te = time.time()
+        if PROFILING:
+            print('%r  %2.2f ms' % \
+                    (method.__name__, (te - ts) * 1000))
+        return result
+    return timed
 
 def string_to_component(s, *arg, **kwarg):
     if s == 'W':
@@ -796,6 +809,7 @@ class Network(object):
             if not isinstance(el,W):
                 self.connect(el, el.node_minus, el.node_plus)
 
+    @timeit
     def compute_char_poly_coeffs(self, is_lossy = True):
 
         self.is_lossy = is_lossy
@@ -1656,7 +1670,8 @@ class Admittance(Component):
     def admittance(self):
         return self.Y
 
-if __name__ == '__main__':
+@timeit
+def main():
     circuit = Qcircuit_NET([
             C(0,2,'C'),
             C(1,3,'C'),
@@ -1670,7 +1685,6 @@ if __name__ == '__main__':
             J(1,2,'L'),
             J(4,7,'L'),
             J(5,0,'L'),
-            J(7,2,'L')
         ])
     # circuit = Qcircuit_GUI(filename = 'test.txt',edit=False,plot=False)
     # print(circuit.Y)
