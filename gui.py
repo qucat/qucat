@@ -133,8 +133,10 @@ class SnappingCanvas(tk.Canvas):
         # directed to be this circuit editor
         self.focus_set()
         
-
-
+    ###########################
+    # Initialization functions
+    ###########################
+    
     def build_menubar(self,master):
         '''
         Builds the File, Edit, ... menu bar situated at the top of
@@ -177,7 +179,7 @@ class SnappingCanvas(tk.Canvas):
         # add cascade menu items
         menu.add_command(
             label=label_template.format("Open", ""), 
-            command=self.open, 
+            command=self.file_open, 
             font=menu_font)
         menu.add_command(
             label=label_template.format("Save", "Ctrl+S"), 
@@ -462,7 +464,7 @@ class SnappingCanvas(tk.Canvas):
         to True, and hence stop hinting that he can do that.
         '''
 
-    def open(self):
+    def file_open(self):
         netlist_filename = filedialog.askopenfilename(initialdir = os.getcwd())
         if netlist_filename == '':
             # User cancelled
@@ -481,6 +483,7 @@ class SnappingCanvas(tk.Canvas):
                 self.track_changes = True
                 self.save()
             self.track_changes = True
+        self.center_window_on_circuit()
             
     def get_mouse_location(self):
         return [self.canvasx(self.winfo_pointerx())-self.winfo_rootx(), 
