@@ -13,17 +13,7 @@ Qcircuits package
     .. toctree::
        :maxdepth: 1
 
-       Qcircuits.constants
        Qcircuits.core
-       Qcircuits.generate_graphics
-       Qcircuits.gui
-       Qcircuits.utility
-    Subpackages:
-
-    .. toctree::
-       :maxdepth: 1
-
-       Qcircuits.tests
 
 
 

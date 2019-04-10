@@ -13,7 +13,10 @@ sys.path.insert(0, os.path.abspath('_extensions'))
 
 # -- Generate API documentation ------------------------------------------------
 def run_apidoc(app):
-    """Generage API documentation"""
+    """Generage API documentation
+    see https://www.sphinx-doc.org/en/master/man/sphinx-apidoc.html
+    and https://github.com/goerz/better-apidoc
+    for available settings"""
     import better_apidoc
     better_apidoc.APP = app
     better_apidoc.main([
@@ -23,6 +26,7 @@ def run_apidoc(app):
         '--force',
         '--no-toc',
         '--separate',
+        '--no-heading',
         '-o',
         os.path.join('.', 'API'),
         os.path.join('..'),

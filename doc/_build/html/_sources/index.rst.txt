@@ -7,7 +7,7 @@ API
 .. toctree::
    :maxdepth: 1
 
-   API of the Qcircuits package <API/Qcircuits>
+   API of the Qcircuits package <API/Qcircuits.core>
 
 Indices and tables
 ==================

@@ -1,5 +1,5 @@
 import unittest
-import Qcircuits.core as core
+import Qcircuits.src.core as core
 from math import isclose
 import numpy as np
 from scipy.constants import e, pi, h, hbar
@@ -32,7 +32,7 @@ class SymbolicOperations(TestCaseAppended):
         L = 1.3e-8
         Lj = 1.33e-9
         w = 33e9
-        circuit = core.Qcircuit_NET([
+        circuit = core.Network([
             core.C(0,1,C),
             core.L(1,2,L),
             core.J(0,2,Lj)
@@ -47,7 +47,7 @@ class SymbolicOperations(TestCaseAppended):
         L = 1.3e-8
         Lj = 1.33e-9
         w = np.sqrt(1/C/(L+Lj))
-        circuit = core.Qcircuit_NET([
+        circuit = core.Network([
             core.C(0,1,C),
             core.L(1,2,L),
             core.J(0,2,Lj)
@@ -63,7 +63,7 @@ class StandardQuantumCircuits(TestCaseAppended):
     '''
 
     def transmon_parameters(self,C,Lj):
-        circuit = core.Qcircuit_NET([
+        circuit = core.Network([
             core.C(0,1,C),
             core.J(0,1,Lj)
         ])
@@ -76,7 +76,7 @@ class StandardQuantumCircuits(TestCaseAppended):
         self.assertRelativelyClose(1/(np.sqrt(C*Lj)*2.*pi),w)
 
     def test_transmon_frequency_L_sweep(self):
-        circuit = core.Qcircuit_NET([
+        circuit = core.Network([
             core.C(0,1,'C'),
             core.J(0,1,'L')])
         L_list = np.linspace(1e-8,2e-8,10)
@@ -95,7 +95,7 @@ class StandardQuantumCircuits(TestCaseAppended):
     '''
     
     def shunted_josephson_ring_parameters(self,C,L):
-        circuit = core.Qcircuit_NET([
+        circuit = core.Network([
             core.C(0,2,C),
             core.C(1,3,C),
             core.J(0,1,L),
@@ -151,20 +151,20 @@ class TestTesting(TestCaseAppended):
     def test_test(self):
         self.assertEqual(0,0)
         
-class TestNetworkAnalysis(TestCaseAppended):
+class Test_NetworkAnalysis(TestCaseAppended):
 
     def test_transfer_left_right_port_identical(self):
         '''
         Trivial cases
         '''
-        net = core.Network([core.R(0,1,'Z2')])
+        net = core._Network([core.R(0,1,'Z2')])
         self.assertEqual(net.transfer(0,1,0,1),1)
 
     def test_transfer_left_right_port_indentical_inverted(self):
         '''
         Trivial cases
         '''
-        net = core.Network([core.R(0,1,'Z2')])
+        net = core._Network([core.R(0,1,'Z2')])
         self.assertEqual(net.transfer(0,1,1,0),-1)
 
     def test_transfer_voltage_divider(self):
@@ -175,7 +175,7 @@ class TestNetworkAnalysis(TestCaseAppended):
         '''
 
         # Compute the bridge transfer function
-        net = core.Network([
+        net = core._Network([
             core.R(0,1,'Z2'),
             core.R(1,2,'Z1'),
             core.R(2,0,'Zg'),
@@ -207,7 +207,7 @@ class TestNetworkAnalysis(TestCaseAppended):
         '''
 
         # Compute the bridge transfer function
-        net = core.Network([
+        net = core._Network([
             core.R(0,1,'R_3'),
             core.R(1,2,'R_x'),
             core.R(2,3,'R_2'),
@@ -244,7 +244,7 @@ class TestNetworkAnalysis(TestCaseAppended):
         '''
 
         # Compute the bridge transfer function
-        net = core.Network([
+        net = core._Network([
             core.R(0,1,'R_3'),
             core.R(1,2,'R_x'),
             core.R(2,3,'R_2'),
@@ -274,7 +274,7 @@ class TestNetworkAnalysis(TestCaseAppended):
         left_plus = 1
         right_minus = 2
         right_plus = 3
-        net = core.Network([
+        net = core._Network([
             core.R(left_minus,left_plus,'Zs'),
             core.R(right_minus,right_plus,'Zl'),
             core.Admittance(left_minus,right_plus,0),
@@ -302,7 +302,7 @@ class TestNetworkAnalysis(TestCaseAppended):
 
     def test_open_or_series_check(self):
         with self.assertRaises(ValueError):
-            net = core.Network([
+            net = core._Network([
                 core.R(0,1,'Z'),
                 core.C(1,2,'Z'),
                 core.J(2,3,'Z'),
@@ -310,14 +310,14 @@ class TestNetworkAnalysis(TestCaseAppended):
 
     def test_connectivity_check_single_element_not_connected(self):
         with self.assertRaises(ValueError):
-            net = core.Network([
+            net = core._Network([
                 core.R(0,1,'Z'),
                 core.C(1,2,'Z'),
                 core.J(3,4,'Z'),
                 ])
     def test_connectivity_check_subcircuit_not_connected(self):
         with self.assertRaises(ValueError):
-            net = core.Network([
+            net = core._Network([
                 core.R(0,1,'Z'),
                 core.C(1,2,'Z'),
                 core.J(3,4,'Z'),

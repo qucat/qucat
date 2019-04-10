@@ -13,8 +13,8 @@ from PIL import Image, ImageTk
 from tkinter import ttk
 import numpy as np
 import os
-from Qcircuits.utility import to_string
-from Qcircuits.constants import *
+from Qcircuits.src._utility import to_string
+from Qcircuits.src._constants import *
 from copy import deepcopy
 
 png_directory = os.path.join(os.path.dirname(__file__), ".graphics")

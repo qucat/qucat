@@ -1,7 +1,6 @@
 import os
-import Qcircuits.core
-from Qcircuits.core_net import string_to_component
-from Qcircuits.constants import *
+from Qcircuits.src.core import string_to_component
+from Qcircuits.src._constants import *
 import matplotlib.pyplot as plt
 from matplotlib.patches import Rectangle
 png_directory = os.path.join(os.path.dirname(__file__),".graphics")
