@@ -519,7 +519,7 @@ class SnappingCanvas(tk.Canvas):
 
         # Obtain the string representation 
         # of all the elements on the canvas       
-        netlist_string = elements_list_to_netlist_string()
+        netlist_string = self.elements_list_to_netlist_string()
 
         # Write that netlist string to the file
         with open(self.netlist_filename, 'w') as f:
@@ -604,8 +604,8 @@ class SnappingCanvas(tk.Canvas):
         # write the grid lines
         for x in grid_x:
             for y in grid_y:
-                self.create_line(x-dx, y, x+2*dx, y, tags='grid')
-                self.create_line(x, y-dy, x, y+2*dy, tags='grid')
+                self.create_line(x-1, y, x+2, y, tags='grid')
+                self.create_line(x, y-1, x, y+2, tags='grid')
 
         # Put the grid behind all other elements of the canvas
         self.tag_lower('grid')
@@ -622,9 +622,9 @@ class SnappingCanvas(tk.Canvas):
 
     def file_open(self):
         '''
-        Triggered by the menubar button File>Open.
-        Opens a dialog window where the user can choose a file.
-        Then loads the file
+        Triggered by the menu bar button File>Open.
+        Opens a dialog window where the user can choose a file
+        then loads the file.
         '''
 
         # Prompt user for file name
@@ -632,26 +632,42 @@ class SnappingCanvas(tk.Canvas):
 
         if netlist_filename == '':
             # User cancelled
-            return
+            pass
         else:
+
+            # open file
             with open(netlist_filename, 'r') as f:
+
+                # extract the netlist file string
                 netlist_file_string = [line for line in f]
-                
+            
+            # here we don't want to track changes
+            # as we're creating many components in one go, 
+            # we'll be saving the new circuit afterwards
             self.track_changes = False
             try:
+                # try and load the netlist
                 self.load_netlist(netlist_file_string)
             except Exception as e:
+                # in case the content of the file was not in the right format
+                self.message("Not all components of the file could be loaded")
                 print("Loading file failed with error:")
                 print(e)
             else:
-                self.track_changes = True
-                self.save()
+                self.message("File succesfully loaded")
+            
+            # Save changes and turn change tracker back on
             self.track_changes = True
-        self.center_window_on_circuit()
+            self.save()
+            
+            # Center window in case the other circuit was 
+            # built at a different location on the canvas
+            self.center_window_on_circuit()
 
     #############################
     # SCROLLING
     ##############################
+
     def scroll_y_wheel(self, event):
         if event.num == 5 or event.delta < 0:
             direction = 1
