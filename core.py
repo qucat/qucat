@@ -678,6 +678,16 @@ class Network(object):
 
         self.netlist = netlist
         self.parse_netlist()
+        self.check_if_connected()
+        self.remove_opens()
+
+    def check_if_connected(self):
+        #TODO
+        pass
+    
+    def remove_opens(self):
+        #TODO
+        pass
 
     def parse_netlist(self):
 
