@@ -122,7 +122,7 @@ pp["normal_mode_arrow"]= {
     }
 plot_parameters_normal_modes = pp
 
-class _Qcircuit(object):
+class Qcircuit(object):
     """docstring for BBQcircuit"""
 
     def __init__(self, netlist):
@@ -415,12 +415,12 @@ class _Qcircuit(object):
 
         return H
 
-class Network(_Qcircuit):
+class Network(Qcircuit):
 
     def __init__(self, netlist):
         super(Network, self).__init__(netlist)
 
-class GUI(_Qcircuit):
+class GUI(Qcircuit):
 
     def __init__(self, filename, edit=True, plot=True, print_network=True):
         
