@@ -7,7 +7,7 @@ API
 .. toctree::
    :maxdepth: 1
 
-   API of the Krotov package <API/krotov>
+   API of the Qcircuits package <API/Qcircuits>
 
 Indices and tables
 ==================
