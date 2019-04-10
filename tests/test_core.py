@@ -150,8 +150,12 @@ class StandardQuantumCircuits(TestCaseAppended):
 class TestTesting(TestCaseAppended):
     def test_test(self):
         self.assertEqual(0,0)
-        
-class Test_NetworkAnalysis(TestCaseAppended):
+
+class TestGraphics(TestCaseAppended):   
+    def test_generate_graphics(self):
+        exec(open("./_generate_graphics.py").read())
+
+class TestNetworkAnalysis(TestCaseAppended):
 
     def test_transfer_left_right_port_identical(self):
         '''
