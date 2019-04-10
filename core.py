@@ -834,7 +834,7 @@ class Network(object):
 
         if self.is_lossy:
             w = sp.Symbol('w')
-            char_poly = (-ntr.RLC_matrices['L']+1j*w*ntr.RLC_matrices['R']+w**2*ntr.RLC_matrices['C']).det()
+            char_poly = (-ntr.RLC_matrices['L']+1j*w*ntr.RLC_matrices['R']+w**2*ntr.RLC_matrices['C']).berkowitz_det()
             char_poly = sp.collect(sp.expand(char_poly), w)
             self.char_poly_order = sp.polys.polytools.degree(
                 char_poly, gen=w)  # Order of the polynomial
@@ -843,7 +843,7 @@ class Network(object):
                 [char_poly.coeff(w, n) for n in range(self.char_poly_order+1)[::-1]] 
         else:
             w2 = sp.Symbol('w2')
-            char_poly = (-ntr.RLC_matrices['L']+w2*ntr.RLC_matrices['C']).det()
+            char_poly = (-ntr.RLC_matrices['L']+w2*ntr.RLC_matrices['C']).berkowitz_det()
             char_poly = sp.collect(sp.expand(char_poly), w2)
             self.char_poly_order = sp.polys.polytools.degree(char_poly, gen=w2)  # Order of the polynomial
             # Get polynomial coefficients, index 0 = highest order term
@@ -1695,6 +1695,8 @@ def main():
             J(1,2,'L'),
             J(4,7,'L'),
             J(5,0,'L'),
+            J(7,2,'L'),
+            R(7,2,1e6)
         ])
     # circuit = Qcircuit_GUI(filename = 'test.txt',edit=False,plot=False)
     # print(circuit.Y)
@@ -1702,3 +1704,6 @@ def main():
     circuit.w_k_A_chi(C=1e-13,L=1e-8,pretty_print=True)
     # circuit.show_normal_mode(0)
     # circuit.show_normal_mode(1)
+
+if __name__ == '__main__':
+    main()
