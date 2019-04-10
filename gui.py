@@ -464,6 +464,89 @@ class SnappingCanvas(tk.Canvas):
         to True, and hence stop hinting that he can do that.
         '''
 
+    #############################
+    #  CORE functions
+    ##############################
+    def save(self, event=None):
+
+        netlist_string = ""
+        for el in self.elements:
+            v, l = el.prop
+            if v is None:
+                v = ''
+            else:
+                v = "%e" % v
+
+            if l is None:
+                l = ''
+
+            netlist_string += ("%s;%s;%s;%s;%s\n" % (
+                type(el).__name__,
+                el.grid_to_node_string(el.x_minus, el.y_minus),
+                el.grid_to_node_string(el.x_plus, el.y_plus),
+                v, l))
+
+        with open(self.netlist_filename, 'w') as f:
+            f.write(netlist_string)
+
+        if self.track_changes:
+            del self.history[self.history_location+1:]
+            self.history.append(netlist_string)
+            self.history_location += 1
+            # print('ADDED TO HISTORY')
+            # for net in self.history:
+            #     print(net)
+
+        self.message("Saving...")
+    
+    def load_netlist(self, lines):
+        self.delete_all(track_changes=False)
+        for el in lines:
+            el = el.replace('\n', '')
+            el = el.split(";")
+            string_to_component(el[0], self, auto_place=el)
+
+    def on_resize(self, event=None):
+        self.configure_scrollregion()
+        self.draw_grid(event)
+
+    def draw_grid(self, event=None):
+
+        # Draw the grid
+        self.delete("grid")
+        dx = 1
+        dy = 1
+        box_canvas = (self.canvasx(0),  # get visible area of the canvas
+                      self.canvasy(0),
+                      self.canvasx(self.winfo_width()),
+                      self.canvasy(self.winfo_height()))
+
+        self.background = self.create_rectangle(
+            *box_canvas, fill='white', outline='', tags='grid')
+
+        grid_x = np.arange(
+            self.canvas_center[0], box_canvas[2], self.grid_unit).tolist()
+        grid_x += np.arange(self.canvas_center[0]-self.grid_unit,
+                            box_canvas[0], -self.grid_unit).tolist()
+        grid_y = np.arange(
+            self.canvas_center[1], box_canvas[3], self.grid_unit).tolist()
+        grid_y += np.arange(self.canvas_center[1]-self.grid_unit,
+                            box_canvas[1], -self.grid_unit).tolist()
+
+        for x in grid_x:
+            for y in grid_y:
+                self.create_line(x-dx, y, x+2*dx, y, tags='grid')
+                self.create_line(x, y-dy, x, y+2*dy, tags='grid')
+        self.tag_lower('grid')
+        self.tag_bind('grid', '<ButtonPress-1>', self.start_selection_field)
+        self.tag_bind('grid', "<B1-Motion>", self.expand_selection_field)
+        self.tag_bind('grid', "<ButtonRelease-1>", self.end_selection_field)
+        self.tag_bind('grid', "<Button-3>", self.right_click)
+
+    ###########################
+    # FILE menu functionalities
+    ###########################
+
     def file_open(self):
         netlist_filename = filedialog.askopenfilename(initialdir = os.getcwd())
         if netlist_filename == '':
@@ -484,77 +567,10 @@ class SnappingCanvas(tk.Canvas):
                 self.save()
             self.track_changes = True
         self.center_window_on_circuit()
-            
-    def get_mouse_location(self):
-        return [self.canvasx(self.winfo_pointerx())-self.winfo_rootx(), 
-            self.canvasy(self.winfo_pointery())-self.winfo_rooty()]
 
-    def cut_selection(self, event=None):
-        self.track_changes = False
-        self.copied_elements = [deepcopy(el)
-                                for el in self.elements if el.selected]
-        self.track_changes = True
-        self.delete_selection()
-
-    def paste(self, event=None):
-        if len(self.copied_elements) > 0:
-            self.deselect_all()
-
-            self.track_changes = False
-            to_paste = [deepcopy(el) for el in self.copied_elements]
-            self.track_changes = True
-
-            # smallest x and y of copied elements, in canvas units
-            x_min = min([el.x_minus for el in to_paste] +
-                        [el.x_plus for el in to_paste])
-            y_min = min([el.y_minus for el in to_paste] +
-                        [el.y_plus for el in to_paste])
-            x_min, y_min = self.grid_to_canvas([x_min, y_min])
-
-            # shift to apply, in canvas units
-            dx = self.canvasx(event.x)-x_min
-            dy = self.canvasy(event.y)-y_min
-
-            for el in to_paste:
-                el.create()
-                el.adapt_to_grid_unit()
-                el.force_select()
-                el.move(dx, dy)
-                el.add_or_replace_label()
-
-            self.bind("<Motion>", el.on_motion)
-            if len(to_paste) == 1:
-                self.bind("<ButtonPress-1>", el.release_motion_paste_single)
-                self.bind('<Left>', lambda event: el.on_updownleftright(event, angle=WEST))
-                self.bind('<Right>', lambda event: el.on_updownleftright(event, angle=EAST))
-                self.bind('<Up>', lambda event: el.on_updownleftright(event, angle=NORTH))
-                self.bind('<Down>', lambda event: el.on_updownleftright(event, angle=SOUTH))
-            else:
-                self.bind("<ButtonPress-1>", el.release_motion_paste)
-
-    def copy_selection(self, event=None):
-        self.track_changes = False
-        self.copied_elements = [deepcopy(el)
-                                for el in self.elements if el.selected]
-        self.track_changes = True
-
-    def center_window_on_circuit(self):
-
-        if len(self.elements) > 0:
-            xs = [el.x_minus for el in self.elements] + \
-                [el.x_plus for el in self.elements]
-            ys = [el.y_minus for el in self.elements] + \
-                [el.y_plus for el in self.elements]
-            box_elements = self.grid_to_canvas([min(xs)-3, min(ys)-3])\
-                    +self.grid_to_canvas([max(xs)+3, max(ys)+3])
-
-            self.configure(scrollregion=box_elements)
-            self.xview_moveto(0)
-            self.yview_moveto(0)
-
-        self.configure_scrollregion()
-        self.draw_grid()
-
+    #############################
+    # SCROLLING
+    ##############################
     def scroll_y_wheel(self, event):
         if event.num == 5 or event.delta < 0:
             direction = 1
@@ -656,6 +672,63 @@ class SnappingCanvas(tk.Canvas):
         self.yview(*args)  # scroll vertically
         self.draw_grid()
 
+    #############################
+    #  COPY/CUT/PASTE
+    ##############################
+
+    def cut_selection(self, event=None):
+        self.track_changes = False
+        self.copied_elements = [deepcopy(el)
+                                for el in self.elements if el.selected]
+        self.track_changes = True
+        self.delete_selection()
+
+    def paste(self, event=None):
+        if len(self.copied_elements) > 0:
+            self.deselect_all()
+
+            self.track_changes = False
+            to_paste = [deepcopy(el) for el in self.copied_elements]
+            self.track_changes = True
+
+            # smallest x and y of copied elements, in canvas units
+            x_min = min([el.x_minus for el in to_paste] +
+                        [el.x_plus for el in to_paste])
+            y_min = min([el.y_minus for el in to_paste] +
+                        [el.y_plus for el in to_paste])
+            x_min, y_min = self.grid_to_canvas([x_min, y_min])
+
+            # shift to apply, in canvas units
+            dx = self.canvasx(event.x)-x_min
+            dy = self.canvasy(event.y)-y_min
+
+            for el in to_paste:
+                el.create()
+                el.adapt_to_grid_unit()
+                el.force_select()
+                el.move(dx, dy)
+                el.add_or_replace_label()
+
+            self.bind("<Motion>", el.on_motion)
+            if len(to_paste) == 1:
+                self.bind("<ButtonPress-1>", el.release_motion_paste_single)
+                self.bind('<Left>', lambda event: el.on_updownleftright(event, angle=WEST))
+                self.bind('<Right>', lambda event: el.on_updownleftright(event, angle=EAST))
+                self.bind('<Up>', lambda event: el.on_updownleftright(event, angle=NORTH))
+                self.bind('<Down>', lambda event: el.on_updownleftright(event, angle=SOUTH))
+            else:
+                self.bind("<ButtonPress-1>", el.release_motion_paste)
+
+    def copy_selection(self, event=None):
+        self.track_changes = False
+        self.copied_elements = [deepcopy(el)
+                                for el in self.elements if el.selected]
+        self.track_changes = True
+
+    #############################
+    #  HISTORY MANAGEMENT
+    ##############################
+
     def ctrl_z(self, event=None):
         # print('CTRL-Z')
         # for net in self.history:
@@ -685,49 +758,9 @@ class SnappingCanvas(tk.Canvas):
             self.message('Nothing to redo')
         # print("location is: %d" % self.history_location)
 
-    def load_netlist(self, lines):
-        self.delete_all(track_changes=False)
-        for el in lines:
-            el = el.replace('\n', '')
-            el = el.split(";")
-            string_to_component(el[0], self, auto_place=el)
-
-    def on_resize(self, event=None):
-        self.configure_scrollregion()
-        self.draw_grid(event)
-
-    def draw_grid(self, event=None):
-
-        # Draw the grid
-        self.delete("grid")
-        dx = 1
-        dy = 1
-        box_canvas = (self.canvasx(0),  # get visible area of the canvas
-                      self.canvasy(0),
-                      self.canvasx(self.winfo_width()),
-                      self.canvasy(self.winfo_height()))
-
-        self.background = self.create_rectangle(
-            *box_canvas, fill='white', outline='', tags='grid')
-
-        grid_x = np.arange(
-            self.canvas_center[0], box_canvas[2], self.grid_unit).tolist()
-        grid_x += np.arange(self.canvas_center[0]-self.grid_unit,
-                            box_canvas[0], -self.grid_unit).tolist()
-        grid_y = np.arange(
-            self.canvas_center[1], box_canvas[3], self.grid_unit).tolist()
-        grid_y += np.arange(self.canvas_center[1]-self.grid_unit,
-                            box_canvas[1], -self.grid_unit).tolist()
-
-        for x in grid_x:
-            for y in grid_y:
-                self.create_line(x-dx, y, x+2*dx, y, tags='grid')
-                self.create_line(x, y-dy, x, y+2*dy, tags='grid')
-        self.tag_lower('grid')
-        self.tag_bind('grid', '<ButtonPress-1>', self.start_selection_field)
-        self.tag_bind('grid', "<B1-Motion>", self.expand_selection_field)
-        self.tag_bind('grid', "<ButtonRelease-1>", self.end_selection_field)
-        self.tag_bind('grid', "<Button-3>", self.right_click)
+    #############################
+    #  RIGHT CLICK
+    ##############################
 
     def right_click(self, event):
         self.deselect_all()
@@ -738,6 +771,10 @@ class SnappingCanvas(tk.Canvas):
         menu.add_command(label="Paste", command=(lambda :self.paste(event)))
         menu.tk_popup(event.x_root, event.y_root)
         self.bind("<ButtonRelease-3>", lambda event: None)
+
+    #############################
+    #  SELECTING
+    ##############################
 
     def start_selection_field(self, event):
         self.deselect_all()
@@ -767,6 +804,10 @@ class SnappingCanvas(tk.Canvas):
         for el in self.elements:
             el.force_select()
 
+    #############################
+    #  DELETING
+    ##############################
+
     def delete_selection(self, event=None, track_changes=None):
         was_tracking_changes = self.track_changes
         self.track_changes = False
@@ -788,43 +829,9 @@ class SnappingCanvas(tk.Canvas):
         self.select_all()
         self.delete_selection(event, track_changes)
 
-    def save(self, event=None):
-
-        netlist_string = ""
-        for el in self.elements:
-            v, l = el.prop
-            if v is None:
-                v = ''
-            else:
-                v = "%e" % v
-
-            if l is None:
-                l = ''
-
-            netlist_string += ("%s;%s;%s;%s;%s\n" % (
-                type(el).__name__,
-                el.grid_to_node_string(el.x_minus, el.y_minus),
-                el.grid_to_node_string(el.x_plus, el.y_plus),
-                v, l))
-
-        with open(self.netlist_filename, 'w') as f:
-            f.write(netlist_string)
-
-        if self.track_changes:
-            del self.history[self.history_location+1:]
-            self.history.append(netlist_string)
-            self.history_location += 1
-            # print('ADDED TO HISTORY')
-            # for net in self.history:
-            #     print(net)
-
-        self.message("Saving...")
-
-    def message(self, text, t = 0.3):
-        saved_message = self.create_text(
-            self.canvasx(5), self.canvasy(2), text=text, anchor=tk.NW,
-            font=Font(family='Helvetica', size=8, weight='normal'))
-        self.after(int(1000*t), lambda: self.delete(saved_message))
+    #############################
+    #  CIRCLE utilities
+    ##############################
 
     def create_circle(self, x, y, r):
         # Everything defined in canvas units
@@ -842,6 +849,10 @@ class SnappingCanvas(tk.Canvas):
         y1 = y + r
         self.coords(circle, x0, y0, x1, y1)
 
+    #############################
+    #  POSITIONNING
+    ##############################
+
     def grid_to_canvas(self, pos):
         # pos = [x ,y] (in grid units)
         return [self.canvas_center[0]+self.grid_unit*pos[0],
@@ -851,6 +862,37 @@ class SnappingCanvas(tk.Canvas):
         # pos = [x ,y] (in canvas units)
         return [(pos[0]-self.canvas_center[0])/self.grid_unit,
                 (pos[1]-self.canvas_center[1])/self.grid_unit]
+    
+    def get_mouse_location(self):
+        return [self.canvasx(self.winfo_pointerx())-self.winfo_rootx(), 
+            self.canvasy(self.winfo_pointery())-self.winfo_rooty()]
+
+    #############################
+    #  OTHER
+    ##############################
+    def center_window_on_circuit(self):
+
+        if len(self.elements) > 0:
+            xs = [el.x_minus for el in self.elements] + \
+                [el.x_plus for el in self.elements]
+            ys = [el.y_minus for el in self.elements] + \
+                [el.y_plus for el in self.elements]
+            box_elements = self.grid_to_canvas([min(xs)-3, min(ys)-3])\
+                    +self.grid_to_canvas([max(xs)+3, max(ys)+3])
+
+            self.configure(scrollregion=box_elements)
+            self.xview_moveto(0)
+            self.yview_moveto(0)
+
+        self.configure_scrollregion()
+        self.draw_grid()
+
+    def message(self, text, t = 0.3):
+        saved_message = self.create_text(
+            self.canvasx(5), self.canvasy(2), text=text, anchor=tk.NW,
+            font=Font(family='Helvetica', size=8, weight='normal'))
+        self.after(int(1000*t), lambda: self.delete(saved_message))
+
 
 class TwoNodeElement(object):
     def __init__(self, canvas, event=None, auto_place=None):
