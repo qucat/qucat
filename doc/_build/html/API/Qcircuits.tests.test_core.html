@@ -1,0 +1,479 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Qcircuits.tests.test_core module &mdash; Qcircuits 6f4d19b documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../_static/jquery.js"></script>
+        <script type="text/javascript" src="../_static/underscore.js"></script>
+        <script type="text/javascript" src="../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/graphviz.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/mycss.css" type="text/css" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> Qcircuits
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <!-- Local TOC -->
+              <div class="local-toc"><ul>
+<li><a class="reference internal" href="#">Qcircuits.tests.test_core module</a><ul>
+<li><a class="reference internal" href="#summary">Summary</a></li>
+<li><a class="reference internal" href="#reference">Reference</a></li>
+</ul>
+</li>
+</ul>
+</div>
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">Qcircuits</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+      <li>Qcircuits.tests.test_core module</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  
+<style>
+/* CSS overrides for sphinx_rtd_theme */
+
+/* 24px margin */
+.nbinput.nblast,
+.nboutput.nblast {
+    margin-bottom: 19px;  /* padding has already 5px */
+}
+
+/* ... except between code cells! */
+.nblast + .nbinput {
+    margin-top: -19px;
+}
+
+.admonition > p:before {
+    margin-right: 4px;  /* make room for the exclamation icon */
+}
+
+/* Fix math alignment, see https://github.com/rtfd/sphinx_rtd_theme/pull/686 */
+.math {
+    text-align: unset;
+}
+</style>
+<div class="section" id="module-Qcircuits.tests.test_core">
+<span id="qcircuits-tests-test-core-module"></span><h1>Qcircuits.tests.test_core module<a class="headerlink" href="#module-Qcircuits.tests.test_core" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="summary">
+<h2>Summary<a class="headerlink" href="#summary" title="Permalink to this headline">¶</a></h2>
+<p>Classes:</p>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><a class="reference internal" href="#Qcircuits.tests.test_core.StandardQuantumCircuits" title="Qcircuits.tests.test_core.StandardQuantumCircuits"><code class="xref py py-obj docutils literal notranslate"><span class="pre">StandardQuantumCircuits</span></code></a></td>
+<td>Transmon circuit parameters</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#Qcircuits.tests.test_core.SymbolicOperations" title="Qcircuits.tests.test_core.SymbolicOperations"><code class="xref py py-obj docutils literal notranslate"><span class="pre">SymbolicOperations</span></code></a></td>
+<td>Create an instance of the class that will use the named test method when executed.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#Qcircuits.tests.test_core.TestCaseAppended" title="Qcircuits.tests.test_core.TestCaseAppended"><code class="xref py py-obj docutils literal notranslate"><span class="pre">TestCaseAppended</span></code></a></td>
+<td>Create an instance of the class that will use the named test method when executed.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#Qcircuits.tests.test_core.TestNetworkAnalysis" title="Qcircuits.tests.test_core.TestNetworkAnalysis"><code class="xref py py-obj docutils literal notranslate"><span class="pre">TestNetworkAnalysis</span></code></a></td>
+<td>Create an instance of the class that will use the named test method when executed.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#Qcircuits.tests.test_core.TestTesting" title="Qcircuits.tests.test_core.TestTesting"><code class="xref py py-obj docutils literal notranslate"><span class="pre">TestTesting</span></code></a></td>
+<td>Create an instance of the class that will use the named test method when executed.</td>
+</tr>
+</tbody>
+</table>
+<p>Functions:</p>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><a class="reference internal" href="#Qcircuits.tests.test_core.cutoff_digits" title="Qcircuits.tests.test_core.cutoff_digits"><code class="xref py py-obj docutils literal notranslate"><span class="pre">cutoff_digits</span></code></a></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="reference">
+<h2>Reference<a class="headerlink" href="#reference" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="Qcircuits.tests.test_core.cutoff_digits">
+<code class="descclassname">Qcircuits.tests.test_core.</code><code class="descname">cutoff_digits</code><span class="sig-paren">(</span><em>f</em>, <em>digits</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/Qcircuits/tests/test_core.html#cutoff_digits"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#Qcircuits.tests.test_core.cutoff_digits" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="class">
+<dt id="Qcircuits.tests.test_core.TestCaseAppended">
+<em class="property">class </em><code class="descclassname">Qcircuits.tests.test_core.</code><code class="descname">TestCaseAppended</code><span class="sig-paren">(</span><em>methodName='runTest'</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/Qcircuits/tests/test_core.html#TestCaseAppended"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#Qcircuits.tests.test_core.TestCaseAppended" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">unittest.case.TestCase</span></code></p>
+<p>Create an instance of the class that will use the named test
+method when executed. Raises a ValueError if the instance does
+not have a method with the specified name.</p>
+<dl class="method">
+<dt id="Qcircuits.tests.test_core.TestCaseAppended.assertRelativelyClose">
+<code class="descname">assertRelativelyClose</code><span class="sig-paren">(</span><em>a</em>, <em>b</em>, <em>digits=10</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/Qcircuits/tests/test_core.html#TestCaseAppended.assertRelativelyClose"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#Qcircuits.tests.test_core.TestCaseAppended.assertRelativelyClose" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="Qcircuits.tests.test_core.TestCaseAppended.assertArrayRelativelyClose">
+<code class="descname">assertArrayRelativelyClose</code><span class="sig-paren">(</span><em>a</em>, <em>b</em>, <em>digits=10</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/Qcircuits/tests/test_core.html#TestCaseAppended.assertArrayRelativelyClose"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#Qcircuits.tests.test_core.TestCaseAppended.assertArrayRelativelyClose" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="Qcircuits.tests.test_core.SymbolicOperations">
+<em class="property">class </em><code class="descclassname">Qcircuits.tests.test_core.</code><code class="descname">SymbolicOperations</code><span class="sig-paren">(</span><em>methodName='runTest'</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/Qcircuits/tests/test_core.html#SymbolicOperations"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#Qcircuits.tests.test_core.SymbolicOperations" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#Qcircuits.tests.test_core.TestCaseAppended" title="Qcircuits.tests.test_core.TestCaseAppended"><code class="xref py py-class docutils literal notranslate"><span class="pre">Qcircuits.tests.test_core.TestCaseAppended</span></code></a></p>
+<p>Create an instance of the class that will use the named test
+method when executed. Raises a ValueError if the instance does
+not have a method with the specified name.</p>
+<dl class="method">
+<dt id="Qcircuits.tests.test_core.SymbolicOperations.test_calculating_Y">
+<code class="descname">test_calculating_Y</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/Qcircuits/tests/test_core.html#SymbolicOperations.test_calculating_Y"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#Qcircuits.tests.test_core.SymbolicOperations.test_calculating_Y" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="Qcircuits.tests.test_core.SymbolicOperations.test_calculating_dY">
+<code class="descname">test_calculating_dY</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/Qcircuits/tests/test_core.html#SymbolicOperations.test_calculating_dY"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#Qcircuits.tests.test_core.SymbolicOperations.test_calculating_dY" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="Qcircuits.tests.test_core.StandardQuantumCircuits">
+<em class="property">class </em><code class="descclassname">Qcircuits.tests.test_core.</code><code class="descname">StandardQuantumCircuits</code><span class="sig-paren">(</span><em>methodName='runTest'</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/Qcircuits/tests/test_core.html#StandardQuantumCircuits"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#Qcircuits.tests.test_core.StandardQuantumCircuits" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#Qcircuits.tests.test_core.TestCaseAppended" title="Qcircuits.tests.test_core.TestCaseAppended"><code class="xref py py-class docutils literal notranslate"><span class="pre">Qcircuits.tests.test_core.TestCaseAppended</span></code></a></p>
+<p>Transmon circuit parameters</p>
+<p>Create an instance of the class that will use the named test
+method when executed. Raises a ValueError if the instance does
+not have a method with the specified name.</p>
+<dl class="method">
+<dt id="Qcircuits.tests.test_core.StandardQuantumCircuits.transmon_parameters">
+<code class="descname">transmon_parameters</code><span class="sig-paren">(</span><em>C</em>, <em>Lj</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/Qcircuits/tests/test_core.html#StandardQuantumCircuits.transmon_parameters"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#Qcircuits.tests.test_core.StandardQuantumCircuits.transmon_parameters" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="Qcircuits.tests.test_core.StandardQuantumCircuits.test_transmon_frequency">
+<code class="descname">test_transmon_frequency</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/Qcircuits/tests/test_core.html#StandardQuantumCircuits.test_transmon_frequency"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#Qcircuits.tests.test_core.StandardQuantumCircuits.test_transmon_frequency" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="Qcircuits.tests.test_core.StandardQuantumCircuits.test_transmon_frequency_L_sweep">
+<code class="descname">test_transmon_frequency_L_sweep</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/Qcircuits/tests/test_core.html#StandardQuantumCircuits.test_transmon_frequency_L_sweep"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#Qcircuits.tests.test_core.StandardQuantumCircuits.test_transmon_frequency_L_sweep" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="Qcircuits.tests.test_core.StandardQuantumCircuits.test_transmon_anharmonicity">
+<code class="descname">test_transmon_anharmonicity</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/Qcircuits/tests/test_core.html#StandardQuantumCircuits.test_transmon_anharmonicity"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#Qcircuits.tests.test_core.StandardQuantumCircuits.test_transmon_anharmonicity" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="Qcircuits.tests.test_core.StandardQuantumCircuits.shunted_josephson_ring_parameters">
+<code class="descname">shunted_josephson_ring_parameters</code><span class="sig-paren">(</span><em>C</em>, <em>L</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/Qcircuits/tests/test_core.html#StandardQuantumCircuits.shunted_josephson_ring_parameters"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#Qcircuits.tests.test_core.StandardQuantumCircuits.shunted_josephson_ring_parameters" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="Qcircuits.tests.test_core.StandardQuantumCircuits.test_shunted_josephson_ring_number_of_modes_nHz">
+<code class="descname">test_shunted_josephson_ring_number_of_modes_nHz</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/Qcircuits/tests/test_core.html#StandardQuantumCircuits.test_shunted_josephson_ring_number_of_modes_nHz"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#Qcircuits.tests.test_core.StandardQuantumCircuits.test_shunted_josephson_ring_number_of_modes_nHz" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="Qcircuits.tests.test_core.StandardQuantumCircuits.test_shunted_josephson_ring_number_of_modes_Hz">
+<code class="descname">test_shunted_josephson_ring_number_of_modes_Hz</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/Qcircuits/tests/test_core.html#StandardQuantumCircuits.test_shunted_josephson_ring_number_of_modes_Hz"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#Qcircuits.tests.test_core.StandardQuantumCircuits.test_shunted_josephson_ring_number_of_modes_Hz" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="Qcircuits.tests.test_core.StandardQuantumCircuits.test_shunted_josephson_ring_number_of_modes_GHz">
+<code class="descname">test_shunted_josephson_ring_number_of_modes_GHz</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/Qcircuits/tests/test_core.html#StandardQuantumCircuits.test_shunted_josephson_ring_number_of_modes_GHz"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#Qcircuits.tests.test_core.StandardQuantumCircuits.test_shunted_josephson_ring_number_of_modes_GHz" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="Qcircuits.tests.test_core.StandardQuantumCircuits.test_shunted_josephson_ring_frequency_0">
+<code class="descname">test_shunted_josephson_ring_frequency_0</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/Qcircuits/tests/test_core.html#StandardQuantumCircuits.test_shunted_josephson_ring_frequency_0"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#Qcircuits.tests.test_core.StandardQuantumCircuits.test_shunted_josephson_ring_frequency_0" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="Qcircuits.tests.test_core.StandardQuantumCircuits.test_shunted_josephson_ring_frequency_1">
+<code class="descname">test_shunted_josephson_ring_frequency_1</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/Qcircuits/tests/test_core.html#StandardQuantumCircuits.test_shunted_josephson_ring_frequency_1"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#Qcircuits.tests.test_core.StandardQuantumCircuits.test_shunted_josephson_ring_frequency_1" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="Qcircuits.tests.test_core.StandardQuantumCircuits.test_shunted_josephson_ring_anharmonicity_0">
+<code class="descname">test_shunted_josephson_ring_anharmonicity_0</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/Qcircuits/tests/test_core.html#StandardQuantumCircuits.test_shunted_josephson_ring_anharmonicity_0"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#Qcircuits.tests.test_core.StandardQuantumCircuits.test_shunted_josephson_ring_anharmonicity_0" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="Qcircuits.tests.test_core.StandardQuantumCircuits.test_shunted_josephson_ring_anharmonicity_1">
+<code class="descname">test_shunted_josephson_ring_anharmonicity_1</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/Qcircuits/tests/test_core.html#StandardQuantumCircuits.test_shunted_josephson_ring_anharmonicity_1"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#Qcircuits.tests.test_core.StandardQuantumCircuits.test_shunted_josephson_ring_anharmonicity_1" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="Qcircuits.tests.test_core.TestTesting">
+<em class="property">class </em><code class="descclassname">Qcircuits.tests.test_core.</code><code class="descname">TestTesting</code><span class="sig-paren">(</span><em>methodName='runTest'</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/Qcircuits/tests/test_core.html#TestTesting"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#Qcircuits.tests.test_core.TestTesting" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#Qcircuits.tests.test_core.TestCaseAppended" title="Qcircuits.tests.test_core.TestCaseAppended"><code class="xref py py-class docutils literal notranslate"><span class="pre">Qcircuits.tests.test_core.TestCaseAppended</span></code></a></p>
+<p>Create an instance of the class that will use the named test
+method when executed. Raises a ValueError if the instance does
+not have a method with the specified name.</p>
+<dl class="method">
+<dt id="Qcircuits.tests.test_core.TestTesting.test_test">
+<code class="descname">test_test</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/Qcircuits/tests/test_core.html#TestTesting.test_test"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#Qcircuits.tests.test_core.TestTesting.test_test" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="Qcircuits.tests.test_core.TestNetworkAnalysis">
+<em class="property">class </em><code class="descclassname">Qcircuits.tests.test_core.</code><code class="descname">TestNetworkAnalysis</code><span class="sig-paren">(</span><em>methodName='runTest'</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/Qcircuits/tests/test_core.html#TestNetworkAnalysis"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#Qcircuits.tests.test_core.TestNetworkAnalysis" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#Qcircuits.tests.test_core.TestCaseAppended" title="Qcircuits.tests.test_core.TestCaseAppended"><code class="xref py py-class docutils literal notranslate"><span class="pre">Qcircuits.tests.test_core.TestCaseAppended</span></code></a></p>
+<p>Create an instance of the class that will use the named test
+method when executed. Raises a ValueError if the instance does
+not have a method with the specified name.</p>
+<dl class="method">
+<dt id="Qcircuits.tests.test_core.TestNetworkAnalysis.test_transfer_left_right_port_identical">
+<code class="descname">test_transfer_left_right_port_identical</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/Qcircuits/tests/test_core.html#TestNetworkAnalysis.test_transfer_left_right_port_identical"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#Qcircuits.tests.test_core.TestNetworkAnalysis.test_transfer_left_right_port_identical" title="Permalink to this definition">¶</a></dt>
+<dd><p>Trivial cases</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="Qcircuits.tests.test_core.TestNetworkAnalysis.test_transfer_left_right_port_indentical_inverted">
+<code class="descname">test_transfer_left_right_port_indentical_inverted</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/Qcircuits/tests/test_core.html#TestNetworkAnalysis.test_transfer_left_right_port_indentical_inverted"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#Qcircuits.tests.test_core.TestNetworkAnalysis.test_transfer_left_right_port_indentical_inverted" title="Permalink to this definition">¶</a></dt>
+<dd><p>Trivial cases</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="Qcircuits.tests.test_core.TestNetworkAnalysis.test_transfer_voltage_divider">
+<code class="descname">test_transfer_voltage_divider</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/Qcircuits/tests/test_core.html#TestNetworkAnalysis.test_transfer_voltage_divider"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#Qcircuits.tests.test_core.TestNetworkAnalysis.test_transfer_voltage_divider" title="Permalink to this definition">¶</a></dt>
+<dd><p>Voltage divider, see:
+<a class="reference external" href="https://en.wikipedia.org/wiki/Voltage_divider">https://en.wikipedia.org/wiki/Voltage_divider</a>
+We add an extra resistor between Vin and ground</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="Qcircuits.tests.test_core.TestNetworkAnalysis.test_transfer_wheatstone">
+<code class="descname">test_transfer_wheatstone</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/Qcircuits/tests/test_core.html#TestNetworkAnalysis.test_transfer_wheatstone"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#Qcircuits.tests.test_core.TestNetworkAnalysis.test_transfer_wheatstone" title="Permalink to this definition">¶</a></dt>
+<dd><p>Wheatstone bridge, see:
+<a class="reference external" href="https://en.wikipedia.org/wiki/Wheatstone_bridge">https://en.wikipedia.org/wiki/Wheatstone_bridge</a>
+Note that the correct definitions of the voltages V_G and V_S can be found here:
+<a class="reference external" href="http://www.ece.lsu.edu/ee4770/1999/lsli04.4up.pdf">http://www.ece.lsu.edu/ee4770/1999/lsli04.4up.pdf</a></p>
+</dd></dl>
+
+<dl class="method">
+<dt id="Qcircuits.tests.test_core.TestNetworkAnalysis.test_transfer_wheatstone_all_equal">
+<code class="descname">test_transfer_wheatstone_all_equal</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/Qcircuits/tests/test_core.html#TestNetworkAnalysis.test_transfer_wheatstone_all_equal"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#Qcircuits.tests.test_core.TestNetworkAnalysis.test_transfer_wheatstone_all_equal" title="Permalink to this definition">¶</a></dt>
+<dd><p>Case where all resistors of the bridge are equal, and
+there is potential for these lines:</p>
+<blockquote>
+<div>A_lattice = (Ya + Yb)*(Yd + Yc)/(Ya*Yd-Yb*Yc)
+B_lattice = (Ya + Yb + Yc + Yd)/(Ya*Yd-Yb*Yc)</div></blockquote>
+<p>to raise an error.
+Note: I made sure with a break-point that this code
+actually calls those two lines.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="Qcircuits.tests.test_core.TestNetworkAnalysis.test_transfer_square_symmetrical_lattice">
+<code class="descname">test_transfer_square_symmetrical_lattice</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/Qcircuits/tests/test_core.html#TestNetworkAnalysis.test_transfer_square_symmetrical_lattice"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#Qcircuits.tests.test_core.TestNetworkAnalysis.test_transfer_square_symmetrical_lattice" title="Permalink to this definition">¶</a></dt>
+<dd><p>Square symmetrical lattice</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="Qcircuits.tests.test_core.TestNetworkAnalysis.test_open_or_series_check">
+<code class="descname">test_open_or_series_check</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/Qcircuits/tests/test_core.html#TestNetworkAnalysis.test_open_or_series_check"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#Qcircuits.tests.test_core.TestNetworkAnalysis.test_open_or_series_check" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="Qcircuits.tests.test_core.TestNetworkAnalysis.test_connectivity_check_single_element_not_connected">
+<code class="descname">test_connectivity_check_single_element_not_connected</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/Qcircuits/tests/test_core.html#TestNetworkAnalysis.test_connectivity_check_single_element_not_connected"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#Qcircuits.tests.test_core.TestNetworkAnalysis.test_connectivity_check_single_element_not_connected" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="Qcircuits.tests.test_core.TestNetworkAnalysis.test_connectivity_check_subcircuit_not_connected">
+<code class="descname">test_connectivity_check_subcircuit_not_connected</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/Qcircuits/tests/test_core.html#TestNetworkAnalysis.test_connectivity_check_subcircuit_not_connected"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#Qcircuits.tests.test_core.TestNetworkAnalysis.test_connectivity_check_subcircuit_not_connected" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, Mario Gely
+      <span class="lastupdated">
+        Last updated on Apr 10, 2019.
+      </span>
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

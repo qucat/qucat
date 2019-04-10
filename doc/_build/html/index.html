@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Qcircuits documentation &mdash; Qcircuits  documentation</title>
+  <title>Welcome to the Krotov package’s documentation! &mdash; Qcircuits 6f4d19b documentation</title>
   
 
   
@@ -32,9 +32,10 @@
   
   <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/graphviz.css" type="text/css" />
+  <link rel="stylesheet" href="_static/mycss.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
-    <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="API" href="API.html" /> 
+    <link rel="search" title="Search" href="search.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -82,10 +83,13 @@
               
             
             
-              <ul>
-<li class="toctree-l1"><a class="reference internal" href="API.html">API</a></li>
+              <!-- Local TOC -->
+              <div class="local-toc"><ul>
+<li><a class="reference internal" href="#">Welcome to the Krotov package’s documentation!</a></li>
+<li><a class="reference internal" href="#api">API</a></li>
+<li><a class="reference internal" href="#indices-and-tables">Indices and tables</a></li>
 </ul>
-
+</div>
             
           
         </div>
@@ -123,20 +127,24 @@
 
 
 
+
+
+
+
+
+
 <div role="navigation" aria-label="breadcrumbs navigation">
 
   <ul class="wy-breadcrumbs">
     
       <li><a href="#">Docs</a> &raquo;</li>
         
-      <li>Qcircuits documentation</li>
+      <li>Welcome to the Krotov package’s documentation!</li>
     
     
       <li class="wy-breadcrumbs-aside">
         
             
-            <a href="_sources/index.rst.txt" rel="nofollow"> View page source</a>
-          
         
       </li>
     
@@ -148,17 +156,44 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="qcircuits-documentation">
-<h1>Qcircuits documentation<a class="headerlink" href="#qcircuits-documentation" title="Permalink to this headline">¶</a></h1>
-<div class="toctree-wrapper compound">
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="API.html">API</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="_autosummary/Qcircuits.core.html">Qcircuits.core</a></li>
-<li class="toctree-l2"><a class="reference internal" href="_autosummary/Qcircuits.gui.html">Qcircuits.gui</a></li>
-</ul>
-</li>
-</ul>
+  
+<style>
+/* CSS overrides for sphinx_rtd_theme */
+
+/* 24px margin */
+.nbinput.nblast,
+.nboutput.nblast {
+    margin-bottom: 19px;  /* padding has already 5px */
+}
+
+/* ... except between code cells! */
+.nblast + .nbinput {
+    margin-top: -19px;
+}
+
+.admonition > p:before {
+    margin-right: 4px;  /* make room for the exclamation icon */
+}
+
+/* Fix math alignment, see https://github.com/rtfd/sphinx_rtd_theme/pull/686 */
+.math {
+    text-align: unset;
+}
+</style>
+<div class="section" id="welcome-to-the-krotov-package-s-documentation">
+<h1>Welcome to the Krotov package’s documentation!<a class="headerlink" href="#welcome-to-the-krotov-package-s-documentation" title="Permalink to this headline">¶</a></h1>
 </div>
+<div class="section" id="api">
+<h1>API<a class="headerlink" href="#api" title="Permalink to this headline">¶</a></h1>
+<div class="toctree-wrapper compound">
+</div>
+</div>
+<div class="section" id="indices-and-tables">
+<h1>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this headline">¶</a></h1>
+<ul class="simple">
+<li><a class="reference internal" href="genindex.html"><span class="std std-ref">Index</span></a></li>
+<li><a class="reference internal" href="py-modindex.html"><span class="std std-ref">Module Index</span></a></li>
+</ul>
 </div>
 
 
@@ -167,19 +202,15 @@
           </div>
           <footer>
   
-    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-      
-        <a href="API.html" class="btn btn-neutral float-right" title="API" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
-      
-      
-    </div>
-  
 
   <hr/>
 
   <div role="contentinfo">
     <p>
         &copy; Copyright 2019, Mario Gely
+      <span class="lastupdated">
+        Last updated on Apr 10, 2019.
+      </span>
 
     </p>
   </div>

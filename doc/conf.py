@@ -1,212 +1,296 @@
-# -*- coding: utf-8 -*-
-#
-# Configuration file for the Sphinx documentation builder.
-#
-# This file does only contain a selection of the most common options. For a
-# full list see the documentation:
-# http://www.sphinx-doc.org/en/master/config
+# Adapted from https://github.com/qucontrol/krotov/blob/master/docs/conf.py
 
-# -- Path setup --------------------------------------------------------------
+import sys
+import os
+import datetime
+import git
+import shutil
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
-#
-# import os
-# import sys
-# sys.path.insert(0, os.path.abspath('.'))
+sys.path.insert(0, os.path.abspath('_extensions'))
+
+# -- Generate API documentation ------------------------------------------------
+def run_apidoc(app):
+    """Generage API documentation"""
+    import better_apidoc
+    better_apidoc.APP = app
+    better_apidoc.main([
+        'better-apidoc',
+        '-t',
+        os.path.join('.', '_templates'),
+        '--force',
+        '--no-toc',
+        '--separate',
+        '-o',
+        os.path.join('.', 'API'),
+        os.path.join('..'),
+    ])
 
 
-# -- Project information -----------------------------------------------------
-
-project = 'Qcircuits'
-copyright = '2019, Mario Gely'
-author = 'Mario Gely'
-
-# The short X.Y version
-version = '0.0'
-# The full version, including alpha/beta/rc tags
-release = ''
+# -- Generate patched README documentation ------------------------------------
+# def generate_patched_readme(_):
+#     if not os.path.isfile('./_README.rst'):
+#         shutil.copyfile(os.path.join('..', 'README.rst'), '_README.rst')
+#         cmd = ['patch', '_README.rst', './_README.patch']
+#         subprocess.run(cmd, check=True)
+#     assert os.path.isfile('./_README.rst')
 
 
-# -- General configuration ---------------------------------------------------
+# -- General configuration -----------------------------------------------------
 
-# If your documentation needs a minimal Sphinx version, state it here.
-#
-# needs_sphinx = '1.0'
+# Report broken links as warnings
+nitpicky = True
+nitpick_ignore = [
+    ('py:class', 'callable'),
+]
 
-# Add any Sphinx extension module names here, as strings. They can be
-# extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
-# ones.
 extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.doctest',
-    'sphinx.ext.intersphinx',
-    'sphinx.ext.todo',
     'sphinx.ext.coverage',
     'sphinx.ext.mathjax',
-    'sphinx.ext.ifconfig',
     'sphinx.ext.viewcode',
-    'sphinx.ext.githubpages',
+    'sphinx.ext.napoleon',
+    'sphinx.ext.intersphinx',
     'sphinx.ext.autosummary',
-    'sphinx.ext.napoleon'
+    'sphinx.ext.extlinks',
+    'sphinx.ext.ifconfig',
+    'sphinx.ext.todo',
+    'nbsphinx',
+    'sphinx.ext.inheritance_diagram',
+    'sphinxcontrib.bibtex',
 ]
+if os.getenv('SPELLCHECK'):
+    extensions += 'sphinxcontrib.spelling',
+    spelling_show_suggestions = True
+    spelling_lang = os.getenv('SPELLCHECK')
+    spelling_word_list_filename = 'spelling_wordlist.txt'
+    spelling_ignore_pypi_package_names = True
 
-autoclass_content = "both"  # include both class docstring and __init__
-autodoc_default_flags = [
-        # Make sure that any autodoc declarations show the right members
-        "members",
-        "inherited-members",
-        "private-members",
-        "show-inheritance",
-]
-autosummary_generate = True  # Make _autosummary files and include them
-napoleon_numpy_docstring = False  # Force consistency, leave only Google
-napoleon_use_rtype = False  # More legible
+# intersphinx_mapping = {
+#     'python': ('https://docs.python.org/3.7', None),
+#     'sympy': ('https://docs.sympy.org/latest/', None),
+#     'scipy': ('https://docs.scipy.org/doc/scipy/reference/', None),
+#     'numpy': ('https://docs.scipy.org/doc/numpy/', None),
+#     'matplotlib': ('https://matplotlib.org/', None),
+#     'qutip': ('http://qutip.org/docs/latest/', None),
+#     'glom': ('https://glom.readthedocs.io/en/latest/', None),
+#     'weylchamber': ('https://weylchamber.readthedocs.io/en/latest/', None),
+# }
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
 
-# The suffix(es) of source filenames.
-# You can specify multiple suffix as a list of string:
-#
-source_suffix = ['.rst', '.md']
-# The master toctree document.
+source_suffix = '.rst'
 master_doc = 'index'
+project = 'Qcircuits'
+year = str(datetime.datetime.now().year)
+author = 'Mario Gely'
+copyright = '{0}, {1}'.format(year, "Mario Gely")
+version = '0.0'
+rootfolder = os.path.join(os.path.dirname(__file__), '..')
+try:
+    last_commit = str(git.Repo(rootfolder).head.commit)[:7]
+    release = last_commit
+except git.exc.InvalidGitRepositoryError:
+    release = version
+numfig = True
 
-# Enable markdown support
-source_parsers = {
-   '.md': 'recommonmark.parser.CommonMarkParser',
+pygments_style = 'friendly'
+# extlinks = {
+#     'issue': ('https://github.com/qucontrol/krotov/issues/%s', '#'),
+#     'pr': ('https://github.com/agkoch/krotov/pull/%s', 'PR #'),
+# }
+
+# autodoc settings
+autoclass_content = 'both'
+autodoc_member_order = 'bysource'
+
+
+html_last_updated_fmt = '%b %d, %Y'
+html_split_index = False
+html_sidebars = {
+   '**': ['searchbox.html', 'globaltoc.html', 'sourcelink.html'],
+}
+html_short_title = '%s-%s' % (project, version)
+
+# Mathjax settings
+mathjax_path = 'https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js'
+mathjax_config = {
+    'extensions': ['tex2jax.js'],
+    'jax': ['input/TeX', 'output/SVG'],
+    'TeX': {
+        'extensions': [
+            "AMSmath.js", "AMSsymbols.js"],
+        'Macros': {
+            'tr': ['{\\operatorname{tr}}', 0],
+            'diag': ['{\\operatorname{diag}}', 0],
+            'abs': ['{\\operatorname{abs}}', 0],
+            'pop': ['{\\operatorname{pop}}', 0],
+            'ee': ['{\\text{e}}', 0],
+            'ii': ['{\\text{i}}', 0],
+            'aux': ['{\\text{aux}}', 0],
+            'opt': ['{\\text{opt}}', 0],
+            'tgt': ['{\\text{tgt}}', 0],
+            'init': ['{\\text{init}}', 0],
+            'lab': ['{\\text{lab}}', 0],
+            'rwa': ['{\\text{rwa}}', 0],
+            'bra': ['{\\langle#1\\vert}', 1],
+            'ket': ['{\\vert#1\\rangle}', 1],
+            'Bra': ['{\\left\\langle#1\\right\\vert}', 1],
+            'Braket': ['{\\left\\langle #1\\vphantom{#2} \\mid #2\\vphantom{#1}\\right\\rangle}', 2],
+            'ketbra': ['{\\vert#1\\rangle\\!\\langle#2\\vert}', 2],
+            'Ket': ['{\\left\\vert#1\\right\\rangle}', 1],
+            'mat': ['{\\mathbf{#1}}', 1],
+            'op': ['{\\hat{#1}}', 1],
+            'Op': ['{\\hat{#1}}', 1],
+            'dd': ['{\\,\\text{d}}', 0],
+            'daggered': ['{^{\\dagger}}', 0],
+            'transposed': ['{^{\\text{T}}}', 0],
+            'Liouville': ['{\\mathcal{L}}', 0],
+            'DynMap': ['{\\mathcal{E}}', 0],
+            'identity': ['{\\mathbf{1}}', 0],
+            'Norm': ['{\\left\\lVert#1\\right\\rVert}', 1],
+            'norm': ['{\\lVert#1\\rVert}', 1],
+            'Abs': ['{\\left\\vert#1\\right\\vert}', 1],
+            'avg': ['{\\langle#1\\rangle}', 1],
+            'Avg': ['{\\left\langle#1\\right\\rangle}', 1],
+            'AbsSq': ['{\\left\\vert#1\\right\\vert^2}', 1],
+            'Re': ['{\\operatorname{Re}}', 0],
+            'Im': ['{\\operatorname{Im}}', 0],
+            'Real': ['{\\mathbb{R}}', 0],
+            'Complex': ['{\\mathbb{C}}', 0],
+            'Integer': ['{\\mathbb{N}}', 0],
+        }
+    }
 }
 
-# The language for content autogenerated by Sphinx. Refer to documentation
-# for a list of supported languages.
-#
-# This is also used if you do content translation via gettext catalogs.
-# Usually you set "language" from the command line for these cases.
-language = None
+# Napoleon settings
+napoleon_google_docstring = True
+napoleon_numpy_docstring = True
+napoleon_include_private_with_doc = False
+napoleon_include_special_with_doc = True
+napoleon_use_admonition_for_examples = False
+napoleon_use_admonition_for_notes = False
+napoleon_use_admonition_for_references = False
+napoleon_use_ivar = False
+napoleon_use_param = True
+napoleon_use_rtype = True
 
-# List of patterns, relative to source directory, that match files and
-# directories to ignore when looking for source files.
-# This pattern also affects html_static_path and html_extra_path.
-exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
+# -- Monkeypatch for instance attribs (sphinx bug #2044) -----------------------
 
-# The name of the Pygments (syntax highlighting) style to use.
-pygments_style = 'sphinx'
+from sphinx.ext.autodoc import (
+    ClassLevelDocumenter, InstanceAttributeDocumenter)
 
 
+def iad_add_directive_header(self, sig):
+    ClassLevelDocumenter.add_directive_header(self, sig)
 
-# -- Options for HTML output -------------------------------------------------
+
+InstanceAttributeDocumenter.add_directive_header = iad_add_directive_header
+
+# -- Options for HTML output ---------------------------------------------------
+
+# on_rtd is whether we are on readthedocs.org, this line of code grabbed from
+# docs.readthedocs.org
+on_rtd = os.environ.get('READTHEDOCS', None) == 'True'
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
-#
+if not on_rtd:  # only import and set the theme if we're building docs locally
+    import sphinx_rtd_theme
+    html_theme = "sphinx_rtd_theme"
+    html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
+#html_theme = 'sphinxdoc'
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
 # documentation.
-#
-# html_theme_options = {}
+html_theme_options = {
+    'collapse_navigation': True,
+    'display_version': True,
+    'navigation_depth': 4,
+}
+
+# Add any paths that contain custom themes here, relative to this directory.
+#html_theme_path = []
+
+# The name for this set of Sphinx documents.  If None, it defaults to
+# "<project> v<release> documentation".
+#html_title = None
+
+# A shorter title for the navigation bar.  Default is the same as html_title.
+#html_short_title = None
+
+# The name of an image file (relative to this directory) to place at the top
+# of the sidebar.
+#html_logo = None
+
+# The name of an image file (within the static path) to use as favicon of the
+# docs.  This file should be a Windows icon file (.ico) being 16x16 or 32x32
+# pixels large.
+#html_favicon = 'favicon.ico'
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ['_static']
 
-# Custom sidebar templates, must be a dictionary that maps document names
-# to template names.
-#
-# The default sidebars (for documents that don't match any pattern) are
-# defined by theme itself.  Builtin themes are using these templates by
-# default: ``['localtoc.html', 'relations.html', 'sourcelink.html',
-# 'searchbox.html']``.
-#
-# html_sidebars = {}
-html_theme = 'sphinx_rtd_theme'
+# If not '', a 'Last updated on:' timestamp is inserted at every page bottom,
+# using the given strftime format.
+#html_last_updated_fmt = '%b %d, %Y'
 
-# -- Options for HTMLHelp output ---------------------------------------------
+# If true, SmartyPants will be used to convert quotes and dashes to
+# typographically correct entities.
+#html_use_smartypants = True
 
-# Output file base name for HTML help builder.
-htmlhelp_basename = 'Qcircuitsdoc'
+# Custom sidebar templates, maps document names to template names.
+#html_sidebars = {}
 
+# Additional templates that should be rendered to pages, maps page names to
+# template names.
+#html_additional_pages = {}
 
-# -- Options for LaTeX output ------------------------------------------------
+# If false, no module index is generated.
+#html_domain_indices = True
 
-latex_elements = {
-    # The paper size ('letterpaper' or 'a4paper').
-    #
-    # 'papersize': 'letterpaper',
+# If false, no index is generated.
+#html_use_index = True
 
-    # The font size ('10pt', '11pt' or '12pt').
-    #
-    # 'pointsize': '10pt',
+# If true, the index is split into individual pages for each letter.
+#html_split_index = False
 
-    # Additional stuff for the LaTeX preamble.
-    #
-    # 'preamble': '',
+# If true, links to the reST sources are added to the pages.
+html_show_sourcelink = False
 
-    # Latex figure (float) alignment
-    #
-    # 'figure_align': 'htbp',
-}
+# If true, "Created using Sphinx" is shown in the HTML footer. Default is True.
+#html_show_sphinx = True
 
-# Grouping the document tree into LaTeX files. List of tuples
-# (source start file, target name, title,
-#  author, documentclass [howto, manual, or own class]).
-latex_documents = [
-    (master_doc, 'Qcircuits.tex', 'Qcircuits Documentation',
-     'Mario Gely', 'manual'),
-]
+# If true, "(C) Copyright ..." is shown in the HTML footer. Default is True.
+#html_show_copyright = True
 
+# If true, an OpenSearch description file will be output, and all pages will
+# contain a <link> tag referring to it.  The value of this option must be the
+# base URL from which the finished HTML is served.
+#html_use_opensearch = ''
 
-# -- Options for manual page output ------------------------------------------
+# This is the file name suffix for HTML files (e.g. ".xhtml").
+#html_file_suffix = None
 
-# One entry per manual page. List of tuples
-# (source start file, name, description, authors, manual section).
-man_pages = [
-    (master_doc, 'qcircuits', 'Qcircuits Documentation',
-     [author], 1)
-]
+# -- Options for nbsphinx -0---------------------------------------------------
+
+# nbsphinx_prolog = r"""
+# {% set docname = env.doc2path(env.docname, base='docs') %}
+# .. only:: html
+#     .. role:: raw-html(raw)
+#         :format: html
+#     :raw-html:`<a href="http://nbviewer.jupyter.org/github/qucontrol/krotov/blob/{{ env.config.release }}/{{ docname }}" target="_blank"><img alt="Render on nbviewer" src="https://img.shields.io/badge/render%20on-nbviewer-orange.svg" style="vertical-align:text-bottom"></a>&nbsp;<a href="https://mybinder.org/v2/gh/qucontrol/krotov/{{ env.config.release }}?filepath={{ docname }}" target="_blank"><img alt="Launch Binder" src="https://mybinder.org/badge_logo.svg" style="vertical-align:text-bottom"></a>`
+# """
 
 
-# -- Options for Texinfo output ----------------------------------------------
-
-# Grouping the document tree into Texinfo files. List of tuples
-# (source start file, target name, title, author,
-#  dir menu entry, description, category)
-texinfo_documents = [
-    (master_doc, 'Qcircuits', 'Qcircuits Documentation',
-     author, 'Qcircuits', 'One line description of project.',
-     'Miscellaneous'),
-]
-
-
-# -- Options for Epub output -------------------------------------------------
-
-# Bibliographic Dublin Core info.
-epub_title = project
-
-# The unique identifier of the text. This can be a ISBN number
-# or the project homepage.
-#
-# epub_identifier = ''
-
-# A unique identification for the text.
-#
-# epub_uid = ''
-
-# A list of files that should not be packed into the epub file.
-epub_exclude_files = ['search.html']
-
-
-# -- Extension configuration -------------------------------------------------
-
-# -- Options for intersphinx extension ---------------------------------------
-
-# Example configuration for intersphinx: refer to the Python standard library.
-intersphinx_mapping = {'https://docs.python.org/': None}
-
-# -- Options for todo extension ----------------------------------------------
-
-# If true, `todo` and `todoList` produce output, else they produce nothing.
-todo_include_todos = True
+# -----------------------------------------------------------------------------
+def setup(app):
+    app.connect('builder-inited', run_apidoc)
+    # app.connect('builder-inited', generate_patched_readme)

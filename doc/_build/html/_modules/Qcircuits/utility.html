@@ -1,0 +1,338 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Qcircuits.utility &mdash; Qcircuits 6f4d19b documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../../_static/jquery.js"></script>
+        <script type="text/javascript" src="../../_static/underscore.js"></script>
+        <script type="text/javascript" src="../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/graphviz.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/mycss.css" type="text/css" />
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> Qcircuits
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <!-- Local TOC -->
+              <div class="local-toc"></div>
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">Qcircuits</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+        
+      <li>Qcircuits.utility</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for Qcircuits.utility</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">math</span> <span class="k">import</span> <span class="n">floor</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">functools</span>
+<span class="kn">from</span> <span class="nn">warnings</span> <span class="k">import</span> <span class="n">warn</span>
+<span class="kn">import</span> <span class="nn">traceback</span>
+<span class="n">np</span><span class="o">.</span><span class="n">seterr</span><span class="p">(</span><span class="n">divide</span><span class="o">=</span><span class="s1">&#39;raise&#39;</span><span class="p">,</span> <span class="n">invalid</span><span class="o">=</span><span class="s1">&#39;raise&#39;</span><span class="p">)</span>
+
+
+<span class="n">exponent_to_letter</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="o">-</span><span class="mi">18</span><span class="p">:</span> <span class="s1">&#39;a&#39;</span><span class="p">,</span>
+    <span class="o">-</span><span class="mi">15</span><span class="p">:</span> <span class="s1">&#39;f&#39;</span><span class="p">,</span>
+    <span class="o">-</span><span class="mi">12</span><span class="p">:</span> <span class="s1">&#39;p&#39;</span><span class="p">,</span>
+    <span class="o">-</span><span class="mi">9</span><span class="p">:</span> <span class="s1">&#39;n&#39;</span><span class="p">,</span>
+    <span class="o">-</span><span class="mi">6</span><span class="p">:</span> <span class="s1">&#39;u&#39;</span><span class="p">,</span>
+    <span class="o">-</span><span class="mi">3</span><span class="p">:</span> <span class="s1">&#39;m&#39;</span><span class="p">,</span>
+    <span class="mi">0</span><span class="p">:</span> <span class="s1">&#39;&#39;</span><span class="p">,</span>
+    <span class="mi">3</span><span class="p">:</span> <span class="s1">&#39;k&#39;</span><span class="p">,</span>
+    <span class="mi">6</span><span class="p">:</span> <span class="s1">&#39;M&#39;</span><span class="p">,</span>
+    <span class="mi">9</span><span class="p">:</span> <span class="s1">&#39;G&#39;</span><span class="p">,</span>
+    <span class="mi">12</span><span class="p">:</span> <span class="s1">&#39;T&#39;</span>
+<span class="p">}</span>
+<span class="n">exponent_to_letter_math</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="o">-</span><span class="mi">18</span><span class="p">:</span> <span class="s1">&#39;a&#39;</span><span class="p">,</span>
+    <span class="o">-</span><span class="mi">15</span><span class="p">:</span> <span class="s1">&#39;f&#39;</span><span class="p">,</span>
+    <span class="o">-</span><span class="mi">12</span><span class="p">:</span> <span class="s1">&#39;p&#39;</span><span class="p">,</span>
+    <span class="o">-</span><span class="mi">9</span><span class="p">:</span> <span class="s1">&#39;n&#39;</span><span class="p">,</span>
+    <span class="o">-</span><span class="mi">6</span><span class="p">:</span> <span class="sa">r</span><span class="s1">&#39;$\mu$&#39;</span><span class="p">,</span>
+    <span class="o">-</span><span class="mi">3</span><span class="p">:</span> <span class="s1">&#39;m&#39;</span><span class="p">,</span>
+    <span class="mi">0</span><span class="p">:</span> <span class="s1">&#39;&#39;</span><span class="p">,</span>
+    <span class="mi">3</span><span class="p">:</span> <span class="s1">&#39;k&#39;</span><span class="p">,</span>
+    <span class="mi">6</span><span class="p">:</span> <span class="s1">&#39;M&#39;</span><span class="p">,</span>
+    <span class="mi">9</span><span class="p">:</span> <span class="s1">&#39;G&#39;</span><span class="p">,</span>
+    <span class="mi">12</span><span class="p">:</span> <span class="s1">&#39;T&#39;</span>
+<span class="p">}</span>
+<span class="n">exponent_to_letter_unicode</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="o">-</span><span class="mi">18</span><span class="p">:</span> <span class="s1">&#39;a&#39;</span><span class="p">,</span>
+    <span class="o">-</span><span class="mi">15</span><span class="p">:</span> <span class="s1">&#39;f&#39;</span><span class="p">,</span>
+    <span class="o">-</span><span class="mi">12</span><span class="p">:</span> <span class="s1">&#39;p&#39;</span><span class="p">,</span>
+    <span class="o">-</span><span class="mi">9</span><span class="p">:</span> <span class="s1">&#39;n&#39;</span><span class="p">,</span>
+    <span class="o">-</span><span class="mi">6</span><span class="p">:</span> <span class="sa">u</span><span class="s1">&#39;</span><span class="se">\u03bc</span><span class="s1">&#39;</span><span class="p">,</span>
+    <span class="o">-</span><span class="mi">3</span><span class="p">:</span> <span class="s1">&#39;m&#39;</span><span class="p">,</span>
+    <span class="mi">0</span><span class="p">:</span> <span class="s1">&#39;&#39;</span><span class="p">,</span>
+    <span class="mi">3</span><span class="p">:</span> <span class="s1">&#39;k&#39;</span><span class="p">,</span>
+    <span class="mi">6</span><span class="p">:</span> <span class="s1">&#39;M&#39;</span><span class="p">,</span>
+    <span class="mi">9</span><span class="p">:</span> <span class="s1">&#39;G&#39;</span><span class="p">,</span>
+    <span class="mi">12</span><span class="p">:</span> <span class="s1">&#39;T&#39;</span>
+<span class="p">}</span>
+
+<div class="viewcode-block" id="safely_evaluate"><a class="viewcode-back" href="../../API/Qcircuits.utility.html#Qcircuits.utility.safely_evaluate">[docs]</a><span class="k">def</span> <span class="nf">safely_evaluate</span><span class="p">(</span><span class="n">func_to_evaluate</span><span class="p">):</span>
+    <span class="nd">@functools</span><span class="o">.</span><span class="n">wraps</span><span class="p">(</span><span class="n">func_to_evaluate</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">wrapper_safely_evaluate</span><span class="p">(</span><span class="n">w</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">func_to_evaluate</span><span class="p">(</span><span class="n">w</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">FloatingPointError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">warn</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="o">+</span><span class="n">f</span><span class="s2">&quot;</span><span class="se">\n\t</span><span class="s2">Perturbing f = {w/2./np.pi} to find finite value&quot;</span><span class="p">)</span>
+            <span class="n">perturbation</span> <span class="o">=</span> <span class="mf">1e-14</span>
+            <span class="k">while</span> <span class="n">perturbation</span><span class="o">&lt;</span><span class="mf">0.01</span><span class="p">:</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">to_return</span> <span class="o">=</span> <span class="n">func_to_evaluate</span><span class="p">(</span><span class="n">w</span><span class="o">*</span><span class="p">(</span><span class="mf">1.</span><span class="o">+</span><span class="n">perturbation</span><span class="p">),</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+                    <span class="n">warn</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;Perturbed f = {w/2./np.pi}*(1+</span><span class="si">{perturbation:.1e}</span><span class="s2">) to find finite value&quot;</span><span class="p">)</span>
+                    <span class="k">return</span> <span class="n">to_return</span>
+                <span class="k">except</span> <span class="ne">FloatingPointError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                    <span class="n">perturbation</span> <span class="o">*=</span> <span class="mi">10</span>
+            <span class="k">raise</span> <span class="ne">FloatingPointError</span><span class="p">(</span><span class="s2">&quot;Even perturbing the frequency by a percent failed to produce finite value.&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">wrapper_safely_evaluate</span></div>
+
+<div class="viewcode-block" id="pretty_value"><a class="viewcode-back" href="../../API/Qcircuits.utility.html#Qcircuits.utility.pretty_value">[docs]</a><span class="k">def</span> <span class="nf">pretty_value</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">use_power_10</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">use_math</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">use_unicode</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">v</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s1">&#39;0&#39;</span>
+    <span class="k">elif</span> <span class="n">v</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">sign</span> <span class="o">=</span> <span class="s1">&#39;-&#39;</span>
+        <span class="n">v</span> <span class="o">*=</span> <span class="o">-</span><span class="mi">1</span>
+    <span class="k">elif</span> <span class="n">v</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">sign</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+    <span class="n">exponent</span> <span class="o">=</span> <span class="n">floor</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="n">v</span><span class="p">))</span>
+    <span class="n">exponent_3</span> <span class="o">=</span> <span class="n">exponent</span><span class="o">-</span><span class="p">(</span><span class="n">exponent</span> <span class="o">%</span> <span class="mi">3</span><span class="p">)</span>
+    <span class="n">float_part</span> <span class="o">=</span> <span class="n">v</span><span class="o">/</span><span class="p">(</span><span class="mi">10</span><span class="o">**</span><span class="n">exponent_3</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">use_power_10</span> <span class="ow">or</span> <span class="n">v</span> <span class="o">&gt;=</span> <span class="mf">1e15</span> <span class="ow">or</span> <span class="n">v</span> <span class="o">&lt;</span> <span class="mf">1e-18</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">exponent_3</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">exponent_part</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">use_math</span><span class="p">:</span>
+                <span class="n">exponent_part</span> <span class="o">=</span> <span class="sa">r</span><span class="s1">&#39;$\times 10^{</span><span class="si">%d</span><span class="s1">}$&#39;</span> <span class="o">%</span> <span class="n">exponent_3</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">exponent_part</span> <span class="o">=</span> <span class="sa">r</span><span class="s1">&#39;e</span><span class="si">%d</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">exponent_3</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">use_unicode</span><span class="p">:</span>
+            <span class="n">exponent_part</span> <span class="o">=</span> <span class="s1">&#39; &#39;</span><span class="o">+</span><span class="n">exponent_to_letter_unicode</span><span class="p">[</span><span class="n">exponent_3</span><span class="p">]</span>
+        <span class="k">elif</span> <span class="n">use_math</span><span class="p">:</span>
+            <span class="n">exponent_part</span> <span class="o">=</span> <span class="s1">&#39; &#39;</span><span class="o">+</span><span class="n">exponent_to_letter_math</span><span class="p">[</span><span class="n">exponent_3</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">exponent_part</span> <span class="o">=</span> <span class="s1">&#39; &#39;</span><span class="o">+</span><span class="n">exponent_to_letter</span><span class="p">[</span><span class="n">exponent_3</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">float_part</span> <span class="o">&gt;=</span> <span class="mf">10.</span><span class="p">:</span>
+        <span class="n">pretty</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">%.0f%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">float_part</span><span class="p">,</span> <span class="n">exponent_part</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">pretty</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">%.1f%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">float_part</span><span class="p">,</span> <span class="n">exponent_part</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">sign</span><span class="o">+</span><span class="n">pretty</span></div>
+
+<div class="viewcode-block" id="check_there_are_no_iterables_in_kwarg"><a class="viewcode-back" href="../../API/Qcircuits.utility.html#Qcircuits.utility.check_there_are_no_iterables_in_kwarg">[docs]</a><span class="k">def</span> <span class="nf">check_there_are_no_iterables_in_kwarg</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">el</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="nb">iter</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
+            <span class="k">pass</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;This function accepts no lists or iterables as input.&quot;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="shift"><a class="viewcode-back" href="../../API/Qcircuits.utility.html#Qcircuits.utility.shift">[docs]</a><span class="k">def</span> <span class="nf">shift</span><span class="p">(</span><span class="n">to_shift</span><span class="p">,</span><span class="n">shift</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span><span class="n">_</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">to_shift</span><span class="p">):</span>
+        <span class="n">to_shift</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">+=</span> <span class="n">shift</span>
+    <span class="k">return</span> <span class="n">to_shift</span></div>
+
+<div class="viewcode-block" id="to_string"><a class="viewcode-back" href="../../API/Qcircuits.utility.html#Qcircuits.utility.to_string">[docs]</a><span class="k">def</span> <span class="nf">to_string</span><span class="p">(</span><span class="n">unit</span><span class="p">,</span><span class="n">label</span><span class="p">,</span><span class="n">value</span><span class="p">,</span> <span class="n">use_math</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">use_unicode</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+
+    <span class="k">if</span> <span class="n">unit</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">use_unicode</span><span class="p">:</span>
+            <span class="n">unit</span> <span class="o">=</span> <span class="n">unit</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;$\Omega$&#39;</span><span class="p">,</span> <span class="sa">u</span><span class="s2">&quot;</span><span class="se">\u03A9</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">use_math</span> <span class="o">==</span> <span class="kc">False</span><span class="p">:</span>
+            <span class="n">unit</span> <span class="o">=</span> <span class="n">unit</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;$\Omega$&#39;</span><span class="p">,</span> <span class="s1">&#39;Ohm&#39;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">label</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">use_math</span><span class="p">:</span>
+            <span class="n">s</span> <span class="o">=</span> <span class="s2">&quot;$</span><span class="si">%s</span><span class="s2">$&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">label</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">s</span> <span class="o">=</span> <span class="n">label</span>
+
+        <span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">s</span><span class="o">+=</span><span class="s1">&#39;=&#39;</span>
+
+    <span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">s</span><span class="o">+=</span> <span class="n">pretty_value</span><span class="p">(</span>
+            <span class="n">value</span><span class="p">,</span> <span class="n">use_math</span><span class="o">=</span><span class="n">use_math</span><span class="p">,</span> <span class="n">use_unicode</span><span class="o">=</span><span class="n">use_unicode</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">unit</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">s</span><span class="o">+=</span><span class="n">unit</span>
+    <span class="k">return</span> <span class="n">s</span></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, Mario Gely
+      <span class="lastupdated">
+        Last updated on Apr 10, 2019.
+      </span>
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>
