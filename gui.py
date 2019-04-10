@@ -93,7 +93,8 @@ class SnappingCanvas(tk.Canvas):
 
         self.history = []
         '''Everytime the user makes a change to the circuit, 
-        this list is appended with the self.elements variable
+        this list is appended with a string representation of 
+        all the components in the circuit
         hence allowing us to undo an arbitrary number of user actions '''
 
         self.history_location = -1
@@ -102,9 +103,16 @@ class SnappingCanvas(tk.Canvas):
 
         self.track_changes = False
         '''We can cancel the appending of changes to the self.history
-        variable as well as the saving of changes to the netlist file
+        variable (not to the netlist file)
         by setting this variable to True.
-        This is useful for example '''
+        This is useful for example when we want to delete all
+        the components on the canvas: by calling undo afterwards
+        we want to have them all reappear, not reappear one by one.
+        Since deleting a single component is logged in the history 
+        by default, we want to set track_changes to false, then
+        delete all components, set track changes to true and finally
+        save, which will add an entry to self.history.
+        '''
 
         self.initialize_user_knowledge_tracking_variables()
         
@@ -467,8 +475,23 @@ class SnappingCanvas(tk.Canvas):
     #############################
     #  CORE functions
     ##############################
-    def save(self, event=None):
 
+    def elements_list_to_netlist_string(self):
+        '''
+        Maps the list of elements (self.elements)
+        to a string which can be saved in 
+        a file and read either by the gui code
+        or by the Qcircuits code.
+
+        Returns
+        --------
+        netlist_string: string
+            of the form 
+            "C;0,1;0,0;1.000000e-13;
+            J;1,1;1,0;;L_J
+            etc..."
+
+        '''
         netlist_string = ""
         for el in self.elements:
             v, l = el.prop
@@ -485,21 +508,55 @@ class SnappingCanvas(tk.Canvas):
                 el.grid_to_node_string(el.x_minus, el.y_minus),
                 el.grid_to_node_string(el.x_plus, el.y_plus),
                 v, l))
+        return netlist_string
 
+    def save(self, event=None):
+        '''
+            Save the current state of the circuit to the file.
+            If we are tracking changes (self.track_changes == True)
+            also append the history list.
+        '''
+
+        # Obtain the string representation 
+        # of all the elements on the canvas       
+        netlist_string = elements_list_to_netlist_string()
+
+        # Write that netlist string to the file
         with open(self.netlist_filename, 'w') as f:
             f.write(netlist_string)
 
+        # If we are tracking the changes made to the circuit
         if self.track_changes:
+            
+            # In case we just used undo (ctrl-z), 
+            # we first want to delete the all entries 
+            # in history which are after the current state of the circuit
             del self.history[self.history_location+1:]
-            self.history.append(netlist_string)
-            self.history_location += 1
-            # print('ADDED TO HISTORY')
-            # for net in self.history:
-            #     print(net)
 
+            # we append all the information about the current circuit
+            # to the history list
+            self.history.append(netlist_string)
+
+            # and increase our location in the history 
+            # lsit by one
+            self.history_location += 1
+
+        # Inform the user that the circuit was just saved
         self.message("Saving...")
     
     def load_netlist(self, lines):
+        '''
+        Loads a circuit stored as a list of strings, each string
+        representing a component of the circuit. The format of these
+        strings is the same as that of the lines in the netlist file
+
+        Parameters
+        ----------
+        node_minus: list of strings
+                    Each string should be in the format
+                    <type> (C,L,R...);<x,y (node_minus in grid unit)>;<x,y (node_plus in grid unit)>;value;symbol
+        '''
+
         self.delete_all(track_changes=False)
         for el in lines:
             el = el.replace('\n', '')
@@ -507,23 +564,34 @@ class SnappingCanvas(tk.Canvas):
             string_to_component(el[0], self, auto_place=el)
 
     def on_resize(self, event=None):
+        '''
+        Called when the user resizes the window, see configure_scrollregion
+        and draw_grid for more detail
+        '''
         self.configure_scrollregion()
         self.draw_grid(event)
 
     def draw_grid(self, event=None):
+        '''
+        Called when the user resizes the window. 
+        Will delete and rebuild the grid.
+        '''
 
-        # Draw the grid
+        # Delete old grid
         self.delete("grid")
-        dx = 1
-        dy = 1
-        box_canvas = (self.canvasx(0),  # get visible area of the canvas
+
+        # Get visible area of the canvas in canvas units
+        box_canvas = (self.canvasx(0),  
                       self.canvasy(0),
                       self.canvasx(self.winfo_width()),
                       self.canvasy(self.winfo_height()))
 
+        # Create a white background
+        # it is invisible, but we can assign actions to the user clicking on it
         self.background = self.create_rectangle(
             *box_canvas, fill='white', outline='', tags='grid')
 
+        # Create x and y coordinates for the grid
         grid_x = np.arange(
             self.canvas_center[0], box_canvas[2], self.grid_unit).tolist()
         grid_x += np.arange(self.canvas_center[0]-self.grid_unit,
@@ -533,11 +601,16 @@ class SnappingCanvas(tk.Canvas):
         grid_y += np.arange(self.canvas_center[1]-self.grid_unit,
                             box_canvas[1], -self.grid_unit).tolist()
 
+        # write the grid lines
         for x in grid_x:
             for y in grid_y:
                 self.create_line(x-dx, y, x+2*dx, y, tags='grid')
                 self.create_line(x, y-dy, x, y+2*dy, tags='grid')
+
+        # Put the grid behind all other elements of the canvas
         self.tag_lower('grid')
+
+        # Determine what happens when the user clicks on the background
         self.tag_bind('grid', '<ButtonPress-1>', self.start_selection_field)
         self.tag_bind('grid', "<B1-Motion>", self.expand_selection_field)
         self.tag_bind('grid', "<ButtonRelease-1>", self.end_selection_field)
@@ -548,10 +621,18 @@ class SnappingCanvas(tk.Canvas):
     ###########################
 
     def file_open(self):
+        '''
+        Triggered by the menubar button File>Open.
+        Opens a dialog window where the user can choose a file.
+        Then loads the file
+        '''
+
+        # Prompt user for file name
         netlist_filename = filedialog.askopenfilename(initialdir = os.getcwd())
+
         if netlist_filename == '':
             # User cancelled
-            pass
+            return
         else:
             with open(netlist_filename, 'r') as f:
                 netlist_file_string = [line for line in f]
