@@ -398,10 +398,10 @@ class SnappingCanvas(tk.Canvas):
         self.bind('g', lambda event: G(self, event))
     def set_keyboard_shortcuts_other(self):
         '''
-            Assign keystrokes to functionalities
-            accessible in the FILE and EDIT menus, 
-            as well as configure what happens when the 
-            user scrolls in combination with CTRL/SHIFT.
+        Assign keystrokes to functionalities
+        accessible in the FILE and EDIT menus, 
+        as well as configure what happens when the 
+        user scrolls in combination with CTRL/SHIFT.
         '''
         
         #############################

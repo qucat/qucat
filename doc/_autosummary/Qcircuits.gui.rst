@@ -8,6 +8,7 @@ Qcircuits.gui
    .. rubric:: Functions
 
    .. autosummary::
+      :toctree: gui
    
       open_canvas
       string_to_component
@@ -19,6 +20,8 @@ Qcircuits.gui
    .. rubric:: Classes
 
    .. autosummary::
+      :toctree: gui
+      :template: class.rst
    
       AutoScrollbar
       C

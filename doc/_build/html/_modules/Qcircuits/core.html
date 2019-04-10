@@ -167,7 +167,7 @@
 <span class="kn">import</span> <span class="nn">time</span>
 <span class="n">PROFILING</span> <span class="o">=</span> <span class="kc">False</span>
 
-<span class="k">def</span> <span class="nf">timeit</span><span class="p">(</span><span class="n">method</span><span class="p">):</span>
+<div class="viewcode-block" id="timeit"><a class="viewcode-back" href="../../_autosummary/core/Qcircuits.core.timeit.html#Qcircuits.core.timeit">[docs]</a><span class="k">def</span> <span class="nf">timeit</span><span class="p">(</span><span class="n">method</span><span class="p">):</span>
     <span class="k">def</span> <span class="nf">timed</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">):</span>
         <span class="n">ts</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
         <span class="n">result</span> <span class="o">=</span> <span class="n">method</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">)</span>
@@ -176,9 +176,9 @@
             <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;calling </span><span class="si">%r</span><span class="s1"> took </span><span class="si">%2.2f</span><span class="s1"> ms&#39;</span> <span class="o">%</span> \
                     <span class="p">(</span><span class="n">method</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span> <span class="p">(</span><span class="n">te</span> <span class="o">-</span> <span class="n">ts</span><span class="p">)</span> <span class="o">*</span> <span class="mi">1000</span><span class="p">))</span>
         <span class="k">return</span> <span class="n">result</span>
-    <span class="k">return</span> <span class="n">timed</span>
+    <span class="k">return</span> <span class="n">timed</span></div>
 
-<span class="k">def</span> <span class="nf">string_to_component</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="o">*</span><span class="n">arg</span><span class="p">,</span> <span class="o">**</span><span class="n">kwarg</span><span class="p">):</span>
+<div class="viewcode-block" id="string_to_component"><a class="viewcode-back" href="../../_autosummary/core/Qcircuits.core.string_to_component.html#Qcircuits.core.string_to_component">[docs]</a><span class="k">def</span> <span class="nf">string_to_component</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="o">*</span><span class="n">arg</span><span class="p">,</span> <span class="o">**</span><span class="n">kwarg</span><span class="p">):</span>
     <span class="k">if</span> <span class="n">s</span> <span class="o">==</span> <span class="s1">&#39;W&#39;</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">W</span><span class="p">(</span><span class="o">*</span><span class="n">arg</span><span class="p">,</span> <span class="o">**</span><span class="n">kwarg</span><span class="p">)</span>
     <span class="k">elif</span> <span class="n">s</span> <span class="o">==</span> <span class="s1">&#39;R&#39;</span><span class="p">:</span>
@@ -190,7 +190,7 @@
     <span class="k">elif</span> <span class="n">s</span> <span class="o">==</span> <span class="s1">&#39;C&#39;</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">C</span><span class="p">(</span><span class="o">*</span><span class="n">arg</span><span class="p">,</span> <span class="o">**</span><span class="n">kwarg</span><span class="p">)</span>
     <span class="k">elif</span> <span class="n">s</span> <span class="o">==</span> <span class="s1">&#39;G&#39;</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">G</span><span class="p">(</span><span class="o">*</span><span class="n">arg</span><span class="p">,</span> <span class="o">**</span><span class="n">kwarg</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">G</span><span class="p">(</span><span class="o">*</span><span class="n">arg</span><span class="p">,</span> <span class="o">**</span><span class="n">kwarg</span><span class="p">)</span></div>
 
 <span class="n">plot_parameters</span> <span class="o">=</span> <span class="p">{</span>
     <span class="s2">&quot;figsize_scaling&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
@@ -563,16 +563,16 @@
 
         <span class="k">return</span> <span class="n">H</span></div>
 
-<div class="viewcode-block" id="Qcircuit_NET"><a class="viewcode-back" href="../../_autosummary/Qcircuits.core.html#Qcircuits.core.Qcircuit_NET">[docs]</a><span class="k">class</span> <span class="nc">Qcircuit_NET</span><span class="p">(</span><span class="n">_Qcircuit</span><span class="p">):</span>
+<div class="viewcode-block" id="Qcircuit_NET"><a class="viewcode-back" href="../../_autosummary/core/Qcircuits.core.Qcircuit_NET.html#Qcircuits.core.Qcircuit_NET">[docs]</a><span class="k">class</span> <span class="nc">Qcircuit_NET</span><span class="p">(</span><span class="n">_Qcircuit</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;docstring for Qcircuit&quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">netlist</span><span class="p">):</span>
-        <span class="nb">super</span><span class="p">(</span><span class="n">Qcircuit_NET</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">netlist</span><span class="p">)</span></div>
+<div class="viewcode-block" id="Qcircuit_NET.__init__"><a class="viewcode-back" href="../../_autosummary/core/Qcircuit_NET/Qcircuits.core.Qcircuit_NET.__init__.html#Qcircuits.core.Qcircuit_NET.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">netlist</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">Qcircuit_NET</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">netlist</span><span class="p">)</span></div></div>
 
-<div class="viewcode-block" id="Qcircuit_GUI"><a class="viewcode-back" href="../../_autosummary/Qcircuits.core.html#Qcircuits.core.Qcircuit_GUI">[docs]</a><span class="k">class</span> <span class="nc">Qcircuit_GUI</span><span class="p">(</span><span class="n">_Qcircuit</span><span class="p">):</span>
+<div class="viewcode-block" id="Qcircuit_GUI"><a class="viewcode-back" href="../../_autosummary/core/Qcircuits.core.Qcircuit_GUI.html#Qcircuits.core.Qcircuit_GUI">[docs]</a><span class="k">class</span> <span class="nc">Qcircuit_GUI</span><span class="p">(</span><span class="n">_Qcircuit</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;docstring for Qcircuit&quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="p">,</span> <span class="n">edit</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">plot</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">print_network</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<div class="viewcode-block" id="Qcircuit_GUI.__init__"><a class="viewcode-back" href="../../_autosummary/core/Qcircuit_GUI/Qcircuits.core.Qcircuit_GUI.__init__.html#Qcircuits.core.Qcircuit_GUI.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="p">,</span> <span class="n">edit</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">plot</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">print_network</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
         
         <span class="k">if</span> <span class="n">edit</span><span class="p">:</span>
             <span class="n">gui</span><span class="o">.</span><span class="n">open_canvas</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
@@ -614,9 +614,9 @@
                     <span class="nb">min</span><span class="p">(</span><span class="n">el</span><span class="o">.</span><span class="n">node_minus</span><span class="p">,</span><span class="n">el</span><span class="o">.</span><span class="n">node_plus</span><span class="p">),</span>
                     <span class="nb">max</span><span class="p">(</span><span class="n">el</span><span class="o">.</span><span class="n">node_minus</span><span class="p">,</span><span class="n">el</span><span class="o">.</span><span class="n">node_plus</span><span class="p">),</span>
                     <span class="n">el</span><span class="o">.</span><span class="n">to_string</span><span class="p">(</span><span class="n">use_math</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)))</span>
-            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span></div>
 
-    <span class="k">def</span> <span class="nf">show</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+<div class="viewcode-block" id="Qcircuit_GUI.show"><a class="viewcode-back" href="../../_autosummary/core/Qcircuit_GUI/Qcircuits.core.Qcircuit_GUI.show.html#Qcircuits.core.Qcircuit_GUI.show">[docs]</a>    <span class="k">def</span> <span class="nf">show</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
              <span class="n">plot</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
              <span class="n">full_output</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
              <span class="n">pp</span><span class="o">=</span><span class="n">plot_parameters</span><span class="p">,</span>
@@ -671,9 +671,9 @@
         <span class="k">if</span> <span class="n">plot</span><span class="p">:</span>
             <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 
-        <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">()</span></div>
 
-    <span class="k">def</span> <span class="nf">show_normal_mode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mode</span><span class="p">,</span> <span class="n">unit</span><span class="o">=</span><span class="s1">&#39;current&#39;</span><span class="p">,</span>
+<div class="viewcode-block" id="Qcircuit_GUI.show_normal_mode"><a class="viewcode-back" href="../../_autosummary/core/Qcircuit_GUI/Qcircuits.core.Qcircuit_GUI.show_normal_mode.html#Qcircuits.core.Qcircuit_GUI.show_normal_mode">[docs]</a>    <span class="k">def</span> <span class="nf">show_normal_mode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mode</span><span class="p">,</span> <span class="n">unit</span><span class="o">=</span><span class="s1">&#39;current&#39;</span><span class="p">,</span>
                          <span class="n">plot</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">save_to</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 
         <span class="n">check_there_are_no_iterables_in_kwarg</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
@@ -805,9 +805,9 @@
             <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
         <span class="k">if</span> <span class="n">save_to</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">fig</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">save_to</span><span class="p">,</span> <span class="n">transparent</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-        <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">()</span></div>
+        <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">()</span></div></div>
 
-<div class="viewcode-block" id="Network"><a class="viewcode-back" href="../../_autosummary/Qcircuits.core.html#Qcircuits.core.Network">[docs]</a><span class="k">class</span> <span class="nc">Network</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<div class="viewcode-block" id="Network"><a class="viewcode-back" href="../../_autosummary/core/Qcircuits.core.Network.html#Qcircuits.core.Network">[docs]</a><span class="k">class</span> <span class="nc">Network</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    The Network class parses network arrays generated by the GUI</span>
 <span class="sd">    or written manually by the user. </span>
@@ -825,7 +825,7 @@
 <span class="sd">        list of Component objects</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">netlist</span><span class="p">):</span>
+<div class="viewcode-block" id="Network.__init__"><a class="viewcode-back" href="../../_autosummary/core/Network/Qcircuits.core.Network.__init__.html#Qcircuits.core.Network.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">netlist</span><span class="p">):</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">netlist</span> <span class="o">=</span> <span class="n">netlist</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">parse_netlist</span><span class="p">()</span>
@@ -833,9 +833,9 @@
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;There are two sub-circuits which are not connected&quot;</span><span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">has_opens</span><span class="p">():</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Analyzing an open/series circuit is impossible |&quot;</span><span class="o">+</span>\
-             <span class="s2">&quot; in the language of graphs, there is a dangling vertex in the electrical network&quot;</span><span class="p">)</span>
+             <span class="s2">&quot; in the language of graphs, there is a dangling vertex in the electrical network&quot;</span><span class="p">)</span></div>
 
-    <span class="nd">@timeit</span>
+<div class="viewcode-block" id="Network.is_connected"><a class="viewcode-back" href="../../_autosummary/core/Network/Qcircuits.core.Network.is_connected.html#Qcircuits.core.Network.is_connected">[docs]</a>    <span class="nd">@timeit</span>
     <span class="k">def</span> <span class="nf">is_connected</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> 
         <span class="n">nodes_encountered</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> 
         <span class="n">start_node</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
@@ -857,14 +857,14 @@
                         <span class="k">return</span> <span class="kc">True</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">return</span> <span class="kc">True</span>
-        <span class="k">return</span> <span class="kc">False</span>    
+        <span class="k">return</span> <span class="kc">False</span>    </div>
 
-    <span class="k">def</span> <span class="nf">has_opens</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="Network.has_opens"><a class="viewcode-back" href="../../_autosummary/core/Network/Qcircuits.core.Network.has_opens.html#Qcircuits.core.Network.has_opens">[docs]</a>    <span class="k">def</span> <span class="nf">has_opens</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">for</span> <span class="n">node</span><span class="p">,</span> <span class="n">connections</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">net_dict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
             <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">connections</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">net_dict</span><span class="p">)</span><span class="o">&gt;</span><span class="mi">2</span><span class="p">:</span>
-                <span class="k">return</span> <span class="kc">True</span>
+                <span class="k">return</span> <span class="kc">True</span></div>
 
-    <span class="k">def</span> <span class="nf">parse_netlist</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="Network.parse_netlist"><a class="viewcode-back" href="../../_autosummary/core/Network/Qcircuits.core.Network.parse_netlist.html#Qcircuits.core.Network.parse_netlist">[docs]</a>    <span class="k">def</span> <span class="nf">parse_netlist</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 
         <span class="k">def</span> <span class="nf">merge_chains</span><span class="p">(</span><span class="n">chains</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">):</span>
             <span class="sd">&#39;&#39;&#39;Merges two chains (two arrays)&#39;&#39;&#39;</span>
@@ -992,9 +992,9 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">net_dict</span><span class="p">[</span><span class="n">n</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="k">for</span> <span class="n">el</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">netlist</span><span class="p">:</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">el</span><span class="p">,</span><span class="n">W</span><span class="p">):</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">el</span><span class="p">,</span> <span class="n">el</span><span class="o">.</span><span class="n">node_minus</span><span class="p">,</span> <span class="n">el</span><span class="o">.</span><span class="n">node_plus</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">el</span><span class="p">,</span> <span class="n">el</span><span class="o">.</span><span class="n">node_minus</span><span class="p">,</span> <span class="n">el</span><span class="o">.</span><span class="n">node_plus</span><span class="p">)</span></div>
 
-    <span class="nd">@timeit</span>
+<div class="viewcode-block" id="Network.compute_char_poly_coeffs"><a class="viewcode-back" href="../../_autosummary/core/Network/Qcircuits.core.Network.compute_char_poly_coeffs.html#Qcircuits.core.Network.compute_char_poly_coeffs">[docs]</a>    <span class="nd">@timeit</span>
     <span class="k">def</span> <span class="nf">compute_char_poly_coeffs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">is_lossy</span> <span class="o">=</span> <span class="kc">True</span><span class="p">):</span>
         
         <span class="nd">@timeit</span>
@@ -1035,13 +1035,13 @@
         <span class="k">while</span> <span class="bp">self</span><span class="o">.</span><span class="n">char_poly_coeffs_analytical</span><span class="p">[</span><span class="o">-</span><span class="n">n</span><span class="p">]</span><span class="o">==</span><span class="mi">0</span><span class="p">:</span>
             <span class="n">n</span><span class="o">+=</span><span class="mi">1</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">char_poly_coeffs_analytical</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">char_poly_coeffs_analytical</span><span class="p">[:</span><span class="bp">self</span><span class="o">.</span><span class="n">char_poly_order</span><span class="o">+</span><span class="mi">2</span><span class="o">-</span><span class="n">n</span><span class="p">]</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">char_poly_coeffs_analytical</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">char_poly_coeffs_analytical</span></div>
 
-    <span class="k">def</span> <span class="nf">simplify</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="Network.simplify"><a class="viewcode-back" href="../../_autosummary/core/Network/Qcircuits.core.Network.simplify.html#Qcircuits.core.Network.simplify">[docs]</a>    <span class="k">def</span> <span class="nf">simplify</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="c1"># TODO</span>
-        <span class="k">pass</span>
+        <span class="k">pass</span></div>
 
-    <span class="k">def</span> <span class="nf">compute_RLC_matrices</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="Network.compute_RLC_matrices"><a class="viewcode-back" href="../../_autosummary/core/Network/Qcircuits.core.Network.compute_RLC_matrices.html#Qcircuits.core.Network.compute_RLC_matrices">[docs]</a>    <span class="k">def</span> <span class="nf">compute_RLC_matrices</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">N_nodes</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">net_dict</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">RLC_matrices</span> <span class="o">=</span> <span class="p">{</span>
             <span class="s1">&#39;R&#39;</span><span class="p">:</span><span class="n">sp</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">N_nodes</span><span class="p">),</span>
@@ -1063,9 +1063,9 @@
         <span class="c1"># set a ground </span>
         <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">RLC_matrices</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">RLC_matrices</span><span class="p">[</span><span class="n">k</span><span class="p">]</span><span class="o">.</span><span class="n">row_del</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">RLC_matrices</span><span class="p">[</span><span class="n">k</span><span class="p">]</span><span class="o">.</span><span class="n">col_del</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">RLC_matrices</span><span class="p">[</span><span class="n">k</span><span class="p">]</span><span class="o">.</span><span class="n">col_del</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="Network.connect"><a class="viewcode-back" href="../../_autosummary/Qcircuits.core.html#Qcircuits.core.Network.connect">[docs]</a>    <span class="k">def</span> <span class="nf">connect</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">element</span><span class="p">,</span> <span class="n">node_minus</span><span class="p">,</span> <span class="n">node_plus</span><span class="p">):</span>
+<div class="viewcode-block" id="Network.connect"><a class="viewcode-back" href="../../_autosummary/core/Qcircuits.core.Network.html#Qcircuits.core.Network.connect">[docs]</a>    <span class="k">def</span> <span class="nf">connect</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">element</span><span class="p">,</span> <span class="n">node_minus</span><span class="p">,</span> <span class="n">node_plus</span><span class="p">):</span>
         <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">        Modifies the ``net_dict`` variable such that ``node_minus``</span>
 <span class="sd">        and ``node_plus`` are marked as connected in future calculations.</span>
@@ -1098,7 +1098,7 @@
         <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">net_dict</span><span class="p">[</span><span class="n">node_plus</span><span class="p">][</span><span class="n">node_minus</span><span class="p">]</span> <span class="o">=</span> <span class="n">element</span></div>
 
-<div class="viewcode-block" id="Network.remove_node"><a class="viewcode-back" href="../../_autosummary/Qcircuits.core.html#Qcircuits.core.Network.remove_node">[docs]</a>    <span class="k">def</span> <span class="nf">remove_node</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node_to_remove</span><span class="p">):</span>
+<div class="viewcode-block" id="Network.remove_node"><a class="viewcode-back" href="../../_autosummary/core/Qcircuits.core.Network.html#Qcircuits.core.Network.remove_node">[docs]</a>    <span class="k">def</span> <span class="nf">remove_node</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node_to_remove</span><span class="p">):</span>
         <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">        Makes use of the star-mesh transform to remove the ``node_to_remove`` from the network.</span>
 <span class="sd">        A node $N$=``node_to_remove`` connected to nodes $A,B,C,..$ through impedances </span>
@@ -1139,7 +1139,7 @@
         <span class="k">for</span> <span class="n">mesh_branch</span> <span class="ow">in</span> <span class="n">mesh_to_add</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="o">*</span><span class="n">mesh_branch</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="Network.admittance"><a class="viewcode-back" href="../../_autosummary/Qcircuits.core.html#Qcircuits.core.Network.admittance">[docs]</a>    <span class="k">def</span> <span class="nf">admittance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node_minus</span><span class="p">,</span> <span class="n">node_plus</span><span class="p">):</span>
+<div class="viewcode-block" id="Network.admittance"><a class="viewcode-back" href="../../_autosummary/core/Qcircuits.core.Network.html#Qcircuits.core.Network.admittance">[docs]</a>    <span class="k">def</span> <span class="nf">admittance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node_minus</span><span class="p">,</span> <span class="n">node_plus</span><span class="p">):</span>
         <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">        Compute the admittance of the network between two nodes </span>
 <span class="sd">        ``node_plus`` and ``node_minus`` </span>
@@ -1173,7 +1173,7 @@
         <span class="n">Y</span> <span class="o">=</span> <span class="n">ntr</span><span class="o">.</span><span class="n">net_dict</span><span class="p">[</span><span class="n">node_minus</span><span class="p">][</span><span class="n">node_plus</span><span class="p">]</span><span class="o">.</span><span class="n">admittance</span><span class="p">()</span>
         <span class="k">return</span> <span class="n">Y</span></div>
 
-<div class="viewcode-block" id="Network.branch_admittance"><a class="viewcode-back" href="../../_autosummary/Qcircuits.core.html#Qcircuits.core.Network.branch_admittance">[docs]</a>    <span class="k">def</span> <span class="nf">branch_admittance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node_1</span><span class="p">,</span> <span class="n">node_2</span><span class="p">):</span>
+<div class="viewcode-block" id="Network.branch_admittance"><a class="viewcode-back" href="../../_autosummary/core/Qcircuits.core.Network.html#Qcircuits.core.Network.branch_admittance">[docs]</a>    <span class="k">def</span> <span class="nf">branch_admittance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node_1</span><span class="p">,</span> <span class="n">node_2</span><span class="p">):</span>
         <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">        Returns the admittance in the branch connecting ``node_1`` and ``node_2``.</span>
 <span class="sd">        If they are not directly connected through a single Component, this function</span>
@@ -1194,7 +1194,7 @@
         <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
             <span class="k">return</span> <span class="mf">0.</span></div>
 
-<div class="viewcode-block" id="Network.transfer"><a class="viewcode-back" href="../../_autosummary/Qcircuits.core.html#Qcircuits.core.Network.transfer">[docs]</a>    <span class="k">def</span> <span class="nf">transfer</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node_left_minus</span><span class="p">,</span> <span class="n">node_left_plus</span><span class="p">,</span> <span class="n">node_right_minus</span><span class="p">,</span> <span class="n">node_right_plus</span><span class="p">):</span>
+<div class="viewcode-block" id="Network.transfer"><a class="viewcode-back" href="../../_autosummary/core/Qcircuits.core.Network.html#Qcircuits.core.Network.transfer">[docs]</a>    <span class="k">def</span> <span class="nf">transfer</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node_left_minus</span><span class="p">,</span> <span class="n">node_left_plus</span><span class="p">,</span> <span class="n">node_right_minus</span><span class="p">,</span> <span class="n">node_right_plus</span><span class="p">):</span>
         <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">        Returns the transfer function V_right/V_left relating the voltage on </span>
 <span class="sd">        a port &#39;right&#39; defined by ``node_right_minus`` and ``node_right_plus``</span>
@@ -1356,18 +1356,18 @@
 
             <span class="k">return</span>  <span class="mi">1</span><span class="o">/</span><span class="n">A</span></div></div>
 
-<div class="viewcode-block" id="Circuit"><a class="viewcode-back" href="../../_autosummary/Qcircuits.core.html#Qcircuits.core.Circuit">[docs]</a><span class="k">class</span> <span class="nc">Circuit</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<div class="viewcode-block" id="Circuit"><a class="viewcode-back" href="../../_autosummary/core/Qcircuits.core.Circuit.html#Qcircuits.core.Circuit">[docs]</a><span class="k">class</span> <span class="nc">Circuit</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;docstring for Circuit&quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node_minus</span><span class="p">,</span> <span class="n">node_plus</span><span class="p">):</span>
+<div class="viewcode-block" id="Circuit.__init__"><a class="viewcode-back" href="../../_autosummary/core/Circuit/Qcircuits.core.Circuit.__init__.html#Qcircuits.core.Circuit.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node_minus</span><span class="p">,</span> <span class="n">node_plus</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">node_minus</span> <span class="o">=</span> <span class="n">node_minus</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">node_plus</span> <span class="o">=</span> <span class="n">node_plus</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">head</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">head</span> <span class="o">=</span> <span class="kc">None</span></div>
 
     <span class="k">def</span> <span class="nf">__or__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other_circuit</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">Parallel</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other_circuit</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">set_plot_coordinates</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="Circuit.set_plot_coordinates"><a class="viewcode-back" href="../../_autosummary/core/Circuit/Qcircuits.core.Circuit.set_plot_coordinates.html#Qcircuits.core.Circuit.set_plot_coordinates">[docs]</a>    <span class="k">def</span> <span class="nf">set_plot_coordinates</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">x_plot_node_minus</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">node_minus_plot</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;,&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">x_plot_node_plus</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">node_plus_plot</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;,&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span>
@@ -1387,9 +1387,9 @@
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">x_plot_node_minus</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">x_plot_node_plus</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">angle</span> <span class="o">=</span> <span class="n">WEST</span>
             <span class="k">else</span><span class="p">:</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">angle</span> <span class="o">=</span> <span class="n">EAST</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">angle</span> <span class="o">=</span> <span class="n">EAST</span></div>
 
-    <span class="k">def</span> <span class="nf">draw_label</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ax</span><span class="p">):</span>
+<div class="viewcode-block" id="Circuit.draw_label"><a class="viewcode-back" href="../../_autosummary/core/Circuit/Qcircuits.core.Circuit.draw_label.html#Qcircuits.core.Circuit.draw_label">[docs]</a>    <span class="k">def</span> <span class="nf">draw_label</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ax</span><span class="p">):</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">angle</span><span class="o">%</span><span class="mf">180.</span> <span class="o">==</span> <span class="mf">0.</span><span class="p">:</span>
             <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">x_plot_center</span><span class="o">+</span><span class="bp">self</span><span class="o">.</span><span class="n">head</span><span class="o">.</span><span class="n">pp</span><span class="p">[</span><span class="s1">&#39;label&#39;</span><span class="p">][</span><span class="s1">&#39;text_position_horizontal&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
             <span class="n">y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">y_plot_center</span><span class="o">+</span><span class="bp">self</span><span class="o">.</span><span class="n">head</span><span class="o">.</span><span class="n">pp</span><span class="p">[</span><span class="s1">&#39;label&#39;</span><span class="p">][</span><span class="s1">&#39;text_position_horizontal&#39;</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span>
@@ -1405,23 +1405,23 @@
         <span class="n">ax</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span>
                 <span class="n">to_string</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">unit</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">label</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span><span class="p">),</span>
                 <span class="n">fontsize</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">head</span><span class="o">.</span><span class="n">pp</span><span class="p">[</span><span class="s1">&#39;label&#39;</span><span class="p">][</span><span class="s1">&#39;fontsize&#39;</span><span class="p">],</span>
-                <span class="n">ha</span><span class="o">=</span><span class="n">ha</span><span class="p">,</span> <span class="n">va</span><span class="o">=</span><span class="n">va</span><span class="p">)</span></div>
+                <span class="n">ha</span><span class="o">=</span><span class="n">ha</span><span class="p">,</span> <span class="n">va</span><span class="o">=</span><span class="n">va</span><span class="p">)</span></div></div>
 
-<div class="viewcode-block" id="Parallel"><a class="viewcode-back" href="../../_autosummary/Qcircuits.core.html#Qcircuits.core.Parallel">[docs]</a><span class="k">class</span> <span class="nc">Parallel</span><span class="p">(</span><span class="n">Circuit</span><span class="p">):</span>
+<div class="viewcode-block" id="Parallel"><a class="viewcode-back" href="../../_autosummary/core/Qcircuits.core.Parallel.html#Qcircuits.core.Parallel">[docs]</a><span class="k">class</span> <span class="nc">Parallel</span><span class="p">(</span><span class="n">Circuit</span><span class="p">):</span>
 
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">left</span><span class="p">,</span> <span class="n">right</span><span class="p">):</span>
+<div class="viewcode-block" id="Parallel.__init__"><a class="viewcode-back" href="../../_autosummary/core/Parallel/Qcircuits.core.Parallel.__init__.html#Qcircuits.core.Parallel.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">left</span><span class="p">,</span> <span class="n">right</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">(</span><span class="n">Parallel</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">node_minus</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">node_plus</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
 
         <span class="c1"># sets the two children circuit elements</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">left</span> <span class="o">=</span> <span class="n">left</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">right</span> <span class="o">=</span> <span class="n">right</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">right</span> <span class="o">=</span> <span class="n">right</span></div>
 
-    <span class="k">def</span> <span class="nf">admittance</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="Parallel.admittance"><a class="viewcode-back" href="../../_autosummary/core/Parallel/Qcircuits.core.Parallel.admittance.html#Qcircuits.core.Parallel.admittance">[docs]</a>    <span class="k">def</span> <span class="nf">admittance</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">Add</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">left</span><span class="o">.</span><span class="n">admittance</span><span class="p">(),</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">right</span><span class="o">.</span><span class="n">admittance</span><span class="p">())</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">right</span><span class="o">.</span><span class="n">admittance</span><span class="p">())</span></div>
     
-    <span class="k">def</span> <span class="nf">get_RLC_matrix_components</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="Parallel.get_RLC_matrix_components"><a class="viewcode-back" href="../../_autosummary/core/Parallel/Qcircuits.core.Parallel.get_RLC_matrix_components.html#Qcircuits.core.Parallel.get_RLC_matrix_components">[docs]</a>    <span class="k">def</span> <span class="nf">get_RLC_matrix_components</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">RLC_matrix_components</span> <span class="o">=</span> <span class="p">{</span>
             <span class="s1">&#39;R&#39;</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span>
             <span class="s1">&#39;L&#39;</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span>
@@ -1431,12 +1431,12 @@
             <span class="n">values_to_add</span> <span class="o">=</span> <span class="n">el</span><span class="o">.</span><span class="n">get_RLC_matrix_components</span><span class="p">()</span>
             <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">RLC_matrix_components</span><span class="p">:</span>
                 <span class="n">RLC_matrix_components</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">+=</span> <span class="n">values_to_add</span><span class="p">[</span><span class="n">k</span><span class="p">]</span>
-        <span class="k">return</span> <span class="n">RLC_matrix_components</span></div>
+        <span class="k">return</span> <span class="n">RLC_matrix_components</span></div></div>
 
-<div class="viewcode-block" id="Component"><a class="viewcode-back" href="../../_autosummary/Qcircuits.core.html#Qcircuits.core.Component">[docs]</a><span class="k">class</span> <span class="nc">Component</span><span class="p">(</span><span class="n">Circuit</span><span class="p">):</span>
+<div class="viewcode-block" id="Component"><a class="viewcode-back" href="../../_autosummary/core/Qcircuits.core.Component.html#Qcircuits.core.Component">[docs]</a><span class="k">class</span> <span class="nc">Component</span><span class="p">(</span><span class="n">Circuit</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;docstring for Component&quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node_minus</span><span class="p">,</span> <span class="n">node_plus</span><span class="p">,</span> <span class="n">arg1</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">arg2</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="Component.__init__"><a class="viewcode-back" href="../../_autosummary/core/Component/Qcircuits.core.Component.__init__.html#Qcircuits.core.Component.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node_minus</span><span class="p">,</span> <span class="n">node_plus</span><span class="p">,</span> <span class="n">arg1</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">arg2</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">(</span><span class="n">Component</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">node_minus</span><span class="p">,</span> <span class="n">node_plus</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">label</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="kc">None</span>
@@ -1450,7 +1450,7 @@
             <span class="k">elif</span> <span class="nb">type</span><span class="p">(</span><span class="n">a</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">str</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">label</span> <span class="o">=</span> <span class="n">a</span>
             <span class="k">else</span><span class="p">:</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">a</span><span class="p">)</span></div>
 
     <span class="k">def</span> <span class="nf">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">label</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -1461,23 +1461,23 @@
             <span class="k">else</span><span class="p">:</span>
                 <span class="k">return</span> <span class="nb">hash</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">value</span><span class="p">)</span><span class="o">+</span><span class="bp">self</span><span class="o">.</span><span class="n">label</span><span class="o">+</span><span class="bp">self</span><span class="o">.</span><span class="n">unit</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">get_value</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<div class="viewcode-block" id="Component.get_value"><a class="viewcode-back" href="../../_autosummary/core/Component/Qcircuits.core.Component.get_value.html#Qcircuits.core.Component.get_value">[docs]</a>    <span class="k">def</span> <span class="nf">get_value</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span>
         <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">kwargs</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">label</span> <span class="ow">in</span> <span class="p">[</span><span class="n">k</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">]:</span>
                 <span class="k">return</span> <span class="n">kwargs</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">label</span><span class="p">]</span>
 
-        <span class="k">return</span> <span class="n">sp</span><span class="o">.</span><span class="n">Symbol</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">label</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">sp</span><span class="o">.</span><span class="n">Symbol</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">label</span><span class="p">)</span></div>
 
-    <span class="k">def</span> <span class="nf">set_component_lists</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="Component.set_component_lists"><a class="viewcode-back" href="../../_autosummary/core/Component/Qcircuits.core.Component.set_component_lists.html#Qcircuits.core.Component.set_component_lists">[docs]</a>    <span class="k">def</span> <span class="nf">set_component_lists</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">label</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="s1">&#39; &#39;</span><span class="p">,</span> <span class="s1">&#39;None&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">]:</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">label</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">head</span><span class="o">.</span><span class="n">no_value_components</span><span class="p">:</span>
                 <span class="c1"># raise ValueError(</span>
                 <span class="c1">#     &quot;Two components may not have the same name %s&quot; % self.label)</span>
                 <span class="k">pass</span>
             <span class="k">else</span><span class="p">:</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">head</span><span class="o">.</span><span class="n">no_value_components</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">label</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">head</span><span class="o">.</span><span class="n">no_value_components</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">label</span><span class="p">)</span></div>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">flux</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -1516,42 +1516,42 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">_flux</span> <span class="o">=</span> <span class="n">_flux</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_flux</span>
 
-    <span class="k">def</span> <span class="nf">voltage</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">w</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="k">return</span> <span class="nb">complex</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">flux</span><span class="p">(</span><span class="n">w</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span><span class="o">*</span><span class="mi">1</span><span class="n">j</span><span class="o">*</span><span class="n">w</span><span class="p">)</span>
+<div class="viewcode-block" id="Component.voltage"><a class="viewcode-back" href="../../_autosummary/core/Component/Qcircuits.core.Component.voltage.html#Qcircuits.core.Component.voltage">[docs]</a>    <span class="k">def</span> <span class="nf">voltage</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">w</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">complex</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">flux</span><span class="p">(</span><span class="n">w</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span><span class="o">*</span><span class="mi">1</span><span class="n">j</span><span class="o">*</span><span class="n">w</span><span class="p">)</span></div>
 
-    <span class="k">def</span> <span class="nf">current</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">w</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<div class="viewcode-block" id="Component.current"><a class="viewcode-back" href="../../_autosummary/core/Component/Qcircuits.core.Component.current.html#Qcircuits.core.Component.current">[docs]</a>    <span class="k">def</span> <span class="nf">current</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">w</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;w&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">w</span>
         <span class="n">Y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">admittance</span><span class="p">()</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">Y</span><span class="p">,</span> <span class="n">Number</span><span class="p">):</span>
             <span class="k">pass</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">Y</span> <span class="o">=</span> <span class="n">Y</span><span class="o">.</span><span class="n">evalf</span><span class="p">(</span><span class="n">subs</span><span class="o">=</span><span class="n">kwargs</span><span class="p">)</span>
-        <span class="k">return</span> <span class="nb">complex</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">voltage</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span><span class="o">*</span><span class="n">Y</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">complex</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">voltage</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span><span class="o">*</span><span class="n">Y</span><span class="p">)</span></div>
 
-    <span class="k">def</span> <span class="nf">charge</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">w</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">current</span><span class="p">(</span><span class="n">w</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span><span class="o">/</span><span class="n">w</span>
+<div class="viewcode-block" id="Component.charge"><a class="viewcode-back" href="../../_autosummary/core/Component/Qcircuits.core.Component.charge.html#Qcircuits.core.Component.charge">[docs]</a>    <span class="k">def</span> <span class="nf">charge</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">w</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">current</span><span class="p">(</span><span class="n">w</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span><span class="o">/</span><span class="n">w</span></div>
 
-    <span class="k">def</span> <span class="nf">to_string</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">use_math</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">use_unicode</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<div class="viewcode-block" id="Component.to_string"><a class="viewcode-back" href="../../_autosummary/core/Component/Qcircuits.core.Component.to_string.html#Qcircuits.core.Component.to_string">[docs]</a>    <span class="k">def</span> <span class="nf">to_string</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">use_math</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">use_unicode</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">to_string</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">unit</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">label</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
-                  <span class="n">use_math</span><span class="o">=</span><span class="n">use_math</span><span class="p">,</span> <span class="n">use_unicode</span><span class="o">=</span><span class="n">use_unicode</span><span class="p">)</span></div>
+                  <span class="n">use_math</span><span class="o">=</span><span class="n">use_math</span><span class="p">,</span> <span class="n">use_unicode</span><span class="o">=</span><span class="n">use_unicode</span><span class="p">)</span></div></div>
 
-<div class="viewcode-block" id="W"><a class="viewcode-back" href="../../_autosummary/Qcircuits.core.html#Qcircuits.core.W">[docs]</a><span class="k">class</span> <span class="nc">W</span><span class="p">(</span><span class="n">Component</span><span class="p">):</span>
+<div class="viewcode-block" id="W"><a class="viewcode-back" href="../../_autosummary/core/Qcircuits.core.W.html#Qcircuits.core.W">[docs]</a><span class="k">class</span> <span class="nc">W</span><span class="p">(</span><span class="n">Component</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;docstring for Wire&quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node_minus</span><span class="p">,</span> <span class="n">node_plus</span><span class="p">,</span> <span class="n">arg1</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">arg2</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="W.__init__"><a class="viewcode-back" href="../../_autosummary/core/W/Qcircuits.core.W.__init__.html#Qcircuits.core.W.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node_minus</span><span class="p">,</span> <span class="n">node_plus</span><span class="p">,</span> <span class="n">arg1</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">arg2</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">(</span><span class="n">W</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">node_minus</span><span class="p">,</span> <span class="n">node_plus</span><span class="p">,</span> <span class="n">arg1</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">arg2</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">unit</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">label</span> <span class="o">=</span> <span class="kc">None</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="kc">None</span></div>
 
-    <span class="k">def</span> <span class="nf">to_string</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="k">return</span> <span class="s1">&#39; &#39;</span>
+<div class="viewcode-block" id="W.to_string"><a class="viewcode-back" href="../../_autosummary/core/W/Qcircuits.core.W.to_string.html#Qcircuits.core.W.to_string">[docs]</a>    <span class="k">def</span> <span class="nf">to_string</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s1">&#39; &#39;</span></div>
 
-    <span class="k">def</span> <span class="nf">set_component_lists</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="W.set_component_lists"><a class="viewcode-back" href="../../_autosummary/core/W/Qcircuits.core.W.set_component_lists.html#Qcircuits.core.W.set_component_lists">[docs]</a>    <span class="k">def</span> <span class="nf">set_component_lists</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">(</span><span class="n">W</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">set_component_lists</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">head</span><span class="o">.</span><span class="n">wires</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">head</span><span class="o">.</span><span class="n">wires</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span></div>
 
-    <span class="k">def</span> <span class="nf">draw</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="W.draw"><a class="viewcode-back" href="../../_autosummary/core/W/Qcircuits.core.W.draw.html#Qcircuits.core.W.draw">[docs]</a>    <span class="k">def</span> <span class="nf">draw</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 
         <span class="n">x</span> <span class="o">=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">x_plot_node_minus</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">x_plot_node_plus</span><span class="p">]),</span>
         <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">x_plot_node_minus</span><span class="p">]),</span>
@@ -1565,21 +1565,21 @@
         <span class="n">line_type</span> <span class="o">+=</span> <span class="p">[</span><span class="s1">&#39;node&#39;</span><span class="p">]</span>
         <span class="n">line_type</span> <span class="o">+=</span> <span class="p">[</span><span class="s1">&#39;node&#39;</span><span class="p">]</span>
 
-        <span class="k">return</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">line_type</span></div>
+        <span class="k">return</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">line_type</span></div></div>
 
-<div class="viewcode-block" id="G"><a class="viewcode-back" href="../../_autosummary/Qcircuits.core.html#Qcircuits.core.G">[docs]</a><span class="k">class</span> <span class="nc">G</span><span class="p">(</span><span class="n">W</span><span class="p">):</span>
+<div class="viewcode-block" id="G"><a class="viewcode-back" href="../../_autosummary/core/Qcircuits.core.G.html#Qcircuits.core.G">[docs]</a><span class="k">class</span> <span class="nc">G</span><span class="p">(</span><span class="n">W</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    From a network perspective, a ground element is a wire that connects</span>
 <span class="sd">    node_plus to a node called &#39;__ground&#39;</span>
 <span class="sd">    &#39;&#39;&#39;</span>
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node_minus</span><span class="p">,</span> <span class="n">node_plus</span><span class="p">,</span> <span class="n">arg1</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">arg2</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="nb">super</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">node_minus</span><span class="p">,</span> <span class="n">node_plus</span><span class="p">,</span> <span class="n">arg1</span><span class="p">,</span> <span class="n">arg2</span><span class="p">)</span>
+<div class="viewcode-block" id="G.__init__"><a class="viewcode-back" href="../../_autosummary/core/G/Qcircuits.core.G.__init__.html#Qcircuits.core.G.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node_minus</span><span class="p">,</span> <span class="n">node_plus</span><span class="p">,</span> <span class="n">arg1</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">arg2</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">node_minus</span><span class="p">,</span> <span class="n">node_plus</span><span class="p">,</span> <span class="n">arg1</span><span class="p">,</span> <span class="n">arg2</span><span class="p">)</span></div>
 
-    <span class="k">def</span> <span class="nf">set_component_lists</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="G.set_component_lists"><a class="viewcode-back" href="../../_autosummary/core/G/Qcircuits.core.G.set_component_lists.html#Qcircuits.core.G.set_component_lists">[docs]</a>    <span class="k">def</span> <span class="nf">set_component_lists</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">set_component_lists</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">head</span><span class="o">.</span><span class="n">grounds</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">head</span><span class="o">.</span><span class="n">grounds</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span></div>
 
-    <span class="k">def</span> <span class="nf">draw</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="G.draw"><a class="viewcode-back" href="../../_autosummary/core/G/Qcircuits.core.G.draw.html#Qcircuits.core.G.draw">[docs]</a>    <span class="k">def</span> <span class="nf">draw</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="c1"># Defined for EAST</span>
         <span class="n">line_type</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="n">x</span> <span class="o">=</span> <span class="p">[</span>
@@ -1606,21 +1606,21 @@
         <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">angle</span> <span class="o">==</span> <span class="n">EAST</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">shift</span><span class="p">([</span><span class="o">-</span><span class="n">xx</span> <span class="k">for</span> <span class="n">xx</span> <span class="ow">in</span> <span class="n">x</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">x_plot_center</span><span class="p">),</span> <span class="n">shift</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">y_plot_center</span><span class="p">),</span> <span class="n">line_type</span>
         <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">angle</span> <span class="o">==</span> <span class="n">SOUTH</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">shift</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">x_plot_center</span><span class="p">),</span> <span class="n">shift</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">y_plot_center</span><span class="p">),</span> <span class="n">line_type</span></div>
+            <span class="k">return</span> <span class="n">shift</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">x_plot_center</span><span class="p">),</span> <span class="n">shift</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">y_plot_center</span><span class="p">),</span> <span class="n">line_type</span></div></div>
 
-<div class="viewcode-block" id="L"><a class="viewcode-back" href="../../_autosummary/Qcircuits.core.html#Qcircuits.core.L">[docs]</a><span class="k">class</span> <span class="nc">L</span><span class="p">(</span><span class="n">Component</span><span class="p">):</span>
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node_minus</span><span class="p">,</span> <span class="n">node_plus</span><span class="p">,</span> <span class="n">arg1</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">arg2</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="L"><a class="viewcode-back" href="../../_autosummary/core/Qcircuits.core.L.html#Qcircuits.core.L">[docs]</a><span class="k">class</span> <span class="nc">L</span><span class="p">(</span><span class="n">Component</span><span class="p">):</span>
+<div class="viewcode-block" id="L.__init__"><a class="viewcode-back" href="../../_autosummary/core/L/Qcircuits.core.L.__init__.html#Qcircuits.core.L.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node_minus</span><span class="p">,</span> <span class="n">node_plus</span><span class="p">,</span> <span class="n">arg1</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">arg2</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">(</span><span class="n">L</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">node_minus</span><span class="p">,</span> <span class="n">node_plus</span><span class="p">,</span> <span class="n">arg1</span><span class="p">,</span> <span class="n">arg2</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">unit</span> <span class="o">=</span> <span class="s1">&#39;H&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">unit</span> <span class="o">=</span> <span class="s1">&#39;H&#39;</span></div>
 
-    <span class="k">def</span> <span class="nf">admittance</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="o">-</span><span class="n">sp</span><span class="o">.</span><span class="n">I</span><span class="o">*</span><span class="n">Mul</span><span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="n">sp</span><span class="o">.</span><span class="n">Symbol</span><span class="p">(</span><span class="s1">&#39;w&#39;</span><span class="p">),</span> <span class="mi">1</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">get_value</span><span class="p">())</span>
+<div class="viewcode-block" id="L.admittance"><a class="viewcode-back" href="../../_autosummary/core/L/Qcircuits.core.L.admittance.html#Qcircuits.core.L.admittance">[docs]</a>    <span class="k">def</span> <span class="nf">admittance</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="o">-</span><span class="n">sp</span><span class="o">.</span><span class="n">I</span><span class="o">*</span><span class="n">Mul</span><span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="n">sp</span><span class="o">.</span><span class="n">Symbol</span><span class="p">(</span><span class="s1">&#39;w&#39;</span><span class="p">),</span> <span class="mi">1</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">get_value</span><span class="p">())</span></div>
 
-    <span class="k">def</span> <span class="nf">set_component_lists</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="L.set_component_lists"><a class="viewcode-back" href="../../_autosummary/core/L/Qcircuits.core.L.set_component_lists.html#Qcircuits.core.L.set_component_lists">[docs]</a>    <span class="k">def</span> <span class="nf">set_component_lists</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">(</span><span class="n">L</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">set_component_lists</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">head</span><span class="o">.</span><span class="n">inductors</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">head</span><span class="o">.</span><span class="n">inductors</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span></div>
 
-    <span class="k">def</span> <span class="nf">draw</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="L.draw"><a class="viewcode-back" href="../../_autosummary/core/L/Qcircuits.core.L.draw.html#Qcircuits.core.L.draw">[docs]</a>    <span class="k">def</span> <span class="nf">draw</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 
         <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mf">0.5</span><span class="p">,</span> <span class="nb">float</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">head</span><span class="o">.</span><span class="n">pp</span><span class="p">[</span><span class="s1">&#39;L&#39;</span><span class="p">][</span><span class="s1">&#39;N_turns&#39;</span><span class="p">])</span> <span class="o">+</span> <span class="mf">1.</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">head</span><span class="o">.</span><span class="n">pp</span><span class="p">[</span><span class="s1">&#39;L&#39;</span><span class="p">][</span><span class="s1">&#39;N_points&#39;</span><span class="p">])</span>
@@ -1665,17 +1665,17 @@
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">angle</span><span class="o">%</span><span class="mf">180.</span> <span class="o">==</span> <span class="mf">0.</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">shift</span><span class="p">(</span><span class="n">x_list</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">x_plot_center</span><span class="p">),</span> <span class="n">shift</span><span class="p">(</span><span class="n">y_list</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">y_plot_center</span><span class="p">),</span> <span class="n">line_type</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">angle</span><span class="o">%</span><span class="mf">180.</span> <span class="o">==</span> <span class="mf">90.</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">shift</span><span class="p">(</span><span class="n">y_list</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">x_plot_center</span><span class="p">),</span> <span class="n">shift</span><span class="p">(</span><span class="n">x_list</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">y_plot_center</span><span class="p">),</span> <span class="n">line_type</span>
+            <span class="k">return</span> <span class="n">shift</span><span class="p">(</span><span class="n">y_list</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">x_plot_center</span><span class="p">),</span> <span class="n">shift</span><span class="p">(</span><span class="n">x_list</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">y_plot_center</span><span class="p">),</span> <span class="n">line_type</span></div>
 
-    <span class="k">def</span> <span class="nf">get_RLC_matrix_components</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="L.get_RLC_matrix_components"><a class="viewcode-back" href="../../_autosummary/core/L/Qcircuits.core.L.get_RLC_matrix_components.html#Qcircuits.core.L.get_RLC_matrix_components">[docs]</a>    <span class="k">def</span> <span class="nf">get_RLC_matrix_components</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="p">{</span>
             <span class="s1">&#39;R&#39;</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span>
             <span class="s1">&#39;L&#39;</span><span class="p">:</span><span class="mi">1</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">get_value</span><span class="p">(),</span>
             <span class="s1">&#39;C&#39;</span><span class="p">:</span><span class="mi">0</span>
-        <span class="p">}</span></div>
+        <span class="p">}</span></div></div>
 
-<div class="viewcode-block" id="J"><a class="viewcode-back" href="../../_autosummary/Qcircuits.core.html#Qcircuits.core.J">[docs]</a><span class="k">class</span> <span class="nc">J</span><span class="p">(</span><span class="n">L</span><span class="p">):</span>
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node_minus</span><span class="p">,</span> <span class="n">node_plus</span><span class="p">,</span> <span class="n">arg1</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">arg2</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">use_E</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">use_I</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<div class="viewcode-block" id="J"><a class="viewcode-back" href="../../_autosummary/core/Qcircuits.core.J.html#Qcircuits.core.J">[docs]</a><span class="k">class</span> <span class="nc">J</span><span class="p">(</span><span class="n">L</span><span class="p">):</span>
+<div class="viewcode-block" id="J.__init__"><a class="viewcode-back" href="../../_autosummary/core/J/Qcircuits.core.J.__init__.html#Qcircuits.core.J.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node_minus</span><span class="p">,</span> <span class="n">node_plus</span><span class="p">,</span> <span class="n">arg1</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">arg2</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">use_E</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">use_I</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">(</span><span class="n">J</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">node_minus</span><span class="p">,</span> <span class="n">node_plus</span><span class="p">,</span> <span class="n">arg1</span><span class="p">,</span> <span class="n">arg2</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">use_E</span> <span class="o">=</span> <span class="n">use_E</span>
@@ -1685,9 +1685,9 @@
         <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">use_I</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">unit</span> <span class="o">=</span> <span class="s1">&#39;A&#39;</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">unit</span> <span class="o">=</span> <span class="s1">&#39;H&#39;</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">unit</span> <span class="o">=</span> <span class="s1">&#39;H&#39;</span></div>
 
-    <span class="k">def</span> <span class="nf">get_value</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<div class="viewcode-block" id="J.get_value"><a class="viewcode-back" href="../../_autosummary/core/J/Qcircuits.core.J.get_value.html#Qcircuits.core.J.get_value">[docs]</a>    <span class="k">def</span> <span class="nf">get_value</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="n">value</span> <span class="o">=</span> <span class="nb">super</span><span class="p">(</span><span class="n">J</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">get_value</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
         <span class="k">if</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">use_E</span> <span class="o">==</span> <span class="kc">False</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">use_I</span> <span class="o">==</span> <span class="kc">False</span><span class="p">):</span>
             <span class="k">return</span> <span class="n">value</span>
@@ -1698,16 +1698,16 @@
             <span class="n">L</span> <span class="o">=</span> <span class="p">(</span><span class="n">hbar</span><span class="o">/</span><span class="mf">2.</span><span class="o">/</span><span class="n">e</span><span class="p">)</span><span class="o">/</span><span class="n">value</span>
             <span class="k">return</span> <span class="n">L</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Cannot set both use_E and use_I to True&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Cannot set both use_E and use_I to True&quot;</span><span class="p">)</span></div>
 
-    <span class="k">def</span> <span class="nf">set_component_lists</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="J.set_component_lists"><a class="viewcode-back" href="../../_autosummary/core/J/Qcircuits.core.J.set_component_lists.html#Qcircuits.core.J.set_component_lists">[docs]</a>    <span class="k">def</span> <span class="nf">set_component_lists</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">(</span><span class="n">J</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">set_component_lists</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">head</span><span class="o">.</span><span class="n">junctions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">head</span><span class="o">.</span><span class="n">junctions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span></div>
 
-    <span class="k">def</span> <span class="nf">anharmonicity</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">w</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">flux</span><span class="p">(</span><span class="n">w</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span><span class="o">**</span><span class="mi">4</span><span class="o">/</span><span class="n">hbar</span><span class="o">**</span><span class="mi">2</span><span class="o">*</span><span class="mf">2.</span><span class="o">*</span><span class="n">e</span><span class="o">**</span><span class="mi">2</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">get_value</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+<div class="viewcode-block" id="J.anharmonicity"><a class="viewcode-back" href="../../_autosummary/core/J/Qcircuits.core.J.anharmonicity.html#Qcircuits.core.J.anharmonicity">[docs]</a>    <span class="k">def</span> <span class="nf">anharmonicity</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">w</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">flux</span><span class="p">(</span><span class="n">w</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span><span class="o">**</span><span class="mi">4</span><span class="o">/</span><span class="n">hbar</span><span class="o">**</span><span class="mi">2</span><span class="o">*</span><span class="mf">2.</span><span class="o">*</span><span class="n">e</span><span class="o">**</span><span class="mi">2</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">get_value</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
 
-    <span class="k">def</span> <span class="nf">draw</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="J.draw"><a class="viewcode-back" href="../../_autosummary/core/J/Qcircuits.core.J.draw.html#Qcircuits.core.J.draw">[docs]</a>    <span class="k">def</span> <span class="nf">draw</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 
         <span class="n">line_type</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="n">x</span> <span class="o">=</span> <span class="p">[</span>
@@ -1732,26 +1732,26 @@
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">angle</span><span class="o">%</span><span class="mf">180.</span> <span class="o">==</span> <span class="mf">0.</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">shift</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">x_plot_center</span><span class="p">),</span> <span class="n">shift</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">y_plot_center</span><span class="p">),</span> <span class="n">line_type</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">angle</span><span class="o">%</span><span class="mf">180.</span> <span class="o">==</span> <span class="mf">90.</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">shift</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">x_plot_center</span><span class="p">),</span> <span class="n">shift</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">y_plot_center</span><span class="p">),</span> <span class="n">line_type</span></div>
+            <span class="k">return</span> <span class="n">shift</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">x_plot_center</span><span class="p">),</span> <span class="n">shift</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">y_plot_center</span><span class="p">),</span> <span class="n">line_type</span></div></div>
 
-<div class="viewcode-block" id="R"><a class="viewcode-back" href="../../_autosummary/Qcircuits.core.html#Qcircuits.core.R">[docs]</a><span class="k">class</span> <span class="nc">R</span><span class="p">(</span><span class="n">Component</span><span class="p">):</span>
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node_minus</span><span class="p">,</span> <span class="n">node_plus</span><span class="p">,</span> <span class="n">arg1</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">arg2</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="R"><a class="viewcode-back" href="../../_autosummary/core/Qcircuits.core.R.html#Qcircuits.core.R">[docs]</a><span class="k">class</span> <span class="nc">R</span><span class="p">(</span><span class="n">Component</span><span class="p">):</span>
+<div class="viewcode-block" id="R.__init__"><a class="viewcode-back" href="../../_autosummary/core/R/Qcircuits.core.R.__init__.html#Qcircuits.core.R.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node_minus</span><span class="p">,</span> <span class="n">node_plus</span><span class="p">,</span> <span class="n">arg1</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">arg2</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">(</span><span class="n">R</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">node_minus</span><span class="p">,</span> <span class="n">node_plus</span><span class="p">,</span> <span class="n">arg1</span><span class="p">,</span> <span class="n">arg2</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">unit</span> <span class="o">=</span> <span class="sa">r</span><span class="s1">&#39;$\Omega$&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">unit</span> <span class="o">=</span> <span class="sa">r</span><span class="s1">&#39;$\Omega$&#39;</span></div>
 
-    <span class="k">def</span> <span class="nf">admittance</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="mi">1</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">get_value</span><span class="p">()</span>
+<div class="viewcode-block" id="R.admittance"><a class="viewcode-back" href="../../_autosummary/core/R/Qcircuits.core.R.admittance.html#Qcircuits.core.R.admittance">[docs]</a>    <span class="k">def</span> <span class="nf">admittance</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="mi">1</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">get_value</span><span class="p">()</span></div>
 
-    <span class="k">def</span> <span class="nf">set_component_lists</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="R.set_component_lists"><a class="viewcode-back" href="../../_autosummary/core/R/Qcircuits.core.R.set_component_lists.html#Qcircuits.core.R.set_component_lists">[docs]</a>    <span class="k">def</span> <span class="nf">set_component_lists</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">(</span><span class="n">R</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">set_component_lists</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">head</span><span class="o">.</span><span class="n">resistors</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
-    <span class="k">def</span> <span class="nf">get_RLC_matrix_components</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">head</span><span class="o">.</span><span class="n">resistors</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span></div>
+<div class="viewcode-block" id="R.get_RLC_matrix_components"><a class="viewcode-back" href="../../_autosummary/core/R/Qcircuits.core.R.get_RLC_matrix_components.html#Qcircuits.core.R.get_RLC_matrix_components">[docs]</a>    <span class="k">def</span> <span class="nf">get_RLC_matrix_components</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="p">{</span>
             <span class="s1">&#39;R&#39;</span><span class="p">:</span><span class="mi">1</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">get_value</span><span class="p">(),</span>
             <span class="s1">&#39;L&#39;</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span>
             <span class="s1">&#39;C&#39;</span><span class="p">:</span><span class="mi">0</span>
-        <span class="p">}</span>
-    <span class="k">def</span> <span class="nf">draw</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="p">}</span></div>
+<div class="viewcode-block" id="R.draw"><a class="viewcode-back" href="../../_autosummary/core/R/Qcircuits.core.R.draw.html#Qcircuits.core.R.draw">[docs]</a>    <span class="k">def</span> <span class="nf">draw</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 
         <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="o">-</span><span class="mf">0.25</span><span class="p">,</span> <span class="mf">0.25</span> <span class="o">+</span>
                         <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">head</span><span class="o">.</span><span class="n">pp</span><span class="p">[</span><span class="s1">&#39;R&#39;</span><span class="p">][</span><span class="s1">&#39;N_ridges&#39;</span><span class="p">]),</span> <span class="bp">self</span><span class="o">.</span><span class="n">head</span><span class="o">.</span><span class="n">pp</span><span class="p">[</span><span class="s1">&#39;R&#39;</span><span class="p">][</span><span class="s1">&#39;N_points&#39;</span><span class="p">])</span>
@@ -1799,21 +1799,21 @@
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">angle</span><span class="o">%</span><span class="mf">180.</span> <span class="o">==</span> <span class="mf">0.</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">shift</span><span class="p">(</span><span class="n">x_list</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">x_plot_center</span><span class="p">),</span> <span class="n">shift</span><span class="p">(</span><span class="n">y_list</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">y_plot_center</span><span class="p">),</span> <span class="n">line_type</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">angle</span><span class="o">%</span><span class="mf">180.</span> <span class="o">==</span> <span class="mf">90.</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">shift</span><span class="p">(</span><span class="n">y_list</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">x_plot_center</span><span class="p">),</span> <span class="n">shift</span><span class="p">(</span><span class="n">x_list</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">y_plot_center</span><span class="p">),</span> <span class="n">line_type</span></div>
+            <span class="k">return</span> <span class="n">shift</span><span class="p">(</span><span class="n">y_list</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">x_plot_center</span><span class="p">),</span> <span class="n">shift</span><span class="p">(</span><span class="n">x_list</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">y_plot_center</span><span class="p">),</span> <span class="n">line_type</span></div></div>
 
-<div class="viewcode-block" id="C"><a class="viewcode-back" href="../../_autosummary/Qcircuits.core.html#Qcircuits.core.C">[docs]</a><span class="k">class</span> <span class="nc">C</span><span class="p">(</span><span class="n">Component</span><span class="p">):</span>
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node_minus</span><span class="p">,</span> <span class="n">node_plus</span><span class="p">,</span> <span class="n">arg1</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">arg2</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="C"><a class="viewcode-back" href="../../_autosummary/core/Qcircuits.core.C.html#Qcircuits.core.C">[docs]</a><span class="k">class</span> <span class="nc">C</span><span class="p">(</span><span class="n">Component</span><span class="p">):</span>
+<div class="viewcode-block" id="C.__init__"><a class="viewcode-back" href="../../_autosummary/core/C/Qcircuits.core.C.__init__.html#Qcircuits.core.C.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node_minus</span><span class="p">,</span> <span class="n">node_plus</span><span class="p">,</span> <span class="n">arg1</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">arg2</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">(</span><span class="n">C</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">node_minus</span><span class="p">,</span> <span class="n">node_plus</span><span class="p">,</span> <span class="n">arg1</span><span class="p">,</span> <span class="n">arg2</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">unit</span> <span class="o">=</span> <span class="s1">&#39;F&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">unit</span> <span class="o">=</span> <span class="s1">&#39;F&#39;</span></div>
 
-    <span class="k">def</span> <span class="nf">admittance</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="n">sp</span><span class="o">.</span><span class="n">I</span><span class="o">*</span><span class="n">Mul</span><span class="p">(</span><span class="n">sp</span><span class="o">.</span><span class="n">Symbol</span><span class="p">(</span><span class="s1">&#39;w&#39;</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_value</span><span class="p">())</span>
+<div class="viewcode-block" id="C.admittance"><a class="viewcode-back" href="../../_autosummary/core/C/Qcircuits.core.C.admittance.html#Qcircuits.core.C.admittance">[docs]</a>    <span class="k">def</span> <span class="nf">admittance</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">sp</span><span class="o">.</span><span class="n">I</span><span class="o">*</span><span class="n">Mul</span><span class="p">(</span><span class="n">sp</span><span class="o">.</span><span class="n">Symbol</span><span class="p">(</span><span class="s1">&#39;w&#39;</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_value</span><span class="p">())</span></div>
 
-    <span class="k">def</span> <span class="nf">set_component_lists</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="C.set_component_lists"><a class="viewcode-back" href="../../_autosummary/core/C/Qcircuits.core.C.set_component_lists.html#Qcircuits.core.C.set_component_lists">[docs]</a>    <span class="k">def</span> <span class="nf">set_component_lists</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">(</span><span class="n">C</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">set_component_lists</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">head</span><span class="o">.</span><span class="n">capacitors</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">head</span><span class="o">.</span><span class="n">capacitors</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span></div>
 
-    <span class="k">def</span> <span class="nf">draw</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="C.draw"><a class="viewcode-back" href="../../_autosummary/core/C/Qcircuits.core.C.draw.html#Qcircuits.core.C.draw">[docs]</a>    <span class="k">def</span> <span class="nf">draw</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">line_type</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="n">x</span> <span class="o">=</span> <span class="p">[</span>
             <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">0.</span><span class="p">,</span> <span class="p">(</span><span class="mf">1.</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">head</span><span class="o">.</span><span class="n">pp</span><span class="p">[</span><span class="s1">&#39;C&#39;</span><span class="p">][</span><span class="s1">&#39;gap&#39;</span><span class="p">])</span><span class="o">/</span><span class="mf">2.</span><span class="p">]),</span>
@@ -1841,25 +1841,25 @@
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">angle</span><span class="o">%</span><span class="mf">180.</span> <span class="o">==</span> <span class="mf">0.</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">shift</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">x_plot_center</span><span class="p">),</span> <span class="n">shift</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">y_plot_center</span><span class="p">),</span> <span class="n">line_type</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">angle</span><span class="o">%</span><span class="mf">180.</span> <span class="o">==</span> <span class="mf">90.</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">shift</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">x_plot_center</span><span class="p">),</span> <span class="n">shift</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">y_plot_center</span><span class="p">),</span> <span class="n">line_type</span>
+            <span class="k">return</span> <span class="n">shift</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">x_plot_center</span><span class="p">),</span> <span class="n">shift</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">y_plot_center</span><span class="p">),</span> <span class="n">line_type</span></div>
 
-    <span class="k">def</span> <span class="nf">get_RLC_matrix_components</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="C.get_RLC_matrix_components"><a class="viewcode-back" href="../../_autosummary/core/C/Qcircuits.core.C.get_RLC_matrix_components.html#Qcircuits.core.C.get_RLC_matrix_components">[docs]</a>    <span class="k">def</span> <span class="nf">get_RLC_matrix_components</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="p">{</span>
             <span class="s1">&#39;R&#39;</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span>
             <span class="s1">&#39;L&#39;</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span>
             <span class="s1">&#39;C&#39;</span><span class="p">:</span><span class="bp">self</span><span class="o">.</span><span class="n">get_value</span><span class="p">()</span>
-        <span class="p">}</span></div>
+        <span class="p">}</span></div></div>
 
-<div class="viewcode-block" id="Admittance"><a class="viewcode-back" href="../../_autosummary/Qcircuits.core.html#Qcircuits.core.Admittance">[docs]</a><span class="k">class</span> <span class="nc">Admittance</span><span class="p">(</span><span class="n">Component</span><span class="p">):</span>
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node_minus</span><span class="p">,</span> <span class="n">node_plus</span><span class="p">,</span> <span class="n">Y</span><span class="p">):</span>
+<div class="viewcode-block" id="Admittance"><a class="viewcode-back" href="../../_autosummary/core/Qcircuits.core.Admittance.html#Qcircuits.core.Admittance">[docs]</a><span class="k">class</span> <span class="nc">Admittance</span><span class="p">(</span><span class="n">Component</span><span class="p">):</span>
+<div class="viewcode-block" id="Admittance.__init__"><a class="viewcode-back" href="../../_autosummary/core/Admittance/Qcircuits.core.Admittance.__init__.html#Qcircuits.core.Admittance.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node_minus</span><span class="p">,</span> <span class="n">node_plus</span><span class="p">,</span> <span class="n">Y</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">node_minus</span> <span class="o">=</span> <span class="n">node_minus</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">node_plus</span> <span class="o">=</span> <span class="n">node_plus</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">Y</span> <span class="o">=</span> <span class="n">Y</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">Y</span> <span class="o">=</span> <span class="n">Y</span></div>
 
-    <span class="k">def</span> <span class="nf">admittance</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">Y</span></div>
+<div class="viewcode-block" id="Admittance.admittance"><a class="viewcode-back" href="../../_autosummary/core/Admittance/Qcircuits.core.Admittance.admittance.html#Qcircuits.core.Admittance.admittance">[docs]</a>    <span class="k">def</span> <span class="nf">admittance</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">Y</span></div></div>
 
-<span class="nd">@timeit</span>
+<div class="viewcode-block" id="main"><a class="viewcode-back" href="../../_autosummary/core/Qcircuits.core.main.html#Qcircuits.core.main">[docs]</a><span class="nd">@timeit</span>
 <span class="k">def</span> <span class="nf">main</span><span class="p">():</span>
     <span class="n">circuit</span> <span class="o">=</span> <span class="n">Qcircuit_NET</span><span class="p">([</span>
             <span class="n">C</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="s1">&#39;C&#39;</span><span class="p">),</span>
@@ -1872,7 +1872,7 @@
     <span class="c1"># circuit = Qcircuit_GUI(filename = &#39;.txt&#39;,edit=False,plot=False)</span>
     <span class="c1"># print(circuit.Y)</span>
     <span class="c1"># print(sp.together(circuit.Y))</span>
-    <span class="n">circuit</span><span class="o">.</span><span class="n">w_k_A_chi</span><span class="p">(</span><span class="n">C</span><span class="o">=</span><span class="mf">1e-13</span><span class="p">,</span><span class="n">pretty_print</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span><span class="n">L</span><span class="o">=</span><span class="mf">1e-8</span><span class="p">)</span>
+    <span class="n">circuit</span><span class="o">.</span><span class="n">w_k_A_chi</span><span class="p">(</span><span class="n">C</span><span class="o">=</span><span class="mf">1e-13</span><span class="p">,</span><span class="n">pretty_print</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span><span class="n">L</span><span class="o">=</span><span class="mf">1e-8</span><span class="p">)</span></div>
     <span class="c1"># circuit.show_normal_mode(0)</span>
     <span class="c1"># circuit.show_normal_mode(1)</span>
 

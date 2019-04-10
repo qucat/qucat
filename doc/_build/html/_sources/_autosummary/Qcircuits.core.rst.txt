@@ -8,8 +8,11 @@ Qcircuits.core
    .. rubric:: Functions
 
    .. autosummary::
+      :toctree: core
    
+      main
       string_to_component
+      timeit
    
    
 
@@ -18,6 +21,8 @@ Qcircuits.core
    .. rubric:: Classes
 
    .. autosummary::
+      :toctree: core
+      :template: class.rst
    
       Admittance
       C
