@@ -681,10 +681,30 @@ class Network(object):
         self.check_if_connected()
         self.remove_opens()
 
-    def check_if_connected(self):
-        #TODO
-        pass
-    
+    @timeit
+    def is_connected(self, 
+        nodes_encountered = None, 
+        start_node = None):
+        '''
+        Adapted from https://www.python-course.eu/graphs_python.php
+        '''
+
+        if nodes_encountered is None:
+            nodes_encountered = set()
+        nodes = list(self.net_dict) # "list" necessary in Python 3 
+        if not start_node:
+            # chosse a node from graph as a starting point
+            start_node = nodes[0]
+        nodes_encountered.add(start_node)
+        if len(nodes_encountered) != len(nodes):
+            for node in self.net_dict[start_node]:
+                if node not in nodes_encountered:
+                    if self.is_connected(nodes_encountered, node):
+                        return True
+        else:
+            return True
+        return False    
+
     def remove_opens(self):
         #TODO
         pass
