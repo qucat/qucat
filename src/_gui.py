@@ -1148,11 +1148,29 @@ class SnappingCanvas(tk.Canvas):
     ##############################
 
     def delete_selection(self, event=None, track_changes=None):
+        '''
+        Deletes selected components.
+
+        Parameters
+        ----------
+        track_changes:  Boolean or None
+                        default is None, in which case the function track changes according
+                        to the value of self.track_changes
+                        True (or False), force the function to keep track (or not) of the
+                        deletion of all components, allowing the user to undo (or not) this
+                        operation.
+        '''
+
         was_tracking_changes = self.track_changes
+
+        # Delete all selected components without tracking those changes
         self.track_changes = False
         to_delete = [el for el in self.elements if el.selected]
         for el in to_delete:
             el.delete()
+
+        # Append these changes to the history variable depending on the value 
+        # of the track_changes input parameters
         if track_changes is None:  # Just follow "was_tracking_changes"
             self.track_changes = was_tracking_changes
             self.save()
@@ -1162,9 +1180,23 @@ class SnappingCanvas(tk.Canvas):
             self.track_changes = True
             self.save()
             self.track_changes = track_changes
+
+        # This may have deleted components out of the visible canvas, 
+        # meaning that the scrollable region should be re-configured.
         self.configure_scrollregion()
 
     def delete_all(self, event=None, track_changes=None):
+        '''
+        Selects all components, then deletes the selection
+        Parameters
+        ----------
+        track_changes:  Boolean or None
+                        default is None, in which case the function track changes according
+                        to the value of self.track_changes
+                        True (or False), force the function to keep track (or not) of the
+                        deletion of all components, allowing the user to undo (or not) this
+                        operation.
+        '''
         self.select_all()
         self.delete_selection(event, track_changes)
 
