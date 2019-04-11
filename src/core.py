@@ -415,63 +415,20 @@ class Qcircuit(object):
 
         return H
 
-class Network(Qcircuit):
-
-    def __init__(self, netlist):
-        super(Network, self).__init__(netlist)
-
-class GUI(Qcircuit):
-
-    def __init__(self, filename, edit=True, plot=True, print_network=True):
-        
-        if edit:
-            _gui.open_canvas(filename)
-
-        # if file does not exist, also open the gui
-        try:
-            with open(filename, 'r') as f:
-                pass
-        except FileNotFoundError as e:
-            _gui.open_canvas(filename)
-
-        netlist = []
-        with open(filename, 'r') as f:
-            for el in f:
-                el = el.replace('\n', '')
-                el = el.split(";")
-                if el[3] == '':
-                    v = None
-                else:
-                    v = float(el[3])
-                if el[4] == '':
-                    l = None
-                else:
-                    l = el[4]
-                netlist.append(
-                    string_to_component(el[0], el[1], el[2], v, l))
-
-        super(GUI, self).__init__(netlist)
-        for el in self.netlist:
-            el.set_plot_coordinates()
-
-        if plot:
-            self.show()
-
-        if print_network:
-            for el in [el for el in self.netlist if not isinstance(el,W)]:
-                print("%s %d %d %s"%(
-                    el.__class__.__name__,
-                    min(el.node_minus,el.node_plus),
-                    max(el.node_minus,el.node_plus),
-                    el.to_string(use_math = False)))
-            print('\n')
-
     def show(self,
              plot=True,
              full_output=False,
              pp=plot_parameters,
              save_to=None,
              **savefig_kwargs):
+
+        if isinstance(self,Network):
+            #TODO recognize if the network is of series/parallel type
+            # in which case the circuit can be constructed anyway
+            raise TypeError('''
+            Plotting functions not available if the circuit was not constructed
+            using the GUI.
+            ''')
         
         self.pp = pp
 
@@ -525,6 +482,12 @@ class GUI(Qcircuit):
 
     def show_normal_mode(self, mode, unit='current',
                          plot=True, save_to=None, **kwargs):
+        
+        if isinstance(self,Network):
+            raise TypeError('''
+            Plotting functions not available if the circuit was not constructed
+            using the GUI.
+            ''')
 
         check_there_are_no_iterables_in_kwarg(**kwargs)
         self.set_w_cpx(**kwargs)
@@ -656,6 +619,57 @@ class GUI(Qcircuit):
         if save_to is not None:
             fig.savefig(save_to, transparent=True)
         plt.close()
+
+class Network(Qcircuit):
+
+    def __init__(self, netlist):
+        super(Network, self).__init__(netlist)
+
+class GUI(Qcircuit):
+
+    def __init__(self, filename, edit=True, plot=True, print_network=True):
+        
+        if edit:
+            _gui.open_canvas(filename)
+
+        # if file does not exist, also open the gui
+        try:
+            with open(filename, 'r') as f:
+                pass
+        except FileNotFoundError as e:
+            _gui.open_canvas(filename)
+
+        netlist = []
+        with open(filename, 'r') as f:
+            for el in f:
+                el = el.replace('\n', '')
+                el = el.split(";")
+                if el[3] == '':
+                    v = None
+                else:
+                    v = float(el[3])
+                if el[4] == '':
+                    l = None
+                else:
+                    l = el[4]
+                netlist.append(
+                    string_to_component(el[0], el[1], el[2], v, l))
+
+        super(GUI, self).__init__(netlist)
+        for el in self.netlist:
+            el.set_plot_coordinates()
+
+        if plot:
+            self.show()
+
+        if print_network:
+            for el in [el for el in self.netlist if not isinstance(el,W)]:
+                print("%s %d %d %s"%(
+                    el.__class__.__name__,
+                    min(el.node_minus,el.node_plus),
+                    max(el.node_minus,el.node_plus),
+                    el.to_string(use_math = False)))
+            print('\n')
 
 class _Network(object):
     """

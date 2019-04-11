@@ -1,5 +1,5 @@
 *************************
-Quantum circuit functions
+Circuit functions
 *************************
 
 .. autoclass:: Qcircuits.Qcircuit

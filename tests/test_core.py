@@ -152,6 +152,24 @@ class TestTesting(TestCaseAppended):
         self.assertEqual(0,0)
 
 class TestGraphics(TestCaseAppended):   
+
+    def test_error_when_trying_to_plot_from_Network_show(self):
+        circuit = core.Network([
+            core.C(0,1,'C'),
+            core.J(0,1,'Lj')
+        ])
+        with self.assertRaises(TypeError):
+            circuit.show()
+            
+    def test_error_when_trying_to_plot_from_Network_show_normal_modes(self):
+        circuit = core.Network([
+            core.C(0,1,'C'),
+            core.J(0,1,'Lj')
+        ])
+        with self.assertRaises(TypeError):
+            circuit.show_normal_mode()
+        
+
     def test_generate_graphics(self):
         exec(open("./_generate_graphics.py").read())
 

@@ -1,5 +1,4 @@
 #
-doc/build
 .vscode/
 .temp
 test*.txt
