@@ -2057,4 +2057,4 @@ class MainWindow(ttk.Frame):
 
 
 if __name__ == '__main__':
-    open_canvas("test.txt")
+    open_canvas('./src/test.txt')
