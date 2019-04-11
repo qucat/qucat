@@ -171,7 +171,7 @@ class TestGraphics(TestCaseAppended):
         
 
     def test_generate_graphics(self):
-        exec(open("./_generate_graphics.py").read())
+        import Qcircuits.src._generate_graphics
 
 class TestNetworkAnalysis(TestCaseAppended):
 
