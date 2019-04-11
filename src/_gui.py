@@ -1057,10 +1057,20 @@ class SnappingCanvas(tk.Canvas):
     ##############################
 
     def right_click(self, event):
+        '''
+        Called when the user right clicks on the grid or on the 
+        background of the canvas.
+        Deselects all components and opens the right click menu.
+        '''
         self.deselect_all()
         self.bind("<ButtonRelease-3>", self.open_right_click_menu)
 
     def open_right_click_menu(self, event):
+        '''
+        Menu opened when the user right clicks on the grid or on the 
+        background of the canvas.
+        Deselects all components and opens the right click menu.
+        '''
         menu = tk.Menu(self, tearoff=0)
         menu.add_command(label="Paste", command=(lambda :self.paste(event)))
         menu.tk_popup(event.x_root, event.y_root)
@@ -1071,13 +1081,38 @@ class SnappingCanvas(tk.Canvas):
     ##############################
 
     def start_selection_field(self, event):
+        '''
+        Called when user clicks on the grid or the background of the canvas.
+        Builds the dashed selection box (initially with zero area) 
+        where the one corner is located at the click position, and the other
+        is located at the current mouses position.
+        The box will be deleted when the click is released.
+        '''
+
         self.deselect_all()
+
+        # Store location at which the user clicks 
+        # in canvas units.
+        # This will form one corner of the selection box.
         self.selection_rectangle_x_start = self.canvasx(event.x)
         self.selection_rectangle_y_start = self.canvasy(event.y)
+
+        # Create the dashed box.
+        # The other corner of the selection box is determined by the position
+        # the mouse (for the moment the box has zero area).
         self.selection_rectangle = self.create_rectangle(
-            self.canvasx(event.x), self.canvasy(event.y), self.canvasx(event.x), self.canvasy(event.y), dash=(3, 5))
+            self.canvasx(event.x), self.canvasy(event.y), self.canvasx(event.x), self.canvasy(event.y), 
+            dash=(3, 5))
 
     def expand_selection_field(self, event):
+        '''
+        Called when user clicks+drags the mouse
+        on the grid or the background of the canvas.
+        Will continuously deselct all the components, then go through all
+        the components and selecting those contained in the selection box.
+        Wheter a component is in or out of the box is determined by the components
+        box_select method which takes the coordinates of the selection rectangle as arguments.
+        '''
         self.deselect_all()
         self.coords(self.selection_rectangle,
                     min(self.canvasx(event.x), self.selection_rectangle_x_start),
@@ -1088,13 +1123,23 @@ class SnappingCanvas(tk.Canvas):
             el.box_select(*self.coords(self.selection_rectangle))
 
     def end_selection_field(self, event):
+        '''
+        Called when user releases a click on the grid or background of the canvas.
+        Will delete the selection rectangle.
+        '''
         self.delete(self.selection_rectangle)
 
     def deselect_all(self, event=None):
+        '''
+        Deselects all components on the canvas.
+        '''
         for el in self.elements:
             el.deselect()
 
     def select_all(self, event=None):
+        '''
+        Selects all components on the canvas.
+        '''
         for el in self.elements:
             el.force_select()
 
