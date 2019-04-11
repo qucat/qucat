@@ -907,53 +907,104 @@ class SnappingCanvas(tk.Canvas):
     ##############################
 
     def cut_selection(self, event=None):
+        '''
+        Called on CTRL+X or Edit>Cut.
+        Copies and deletes all selected elements.
+        '''
+        self.copy_selection()
+        self.delete_selection()
+
+    def copy_selection(self, event=None):
+        '''
+        Called on CTRL+C or Edit>Copy.
+        Adds selected elements to the self.copied_elements variable.
+        '''
+        
+        # Since deepcopying calls the __init__ of elements
+        # we forbid any additions the history variable to be on the safe side
         self.track_changes = False
+
         self.copied_elements = [deepcopy(el)
                                 for el in self.elements if el.selected]
         self.track_changes = True
-        self.delete_selection()
 
     def paste(self, event=None):
+        '''
+        Called on CTRL+V or Edit>Paste.
+        '''
+
         if len(self.copied_elements) > 0:
             self.deselect_all()
 
+            # Create a list of elements to paste, this allows
+            # us to paste multiple times the same content
+            # without the different version of the elements having
+            # anything in common.
             self.track_changes = False
             to_paste = [deepcopy(el) for el in self.copied_elements]
             self.track_changes = True
 
-            # smallest x and y of copied elements, in canvas units
+            # Calculate top left position of the circuit to paste
+            # in grid units then convert it to canvas units
             x_min = min([el.x_minus for el in to_paste] +
                         [el.x_plus for el in to_paste])
             y_min = min([el.y_minus for el in to_paste] +
                         [el.y_plus for el in to_paste])
             x_min, y_min = self.grid_to_canvas([x_min, y_min])
 
-            # shift to apply, in canvas units
+            # shift in position to apply to all elements
+            # such that the top left of the circuit lies
+            # under the mouse
+            # in canvas units
             dx = self.canvasx(event.x)-x_min
             dy = self.canvasy(event.y)-y_min
 
             for el in to_paste:
+
+                # create the component
                 el.create()
+                # scale the component and position it where it was copied
                 el.adapt_to_grid_unit()
+                # select it
                 el.force_select()
+                # move it such that the top left of the circuit lies
+                # under the mouse
                 el.move(dx, dy)
+
+                # used to update the position of components label
                 el.add_or_replace_label()
 
+            #########################
+            # Note: all the bindings below need only
+            # be applied to a single element since
+            # "on_motion", "release_motion_paste" acts
+            # on all the selected elements
+            # and we have set all the pasted elements to 
+            # be selected above
+            #########################
+
+            # Ensure that when the mouse moves, the selection 
+            # moves such that the top left of the circuit lies
+            # under the mouse
             self.bind("<Motion>", el.on_motion)
+            
             if len(to_paste) == 1:
+                
+                # Snaps the element to the grid and removes the binding 
+                # of arrow keys and replaces binding of button-press to box selection
                 self.bind("<ButtonPress-1>", el.release_motion_paste_single)
+
+                # If only a single element is pasted, allow the user to rotate that 
+                # element with arrows
                 self.bind('<Left>', lambda event: el.on_updownleftright(event, angle=WEST))
                 self.bind('<Right>', lambda event: el.on_updownleftright(event, angle=EAST))
                 self.bind('<Up>', lambda event: el.on_updownleftright(event, angle=NORTH))
                 self.bind('<Down>', lambda event: el.on_updownleftright(event, angle=SOUTH))
             else:
+                # Snaps the elements (the selection) to the grid and
+                # replaces binding of button-press to box selection
                 self.bind("<ButtonPress-1>", el.release_motion_paste)
 
-    def copy_selection(self, event=None):
-        self.track_changes = False
-        self.copied_elements = [deepcopy(el)
-                                for el in self.elements if el.selected]
-        self.track_changes = True
 
     #############################
     #  HISTORY MANAGEMENT
