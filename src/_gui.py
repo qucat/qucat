@@ -61,7 +61,39 @@ class AutoScrollbar(ttk.Scrollbar):
 
 class SnappingCanvas(tk.Canvas):
     def __init__(self, master, grid_unit, netlist_filename, **kw):
-        """ Initialize the ImageFrame """
+        """
+        Coordinate systems
+        ==================
+
+        The Canvas widget uses two coordinate systems; 
+        the window coordinate system, with (0, 0) in the upper left corner
+        and (canvas.winfo_width,canvas.winfo_height) in the lower right corner, 
+        and a canvas coordinate system which specify where the items are drawn.
+
+        By scrolling the canvas, you can specify which part of the canvas coordinate system 
+        to show in the window.
+
+        To convert from window coordinates to canvas coordinates, use the canvasx and canvasy methods.
+        For example the upper left corner of the window has canvas coordinates (canvasx(0),canvasy(0))
+        and the bottom right corner of the window has canvas coordinates 
+        (canvasx(canvas.winfo_width), canvasy(canvas.winfo_height))
+
+        A circuit component has thus a unique set of canvas coordinates (x_can, y_can).
+        They can be seen on the window if:
+        canvasx(0) < x_can < canvasx(canvas.winfo_width) and canvasx(0) < y_can < canvasy(canvas.winfo_height)
+
+        We use an additional set of coordinates called grid coordinates, where the horizontal and
+        vertical directions are divided into discrete steps to the circuit components will snap to.
+        Any node of a circuit component can thus be assigned two (possible negative) integers, 
+        (x_grid,y_grid) corresponding to a number of horizontal and vertical steps away from an 
+        initially defined center. 
+        The center and the size of the step size is defined in canvas units (canvas.canvas_center and
+        canvas.grid_unit respectively) such that 
+        x_can = canvas.canvas_center[0]+canvas.grid_unit*x_grid
+        y_can = canvas.canvas_center[1]+canvas.grid_unit*y_grid
+
+        canvas.canvas_center and canvas.grid_unit are not constant and are modified when zooming in/out
+        """
         
         self.netlist_filename = netlist_filename
         '''In the netlist file is stored at all times 
