@@ -1188,6 +1188,7 @@ class SnappingCanvas(tk.Canvas):
     def delete_all(self, event=None, track_changes=None):
         '''
         Selects all components, then deletes the selection
+
         Parameters
         ----------
         track_changes:  Boolean or None
@@ -1205,7 +1206,25 @@ class SnappingCanvas(tk.Canvas):
     ##############################
 
     def create_circle(self, x, y, r):
-        # Everything defined in canvas units
+        '''
+        Creates a filled black circle located at 
+        (x,y) with a radius r. 
+
+        Parameters
+        ----------
+        x:  float
+            horizontal position of the center of the circle in canvas units
+        y:  float
+            vertical position of the center of the circle in canvas units
+        r:  float
+            radius of the circle in canvas units
+
+        Returns
+        -------
+        object_id:  integer
+            object ID of the circle (actually an tkinter oval)
+        '''
+
         x0 = x - r
         y0 = y - r
         x1 = x + r
@@ -1213,7 +1232,21 @@ class SnappingCanvas(tk.Canvas):
         return self.create_oval(x0, y0, x1, y1, fill='black')
 
     def update_circle(self, circle, x, y, r):
-        # Everything defined in canvas units
+        '''
+        Updates the position and size of a circle.
+
+        Parameters
+        ----------
+        circle: int
+            object ID of a circle (actually an tkinter oval)
+        x:  float
+            horizontal position of the center of the circle in canvas units
+        y:  float
+            vertical position of the center of the circle in canvas units
+        r:  float
+            radius of the circle in canvas units
+        '''
+
         x0 = x - r
         y0 = y - r
         x1 = x + r
