@@ -427,11 +427,11 @@ class SnappingCanvas(tk.Canvas):
         #############################
 
         # zoom for Windows and MacOS, but not Linux
-        self.bind('<Control-MouseWheel>', self.wheel)
+        self.bind('<Control-MouseWheel>', self.scroll_zoom)
         # zoom for Linux, wheel scroll down
-        self.bind('<Control-Button-5>',   self.wheel)
+        self.bind('<Control-Button-5>',   self.scroll_zoom)
         # zoom for Linux, wheel scroll up
-        self.bind('<Control-Button-4>',   self.wheel)
+        self.bind('<Control-Button-4>',   self.scroll_zoom)
         # zoom for Windows and MacOS, but not Linux
         self.bind('<Shift-MouseWheel>', self.scroll_x_wheel)
         # zoom for Linux, wheel scroll down
@@ -665,62 +665,95 @@ class SnappingCanvas(tk.Canvas):
             self.center_window_on_circuit()
 
     #############################
-    # SCROLLING
+    # SCROLLING/ZOOMING
     ##############################
 
     def scroll_y_wheel(self, event):
+        '''
+        Triggered by the user scrolling (in combination with no particular key presses).
+        '''
+
+        # Determine which direction the user is scrolling 
+        # if using windows, then event.delta has also a different
+        # amplitude depending on how fast the user is scrolling, 
+        # but we ignore that 
         if event.num == 5 or event.delta < 0:
             direction = 1
         if event.num == 4 or event.delta > 0:
             direction = -1
+
+        # Move the canvas appropriately
         self.yview_scroll(direction, tk.UNITS)
+
+        # reconfigure the region in which the scroll bars
+        # can scroll
         self.configure_scrollregion()
+
+        # redraw the grid such that it fills the 
+        # visible canvas
         self.draw_grid(event)
 
     def scroll_x_wheel(self, event):
+        '''
+        Triggered by the user is SHIFT+scrolling 
+        '''
+
+        # Determine which direction the user is scrolling 
+        # if using windows, then event.delta has also a different
+        # amplitude depending on how fast the user is scrolling, 
+        # but we ignore that.
+        # Note: Linux -> event.num and  Windows -> event.delta
         if event.num == 5 or event.delta < 0:
             direction = 1
         if event.num == 4 or event.delta > 0:
             direction = -1
+
+        # Move the canvas appropriately
         self.xview_scroll(direction, tk.UNITS)
+
+        # reconfigure the region in which the scroll bars
+        # can scroll
         self.configure_scrollregion()
+
+        # redraw the grid such that it fills the 
+        # visible canvas
         self.draw_grid(event)
-
-    def configure_scrollregion(self):
-        extra_scrollable_region = 50 # in canvas units
-        box_canvas = [self.canvasx(0)-extra_scrollable_region,  # get visible area of the canvas
-                      self.canvasy(0)-extra_scrollable_region,
-                      self.canvasx(self.winfo_width())+extra_scrollable_region,
-                      self.canvasy(self.winfo_height())+extra_scrollable_region]
-
-        if len(self.elements) > 0:
-            xs = [el.x_minus for el in self.elements] + \
-                [el.x_plus for el in self.elements]
-            ys = [el.y_minus for el in self.elements] + \
-                [el.y_plus for el in self.elements]
-            box_elements = self.grid_to_canvas(
-                [min(xs)-1, min(ys)-1])+self.grid_to_canvas([max(xs)+1, max(ys)+1])
-
-            self.configure(
-                scrollregion=[min(box_elements[0], box_canvas[0]), min(box_elements[1], box_canvas[1]),
-                              max(box_elements[2], box_canvas[2]), max(box_elements[3], box_canvas[3])])
-        else:
-            self.configure(scrollregion=box_canvas)
-
-    def wheel(self, event):
-        old_grid_unit = self.grid_unit
+    
+    def scroll_zoom(self, event):
+        '''
+        Called when the user ALT+Scrolls.
+        Zooms in/out of the canvas.
+        Zooming works by chaning the grid_unit of the canvas
+        and re-plotting all the circuit elements.
+        During zooming, we move the circuit and grid such that
+        the position of the mouse on the grid remains constant
+        '''
         
-        scaling = 1.08
-        try:
-            if abs(event.delta) > 120:
-                # Fast scrolling case on Windows
-                scaling = 1.15
-        except:
-            pass
+        # Sets the smallest/largest allowed grid_unit size
         smallest_grid_unit = 35
         largest_grid_unit = 100
 
-        # Respond to Linux (event.num) or Windows (event.delta) wheel event
+        # Determine which direction the user is scrolling 
+        # if using windows, then event.delta has also a different
+        # amplitude depending on how fast the user is scrolling, 
+        # but we ignore that.
+        # Note: Linux -> event.num and  Windows -> event.delta
+        old_grid_unit = self.grid_unit
+        
+        # Default scaling of the grid_unit for slow scrolling on windows
+        # or all scrolling on other OS
+        scaling = 1.08
+
+        # If on windows, we can change the scaling in case of fast scrolling
+        try:
+            if abs(event.delta) > 120:
+                scaling = 1.15
+        except:
+            pass
+
+        # Determine which direction the user is scrolling 
+        # and scale the grid_unit accordingly
+        # Note: Linux -> event.num and  Windows -> event.delta
         if event.num == 5 or event.delta < 0:  # scroll out, smaller
             new_grid_unit = int(self.grid_unit/scaling)
             if new_grid_unit == old_grid_unit:
@@ -730,43 +763,143 @@ class SnappingCanvas(tk.Canvas):
             if new_grid_unit == old_grid_unit:
                 new_grid_unit += 1
 
+        # If the user is trying to go below/above the 
+        # smallest/largest grid unit size, just
+        # display a message
         if smallest_grid_unit > new_grid_unit:
             self.message("Can't zoom out more")
         elif new_grid_unit > largest_grid_unit:
             self.message("Can't zoom in more")
+
         else:
-            grid_pos_old = self.canvas_to_grid(
+
+            # position of the mouse when the scrolling occured
+            # in old grid units
+            grid_mouse_pos_old = self.canvas_to_grid(
                 [self.canvasx(event.x), self.canvasy(event.y)])
+
+            # change the grid unit
             self.grid_unit = new_grid_unit
-            canvas_pos_old = self.grid_to_canvas(grid_pos_old)
-            canvas_center_shift = [self.canvasx(
-                event.x)-canvas_pos_old[0], self.canvasy(event.y)-canvas_pos_old[1]]
+
+            
+            # position of the mouse when the scrolling occured
+            # in canvas units
+            canvas_mouse_pos = self.grid_to_canvas(grid_mouse_pos_old)
+
+            # Amount we have to shift the canvas such that the 
+            # position of the mouse on the new and old grid remains constant
+            canvas_center_shift = [
+                self.canvasx(event.x)-canvas_mouse_pos[0], 
+                self.canvasy(event.y)-canvas_mouse_pos[1]]
+
+            # Shift the center of the canvas such that 
+            # position of the mouse on the new and old grid remains constant
             self.canvas_center = [self.canvas_center[0]+canvas_center_shift[0],
                                   self.canvas_center[1]+canvas_center_shift[1]]
+
+            # Move and scale all ALREADY CREATED elements to adapt to the 
+            # new grid
             for el in self.elements:
                 el.adapt_to_grid_unit()
+
+            # Move and scale all IN CREATION elements to adapt to the 
+            # new grid    
             if self.in_creation is not None:
                 self.in_creation.init_adapt_to_grid_unit(event)
 
+            # redraw the grid such that it fills the 
+            # visible canvas
             self.draw_grid(event)
+
+            # reconfigure the region in which the scroll bars
+            # can scroll
             self.configure_scrollregion()
-            
+
+       
+    def configure_scrollregion(self):
+
+        '''
+        Called every time some moving around or zooming occurs on the canvas
+        Configures the range that is scrollable with the scrollbars
+        '''
+
+        extra_scrollable_region = 50 # in canvas units
+        '''
+        if the circuit fulls the visible canvas, there will 
+        still be a small gap in the scrollbar to indicate to
+        the user he can use the scrollbars to scroll down by some 
+        small amount
+        '''
+
+        # get visible area of the canvas in canvas units
+        box_canvas = [self.canvasx(0)-extra_scrollable_region,  
+                      self.canvasy(0)-extra_scrollable_region,
+                      self.canvasx(self.winfo_width())+extra_scrollable_region,
+                      self.canvasy(self.winfo_height())+extra_scrollable_region]
+
+        # If there are some drawn circuit elemnts
+        # set box_elemnts to describe the area filled by the circuit 
+        # in canvas units
+        if len(self.elements) > 0:
+            xs = [el.x_minus for el in self.elements] + \
+                [el.x_plus for el in self.elements]
+            ys = [el.y_minus for el in self.elements] + \
+                [el.y_plus for el in self.elements]
+            box_elements = self.grid_to_canvas(
+                [min(xs)-1, min(ys)-1])+self.grid_to_canvas([max(xs)+1, max(ys)+1])
+
+            # If there are some drawn circuit elemnts, the scrollable region
+            # should show that the user has some circuit elements to discover
+            # if he scrolls down/up/left/right
+            self.configure(
+                scrollregion=[min(box_elements[0], box_canvas[0]), min(box_elements[1], box_canvas[1]),
+                              max(box_elements[2], box_canvas[2]), max(box_elements[3], box_canvas[3])])
+        else:
+            # if there are no drawn circuit elements, just indicate
+            # that the user can scroll down/up/left/right a little bit
+            self.configure(scrollregion=box_canvas)
+
     def zoom(self, direction = 'in'):
-        args = ['<Control-MouseWheel>']
+        '''
+        Generates an event which simulates the user
+        scrolling by one increment
+
+        Parameters
+        ----------
+        direction:  string
+                    'in' tp scroll in
+                    'out' to scroll out
+        '''
+
+        # Location at which the fake scrolling occurs
         kwargs = {'x':0,'y':0}
+
+        args = ['<Control-MouseWheel>']
         if direction == 'in':
             self.event_generate(*args, delta = 121, **kwargs)
         if direction == 'out':
             self.event_generate(*args, delta = -121, **kwargs)
 
     def scroll_x(self, *args, **kwargs):
-        """ Scroll canvas horizontally and redraw the image """
-        self.xview(*args)  # scroll vertically
+        """ 
+        Is called when the user interacts with the horizontal scroll bar
+        """
+        # shift canvas horizontally
+        self.xview(*args)
+
+        # redraw the grid such that it fills the 
+        # visible canvas
         self.draw_grid()
 
     def scroll_y(self, *args, **kwargs):
-        """ Scroll canvas vertically and redraw the image """
-        self.yview(*args)  # scroll vertically
+        """ 
+        Is called when the user interacts with the vertical scroll bar
+        """
+        # shift canvas vertically
+        self.yview(*args)
+
+        # redraw the grid such that it fills the 
+        # visible canvas
         self.draw_grid()
 
     #############################
