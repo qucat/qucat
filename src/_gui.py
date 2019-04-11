@@ -931,6 +931,9 @@ class SnappingCanvas(tk.Canvas):
     def paste(self, event=None):
         '''
         Called on CTRL+V or Edit>Paste.
+        Creates all the elements in self.copied_elements
+        and has them hover under the users mouse until
+        he clicks somewhere, snapping them in place on the grid.
         '''
 
         if len(self.copied_elements) > 0:
@@ -1011,10 +1014,14 @@ class SnappingCanvas(tk.Canvas):
     ##############################
 
     def ctrl_z(self, event=None):
-        # print('CTRL-Z')
-        # for net in self.history:
-        #     print(net)
-        # print("location was: %d" % self.history_location)
+        '''
+        Called on CTRL+Z or Edit>Undo.
+        Returns to the circuit configuration previously stored in the
+        self.history variable. 
+        A circuit is added to the self.history variable when self.save()
+        is called and self.track_changes == True.
+        '''
+
         if self.history_location > 0:
             self.track_changes = False
             self.history_location -= 1
@@ -1023,13 +1030,20 @@ class SnappingCanvas(tk.Canvas):
             self.track_changes = True
         else:
             self.message('Nothing to undo')
-        # print("location is: %d" % self.history_location)
 
     def ctrl_y(self, event=None):
-        # print('CTRL-Y')
-        # for net in self.history:
-        #     print(net)
-        # print("location was: %d" % self.history_location)
+        '''
+        Called on CTRL+Y or Edit>Redo.
+        Returns to the next circuit configuration available in the
+        self.history variable. 
+        This is possible if the user just undid (CTRL-Z) and did 
+        not yet create or move a component.
+        Indeed if the user does the latter then self.save() should be
+        called with self.track_changes == True, which erases all future 
+        self.history entries.
+        This function will then display the message 'Nothing to redo'.
+        '''
+
         if 0 <= self.history_location < len(self.history)-1:
             self.track_changes = False
             self.history_location += 1
@@ -1037,7 +1051,6 @@ class SnappingCanvas(tk.Canvas):
             self.track_changes = True
         else:
             self.message('Nothing to redo')
-        # print("location is: %d" % self.history_location)
 
     #############################
     #  RIGHT CLICK
