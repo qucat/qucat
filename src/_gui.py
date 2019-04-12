@@ -33,6 +33,9 @@ def track_menu(label):
 def track_scrollbar(direction,*args):
     print(direction,args)
 
+def track_value_label_change(v,l):
+    print('Changed values to:',v,l)
+
 class TrackableScrollbar(ttk.Scrollbar):
     def configure(self,**options):
         scroll_xy = options['command']
@@ -2490,7 +2493,8 @@ class G(Component):
         super(G,self).add_nodes(to = to, minus = minus, plus = plus)       
 
 class RequestValueLabelWindow(tk.Toplevel):
-    def __init__(self, master, component):
+
+    def __init__(self, master, component, force_vl = None):
         tk.Toplevel.__init__(self, master)
         self.component = component
 
@@ -2528,6 +2532,13 @@ class RequestValueLabelWindow(tk.Toplevel):
         cancel_button = tk.Button(self, text='Cancel', command=self.cancel)
         cancel_button.pack(side=tk.LEFT, padx=5, pady=5)
 
+        if force_vl is not None:
+            # In case we want to emulate the user
+            # entering some values
+            self.entries[0][1].get(force_vl[0])
+            self.entries[1][1].get(force_vl[1])
+            self.ok()
+
     def ok(self):
         value = self.entries[0][1].get()
         label = self.entries[1][1].get()
@@ -2554,6 +2565,7 @@ class RequestValueLabelWindow(tk.Toplevel):
             return None
         else:
             self.component.prop = [v, l]
+            track_value_label_change(v,l)
             self.destroy()
 
     def cancel(self):
