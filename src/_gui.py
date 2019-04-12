@@ -1290,16 +1290,51 @@ class SnappingCanvas(tk.Canvas):
     ##############################
 
     def grid_to_canvas(self, pos):
-        # pos = [x ,y] (in grid units)
+        '''
+        Converts a position in grid units to canvas units
+
+        Parameters
+        ----------
+        pos:    list of floats
+                pos = [x_grid,y_grid] where x_grid and y_grid are given in grid units
+
+        Returns
+        -------
+        [x_canvas,y_canvas]:    list of floats
+                                position in canvas units
+        '''
+
         return [self.canvas_center[0]+self.grid_unit*pos[0],
                 self.canvas_center[1]+self.grid_unit*pos[1]]
 
     def canvas_to_grid(self, pos):
-        # pos = [x ,y] (in canvas units)
+        '''
+        Converts a position in canvas units to grid units
+
+        Parameters
+        ----------
+        pos:    list of floats
+                pos = [x_canvas,y_canvas] where x_canvas and y_canvas are given in canvas units
+
+        Returns
+        -------
+        [x_grid,y_grid]:    list of floats
+                            position in grid units
+        '''
+
         return [(pos[0]-self.canvas_center[0])/self.grid_unit,
                 (pos[1]-self.canvas_center[1])/self.grid_unit]
     
     def get_mouse_location(self):
+        '''
+        Returns the location of the mouse pointer in canvas units.
+
+        Returns
+        -------
+        [x,y]:  List of floats
+                corresponding to the location of the mouse pointer in canvas units.
+        '''
+
         return [self.canvasx(self.winfo_pointerx())-self.winfo_rootx(), 
             self.canvasy(self.winfo_pointery())-self.winfo_rooty()]
 
