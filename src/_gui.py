@@ -39,29 +39,22 @@ def string_to_component(s, *arg, **kwarg):
     elif s == 'G':
         return G(*arg, **kwarg)
 
-
-class AutoScrollbar(ttk.Scrollbar):
-
-    def set(self, lo, hi):
-        # uncomment for auto-hiding scroll bars
-        # if float(lo) <= 0.0 and float(hi) >= 1.0:
-        #     self.grid_remove()
-        # else:
-        self.grid()
-        ttk.Scrollbar.set(self, lo, hi)
-
-    def pack(self, **kw):
-        raise tk.TclError(
-            'Cannot use pack with the widget ' + self.__class__.__name__)
-
-    def place(self, **kw):
-        raise tk.TclError(
-            'Cannot use place with the widget ' + self.__class__.__name__)
-
-
 class CircuitEditor(tk.Canvas):
     def __init__(self, master, grid_unit, netlist_filename, **kw):
         """
+        The CircuitEditor is the only widget which populates the MainWindow of the application.
+        The main part of this widget is a Tkinter Canvas on which the user visualises
+        and interacts with an electrical circuit.
+
+        Circuit components are placed manually on the canvas and snap to the canvas grid.
+        The user can navigate the canvas by scrolling to zoom in or out, or pan horizontally and vertically.
+        The user can then drag and drop, edit, copy/cut/paste, etc... these components at will.
+        Each change made by the user is automatically saved in a file defined by the netlist_filename.
+        Each line of this text file is in the format:
+        <type> (C,L,R...);<x,y (node_minus in grid unit)>;<x,y (node_plus in grid unit)>;value;symbol
+        This file can be read by this application to load a circuit, or by an analysis software.
+        These changes are also logged in a history variable which enables actions to be un/redone.
+
         Coordinate systems
         ==================
 
@@ -93,6 +86,21 @@ class CircuitEditor(tk.Canvas):
         y_can = canvas.canvas_center[1]+canvas.grid_unit*y_grid
 
         canvas.canvas_center and canvas.grid_unit are not constant and are modified when zooming in/out
+
+        Nodes, wires and intersections
+        ==============================
+
+        All circuit components currently implemented have two nodes except the special case
+        of the ground element, which has one. 
+        Nodes are represented as full black circles in the editor. 
+
+        When a node (node 1) is placed on a wire, this wire automatically splits into two wires, each sharing
+        a node with (node 1).
+        Conversely, when a wire is moved, or is created such that it crosses a node (node 1), it will 
+        split into two wires, each sharing a node with (node 1).
+        
+        However, if two wires cross, such that neither has a node placed on a wire, there will be no
+        splitting of wires or creation of new nodes. This case implements a cros-over.
         """
         
         self.netlist_filename = netlist_filename
@@ -364,7 +372,6 @@ class CircuitEditor(tk.Canvas):
         self.frame.grid(sticky='nswe')  # make frame container sticky
         self.frame.rowconfigure(0, weight=1)  # make canvas expandable in x
         self.frame.columnconfigure(0, weight=1)  # make canvas expandable in y
-
     def build_scrollbars(self):
         '''
         Builds horizontal and vertical scrollbars and places
@@ -372,8 +379,8 @@ class CircuitEditor(tk.Canvas):
         '''
         
         # Vertical and horizontal scrollbars for canvas
-        self.hbar = AutoScrollbar(self.frame, orient='horizontal')
-        self.vbar = AutoScrollbar(self.frame, orient='vertical')
+        self.hbar = ttk.Scrollbar(self.frame, orient='horizontal')
+        self.vbar = ttk.Scrollbar(self.frame, orient='vertical')
         self.hbar.grid(row=1, column=0, sticky='we')
         self.vbar.grid(row=0, column=1, sticky='ns')
     def build_canvas(self):
