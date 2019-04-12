@@ -30,6 +30,19 @@ def track_event(event, tagOrId = None, sequence=None, func=None, add=None):
 def track_menu(label):
     print(label)
 
+def track_scrollbar(direction,*args):
+    print(direction,args)
+
+class TrackableScrollbar(ttk.Scrollbar):
+    def configure(self,**options):
+        scroll_xy = options['command']
+        def tracked_command(*args, **kwargs):
+            track_scrollbar(scroll_xy.__name__[-1],*args)
+            scroll_xy(*args, **kwargs)
+        options['command'] = tracked_command
+        super(TrackableScrollbar, self).configure(**options)
+
+
 class TrackableMenu(tk.Menu):
     def add_command(self,**options):
         command = options['command']
@@ -393,8 +406,8 @@ class CircuitEditor(tk.Canvas):
         '''
         
         # Vertical and horizontal scrollbars for canvas
-        self.hbar = ttk.Scrollbar(self.frame, orient='horizontal')
-        self.vbar = ttk.Scrollbar(self.frame, orient='vertical')
+        self.hbar = TrackableScrollbar(self.frame, orient='horizontal')
+        self.vbar = TrackableScrollbar(self.frame, orient='vertical')
         self.hbar.grid(row=1, column=0, sticky='we')
         self.vbar.grid(row=0, column=1, sticky='ns')
     def build_canvas(self):
@@ -423,7 +436,7 @@ class CircuitEditor(tk.Canvas):
         Define what functions the scrollbars should call
         when we interact with them.
         '''
-        self.hbar.configure(command=self.scroll_x)  # bind scrollbars to the canvas
+        self.hbar.configure(command=self.scroll_x)
         self.vbar.configure(command=self.scroll_y)
     def set_canvas_center(self):
         '''
@@ -928,7 +941,6 @@ class CircuitEditor(tk.Canvas):
             # can scroll
             self.configure_scrollregion()
 
-       
     def configure_scrollregion(self):
 
         '''
@@ -997,6 +1009,7 @@ class CircuitEditor(tk.Canvas):
         """ 
         Is called when the user interacts with the horizontal scroll bar
         """
+
         # shift canvas horizontally
         self.xview(*args)
 
