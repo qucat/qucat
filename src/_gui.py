@@ -1337,31 +1337,83 @@ class SnappingCanvas(tk.Canvas):
 
         return [self.canvasx(self.winfo_pointerx())-self.winfo_rootx(), 
             self.canvasy(self.winfo_pointery())-self.winfo_rooty()]
-
-    #############################
-    #  OTHER
-    ##############################
+    
     def center_window_on_circuit(self):
+        '''
+        Called when the gui is opened or a new circuit is opened, or
+        upon clicking View>Re-center.
+
+        Moves the canvas such that the top left point of the circuit 
+        is situated at the top left of the canvas.
+        '''
+
+        margin = 3
+        '''
+        Mrgin between the circuit and the upper and left edges of the canvas.
+        In grid units.
+        '''
 
         if len(self.elements) > 0:
+
+            # determine the coordinates of a box surrounding all
+            # the circuit elements (plus a margin)
             xs = [el.x_minus for el in self.elements] + \
                 [el.x_plus for el in self.elements]
             ys = [el.y_minus for el in self.elements] + \
                 [el.y_plus for el in self.elements]
-            box_elements = self.grid_to_canvas([min(xs)-3, min(ys)-3])\
-                    +self.grid_to_canvas([max(xs)+3, max(ys)+3])
+            box_elements = self.grid_to_canvas([min(xs)-margin, min(ys)-margin])\
+                    +self.grid_to_canvas([max(xs)+margin, max(ys)+margin])
 
+            # Set this box to be the scrollable region and
+            # move to the upper left corner of that scrollable region
             self.configure(scrollregion=box_elements)
             self.xview_moveto(0)
             self.yview_moveto(0)
 
+        # Since the canvas has moved, 
+        # re-configure the scrollregion and 
+        # re-draw the grid
         self.configure_scrollregion()
         self.draw_grid()
 
-    def message(self, text, t = 0.3):
+    #############################
+    #  UTILITIES
+    ##############################
+    np.linspace
+    def message(self, text, t = 0.3, x = 5, y = 2,size = 8, weight = 'normal'):
+        '''
+        Displays a message on the canvas for a given amount of time.
+        Called each time the circuit is saved, or to 
+        inform the user he cannot zoom anymore, etc...
+
+        Parameters
+        ----------
+        text:   string
+                message to be displayed
+        t:      float, optional
+                Amount of time to display the message (in seconds).
+                Default is 0.3
+        x:      float, optional
+                Distance of the message with respect to the left
+                side of the window, in window units. Default is 5
+        y:      float, optional
+                Distance of the message with respect to the top
+                side of the window, in window units. Default is 2
+        size:   float, optional
+                Fontsize to use. Default is 8
+        weight: string, optional
+                Font weight. Default is 'normal'
+        '''
+
         saved_message = self.create_text(
-            self.canvasx(5), self.canvasy(2), text=text, anchor=tk.NW,
-            font=Font(family='Helvetica', size=8, weight='normal'))
+            self.canvasx(x), 
+            self.canvasy(y), 
+            text=text, 
+            anchor=tk.NW,
+            font=Font(family='Helvetica', 
+            size=size, 
+            weight=weight))
+
         self.after(int(1000*t), lambda: self.delete(saved_message))
 
 
