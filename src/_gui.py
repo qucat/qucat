@@ -25,20 +25,6 @@ lw_select_hover = 5.*lw
 lw_select = 3.*lw
 
 
-def string_to_component(s, *arg, **kwarg):
-    if s == 'W':
-        return W(*arg, **kwarg)
-    elif s == 'R':
-        return R(*arg, **kwarg)
-    elif s == 'L':
-        return L(*arg, **kwarg)
-    elif s == 'J':
-        return J(*arg, **kwarg)
-    elif s == 'C':
-        return C(*arg, **kwarg)
-    elif s == 'G':
-        return G(*arg, **kwarg)
-
 class CircuitEditor(tk.Canvas):
     def __init__(self, master, grid_unit, netlist_filename, **kw):
         """
@@ -611,7 +597,21 @@ class CircuitEditor(tk.Canvas):
         for el in lines:
             el = el.replace('\n', '')
             el = el.split(";")
-            string_to_component(el[0], self, auto_place=el)
+
+            #TODO replace this with 
+            # less verbose code?
+            if el[0] == 'W':
+                W(self, auto_place=el)
+            elif el[0] == 'R':
+                R(self, auto_place=el)
+            elif el[0] == 'L':
+                L(self, auto_place=el)
+            elif el[0] == 'J':
+                J(self, auto_place=el)
+            elif el[0] == 'C':
+                C(self, auto_place=el)
+            elif el[0] == 'G':
+                G(self, auto_place=el)
 
     def on_resize(self, event=None):
         '''
@@ -1432,7 +1432,6 @@ class CircuitEditor(tk.Canvas):
             weight=weight))
 
         self.after(int(1000*t), lambda: self.delete(saved_message))
-
 
 class TwoNodeElement(object):
 
