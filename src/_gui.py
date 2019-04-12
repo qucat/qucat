@@ -674,7 +674,7 @@ class CircuitEditor(tk.Canvas):
         self.tag_bind('grid', "<B1-Motion>", self.expand_selection_field)
         self.tag_bind('grid', "<ButtonRelease-1>", self.end_selection_field)
         self.tag_bind('grid', "<Button-3>", self.right_click)
-
+        
     ###########################
     # FILE menu functionalities
     ###########################
@@ -2342,14 +2342,12 @@ class R(Component):
         self.unit = r'$\Omega$'
         super(R, self).__init__(canvas, event, auto_place)
 
-
 class L(Component):
     """docstring for L"""
 
     def __init__(self, canvas, event=None, auto_place=None):
         self.unit = 'H'
         super(L, self).__init__(canvas, event, auto_place)
-
 
 class C(Component):
     """docstring for C"""
@@ -2358,14 +2356,12 @@ class C(Component):
         self.unit = 'F'
         super(C, self).__init__(canvas, event, auto_place)
 
-
 class J(Component):
     """docstring for J"""
 
     def __init__(self, canvas, event=None, auto_place=None):
         self.unit = 'H'
         super(J, self).__init__(canvas, event, auto_place)
-
 
 class G(Component):
     """docstring for J"""
@@ -2494,9 +2490,15 @@ class GuiWindow(ttk.Frame):
     netlist_filename:   string
                         path to the file used to save the network constructed
                         in the GUI
+    unittesting:        Boolean
+                        If False (default), the application will update automatically, this
+                        corresponds to normal usage of the application.
+                        If True, the application will only update when we call self.update(),
+                        which means that the window will be non-blocking, and we can
+                        programmatically interact with the GUI for automatic (unit)testing.
     """
 
-    def __init__(self, netlist_filename):
+    def __init__(self, netlist_filename, unittesting = False):
 
         # Initialize the frame, inside the root window (tk.Tk())
         ttk.Frame.__init__(self, master=tk.Tk())
@@ -2521,7 +2523,17 @@ class GuiWindow(ttk.Frame):
         # Populate that grid with the circuit editor
         self.canvas = CircuitEditor(
             self.master, netlist_filename=netlist_filename, grid_unit=60)
-        self.mainloop()
+
+        if not unittesting:
+            self.mainloop()
+    
+    def update_and_send(self,*args,**kwargs):
+        '''
+        Update window then generate an event.
+        Used for unittesting (simply to avoid writing update over and over again).
+        '''
+        self.update()
+        self.event_generate(*args,**kwargs)
 
 if __name__ == '__main__':
     GuiWindow('./src/test.txt')

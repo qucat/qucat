@@ -1751,4 +1751,9 @@ def main():
     # circuit.show_normal_mode(1)
 
 if __name__ == '__main__':
-    main()
+    # main()
+    def func1():
+        pass
+    def func2():
+        func1()
+    func2()
