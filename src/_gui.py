@@ -24,6 +24,21 @@ lw_hover = 2.*lw
 lw_select_hover = 5.*lw
 lw_select = 3.*lw
 
+def track_event(event, tagOrId = None, sequence=None, func=None, add=None):
+    print(event)
+
+def track_menu(label):
+    print(label)
+
+class TrackableMenu(tk.Menu):
+    def add_command(self,**options):
+        command = options['command']
+        def tracked_command():
+            track_menu(options['label'])
+            command()
+        options['command'] = tracked_command
+        super(TrackableMenu, self).add_command(**options)
+
 
 class CircuitEditor(tk.Canvas):
     """
@@ -161,7 +176,7 @@ class CircuitEditor(tk.Canvas):
         self.configure_canvas()
         
         self.set_keyboard_shortcuts_element_creation()
-        self.set_keyboard_shortcuts_other()
+        self.set_keyboard_shortcuts_other(master)
 
         self.load_or_create_netlist_file()
         self.center_window_on_circuit()
@@ -187,7 +202,7 @@ class CircuitEditor(tk.Canvas):
         '''
 
         # initialize the menubar object
-        self.menubar = tk.Menu(self.frame)
+        self.menubar = TrackableMenu(self.frame)
 
         ####################################
         # Define the label formatting
@@ -214,23 +229,23 @@ class CircuitEditor(tk.Canvas):
         ####################################
 
         # add new item to the menubar
-        menu = tk.Menu(self.menubar, tearoff=0)
+        menu = TrackableMenu(self.menubar, tearoff=0)
         self.menubar.add_cascade(
             label=menu_label_template.format("File"), 
             menu=menu)
 
         # add cascade menu items
         menu.add_command(
-            label=label_template.format("Open", ""), 
-            command=self.file_open, 
+            label=label_template.format("Open", "Ctrl+O"), 
+            command=(lambda: self.event_generate('<Control-o>')), 
             font=menu_font)
         menu.add_command(
             label=label_template.format("Save", "Ctrl+S"), 
-            command=self.save, 
+            command=(lambda: self.event_generate('<Control-s>')), 
             font=menu_font)
         menu.add_command(
-            label=label_template.format("Exit", ""), 
-            command=master.destroy, 
+            label=label_template.format("Exit", "Ctrl+Q"), 
+            command=(lambda: self.event_generate('<Control-q>')), 
             font=menu_font)
 
         ####################################
@@ -238,7 +253,7 @@ class CircuitEditor(tk.Canvas):
         ####################################
 
         # add new item to the menubar
-        menu = tk.Menu(self.menubar, tearoff=0)
+        menu = TrackableMenu(self.menubar, tearoff=0)
         self.menubar.add_cascade(
             label=menu_label_template.format("Edit"), 
             menu=menu)
@@ -246,20 +261,20 @@ class CircuitEditor(tk.Canvas):
         # add cascade menu items
         menu.add_command(
             label=label_template.format("Undo", "Ctrl+Z"), 
-            command=self.ctrl_z, 
+            command=(lambda :self.event_generate('<Control-z>')), 
             font=menu_font)
         menu.add_command(
             label=label_template.format("Redo", "Ctrl+Y"), 
-            command=self.ctrl_y, 
+            command=(lambda :self.event_generate('<Control-y>')), 
             font=menu_font)
         menu.add_separator()
         menu.add_command(
             label=label_template.format("Cut", "Ctrl+X"), 
-            command=self.cut_selection, 
+            command=(lambda :self.event_generate('<Control-x>')), 
             font=menu_font)
         menu.add_command(
             label=label_template.format("Copy", "Ctrl+C"), 
-            command=self.copy_selection, 
+            command=(lambda :self.event_generate('<Control-c>')), 
             font=menu_font)
         menu.add_command(
             label=label_template.format("Paste", "Ctrl+V"), 
@@ -268,16 +283,20 @@ class CircuitEditor(tk.Canvas):
         menu.add_separator()
         menu.add_command(
             label=label_template.format("Select all", "Ctrl+A"), 
-            command=self.select_all, 
+            command=(lambda :self.event_generate('<Control-a>')), 
             font=menu_font)
         menu.add_separator()
         menu.add_command(
             label=label_template.format("Delete", "Del"), 
-            command=self.delete_selection, 
+            command=(lambda :self.event_generate('<Delete>')), 
             font=menu_font)
+
+        def generate_delete_all_key_sequence():
+            self.event_generate('<Control-a>')
+            self.event_generate('<Delete>')
         menu.add_command(
             label=label_template.format("Delete all", ""), 
-            command=self.delete_all, 
+            command=generate_delete_all_key_sequence, 
             font=menu_font)
 
 
@@ -286,7 +305,7 @@ class CircuitEditor(tk.Canvas):
         ####################################
         
         # add new item to the menubar
-        menu = tk.Menu(self.menubar, tearoff=0)
+        menu = TrackableMenu(self.menubar, tearoff=0)
         self.menubar.add_cascade(
             label=menu_label_template.format("Insert"), 
             menu=menu)
@@ -323,7 +342,7 @@ class CircuitEditor(tk.Canvas):
         ####################################
         
         # add new item to the menubar
-        menu = tk.Menu(self.menubar, tearoff=0)
+        menu = TrackableMenu(self.menubar, tearoff=0)
         self.menubar.add_cascade(
             label=menu_label_template.format("View"), 
             menu=menu)
@@ -339,8 +358,8 @@ class CircuitEditor(tk.Canvas):
             font=menu_font)
         menu.add_separator()
         menu.add_command(
-            label=label_template.format("Re-center", ""), 
-            command=(self.center_window_on_circuit), 
+            label=label_template.format("Re-center", "Ctrl+R"), 
+            command=(lambda: self.event_generate('<Control-r>')), 
             font=menu_font)
 
         # Add the menubar to the application
@@ -398,6 +417,7 @@ class CircuitEditor(tk.Canvas):
             confine=False, 
             bg="white")
         self.grid(row=0, column=0, sticky='nswe')
+
     def configure_scrollbars(self):
         '''
         Define what functions the scrollbars should call
@@ -425,11 +445,24 @@ class CircuitEditor(tk.Canvas):
             self.canvasy(self.winfo_height()/2.)]
     def configure_canvas(self):
         '''
-        Ensure that the function "on_resize"
-        is called each time the user resizes
-        the window. 
+        Configures the canvas. This is a collection of small things 
+        we still have to do to the canvas
         '''
+
+        # Ensure that the function "on_resize"
+        # is called each time the user resizes
+        # the window. 
         self.bind("<Configure>", self.on_resize)
+
+        # This function is only useful if we 
+        # are tracking the actions of the user.
+        # Mouse motion is by default not binded to 
+        # any function, here we bind it to a function
+        # which does nothing, but, if tracking is turned
+        # on, this function will be appended with tracking
+        # functionalities.
+        self.bind("<Motion>", lambda event: None)
+
     def set_keyboard_shortcuts_element_creation(self):
         '''
             Assign key R to the creation of a resistor, 
@@ -441,7 +474,7 @@ class CircuitEditor(tk.Canvas):
         self.bind('j', lambda event: J(self, event))
         self.bind('w', lambda event: W(self, event))
         self.bind('g', lambda event: G(self, event))
-    def set_keyboard_shortcuts_other(self):
+    def set_keyboard_shortcuts_other(self,master):
         '''
         Assign keystrokes to functionalities
         accessible in the FILE and EDIT menus, 
@@ -452,6 +485,8 @@ class CircuitEditor(tk.Canvas):
         #############################
         # FILE menu functionalities
         #############################
+        self.bind('<Control-q>', lambda event: master.destroy())
+        self.bind('<Control-o>', self.file_open)
         self.bind('<Control-s>', self.save)
 
         #############################
@@ -465,6 +500,10 @@ class CircuitEditor(tk.Canvas):
         self.bind('<Control-y>', self.ctrl_y)
         self.bind('<Control-z>', self.ctrl_z)
 
+        #############################
+        # VIEW menu functionalities
+        #############################
+        self.bind('<Control-r>', self.center_window_on_circuit)
         
 
         #############################
@@ -675,11 +714,26 @@ class CircuitEditor(tk.Canvas):
         self.tag_bind('grid', "<ButtonRelease-1>", self.end_selection_field)
         self.tag_bind('grid', "<Button-3>", self.right_click)
         
+    def bind(self, sequence=None, func=None, add=None):
+        
+        def tracked_func(event):
+            track_event(event, tagOrId = None, sequence=sequence, func=func, add=add)
+            func(event)
+        super(CircuitEditor, self).bind(sequence,tracked_func,add)
+
+    def tag_bind(self, tagOrId, sequence=None, func=None, add=None):
+        def tracked_func(event):
+            track_event(event,tagOrId = tagOrId, sequence=sequence, func=func, add=add)
+            func(event)
+        super(CircuitEditor, self).tag_bind(tagOrId,sequence,tracked_func,add)
+
+
+
     ###########################
     # FILE menu functionalities
     ###########################
 
-    def file_open(self):
+    def file_open(self,event = None):
         '''
         Triggered by the menu bar button File>Open.
         Opens a dialog window where the user can choose a file
@@ -1130,7 +1184,7 @@ class CircuitEditor(tk.Canvas):
         background of the canvas.
         Deselects all components and opens the right click menu.
         '''
-        menu = tk.Menu(self, tearoff=0)
+        menu = TrackableMenu(self, tearoff=0)
         menu.add_command(label="Paste", command=(lambda :self.paste(event)))
         menu.tk_popup(event.x_root, event.y_root)
         self.bind("<ButtonRelease-3>", lambda event: None)
@@ -1365,7 +1419,7 @@ class CircuitEditor(tk.Canvas):
         return [self.canvasx(self.winfo_pointerx())-self.winfo_rootx(), 
             self.canvasy(self.winfo_pointery())-self.winfo_rooty()]
     
-    def center_window_on_circuit(self):
+    def center_window_on_circuit(self, event = None):
         '''
         Called when the gui is opened or a new circuit is opened, or
         upon clicking View>Re-center.
@@ -1804,7 +1858,7 @@ class W(TwoNodeElement):
         return [(xm+xp)/2., (ym+yp)/2.]
 
     def open_right_click_menu(self, event):
-        menu = tk.Menu(self.canvas, tearoff=0)
+        menu = TrackableMenu(self.canvas, tearoff=0)
         menu.add_command(label="Delete", command=self.canvas.delete_selection)
         menu.add_command(label="Copy", command=self.canvas.copy_selection)
         menu.add_command(label="Cut", command=self.canvas.cut_selection)
@@ -2213,7 +2267,7 @@ class Component(TwoNodeElement):
             self.hover_enter(event)
 
     def open_right_click_menu(self, event):
-        menu = tk.Menu(self.canvas, tearoff=0)
+        menu = TrackableMenu(self.canvas, tearoff=0)
         menu.add_command(label="Edit", command=self.modify_values)
         menu.add_command(label="Rotate", command=self.rotate)
         menu.add_command(label="Delete", command=self.canvas.delete_selection)
@@ -2385,7 +2439,7 @@ class G(Component):
         pass
 
     def open_right_click_menu(self, event):
-        menu = tk.Menu(self.canvas, tearoff=0)
+        menu = TrackableMenu(self.canvas, tearoff=0)
         menu.add_command(label="Rotate", command=self.rotate)
         menu.add_command(label="Delete", command=self.delete)
         menu.add_separator()
