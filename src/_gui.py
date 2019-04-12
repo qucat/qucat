@@ -1198,7 +1198,7 @@ class CircuitEditor(tk.Canvas):
         Deselects all components and opens the right click menu.
         '''
         menu = TrackableMenu(self, tearoff=0)
-        menu.add_command(label="Paste", command=(lambda :self.paste(event)))
+        menu.add_command(label="Paste", command=(lambda :self.event_generate('<Control-v>')))
         menu.tk_popup(event.x_root, event.y_root)
         self.bind("<ButtonRelease-3>", lambda event: None)
 
@@ -1509,6 +1509,15 @@ class CircuitEditor(tk.Canvas):
 
         self.after(int(1000*t), lambda: self.delete(saved_message))
 
+    def is_more_than_one_selected(self):
+        i=0
+        for el in self.elements:
+            if el.selected:
+                i+=1
+                if i>1:
+                    return True
+        return False
+
 class TwoNodeElement(object):
 
     def __init__(self, canvas, event=None, auto_place=None):
@@ -1692,7 +1701,12 @@ class TwoNodeElement(object):
         self.update_graphic()
 
     def right_click(self, event):
-        self.canvas.bind("<ButtonRelease-3>", self.open_right_click_menu)
+        if self.canvas.is_more_than_one_selected() and self.selected:
+            self.canvas.bind("<ButtonRelease-3>", self.open_right_click_menu)
+        else:
+            self.canvas.deselect_all()
+            self.select()
+            self.canvas.bind("<ButtonRelease-3>", self.open_right_click_menu)
 
     def select(self):
         self.canvas.deselect_all()
@@ -1872,9 +1886,9 @@ class W(TwoNodeElement):
 
     def open_right_click_menu(self, event):
         menu = TrackableMenu(self.canvas, tearoff=0)
-        menu.add_command(label="Delete", command=self.canvas.delete_selection)
-        menu.add_command(label="Copy", command=self.canvas.copy_selection)
-        menu.add_command(label="Cut", command=self.canvas.cut_selection)
+        menu.add_command(label="Delete", command=(lambda :self.canvas.event_generate('<Delete>')))
+        menu.add_command(label="Copy", command=(lambda :self.canvas.event_generate('<Control-c>')))
+        menu.add_command(label="Cut", command=(lambda :self.canvas.event_generate('<Control-x>')))
         menu.tk_popup(event.x_root, event.y_root)
         self.canvas.bind("<ButtonRelease-3>", lambda event: None)
 
@@ -2280,13 +2294,19 @@ class Component(TwoNodeElement):
             self.hover_enter(event)
 
     def open_right_click_menu(self, event):
+
         menu = TrackableMenu(self.canvas, tearoff=0)
-        menu.add_command(label="Edit", command=self.modify_values)
-        menu.add_command(label="Rotate", command=self.rotate)
-        menu.add_command(label="Delete", command=self.canvas.delete_selection)
-        menu.add_separator()
-        menu.add_command(label="Copy", command=self.canvas.copy_selection)
-        menu.add_command(label="Cut", command=self.canvas.cut_selection)
+        if self.canvas.is_more_than_one_selected():
+            menu.add_command(label="Delete", command=(lambda: self.canvas.event_generate('<Delete>')))
+            menu.add_command(label="Copy", command=(lambda: self.canvas.event_generate('<Control-c>')))
+            menu.add_command(label="Cut", command=(lambda: self.canvas.event_generate('<Control-x>')))
+        else:
+            menu.add_command(label="Edit", command=self.modify_values)
+            # menu.add_command(label="Rotate", command=self.rotate)
+            menu.add_command(label="Delete", command=(lambda: self.canvas.event_generate('<Delete>')))
+            menu.add_separator()
+            menu.add_command(label="Copy", command=(lambda: self.canvas.event_generate('<Control-c>')))
+            menu.add_command(label="Cut", command=(lambda: self.canvas.event_generate('<Control-x>')))
         menu.tk_popup(event.x_root, event.y_root)
         self.canvas.bind("<ButtonRelease-3>", lambda event: None)
 
@@ -2453,11 +2473,10 @@ class G(Component):
 
     def open_right_click_menu(self, event):
         menu = TrackableMenu(self.canvas, tearoff=0)
-        menu.add_command(label="Rotate", command=self.rotate)
-        menu.add_command(label="Delete", command=self.delete)
-        menu.add_separator()
-        menu.add_command(label="Copy", command=self.canvas.copy_selection)
-        menu.add_command(label="Cut", command=self.canvas.cut_selection)
+        # menu.add_command(label="Rotate", command=self.rotate)
+        menu.add_command(label="Delete", command=(lambda :self.canvas.event_generate('<Delete>')))
+        menu.add_command(label="Copy", command=(lambda :self.canvas.event_generate('<Control-c>')))
+        menu.add_command(label="Cut", command=(lambda :self.canvas.event_generate('<Control-x>')))
         menu.tk_popup(event.x_root, event.y_root)
         self.canvas.bind("<ButtonRelease-3>", lambda event: None)
 
