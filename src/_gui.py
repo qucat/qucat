@@ -59,7 +59,7 @@ class AutoScrollbar(ttk.Scrollbar):
             'Cannot use place with the widget ' + self.__class__.__name__)
 
 
-class SnappingCanvas(tk.Canvas):
+class CircuitEditor(tk.Canvas):
     def __init__(self, master, grid_unit, netlist_filename, **kw):
         """
         Coordinate systems
@@ -347,13 +347,24 @@ class SnappingCanvas(tk.Canvas):
         Builds the main area of the window (called a frame), 
         which should stick to the edges of the window and 
         expand as a user expands the window.
+
+        This frame will be divided into a grid hosting the
+        canvas, menubar, scrollbars
         '''
 
+        # Builds a new frame, which will be divided into a grid
+        # hosting the canvas, menubar, scrollbars
         self.frame = ttk.Frame()
-        self.frame.grid()  # place Canvas widget on the grid
+
+        # Places the Frame widget self.frame in the parent 
+        # widget (MainWindow) in a grid
+        self.frame.grid()  
+
+        # Configure the frames grid
         self.frame.grid(sticky='nswe')  # make frame container sticky
         self.frame.rowconfigure(0, weight=1)  # make canvas expandable in x
         self.frame.columnconfigure(0, weight=1)  # make canvas expandable in y
+
     def build_scrollbars(self):
         '''
         Builds horizontal and vertical scrollbars and places
@@ -1379,7 +1390,6 @@ class SnappingCanvas(tk.Canvas):
     #############################
     #  UTILITIES
     ##############################
-    np.linspace
     def message(self, text, t = 0.3, x = 5, y = 2,size = 8, weight = 'normal'):
         '''
         Displays a message on the canvas for a given amount of time.
@@ -1418,6 +1428,7 @@ class SnappingCanvas(tk.Canvas):
 
 
 class TwoNodeElement(object):
+
     def __init__(self, canvas, event=None, auto_place=None):
         self.canvas = canvas
         self.was_moved = False
@@ -2452,35 +2463,51 @@ class RequestValueLabelWindow(tk.Toplevel):
     def cancel(self):
         self.destroy()
 
+class GuiWindow(ttk.Frame):
+    """
+    GuiWindow inherits from the tkinter Frame class.
+    A Frame is a rectangular region on the screen.
+    This Frame just plays the role of placeholder for another 
+    Frame defined in the CircuitEditor which will
+    host the canvas, menubar, scrollbars.
 
-def open_canvas(netlist_filename):
-    # root = tk.Tk()
-    # canvas = SnappingCanvas(root,
-    #                         netlist_filename=netlist_filename, grid_unit=60, bg="white")
-    # root.focus_force()
-    # root.mainloop()
-    app = MainWindow(tk.Tk(), netlist_filename)
-    app.mainloop()
+    In this class we manage the launching of the GUI
+    and properties pertaining to the opened window
+    such as the titlebar and initial window size
+    
+    Parameters
+    ----------
+    netlist_filename:   string
+                        path to the file used to save the network constructed
+                        in the GUI
+    """
 
+    def __init__(self, netlist_filename):
 
-class MainWindow(ttk.Frame):
-    """ Main window class """
+        # Initialize the frame, inside the root window (tk.Tk())
+        ttk.Frame.__init__(self, master=tk.Tk())
 
-    def __init__(self, mainframe, netlist_filename):
-        """ Initialize the main Frame """
-        ttk.Frame.__init__(self, master=mainframe)
+        # Set the name to appear in the title bar
         self.master.title('Circuit Editor')
-        self.master.geometry('800x600')  # size of the main window
+
+        # Set the initial size of the window in pixels
+        self.master.geometry('800x600')
+
+        # Load the logo to the title bar
         try:
             self.master.iconbitmap(r'C:\ProgramData\Anaconda3\Lib\site-packages\Qcircuits\artwork\logo.ico')
         except Exception as e:
             # Anticipating possible non-Windows related issues
             print("There has been an error loading the applications icon:\n"+str(e))
-        self.master.rowconfigure(0, weight=1)  # make canvas expandable
-        self.master.columnconfigure(0, weight=1)
-        self.canvas = SnappingCanvas(
-            self.master, netlist_filename=netlist_filename, grid_unit=60)
 
+        # Make the fram a 1x1 expandable grid
+        self.master.rowconfigure(0, weight=1)
+        self.master.columnconfigure(0, weight=1)
+
+        # Populate that grid with the circuit editor
+        self.canvas = CircuitEditor(
+            self.master, netlist_filename=netlist_filename, grid_unit=60)
+        self.mainloop()
 
 if __name__ == '__main__':
-    open_canvas('./src/test.txt')
+    GuiWindow('./src/test.txt')

@@ -630,14 +630,14 @@ class GUI(Qcircuit):
     def __init__(self, filename, edit=True, plot=True, print_network=True):
         
         if edit:
-            _gui.open_canvas(filename)
+            _gui.GuiWindow(filename)
 
         # if file does not exist, also open the gui
         try:
             with open(filename, 'r') as f:
                 pass
         except FileNotFoundError as e:
-            _gui.open_canvas(filename)
+            _gui.GuiWindow(filename)
 
         netlist = []
         with open(filename, 'r') as f:
