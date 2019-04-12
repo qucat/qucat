@@ -26,68 +26,77 @@ lw_select = 3.*lw
 
 
 class CircuitEditor(tk.Canvas):
-    def __init__(self, master, grid_unit, netlist_filename, **kw):
-        """
-        The CircuitEditor is the only widget which populates the MainWindow of the application.
-        The main part of this widget is a Tkinter Canvas on which the user visualises
-        and interacts with an electrical circuit.
+    """
+    The CircuitEditor is the only widget which populates the MainWindow of the application.
+    The main part of this widget is a Tkinter Canvas on which the user visualises
+    and interacts with an electrical circuit.
 
-        Circuit components are placed manually on the canvas and snap to the canvas grid.
-        The user can navigate the canvas by scrolling to zoom in or out, or pan horizontally and vertically.
-        The user can then drag and drop, edit, copy/cut/paste, etc... these components at will.
-        Each change made by the user is automatically saved in a file defined by the netlist_filename.
-        Each line of this text file is in the format:
-        <type> (C,L,R...);<x,y (node_minus in grid unit)>;<x,y (node_plus in grid unit)>;value;symbol
-        This file can be read by this application to load a circuit, or by an analysis software.
-        These changes are also logged in a history variable which enables actions to be un/redone.
+    Circuit components are placed manually on the canvas and snap to the canvas grid.
+    The user can navigate the canvas by scrolling to zoom in or out, or pan horizontally and vertically.
+    The user can then drag and drop, edit, copy/cut/paste, etc... these components at will.
+    Each change made by the user is automatically saved in a file defined by the netlist_filename.
+    Each line of this text file is in the format:
+    <type> (C,L,R...);<x,y (node_minus in grid unit)>;<x,y (node_plus in grid unit)>;value;symbol
+    This file can be read by this application to load a circuit, or by an analysis software.
+    These changes are also logged in a history variable which enables actions to be un/redone.
 
-        Coordinate systems
-        ==================
+    Coordinate systems
+    ==================
 
-        The Canvas widget uses two coordinate systems; 
-        the window coordinate system, with (0, 0) in the upper left corner
-        and (canvas.winfo_width,canvas.winfo_height) in the lower right corner, 
-        and a canvas coordinate system which specify where the items are drawn.
+    The Canvas widget uses two coordinate systems; 
+    the window coordinate system, with (0, 0) in the upper left corner
+    and (canvas.winfo_width,canvas.winfo_height) in the lower right corner, 
+    and a canvas coordinate system which specify where the items are drawn.
 
-        By scrolling the canvas, you can specify which part of the canvas coordinate system 
-        to show in the window.
+    By scrolling the canvas, you can specify which part of the canvas coordinate system 
+    to show in the window.
 
-        To convert from window coordinates to canvas coordinates, use the canvasx and canvasy methods.
-        For example the upper left corner of the window has canvas coordinates (canvasx(0),canvasy(0))
-        and the bottom right corner of the window has canvas coordinates 
-        (canvasx(canvas.winfo_width), canvasy(canvas.winfo_height))
+    To convert from window coordinates to canvas coordinates, use the canvasx and canvasy methods.
+    For example the upper left corner of the window has canvas coordinates (canvasx(0),canvasy(0))
+    and the bottom right corner of the window has canvas coordinates 
+    (canvasx(canvas.winfo_width), canvasy(canvas.winfo_height))
 
-        A circuit component has thus a unique set of canvas coordinates (x_can, y_can).
-        They can be seen on the window if:
-        canvasx(0) < x_can < canvasx(canvas.winfo_width) and canvasx(0) < y_can < canvasy(canvas.winfo_height)
+    A circuit component has thus a unique set of canvas coordinates (x_can, y_can).
+    They can be seen on the window if:
+    canvasx(0) < x_can < canvasx(canvas.winfo_width) and canvasx(0) < y_can < canvasy(canvas.winfo_height)
 
-        We use an additional set of coordinates called grid coordinates, where the horizontal and
-        vertical directions are divided into discrete steps to the circuit components will snap to.
-        Any node of a circuit component can thus be assigned two (possible negative) integers, 
-        (x_grid,y_grid) corresponding to a number of horizontal and vertical steps away from an 
-        initially defined center. 
-        The center and the size of the step size is defined in canvas units (canvas.canvas_center and
-        canvas.grid_unit respectively) such that 
-        x_can = canvas.canvas_center[0]+canvas.grid_unit*x_grid
-        y_can = canvas.canvas_center[1]+canvas.grid_unit*y_grid
+    We use an additional set of coordinates called grid coordinates, where the horizontal and
+    vertical directions are divided into discrete steps to the circuit components will snap to.
+    Any node of a circuit component can thus be assigned two (possible negative) integers, 
+    (x_grid,y_grid) corresponding to a number of horizontal and vertical steps away from an 
+    initially defined center. 
+    The center and the size of the step size is defined in canvas units (canvas.canvas_center and
+    canvas.grid_unit respectively) such that 
+    x_can = canvas.canvas_center[0]+canvas.grid_unit*x_grid
+    y_can = canvas.canvas_center[1]+canvas.grid_unit*y_grid
 
-        canvas.canvas_center and canvas.grid_unit are not constant and are modified when zooming in/out
+    canvas.canvas_center and canvas.grid_unit are not constant and are modified when zooming in/out
 
-        Nodes, wires and intersections
-        ==============================
+    Nodes, wires and intersections
+    ==============================
 
-        All circuit components currently implemented have two nodes except the special case
-        of the ground element, which has one. 
-        Nodes are represented as full black circles in the editor. 
+    All circuit components currently implemented have two nodes except the special case
+    of the ground element, which has one. 
+    Nodes are represented as full black circles in the editor. 
 
-        When a node (node 1) is placed on a wire, this wire automatically splits into two wires, each sharing
-        a node with (node 1).
-        Conversely, when a wire is moved, or is created such that it crosses a node (node 1), it will 
-        split into two wires, each sharing a node with (node 1).
-        
-        However, if two wires cross, such that neither has a node placed on a wire, there will be no
-        splitting of wires or creation of new nodes. This case implements a cros-over.
-        """
+    When a node (node 1) is placed on a wire, this wire automatically splits into two wires, each sharing
+    a node with (node 1).
+    Conversely, when a wire is moved, or is created such that it crosses a node (node 1), it will 
+    split into two wires, each sharing a node with (node 1).
+    
+    However, if two wires cross, such that neither has a node placed on a wire, there will be no
+    splitting of wires or creation of new nodes. This case implements a cros-over.
+
+    Parameters
+    ----------
+    master:         the root window (tk.Tk())
+    grid_unit:      float
+                    initial grid size in canvas units
+    netlist_filename:   string
+                        path to the file used to save the network
+
+    """
+    def __init__(self, master, grid_unit, netlist_filename):
         
         self.netlist_filename = netlist_filename
         '''In the netlist file is stored at all times 
@@ -1497,7 +1506,6 @@ class TwoNodeElement(object):
         if event.type == tk.EventType.KeyPress and rerun_command:
             self.canvas.event_generate(event.char)
         del self
-
 
     def set_nodes(self):
         pass
