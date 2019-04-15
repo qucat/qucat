@@ -2648,7 +2648,9 @@ class GuiWindow(ttk.Frame):
         self.canvas = CircuitEditor(
             self.master, netlist_filename=netlist_filename, grid_unit=60, track_events_to=_track_events_to)
 
-        if not _unittesting:
+        if _unittesting:
+            self.update()
+        else:
             self.mainloop()
     
     def update_and_send(self,*args,**kwargs):
