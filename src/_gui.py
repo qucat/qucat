@@ -25,45 +25,47 @@ lw_hover = 2.*lw
 lw_select_hover = 5.*lw
 lw_select = 3.*lw
 
-def track_event(event, tagOrId = None, sequence=None, func=None, add=None):
-    if str(event)[1] !='M':
-        to_print = "'"+sequence+"'"
-        for key,value in event.__dict__.items():
-            if key in ["when","above","borderwidth","button","count","data",
-                "detail","focus","height","keycode","keysym","mode","override","place",
-                "root","rootx","rooty","sendevent","serial","state","subwindow",
-                "warp","width","window","x","y"]:
-                if value != '??':
-                    to_print+=(', '+key+' = '+repr(value))
-        print('event_generate('+to_print+')')
+def track_event(track_events_to, event, tagOrId = None, sequence=None, func=None, add=None):
+    event_string = "'"+sequence+"'"
+    for key,value in event.__dict__.items():
+        if key in ["when","above","borderwidth","button","count","data",
+            "detail","focus","height","keycode","keysym","mode","override","place",
+            "root","rootx","rooty","sendevent","serial","state","subwindow",
+            "warp","width","window","x","y"]:
+            if value != '??':
+                event_string+=(', '+key+' = '+repr(value))
+    with open(track_events_to,'a') as event_tracking_file:
+        event_tracking_file.write(event_string+'\n')
 
-def track_menu(label):
-    print(label)
+def track_menu(track_events_to,label):
+    pass
+    # print(label)
 
-def track_scrollbar(direction,*args):
-    print(direction,args)
+def track_scrollbar(track_events_to,direction,*args):
+    pass
+    # print(direction,args)
 
-def track_value_label_change(v,l):
-    print('Changed values to:',v,l)
+def track_value_label_change(track_events_to,v,l):
+    pass
+    # print('Changed values to:',v,l)
 
 class TrackableScrollbar(ttk.Scrollbar):
-    def configure(self,track_events = False, **options):
-        if track_events:
+    def configure(self,track_events_to = None, **options):
+        if track_events_to is not None:
             scroll_xy = options['command']
             def tracked_command(*args, **kwargs):
-                track_scrollbar(scroll_xy.__name__[-1],*args)
+                track_scrollbar(track_events_to,scroll_xy.__name__[-1],*args)
                 scroll_xy(*args, **kwargs)
             options['command'] = tracked_command
 
         super(TrackableScrollbar, self).configure(**options)
 
-
 class TrackableMenu(tk.Menu):
-    def add_command(self,track_events = False, **options):
-        if track_events:
+    def add_command(self,track_events_to = None, **options):
+        if track_events_to is not None:
             command = options['command']
             def tracked_command():
-                track_menu(options['label'])
+                track_menu(track_events_to,options['label'])
                 command()
             options['command'] = tracked_command
         super(TrackableMenu, self).add_command(**options)
@@ -139,9 +141,9 @@ class CircuitEditor(tk.Canvas):
                         path to the file used to save the network
 
     """
-    def __init__(self, master, grid_unit, netlist_filename, track_events = False):
+    def __init__(self, master, grid_unit, netlist_filename, track_events_to = None):
 
-        self.track_events = track_events
+        self.track_events_to = track_events_to
         
         self.netlist_filename = netlist_filename
         '''In the netlist file is stored at all times 
@@ -745,9 +747,9 @@ class CircuitEditor(tk.Canvas):
         self.tag_bind('grid', "<Button-3>", self.right_click)
         
     def bind(self, sequence=None, func=None, add=None):
-        if self.track_events:
+        if self.track_events_to is not None:
             def tracked_func(event):
-                track_event(event, tagOrId = None, sequence=sequence, func=func, add=add)
+                track_event(self.track_events_to,event, tagOrId = None, sequence=sequence, func=func, add=add)
                 func(event)
             super(CircuitEditor, self).bind(sequence,tracked_func,add)
         else:
@@ -755,9 +757,9 @@ class CircuitEditor(tk.Canvas):
 
 
     def tag_bind(self, tagOrId, sequence=None, func=None, add=None):
-        if self.track_events:
+        if self.track_events_to is not None:
             def tracked_func(event):
-                track_event(event,tagOrId = tagOrId, sequence=sequence, func=func, add=add)
+                track_event(self.track_events_to, event,tagOrId = tagOrId, sequence=sequence, func=func, add=add)
                 func(event)
             super(CircuitEditor, self).tag_bind(tagOrId,sequence,tracked_func,add)
         else:
@@ -2514,9 +2516,9 @@ class G(Component):
 
 class RequestValueLabelWindow(tk.Toplevel):
 
-    def __init__(self, master, component, force_vl = None, track_events = False):
+    def __init__(self, master, component, force_vl = None, track_events_to = None):
         tk.Toplevel.__init__(self, master)
-        self.track_events = track_events
+        self.track_events_to = track_events_to
         self.component = component
 
         # TODO add suggestions
@@ -2586,8 +2588,8 @@ class RequestValueLabelWindow(tk.Toplevel):
             return None
         else:
             self.component.prop = [v, l]
-            if self.track_events:
-            track_value_label_change(v,l)
+            if self.track_events_to is not None:
+                track_value_label_change(track_events_to,v,l)
             self.destroy()
 
     def cancel(self):
@@ -2620,7 +2622,7 @@ class GuiWindow(ttk.Frame):
 
     def __init__(self, netlist_filename, 
         _unittesting = False, 
-        _track_events = False):
+        _track_events_to = None):
 
         # Initialize the frame, inside the root window (tk.Tk())
         ttk.Frame.__init__(self, master=tk.Tk())
@@ -2644,7 +2646,7 @@ class GuiWindow(ttk.Frame):
 
         # Populate that grid with the circuit editor
         self.canvas = CircuitEditor(
-            self.master, netlist_filename=netlist_filename, grid_unit=60, track_events=_track_events)
+            self.master, netlist_filename=netlist_filename, grid_unit=60, track_events_to=_track_events_to)
 
         if not _unittesting:
             self.mainloop()
@@ -2658,4 +2660,4 @@ class GuiWindow(ttk.Frame):
         self.event_generate(*args,**kwargs)
 
 if __name__ == '__main__':
-    GuiWindow('./src/test.txt')
+    GuiWindow('./src/test.txt',_track_events_to='test.txt')
