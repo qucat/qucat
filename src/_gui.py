@@ -9,6 +9,7 @@ except ImportError:
     import tkinter as tk
     from tkinter.font import Font
     from tkinter import messagebox,filedialog
+
 from PIL import Image, ImageTk
 from tkinter import ttk
 import numpy as np
@@ -25,7 +26,16 @@ lw_select_hover = 5.*lw
 lw_select = 3.*lw
 
 def track_event(event, tagOrId = None, sequence=None, func=None, add=None):
-    print(event)
+    if str(event)[1] !='M':
+        to_print = "'"+sequence+"'"
+        for key,value in event.__dict__.items():
+            if key in ["when","above","borderwidth","button","count","data",
+                "detail","focus","height","keycode","keysym","mode","override","place",
+                "root","rootx","rooty","sendevent","serial","state","subwindow",
+                "warp","width","window","x","y"]:
+                if value != '??':
+                    to_print+=(', '+key+' = '+repr(value))
+        print('event_generate('+to_print+')')
 
 def track_menu(label):
     print(label)
@@ -37,24 +47,26 @@ def track_value_label_change(v,l):
     print('Changed values to:',v,l)
 
 class TrackableScrollbar(ttk.Scrollbar):
-    def configure(self,**options):
-        scroll_xy = options['command']
-        def tracked_command(*args, **kwargs):
-            track_scrollbar(scroll_xy.__name__[-1],*args)
-            scroll_xy(*args, **kwargs)
-        options['command'] = tracked_command
+    def configure(self,track_events = False, **options):
+        if track_events:
+            scroll_xy = options['command']
+            def tracked_command(*args, **kwargs):
+                track_scrollbar(scroll_xy.__name__[-1],*args)
+                scroll_xy(*args, **kwargs)
+            options['command'] = tracked_command
+
         super(TrackableScrollbar, self).configure(**options)
 
 
 class TrackableMenu(tk.Menu):
-    def add_command(self,**options):
-        command = options['command']
-        def tracked_command():
-            track_menu(options['label'])
-            command()
-        options['command'] = tracked_command
+    def add_command(self,track_events = False, **options):
+        if track_events:
+            command = options['command']
+            def tracked_command():
+                track_menu(options['label'])
+                command()
+            options['command'] = tracked_command
         super(TrackableMenu, self).add_command(**options)
-
 
 class CircuitEditor(tk.Canvas):
     """
@@ -127,7 +139,9 @@ class CircuitEditor(tk.Canvas):
                         path to the file used to save the network
 
     """
-    def __init__(self, master, grid_unit, netlist_filename):
+    def __init__(self, master, grid_unit, netlist_filename, track_events = False):
+
+        self.track_events = track_events
         
         self.netlist_filename = netlist_filename
         '''In the netlist file is stored at all times 
@@ -731,17 +745,23 @@ class CircuitEditor(tk.Canvas):
         self.tag_bind('grid', "<Button-3>", self.right_click)
         
     def bind(self, sequence=None, func=None, add=None):
-        
-        def tracked_func(event):
-            track_event(event, tagOrId = None, sequence=sequence, func=func, add=add)
-            func(event)
-        super(CircuitEditor, self).bind(sequence,tracked_func,add)
+        if self.track_events:
+            def tracked_func(event):
+                track_event(event, tagOrId = None, sequence=sequence, func=func, add=add)
+                func(event)
+            super(CircuitEditor, self).bind(sequence,tracked_func,add)
+        else:
+            super(CircuitEditor, self).bind(sequence,func,add)
+
 
     def tag_bind(self, tagOrId, sequence=None, func=None, add=None):
-        def tracked_func(event):
-            track_event(event,tagOrId = tagOrId, sequence=sequence, func=func, add=add)
-            func(event)
-        super(CircuitEditor, self).tag_bind(tagOrId,sequence,tracked_func,add)
+        if self.track_events:
+            def tracked_func(event):
+                track_event(event,tagOrId = tagOrId, sequence=sequence, func=func, add=add)
+                func(event)
+            super(CircuitEditor, self).tag_bind(tagOrId,sequence,tracked_func,add)
+        else:
+            super(CircuitEditor, self).tag_bind(tagOrId,sequence,func,add)
 
 
 
@@ -2494,8 +2514,9 @@ class G(Component):
 
 class RequestValueLabelWindow(tk.Toplevel):
 
-    def __init__(self, master, component, force_vl = None):
+    def __init__(self, master, component, force_vl = None, track_events = False):
         tk.Toplevel.__init__(self, master)
+        self.track_events = track_events
         self.component = component
 
         # TODO add suggestions
@@ -2565,6 +2586,7 @@ class RequestValueLabelWindow(tk.Toplevel):
             return None
         else:
             self.component.prop = [v, l]
+            if self.track_events:
             track_value_label_change(v,l)
             self.destroy()
 
@@ -2596,7 +2618,9 @@ class GuiWindow(ttk.Frame):
                         programmatically interact with the GUI for automatic (unit)testing.
     """
 
-    def __init__(self, netlist_filename, unittesting = False):
+    def __init__(self, netlist_filename, 
+        _unittesting = False, 
+        _track_events = False):
 
         # Initialize the frame, inside the root window (tk.Tk())
         ttk.Frame.__init__(self, master=tk.Tk())
@@ -2620,9 +2644,9 @@ class GuiWindow(ttk.Frame):
 
         # Populate that grid with the circuit editor
         self.canvas = CircuitEditor(
-            self.master, netlist_filename=netlist_filename, grid_unit=60)
+            self.master, netlist_filename=netlist_filename, grid_unit=60, track_events=_track_events)
 
-        if not unittesting:
+        if not _unittesting:
             self.mainloop()
     
     def update_and_send(self,*args,**kwargs):
