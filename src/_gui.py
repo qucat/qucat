@@ -12,6 +12,7 @@ except ImportError:
 
 from PIL import Image, ImageTk
 from tkinter import ttk
+import mttkinter
 import numpy as np
 import os
 from Qcircuits.src._utility import to_string
