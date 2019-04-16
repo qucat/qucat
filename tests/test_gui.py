@@ -3,9 +3,6 @@ import os
 import shutil
 from Qcircuits.src._gui import GuiWindow
 import inspect
-from time import sleep
-import threading
-import sys
 
 class ManualTesting(unittest.TestCase):
 
@@ -33,7 +30,6 @@ class ManualTesting(unittest.TestCase):
 
 
 class GuiTesting(unittest.TestCase):
-
 
     def launch_gui_testing(self,exclude = None):
         folder = self.get_folder_name()
@@ -63,7 +59,6 @@ class GuiTesting(unittest.TestCase):
             calling_function_name)
         return folder
 
- 
     def run_events(self,folder,  init, events):
         init = os.path.join(folder,'initial_netlist.txt')
         final_after_events = os.path.join(folder,'final_after_events_netlist.txt')
@@ -71,17 +66,14 @@ class GuiTesting(unittest.TestCase):
 
         shutil.copyfile(init,final_after_events)
         gui = GuiWindow(final_after_events, _unittesting = True)
-        def events_thread(gui):
-            with open(events,'r') as f:
-                lines = f.readlines()
-                for l in lines:
-                    exec('gui.canvas.event_generate('+l+')', globals(), locals())
-            gui.master.destroy()
+        with open(events,'r') as f:
+            lines = f.readlines()
+            for l in lines:
+                if 'Motion' in l:
+                    l += ',warp=True'
+                exec('gui.canvas.event_generate('+l+')', globals(), locals())
+        gui.destroy()
 
-        thread = threading.Thread(target=events_thread, args=(gui,))
-        thread.start()
-        gui.mainloop()
-        thread.join()
 
 
     def gui_build_test(self,folder,exclude):
@@ -113,6 +105,7 @@ class GuiTesting(unittest.TestCase):
                         if wr:
                             to_write.write(l)
             os.remove(temp)
+
 
     def already_built(self,folder):
         try:
@@ -146,16 +139,10 @@ class TestMovingComponentsAround(GuiTesting):
     def test_moving_capacitor_horizontally(self):
         self.launch_gui_testing()
 
-    def test_moving_capacitor_twice(self):
-        self.launch_gui_testing()
-
     def test_rotating_capacitor(self):
         self.launch_gui_testing()
 
-    def test_moving_parallel_RLCJG(self):
-        self.launch_gui_testing()
-
 if __name__ == "__main__":
-    # unittest.main()
-    unittest.main(defaultTest='TestMovingComponentsAround')
-    # unittest.main(defaultTest='TestMovingComponentsAround.test_moving_parallel_RLCJG')
+    unittest.main()
+    # unittest.main(defaultTest='TestMovingComponentsAround')
+    # unittest.main(defaultTest='TestMovingComponentsAround.test_rotating_capacitor')
