@@ -31,7 +31,7 @@ class ManualTesting(unittest.TestCase):
 
 class GuiTesting(unittest.TestCase):
 
-    def launch_gui_testing(self,exclude = []):
+    def launch_gui_testing(self,exclude = None):
         folder = self.get_folder_name()
 
         if not self.already_built(folder):
@@ -72,7 +72,7 @@ class GuiTesting(unittest.TestCase):
                 if 'Motion' in l:
                     l += ',warp=True'
                 exec('gui.canvas.event_generate('+l+')', globals(), locals())
-        gui.master.destroy()
+        gui.destroy()
 
 
 
@@ -90,20 +90,21 @@ class GuiTesting(unittest.TestCase):
         self.remove_exluded_events(folder,exclude)
 
     def remove_exluded_events(self,folder,exclude):
-        events = os.path.join(folder,'events.txt')
-        temp = os.path.join(folder,'temp.txt')
-        shutil.copyfile(events,temp)
-        with open(events,'w') as to_write:
-            with open(temp,'r') as to_read:
-                lines = to_read.readlines()
-                for l in lines:
-                    wr = True
-                    for e in exclude:
-                        if e in l:
-                            wr = False
-                    if wr:
-                        to_write.write(l)
-        os.remove(temp)
+        if exclude is not None:
+            events = os.path.join(folder,'events.txt')
+            temp = os.path.join(folder,'temp.txt')
+            shutil.copyfile(events,temp)
+            with open(events,'w') as to_write:
+                with open(temp,'r') as to_read:
+                    lines = to_read.readlines()
+                    for l in lines:
+                        wr = True
+                        for e in exclude:
+                            if e in l:
+                                wr = False
+                        if wr:
+                            to_write.write(l)
+            os.remove(temp)
 
 
     def already_built(self,folder):
@@ -130,15 +131,18 @@ class TestOpening(ManualTesting):
     def test_if_opening_blank_test_throws_error(self):
         filename = self.write_netlist_file('')
         gui = GuiWindow(filename, _unittesting = True)
-        gui.master.destroy()
+        gui.destroy()
         self.assertEqual('',self.read_netlist_file())
 
 class TestMovingComponentsAround(GuiTesting):
 
-
     def test_moving_capacitor_horizontally(self):
-        # '<Motion>','<B1-Motion>'
-        self.launch_gui_testing(exclude=[])
+        self.launch_gui_testing()
+
+    def test_rotating_capacitor(self):
+        self.launch_gui_testing()
 
 if __name__ == "__main__":
     unittest.main()
+    # unittest.main(defaultTest='TestMovingComponentsAround')
+    # unittest.main(defaultTest='TestMovingComponentsAround.test_rotating_capacitor')

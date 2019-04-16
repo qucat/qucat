@@ -26,16 +26,18 @@ lw_select_hover = 5.*lw
 lw_select = 3.*lw
 
 def track_event(track_events_to, event, tagOrId = None, sequence=None, func=None, add=None):
-    event_string = "'"+sequence+"'"
-    for key,value in event.__dict__.items():
-        if key in ["when","above","borderwidth","button","count","data",
-            "detail","focus","height","keycode","keysym","mode","override","place",
-            "root","rootx","rooty","sendevent","serial","state","subwindow",
-            "warp","width","window","x","y"]:
-            if value != '??':
-                event_string+=(', '+key+' = '+repr(value))
-    with open(track_events_to,'a') as event_tracking_file:
-        event_tracking_file.write(event_string+'\n')
+    to_exclude = ['<Enter>','<Leave>'] # redundant information to store, and impossible to interpret
+    if sequence not in to_exclude:
+        event_string = "'"+sequence+"'"
+        for key,value in event.__dict__.items():
+            if key in ["when","above","borderwidth","button","count","data",
+                "detail","focus","height","keycode","keysym","mode","override","place",
+                "root","rootx","rooty","sendevent","serial","state","subwindow",
+                "warp","width","window","x","y"]:
+                if value != '??':
+                    event_string+=(', '+key+' = '+repr(value))
+        with open(track_events_to,'a') as event_tracking_file:
+            event_tracking_file.write(event_string+'\n')
 
 def track_menu(track_events_to,label):
     pass
@@ -2652,14 +2654,6 @@ class GuiWindow(ttk.Frame):
             self.update()
         else:
             self.mainloop()
-    
-    def update_and_send(self,*args,**kwargs):
-        '''
-        Update window then generate an event.
-        Used for unittesting (simply to avoid writing update over and over again).
-        '''
-        self.update()
-        self.event_generate(*args,**kwargs)
 
 if __name__ == '__main__':
     GuiWindow('./src/test.txt',_track_events_to='test.txt')
