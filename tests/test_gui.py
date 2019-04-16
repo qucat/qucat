@@ -69,8 +69,6 @@ class GuiTesting(unittest.TestCase):
         with open(events,'r') as f:
             lines = f.readlines()
             for l in lines:
-                if 'Motion' in l:
-                    l += ',warp=True'
                 exec('gui.canvas.event_generate('+l+')', globals(), locals())
         gui.destroy()
 
@@ -140,6 +138,12 @@ class TestMovingComponentsAround(GuiTesting):
         self.launch_gui_testing()
 
     def test_rotating_capacitor(self):
+        self.launch_gui_testing()
+
+    def test_moving_capacitor_twice(self):
+        self.launch_gui_testing()
+
+    def test_moving_parallel_RLCJG(self):
         self.launch_gui_testing()
 
 if __name__ == "__main__":
