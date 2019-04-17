@@ -2176,9 +2176,11 @@ class Component(TwoNodeElement):
                 self.create()
 
     def request_value_label(self):
-        if self.canvas.track_events_to is None:
+        if self.canvas.track_events_to is None and self.unittesting is False:
             window = RequestValueLabelWindow(self.canvas.master, self)
             self.canvas.master.wait_window(window)
+        else:
+            self.prop = [1, 'X']
 
     def import_image(self):
         png = type(self).__name__
@@ -2285,10 +2287,6 @@ class Component(TwoNodeElement):
         self.canvas.set_keyboard_shortcuts_element_creation()
         self.request_value_label()
         self.canvas.in_creation = None
-        if self.prop[0] is None and self.prop[1] is None:
-            self.abort_creation(rerun_command = False)
-            self.canvas.track_changes = True
-            return
         self.add_or_replace_label()
         self.canvas.elements.append(self)
         self.set_allstate_bindings()
