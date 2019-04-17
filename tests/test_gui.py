@@ -1,21 +1,13 @@
 import unittest
 import os
+import sys
 import shutil
 from Qcircuits.src._gui import GuiWindow
 import inspect
 import tkinter as tk
 
 class GuiTestingHandler(unittest.TestCase):
-
-    def close_gui(self):
-        while True:
-            try:
-                self.gui.master.destroy()
-            except tk.TclError:
-                # The gui is no longer open
-                return
-
-    
+    pass    
 
 class ManualTesting(GuiTestingHandler):
 
@@ -82,12 +74,15 @@ class AutomaticTesting(GuiTestingHandler):
 
         shutil.copyfile(self.init,self.final_after_events)
         self.gui = GuiWindow(self.final_after_events, _unittesting = True)
+
         with open(self.events,'r') as f:
             lines = f.readlines()
             for l in lines:
                 self.gui.canvas.focus_force()
                 exec('self.gui.canvas.event_generate('+l+')', globals(), locals())
-        self.close_gui()
+        
+        self.gui.master.destroy()
+
 
     def gui_build_test(self):
 
@@ -145,7 +140,7 @@ class TestOpening(ManualTesting):
     def test_if_opening_blank_test_throws_error(self):
         filename = self.write_netlist_file('')
         self.gui = GuiWindow(filename, _unittesting = True)
-        self.close_gui()
+        self.gui.master.destroy()
         self.assertEqual('',self.read_netlist_file())
 
 class TestMovingComponentsAround(AutomaticTesting):
@@ -158,7 +153,6 @@ class TestMovingComponentsAround(AutomaticTesting):
 
     def test_rotating_ground(self):
         self.launch_gui_testing()
-
 
     def test_moving_capacitor_twice(self):
         self.launch_gui_testing()

@@ -1534,7 +1534,7 @@ class CircuitEditor(tk.Canvas):
             size=size, 
             weight=weight))
 
-        self.after(int(1000*t), lambda: self.delete(saved_message))
+        # self.after(int(1000*t), lambda: self.delete(saved_message))
 
     def is_more_than_one_selected(self):
         i=0
