@@ -2176,7 +2176,7 @@ class Component(TwoNodeElement):
                 self.create()
 
     def request_value_label(self):
-        if self.canvas.track_events_to is None and self.unittesting is False:
+        if (self.canvas.track_events_to is None) and (self.canvas.unittesting == False):
             window = RequestValueLabelWindow(self.canvas.master, self)
             self.canvas.master.wait_window(window)
         else:
@@ -2629,4 +2629,5 @@ class GuiWindow(ttk.Frame):
             self.mainloop()
 
 if __name__ == '__main__':
-    GuiWindow('./src/test.txt',_track_events_to='test.txt')
+    # GuiWindow('./src/test.txt',_track_events_to='test.txt')
+    GuiWindow('./src/test.txt')

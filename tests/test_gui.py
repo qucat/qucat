@@ -83,7 +83,6 @@ class AutomaticTesting(GuiTestingHandler):
         
         self.gui.master.destroy()
 
-
     def gui_build_test(self):
 
         print("Build initial circuit")
@@ -146,6 +145,9 @@ class TestOpening(ManualTesting):
 class TestMovingComponentsAround(AutomaticTesting):
 
     def test_moving_capacitor_horizontally(self):
+        self.launch_gui_testing()
+
+    def test_zooming_in_out_then_moving_capacitor(self):
         self.launch_gui_testing()
 
     def test_rotating_capacitor(self):
