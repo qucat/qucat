@@ -143,9 +143,10 @@ class CircuitEditor(tk.Canvas):
                         path to the file used to save the network
 
     """
-    def __init__(self, master, grid_unit, netlist_filename, track_events_to = None):
+    def __init__(self, master, grid_unit, netlist_filename, track_events_to = None, unittesting = False):
 
         self.track_events_to = track_events_to
+        self.unittesting = unittesting
         
         self.netlist_filename = netlist_filename
         '''In the netlist file is stored at all times 
@@ -1524,17 +1525,18 @@ class CircuitEditor(tk.Canvas):
         weight: string, optional
                 Font weight. Default is 'normal'
         '''
+        if not self.unittesting:
+            saved_message = self.create_text(
+                self.canvasx(x), 
+                self.canvasy(y), 
+                text=text, 
+                anchor=tk.NW,
+                font=Font(family='Helvetica', 
+                size=size, 
+                weight=weight))
 
-        saved_message = self.create_text(
-            self.canvasx(x), 
-            self.canvasy(y), 
-            text=text, 
-            anchor=tk.NW,
-            font=Font(family='Helvetica', 
-            size=size, 
-            weight=weight))
 
-        # self.after(int(1000*t), lambda: self.delete(saved_message))
+            self.after(int(1000*t), lambda: self.delete(saved_message))
 
     def is_more_than_one_selected(self):
         i=0
@@ -2648,7 +2650,7 @@ class GuiWindow(ttk.Frame):
 
         # Populate that grid with the circuit editor
         self.canvas = CircuitEditor(
-            self.master, netlist_filename=netlist_filename, grid_unit=60, track_events_to=_track_events_to)
+            self.master, netlist_filename=netlist_filename, grid_unit=60, track_events_to=_track_events_to, unittesting = _unittesting)
 
         if _unittesting:
             self.update()
