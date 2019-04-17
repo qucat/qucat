@@ -42,7 +42,6 @@ def track_event(track_events_to, event, tagOrId = None, sequence=None, func=None
 
 def track_scrollbar(track_events_to,direction,*args):
     pass
-    # print(direction,args)
 
 class TrackableScrollbar(ttk.Scrollbar):
     def configure(self,track_events_to = None, **options):
@@ -248,7 +247,7 @@ class CircuitEditor(tk.Canvas):
         ####################################
 
         # add new item to the menubar
-        menu = TrackableMenu(self.menubar, tearoff=0)
+        menu = tk.Menu(self.menubar, tearoff=0)
         self.menubar.add_cascade(
             label=menu_label_template.format("File"), 
             menu=menu)
@@ -272,7 +271,7 @@ class CircuitEditor(tk.Canvas):
         ####################################
 
         # add new item to the menubar
-        menu = TrackableMenu(self.menubar, tearoff=0)
+        menu = tk.Menu(self.menubar, tearoff=0)
         self.menubar.add_cascade(
             label=menu_label_template.format("Edit"), 
             menu=menu)
@@ -324,7 +323,7 @@ class CircuitEditor(tk.Canvas):
         ####################################
         
         # add new item to the menubar
-        menu = TrackableMenu(self.menubar, tearoff=0)
+        menu = tk.Menu(self.menubar, tearoff=0)
         self.menubar.add_cascade(
             label=menu_label_template.format("Insert"), 
             menu=menu)
@@ -361,7 +360,7 @@ class CircuitEditor(tk.Canvas):
         ####################################
         
         # add new item to the menubar
-        menu = TrackableMenu(self.menubar, tearoff=0)
+        menu = tk.Menu(self.menubar, tearoff=0)
         self.menubar.add_cascade(
             label=menu_label_template.format("View"), 
             menu=menu)
@@ -1209,7 +1208,7 @@ class CircuitEditor(tk.Canvas):
         background of the canvas.
         Deselects all components and opens the right click menu.
         '''
-        menu = TrackableMenu(self, tearoff=0)
+        menu = tk.Menu(self, tearoff=0)
         menu.add_command(label="Paste", command=(lambda :self.event_generate('<Control-v>')))
         menu.tk_popup(event.x_root, event.y_root)
         self.bind("<ButtonRelease-3>", lambda event: None)
@@ -1898,7 +1897,7 @@ class W(TwoNodeElement):
         return [(xm+xp)/2., (ym+yp)/2.]
 
     def open_right_click_menu(self, event):
-        menu = TrackableMenu(self.canvas, tearoff=0)
+        menu = tk.Menu(self.canvas, tearoff=0)
         menu.add_command(label="Delete", command=(lambda :self.canvas.event_generate('<Delete>')))
         menu.add_command(label="Copy", command=(lambda :self.canvas.event_generate('<Control-c>')))
         menu.add_command(label="Cut", command=(lambda :self.canvas.event_generate('<Control-x>')))
@@ -2177,8 +2176,9 @@ class Component(TwoNodeElement):
                 self.create()
 
     def request_value_label(self):
-        window = RequestValueLabelWindow(self.canvas.master, self)
-        self.canvas.master.wait_window(window)
+        if self.canvas.track_events_to is None:
+            window = RequestValueLabelWindow(self.canvas.master, self)
+            self.canvas.master.wait_window(window)
 
     def import_image(self):
         png = type(self).__name__
@@ -2308,7 +2308,7 @@ class Component(TwoNodeElement):
 
     def open_right_click_menu(self, event):
 
-        menu = TrackableMenu(self.canvas, tearoff=0)
+        menu = tk.Menu(self.canvas, tearoff=0)
         if self.canvas.is_more_than_one_selected():
             menu.add_command(label="Delete", command=(lambda: self.canvas.event_generate('<Delete>')))
             menu.add_command(label="Copy", command=(lambda: self.canvas.event_generate('<Control-c>')))
@@ -2485,7 +2485,7 @@ class G(Component):
         pass
 
     def open_right_click_menu(self, event):
-        menu = TrackableMenu(self.canvas, tearoff=0)
+        menu = tk.Menu(self.canvas, tearoff=0)
         # menu.add_command(label="Rotate", command=self.rotate)
         menu.add_command(label="Delete", command=(lambda :self.canvas.event_generate('<Delete>')))
         menu.add_command(label="Copy", command=(lambda :self.canvas.event_generate('<Control-c>')))
@@ -2503,14 +2503,8 @@ class G(Component):
         super(G,self).add_nodes(to = to, minus = minus, plus = plus)       
 
 class RequestValueLabelWindow(tk.Toplevel):
-<<<<<<< HEAD
-
-    def __init__(self, master, component, force_vl = None, track_events_to = None):
-=======
     def __init__(self, master, component):
->>>>>>> parent of f06205c... Request value trackable
         tk.Toplevel.__init__(self, master)
-        self.track_events_to = track_events_to
         self.component = component
 
         # TODO add suggestions
