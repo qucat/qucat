@@ -4,7 +4,6 @@ import shutil
 from Qcircuits.src._gui import GuiWindow
 import inspect
 import tkinter as tk
-from time import sleep
 
 class GuiTestingHandler(unittest.TestCase):
 
@@ -12,7 +11,7 @@ class GuiTestingHandler(unittest.TestCase):
         while True:
             try:
                 self.gui.master.destroy()
-            except Exception:#tk.TclError:
+            except tk.TclError:
                 # The gui is no longer open
                 return
 
@@ -88,9 +87,6 @@ class AutomaticTesting(GuiTestingHandler):
             for l in lines:
                 self.gui.canvas.focus_force()
                 exec('self.gui.canvas.event_generate('+l+')', globals(), locals())
-                exec('self.gui.event_generate('+l+')', globals(), locals())
-                self.gui.canvas.update()
-                self.gui.update()
         self.close_gui()
 
     def gui_build_test(self):
@@ -172,7 +168,3 @@ class TestMovingComponentsAround(AutomaticTesting):
 
 if __name__ == "__main__":
     unittest.main()
-    # unittest.main(defaultTest='TestMovingComponentsAround')
-    # unittest.main(defaultTest=['TestOpening.test_if_opening_blank_test_throws_error','TestMovingComponentsAround.test_rotating_capacitor'])
-    # unittest.main(defaultTest='TestMovingComponentsAround.test_rotating_capacitor')
-    # unittest.main(defaultTest='TestMovingComponentsAround.test_rotating_ground')
