@@ -25,7 +25,6 @@ lw_hover = 2.*lw
 lw_select_hover = 5.*lw
 lw_select = 3.*lw
 
-<<<<<<< HEAD
 def track_event(track_events_to, event, tagOrId = None, sequence=None, func=None, add=None):
     to_exclude = ['<Enter>','<Leave>'] # redundant information to store, and impossible to interpret
     if sequence not in to_exclude:
@@ -40,27 +39,10 @@ def track_event(track_events_to, event, tagOrId = None, sequence=None, func=None
         with open(track_events_to,'a') as event_tracking_file:
             event_tracking_file.write(event_string+'\n')
 
-def track_menu(track_events_to,label):
-    pass
-    # print(label)
 
 def track_scrollbar(track_events_to,direction,*args):
     pass
     # print(direction,args)
-
-def track_value_label_change(track_events_to,v,l):
-    pass
-    # print('Changed values to:',v,l)
-=======
-def track_event(event, tagOrId = None, sequence=None, func=None, add=None):
-    print(event)
-
-def track_menu(label):
-    print(label)
-
-def track_scrollbar(direction,*args):
-    print(direction,args)
->>>>>>> parent of f06205c... Request value trackable
 
 class TrackableScrollbar(ttk.Scrollbar):
     def configure(self,track_events_to = None, **options):
@@ -73,15 +55,6 @@ class TrackableScrollbar(ttk.Scrollbar):
 
         super(TrackableScrollbar, self).configure(**options)
 
-class TrackableMenu(tk.Menu):
-    def add_command(self,track_events_to = None, **options):
-        if track_events_to is not None:
-            command = options['command']
-            def tracked_command():
-                track_menu(track_events_to,options['label'])
-                command()
-            options['command'] = tracked_command
-        super(TrackableMenu, self).add_command(**options)
 
 class CircuitEditor(tk.Canvas):
     """
@@ -248,7 +221,7 @@ class CircuitEditor(tk.Canvas):
         '''
 
         # initialize the menubar object
-        self.menubar = TrackableMenu(self.frame)
+        self.menubar = tk.Menu(self.frame)
 
         ####################################
         # Define the label formatting
@@ -2600,11 +2573,6 @@ class RequestValueLabelWindow(tk.Toplevel):
             return None
         else:
             self.component.prop = [v, l]
-<<<<<<< HEAD
-            if self.track_events_to is not None:
-                track_value_label_change(track_events_to,v,l)
-=======
->>>>>>> parent of f06205c... Request value trackable
             self.destroy()
 
     def cancel(self):
