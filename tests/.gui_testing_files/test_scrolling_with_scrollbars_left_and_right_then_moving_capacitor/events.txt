@@ -1,0 +1,568 @@
+'<Motion>', serial = 360, state = 8, x = 778, y = 292
+'<Motion>', serial = 360, state = 8, x = 778, y = 296
+'<Motion>', serial = 360, state = 8, x = 777, y = 300
+'<Motion>', serial = 360, state = 8, x = 777, y = 305
+'<Motion>', serial = 360, state = 8, x = 777, y = 308
+'<Motion>', serial = 360, state = 8, x = 776, y = 311
+'<Motion>', serial = 360, state = 8, x = 776, y = 315
+'<Motion>', serial = 360, state = 8, x = 776, y = 318
+'<Motion>', serial = 360, state = 8, x = 776, y = 320
+'<Motion>', serial = 360, state = 8, x = 776, y = 323
+'<Motion>', serial = 360, state = 8, x = 776, y = 325
+'<Motion>', serial = 360, state = 8, x = 776, y = 327
+'<Motion>', serial = 360, state = 8, x = 774, y = 329
+'<Motion>', serial = 360, state = 8, x = 774, y = 331
+'<Motion>', serial = 360, state = 8, x = 774, y = 333
+'<Motion>', serial = 360, state = 8, x = 774, y = 336
+'<Motion>', serial = 360, state = 8, x = 774, y = 337
+'<Motion>', serial = 360, state = 8, x = 774, y = 340
+'<Motion>', serial = 360, state = 8, x = 774, y = 342
+'<Motion>', serial = 360, state = 8, x = 774, y = 347
+'<Motion>', serial = 360, state = 8, x = 774, y = 350
+'<Motion>', serial = 360, state = 8, x = 774, y = 353
+'<Motion>', serial = 360, state = 8, x = 774, y = 354
+'<Motion>', serial = 360, state = 8, x = 774, y = 358
+'<Motion>', serial = 360, state = 8, x = 774, y = 359
+'<Motion>', serial = 360, state = 8, x = 774, y = 361
+'<Motion>', serial = 360, state = 8, x = 774, y = 364
+'<Motion>', serial = 360, state = 8, x = 775, y = 364
+'<Motion>', serial = 360, state = 8, x = 777, y = 367
+'<Motion>', serial = 360, state = 8, x = 778, y = 368
+#y, 'moveto', '0.07237927963277839'
+#y, 'moveto', '0.07034261975497798'
+#y, 'moveto', '0.06423264012157676'
+#y, 'moveto', '0.060159320365975946'
+#y, 'moveto', '0.054049340732574724'
+#y, 'moveto', '0.05201268085477431'
+#y, 'moveto', '0.04590270122137309'
+#y, 'moveto', '0.043866041343572686'
+#y, 'moveto', '0.03368274195457065'
+#y, 'moveto', '0.03164608207677024'
+#y, 'moveto', '0.025536102443369013'
+#y, 'moveto', '0.017389462932167386'
+#y, 'moveto', '0.011279483298766171'
+#y, 'moveto', '0.00924282342096576'
+#y, 'moveto', '0.0051695036653649495'
+#y, 'moveto', '0.0010961839097641257'
+#y, 'moveto', '-0.009087115479237906'
+#y, 'moveto', '-0.015197095112639128'
+#y, 'moveto', '-0.019270414868239938'
+#y, 'moveto', '-0.04371033340184484'
+#y, 'moveto', '-0.04982031303524606'
+#y, 'moveto', '-0.05185697291304647'
+#y, 'moveto', '-0.05593029266864727'
+#y, 'moveto', '-0.05796695254644768'
+#y, 'moveto', '-0.06000361242424809'
+#y, 'moveto', '-0.0661135920576493'
+#y, 'moveto', '-0.06815025193544971'
+#y, 'moveto', '-0.07222357169105054'
+#y, 'moveto', '-0.07426023156885095'
+#y, 'moveto', '-0.07629689144665136'
+#y, 'moveto', '-0.08037021120225216'
+#y, 'moveto', '-0.08240687108005257'
+#y, 'moveto', '-0.08648019083565339'
+#y, 'moveto', '-0.09870015010245584'
+#y, 'moveto', '-0.10073680998025625'
+#y, 'moveto', '-0.11499342912485908'
+#y, 'moveto', '-0.11703008900265949'
+#y, 'moveto', '-0.13536002790286317'
+#y, 'moveto', '-0.139433347658464'
+#y, 'moveto', '-0.15572662668086723'
+#y, 'moveto', '-0.15776328655866764'
+#y, 'moveto', '-0.16387326619206888'
+#y, 'moveto', '-0.16590992606986926'
+#y, 'moveto', '-0.1699832458254701'
+#y, 'moveto', '-0.17609322545887132'
+#y, 'moveto', '-0.18016654521447215'
+#y, 'moveto', '-0.18220320509227253'
+#y, 'moveto', '-0.18831318472567374'
+#y, 'moveto', '-0.19238650448127456'
+#y, 'moveto', '-0.194423164359075'
+#y, 'moveto', '-0.19645982423687539'
+#y, 'moveto', '-0.20460646374807703'
+#y, 'moveto', '-0.20664312362587742'
+#y, 'moveto', '-0.21071644338147824'
+#y, 'moveto', '-0.21682642301487945'
+#y, 'moveto', '-0.22089974277048027'
+#y, 'moveto', '-0.22293640264828066'
+#y, 'moveto', '-0.2331197020372827'
+#y, 'moveto', '-0.23515636191508313'
+#y, 'moveto', '-0.2371930217928835'
+#y, 'moveto', '-0.24126634154848434'
+#y, 'moveto', '-0.24533966130408516'
+#y, 'moveto', '-0.24737632118188554'
+#y, 'moveto', '-0.24941298105968598'
+#y, 'moveto', '-0.2534863008152868'
+#y, 'moveto', '-0.2555229606930872'
+#y, 'moveto', '-0.25755962057088755'
+#y, 'moveto', '-0.26163294032648843'
+#y, 'moveto', '-0.2657062600820892'
+#y, 'moveto', '-0.2697795798376901'
+#y, 'moveto', '-0.2718162397154904'
+#y, 'moveto', '-0.27385289959329084'
+#y, 'moveto', '-0.2779262193488917'
+#y, 'moveto', '-0.28607285886009326'
+#y, 'moveto', '-0.29014617861569414'
+#y, 'moveto', '-0.29625615824909535'
+#y, 'moveto', '-0.3105127773936982'
+#y, 'moveto', '-0.31254943727149864'
+#y, 'moveto', '-0.32476939653830106'
+#y, 'moveto', '-0.3288427162939018'
+#y, 'moveto', '-0.33495269592730303'
+#y, 'moveto', '-0.3369893558051035'
+#y, 'moveto', '-0.3390260156829039'
+#y, 'moveto', '-0.34106267556070435'
+#y, 'moveto', '-0.3430993354385047'
+#y, 'moveto', '-0.3451359953163051'
+#y, 'moveto', '-0.34717265519410556'
+#y, 'moveto', '-0.3492093150719059'
+#y, 'moveto', '-0.35124597494970633'
+#y, 'moveto', '-0.35124597494970633'
+#y, 'moveto', '-0.3553192947053072'
+#y, 'moveto', '-0.35735595458310754'
+#y, 'moveto', '-0.35735595458310754'
+#y, 'moveto', '-0.359392614460908'
+#y, 'moveto', '-0.36346593421650875'
+#y, 'moveto', '-0.3675392539721096'
+#y, 'moveto', '-0.3716125737277104'
+'<Motion>', serial = 1426, state = 8, x = 776, y = 224
+'<Motion>', serial = 1426, state = 8, x = 774, y = 224
+'<Motion>', serial = 1426, state = 8, x = 772, y = 224
+'<Motion>', serial = 1426, state = 8, x = 767, y = 228
+'<Motion>', serial = 1426, state = 8, x = 762, y = 233
+'<Motion>', serial = 1426, state = 8, x = 754, y = 239
+'<Motion>', serial = 1426, state = 8, x = 745, y = 246
+'<Motion>', serial = 1426, state = 8, x = 735, y = 254
+'<Motion>', serial = 1426, state = 8, x = 727, y = 262
+'<Motion>', serial = 1426, state = 8, x = 719, y = 269
+'<Motion>', serial = 1426, state = 8, x = 710, y = 277
+'<Motion>', serial = 1426, state = 8, x = 700, y = 285
+'<Motion>', serial = 1426, state = 8, x = 688, y = 295
+'<Motion>', serial = 1426, state = 8, x = 678, y = 306
+'<Motion>', serial = 1426, state = 8, x = 670, y = 317
+'<Motion>', serial = 1426, state = 8, x = 659, y = 332
+'<Motion>', serial = 1426, state = 8, x = 651, y = 346
+'<Motion>', serial = 1426, state = 8, x = 644, y = 360
+'<Motion>', serial = 1426, state = 8, x = 638, y = 374
+'<Motion>', serial = 1426, state = 8, x = 631, y = 390
+'<Motion>', serial = 1426, state = 8, x = 628, y = 402
+'<Motion>', serial = 1426, state = 8, x = 624, y = 416
+'<Motion>', serial = 1426, state = 8, x = 623, y = 428
+'<Motion>', serial = 1426, state = 8, x = 621, y = 439
+'<Motion>', serial = 1426, state = 8, x = 621, y = 449
+'<Motion>', serial = 1426, state = 8, x = 621, y = 458
+'<Motion>', serial = 1426, state = 8, x = 621, y = 466
+'<Motion>', serial = 1426, state = 8, x = 621, y = 472
+'<Motion>', serial = 1426, state = 8, x = 621, y = 474
+'<Motion>', serial = 1426, state = 8, x = 621, y = 479
+'<Motion>', serial = 1426, state = 8, x = 621, y = 483
+'<Motion>', serial = 1426, state = 8, x = 621, y = 484
+'<Motion>', serial = 1426, state = 8, x = 624, y = 488
+'<Motion>', serial = 1426, state = 8, x = 624, y = 489
+'<Motion>', serial = 1426, state = 8, x = 625, y = 491
+'<Motion>', serial = 1426, state = 8, x = 626, y = 493
+'<Motion>', serial = 1426, state = 8, x = 628, y = 497
+'<Motion>', serial = 1426, state = 8, x = 629, y = 498
+'<Motion>', serial = 1426, state = 8, x = 629, y = 499
+'<Motion>', serial = 1426, state = 8, x = 631, y = 502
+'<Motion>', serial = 1426, state = 8, x = 633, y = 505
+'<Motion>', serial = 1426, state = 8, x = 633, y = 506
+'<Motion>', serial = 1426, state = 8, x = 634, y = 507
+'<Motion>', serial = 1426, state = 8, x = 635, y = 509
+'<Motion>', serial = 1426, state = 8, x = 637, y = 511
+'<Motion>', serial = 1426, state = 8, x = 637, y = 512
+'<Motion>', serial = 1426, state = 8, x = 638, y = 514
+'<Motion>', serial = 1426, state = 8, x = 641, y = 518
+'<Motion>', serial = 1426, state = 8, x = 641, y = 519
+'<Motion>', serial = 1426, state = 8, x = 641, y = 522
+'<Motion>', serial = 1426, state = 8, x = 641, y = 526
+'<Motion>', serial = 1426, state = 8, x = 642, y = 529
+'<Motion>', serial = 1426, state = 8, x = 642, y = 532
+'<Motion>', serial = 1426, state = 8, x = 643, y = 536
+'<Motion>', serial = 1426, state = 8, x = 643, y = 537
+'<Motion>', serial = 1426, state = 8, x = 643, y = 542
+'<Motion>', serial = 1426, state = 8, x = 644, y = 545
+'<Motion>', serial = 1426, state = 8, x = 644, y = 548
+'<Motion>', serial = 1426, state = 8, x = 644, y = 552
+'<Motion>', serial = 1426, state = 8, x = 645, y = 553
+#x, 'moveto', '0.0554861733432481'
+#x, 'moveto', '0.05408952529855537'
+#x, 'moveto', '0.04989958116447715'
+#x, 'moveto', '0.0443129889857062'
+#x, 'moveto', '0.037329748762242515'
+#x, 'moveto', '0.028949860494086092'
+#x, 'moveto', '0.01219008395777324'
+#x, 'moveto', '0.006603491779002289'
+#x, 'moveto', '-0.011552932802003292'
+#x, 'moveto', '-0.02412276520423793'
+#x, 'moveto', '-0.031106005427701623'
+#x, 'moveto', '-0.04367583782993626'
+#x, 'moveto', '-0.049262430008707205'
+#x, 'moveto', '-0.060435614366249106'
+#x, 'moveto', '-0.06602220654502006'
+#x, 'moveto', '-0.07300544676848372'
+#x, 'moveto', '-0.08557527917071836'
+#x, 'moveto', '-0.09255851939418205'
+#x, 'moveto', '-0.09535181548356753'
+#x, 'moveto', '-0.10093840766233847'
+#x, 'moveto', '-0.10931829593049491'
+#x, 'moveto', '-0.11350824006457311'
+#x, 'moveto', '-0.11909483224334408'
+#x, 'moveto', '-0.12607807246680774'
+#x, 'moveto', '-0.13864790486904238'
+#x, 'moveto', '-0.14702779313719883'
+#x, 'moveto', '-0.156804329450048'
+#x, 'moveto', '-0.17775405012043904'
+#x, 'moveto', '-0.1945138266567519'
+#x, 'moveto', '-0.2028937149249083'
+#x, 'moveto', '-0.21267025123775748'
+#x, 'moveto', '-0.21686019537183568'
+#x, 'moveto', '-0.23501661995284126'
+#x, 'moveto', '-0.23780991604222676'
+#x, 'moveto', '-0.2406032121316122'
+#x, 'moveto', '-0.2517763964891542'
+#x, 'moveto', '-0.2587596367126178'
+#x, 'moveto', '-0.2615529328020033'
+#x, 'moveto', '-0.268536173025467'
+#x, 'moveto', '-0.28110600542770164'
+#x, 'moveto', '-0.2866925976064726'
+#x, 'moveto', '-0.2908825417405508'
+#x, 'moveto', '-0.3034523741427854'
+#x, 'moveto', '-0.30764231827686367'
+#x, 'moveto', '-0.3132289104556346'
+#x, 'moveto', '-0.32579874285786925'
+#x, 'moveto', '-0.32998868699194744'
+#x, 'moveto', '-0.33417863112602564'
+#x, 'moveto', '-0.33976522330479664'
+#x, 'moveto', '-0.34116187134948933'
+#x, 'moveto', '-0.3425585193941821'
+#x, 'moveto', '-0.3495417596176458'
+#x, 'moveto', '-0.3523350557070313'
+#x, 'moveto', '-0.3579216478858022'
+#x, 'moveto', '-0.3621115920198804'
+#x, 'moveto', '-0.3663015361539586'
+#x, 'moveto', '-0.3732847763774223'
+#x, 'moveto', '-0.37887136855619324'
+#x, 'moveto', '-0.3844579607349642'
+#x, 'moveto', '-0.39283784900312063'
+#x, 'moveto', '-0.39563114509250613'
+#x, 'moveto', '-0.40261438531596977'
+#x, 'moveto', '-0.406804329450048'
+#x, 'moveto', '-0.4151842177182044'
+#x, 'moveto', '-0.41937416185228266'
+#x, 'moveto', '-0.4319439942545173'
+#x, 'moveto', '-0.4361339383885955'
+#x, 'moveto', '-0.4431171786120592'
+#x, 'moveto', '-0.4459104747014447'
+#x, 'moveto', '-0.4487037707908302'
+#x, 'moveto', '-0.4501004188355228'
+#x, 'moveto', '-0.4528937149249083'
+#x, 'moveto', '-0.45987695514837207'
+#x, 'moveto', '-0.4612736031930648'
+'<Motion>', serial = 2246, state = 8, x = 299, y = 550
+'<Motion>', serial = 2246, state = 8, x = 299, y = 549
+'<Motion>', serial = 2246, state = 8, x = 301, y = 547
+'<Motion>', serial = 2246, state = 8, x = 305, y = 547
+'<Motion>', serial = 2246, state = 8, x = 310, y = 546
+'<Motion>', serial = 2246, state = 8, x = 317, y = 546
+'<Motion>', serial = 2246, state = 8, x = 324, y = 544
+'<Motion>', serial = 2246, state = 8, x = 333, y = 544
+'<Motion>', serial = 2246, state = 8, x = 345, y = 541
+'<Motion>', serial = 2246, state = 8, x = 356, y = 540
+'<Motion>', serial = 2246, state = 8, x = 368, y = 537
+'<Motion>', serial = 2246, state = 8, x = 378, y = 535
+'<Motion>', serial = 2246, state = 8, x = 391, y = 530
+'<Motion>', serial = 2246, state = 8, x = 401, y = 528
+'<Motion>', serial = 2246, state = 8, x = 412, y = 522
+'<Motion>', serial = 2246, state = 8, x = 424, y = 520
+'<Motion>', serial = 2246, state = 8, x = 437, y = 515
+'<Motion>', serial = 2246, state = 8, x = 449, y = 513
+'<Motion>', serial = 2246, state = 8, x = 461, y = 509
+'<Motion>', serial = 2246, state = 8, x = 472, y = 506
+'<Motion>', serial = 2246, state = 8, x = 486, y = 503
+'<Motion>', serial = 2246, state = 8, x = 495, y = 502
+'<Motion>', serial = 2246, state = 8, x = 504, y = 501
+'<Motion>', serial = 2246, state = 8, x = 510, y = 501
+'<Motion>', serial = 2246, state = 8, x = 521, y = 497
+'<Motion>', serial = 2246, state = 8, x = 528, y = 495
+'<Motion>', serial = 2246, state = 8, x = 539, y = 494
+'<Motion>', serial = 2246, state = 8, x = 548, y = 493
+'<Motion>', serial = 2246, state = 8, x = 555, y = 490
+'<Motion>', serial = 2246, state = 8, x = 561, y = 489
+'<Motion>', serial = 2246, state = 8, x = 568, y = 489
+'<Motion>', serial = 2246, state = 8, x = 576, y = 489
+'<Motion>', serial = 2246, state = 8, x = 582, y = 488
+'<Motion>', serial = 2246, state = 8, x = 587, y = 488
+'<Motion>', serial = 2246, state = 8, x = 593, y = 487
+'<Motion>', serial = 2246, state = 8, x = 598, y = 487
+'<Motion>', serial = 2246, state = 8, x = 602, y = 487
+'<Motion>', serial = 2246, state = 8, x = 606, y = 485
+'<Motion>', serial = 2246, state = 8, x = 610, y = 485
+'<Motion>', serial = 2246, state = 8, x = 613, y = 484
+'<Motion>', serial = 2246, state = 8, x = 617, y = 484
+'<Motion>', serial = 2246, state = 8, x = 619, y = 483
+'<Motion>', serial = 2246, state = 8, x = 622, y = 483
+'<Motion>', serial = 2246, state = 8, x = 623, y = 483
+'<Motion>', serial = 2246, state = 8, x = 626, y = 483
+'<Motion>', serial = 2246, state = 8, x = 628, y = 483
+'<Motion>', serial = 2246, state = 8, x = 631, y = 483
+'<Motion>', serial = 2246, state = 8, x = 632, y = 483
+'<Motion>', serial = 2246, state = 8, x = 634, y = 483
+'<Motion>', serial = 2256, state = 8, x = 634, y = 482
+'<Motion>', serial = 2256, state = 8, x = 635, y = 482
+'<Motion>', serial = 2256, state = 8, x = 636, y = 482
+'<Motion>', serial = 2256, state = 8, x = 639, y = 481
+'<Motion>', serial = 2256, state = 8, x = 642, y = 480
+'<Motion>', serial = 2256, state = 8, x = 643, y = 480
+'<Motion>', serial = 2256, state = 8, x = 644, y = 480
+'<Motion>', serial = 2256, state = 8, x = 646, y = 480
+'<Motion>', serial = 2256, state = 8, x = 647, y = 480
+'<Motion>', serial = 2256, state = 8, x = 648, y = 479
+'<Motion>', serial = 2256, state = 8, x = 649, y = 478
+'<Motion>', serial = 2256, state = 8, x = 650, y = 478
+'<Motion>', serial = 2256, state = 8, x = 651, y = 478
+'<Motion>', serial = 2256, state = 8, x = 652, y = 477
+'<Motion>', serial = 2256, state = 8, x = 653, y = 476
+'<Button-1>', serial = 2256, state = 8, x = 653, y = 476
+'<B1-Motion>', serial = 2266, state = 264, x = 653, y = 475
+'<Motion>', serial = 2266, state = 264, x = 653, y = 475
+'<B1-Motion>', serial = 2269, state = 264, x = 653, y = 474
+'<Motion>', serial = 2269, state = 264, x = 653, y = 474
+'<B1-Motion>', serial = 2272, state = 264, x = 653, y = 473
+'<Motion>', serial = 2272, state = 264, x = 653, y = 473
+'<B1-Motion>', serial = 2275, state = 264, x = 653, y = 472
+'<Motion>', serial = 2275, state = 264, x = 653, y = 472
+'<B1-Motion>', serial = 2278, state = 264, x = 653, y = 469
+'<Motion>', serial = 2278, state = 264, x = 653, y = 469
+'<B1-Motion>', serial = 2281, state = 264, x = 651, y = 467
+'<Motion>', serial = 2281, state = 264, x = 651, y = 467
+'<B1-Motion>', serial = 2284, state = 264, x = 648, y = 464
+'<Motion>', serial = 2284, state = 264, x = 648, y = 464
+'<B1-Motion>', serial = 2287, state = 264, x = 645, y = 461
+'<Motion>', serial = 2287, state = 264, x = 645, y = 461
+'<B1-Motion>', serial = 2290, state = 264, x = 640, y = 457
+'<Motion>', serial = 2290, state = 264, x = 640, y = 457
+'<B1-Motion>', serial = 2293, state = 264, x = 634, y = 452
+'<Motion>', serial = 2293, state = 264, x = 634, y = 452
+'<B1-Motion>', serial = 2296, state = 264, x = 630, y = 450
+'<Motion>', serial = 2296, state = 264, x = 630, y = 450
+'<B1-Motion>', serial = 2299, state = 264, x = 622, y = 445
+'<Motion>', serial = 2299, state = 264, x = 622, y = 445
+'<B1-Motion>', serial = 2302, state = 264, x = 616, y = 440
+'<Motion>', serial = 2302, state = 264, x = 616, y = 440
+'<B1-Motion>', serial = 2305, state = 264, x = 607, y = 433
+'<Motion>', serial = 2305, state = 264, x = 607, y = 433
+'<B1-Motion>', serial = 2308, state = 264, x = 593, y = 426
+'<Motion>', serial = 2308, state = 264, x = 593, y = 426
+'<B1-Motion>', serial = 2311, state = 264, x = 580, y = 417
+'<Motion>', serial = 2311, state = 264, x = 580, y = 417
+'<B1-Motion>', serial = 2314, state = 264, x = 567, y = 409
+'<Motion>', serial = 2314, state = 264, x = 567, y = 409
+'<B1-Motion>', serial = 2317, state = 264, x = 556, y = 401
+'<Motion>', serial = 2317, state = 264, x = 556, y = 401
+'<B1-Motion>', serial = 2320, state = 264, x = 543, y = 391
+'<Motion>', serial = 2320, state = 264, x = 543, y = 391
+'<B1-Motion>', serial = 2323, state = 264, x = 532, y = 382
+'<Motion>', serial = 2323, state = 264, x = 532, y = 382
+'<B1-Motion>', serial = 2326, state = 264, x = 516, y = 372
+'<Motion>', serial = 2326, state = 264, x = 516, y = 372
+'<B1-Motion>', serial = 2329, state = 264, x = 500, y = 360
+'<Motion>', serial = 2329, state = 264, x = 500, y = 360
+'<B1-Motion>', serial = 2332, state = 264, x = 488, y = 351
+'<Motion>', serial = 2332, state = 264, x = 488, y = 351
+'<B1-Motion>', serial = 2335, state = 264, x = 475, y = 341
+'<Motion>', serial = 2335, state = 264, x = 475, y = 341
+'<B1-Motion>', serial = 2338, state = 264, x = 462, y = 334
+'<Motion>', serial = 2338, state = 264, x = 462, y = 334
+'<B1-Motion>', serial = 2341, state = 264, x = 451, y = 327
+'<Motion>', serial = 2341, state = 264, x = 451, y = 327
+'<B1-Motion>', serial = 2344, state = 264, x = 440, y = 319
+'<Motion>', serial = 2344, state = 264, x = 440, y = 319
+'<B1-Motion>', serial = 2347, state = 264, x = 431, y = 312
+'<Motion>', serial = 2347, state = 264, x = 431, y = 312
+'<B1-Motion>', serial = 2350, state = 264, x = 422, y = 308
+'<Motion>', serial = 2350, state = 264, x = 422, y = 308
+'<B1-Motion>', serial = 2353, state = 264, x = 409, y = 301
+'<Motion>', serial = 2353, state = 264, x = 409, y = 301
+'<B1-Motion>', serial = 2356, state = 264, x = 400, y = 296
+'<Motion>', serial = 2356, state = 264, x = 400, y = 296
+'<B1-Motion>', serial = 2359, state = 264, x = 389, y = 289
+'<Motion>', serial = 2359, state = 264, x = 389, y = 289
+'<B1-Motion>', serial = 2362, state = 264, x = 378, y = 284
+'<Motion>', serial = 2362, state = 264, x = 378, y = 284
+'<B1-Motion>', serial = 2365, state = 264, x = 369, y = 277
+'<Motion>', serial = 2365, state = 264, x = 369, y = 277
+'<B1-Motion>', serial = 2368, state = 264, x = 361, y = 271
+'<Motion>', serial = 2368, state = 264, x = 361, y = 271
+'<B1-Motion>', serial = 2371, state = 264, x = 353, y = 265
+'<Motion>', serial = 2371, state = 264, x = 353, y = 265
+'<B1-Motion>', serial = 2374, state = 264, x = 345, y = 257
+'<Motion>', serial = 2374, state = 264, x = 345, y = 257
+'<B1-Motion>', serial = 2377, state = 264, x = 340, y = 253
+'<Motion>', serial = 2377, state = 264, x = 340, y = 253
+'<B1-Motion>', serial = 2380, state = 264, x = 333, y = 246
+'<Motion>', serial = 2380, state = 264, x = 333, y = 246
+'<B1-Motion>', serial = 2383, state = 264, x = 330, y = 243
+'<Motion>', serial = 2383, state = 264, x = 330, y = 243
+'<B1-Motion>', serial = 2386, state = 264, x = 327, y = 240
+'<Motion>', serial = 2386, state = 264, x = 327, y = 240
+'<B1-Motion>', serial = 2389, state = 264, x = 322, y = 236
+'<Motion>', serial = 2389, state = 264, x = 322, y = 236
+'<B1-Motion>', serial = 2392, state = 264, x = 320, y = 233
+'<Motion>', serial = 2392, state = 264, x = 320, y = 233
+'<B1-Motion>', serial = 2395, state = 264, x = 316, y = 229
+'<Motion>', serial = 2395, state = 264, x = 316, y = 229
+'<B1-Motion>', serial = 2398, state = 264, x = 312, y = 224
+'<Motion>', serial = 2398, state = 264, x = 312, y = 224
+'<B1-Motion>', serial = 2401, state = 264, x = 309, y = 220
+'<Motion>', serial = 2401, state = 264, x = 309, y = 220
+'<B1-Motion>', serial = 2404, state = 264, x = 304, y = 215
+'<Motion>', serial = 2404, state = 264, x = 304, y = 215
+'<B1-Motion>', serial = 2407, state = 264, x = 300, y = 212
+'<Motion>', serial = 2407, state = 264, x = 300, y = 212
+'<B1-Motion>', serial = 2410, state = 264, x = 297, y = 209
+'<Motion>', serial = 2410, state = 264, x = 297, y = 209
+'<B1-Motion>', serial = 2413, state = 264, x = 291, y = 202
+'<Motion>', serial = 2413, state = 264, x = 291, y = 202
+'<B1-Motion>', serial = 2416, state = 264, x = 286, y = 199
+'<Motion>', serial = 2416, state = 264, x = 286, y = 199
+'<B1-Motion>', serial = 2419, state = 264, x = 282, y = 196
+'<Motion>', serial = 2419, state = 264, x = 282, y = 196
+'<B1-Motion>', serial = 2422, state = 264, x = 276, y = 189
+'<Motion>', serial = 2422, state = 264, x = 276, y = 189
+'<B1-Motion>', serial = 2425, state = 264, x = 269, y = 185
+'<Motion>', serial = 2425, state = 264, x = 269, y = 185
+'<B1-Motion>', serial = 2428, state = 264, x = 267, y = 183
+'<Motion>', serial = 2428, state = 264, x = 267, y = 183
+'<B1-Motion>', serial = 2431, state = 264, x = 263, y = 178
+'<Motion>', serial = 2431, state = 264, x = 263, y = 178
+'<B1-Motion>', serial = 2434, state = 264, x = 259, y = 176
+'<Motion>', serial = 2434, state = 264, x = 259, y = 176
+'<B1-Motion>', serial = 2437, state = 264, x = 257, y = 174
+'<Motion>', serial = 2437, state = 264, x = 257, y = 174
+'<B1-Motion>', serial = 2440, state = 264, x = 254, y = 172
+'<Motion>', serial = 2440, state = 264, x = 254, y = 172
+'<B1-Motion>', serial = 2443, state = 264, x = 251, y = 169
+'<Motion>', serial = 2443, state = 264, x = 251, y = 169
+'<B1-Motion>', serial = 2446, state = 264, x = 244, y = 163
+'<Motion>', serial = 2446, state = 264, x = 244, y = 163
+'<B1-Motion>', serial = 2449, state = 264, x = 242, y = 162
+'<Motion>', serial = 2449, state = 264, x = 242, y = 162
+'<B1-Motion>', serial = 2452, state = 264, x = 239, y = 160
+'<Motion>', serial = 2452, state = 264, x = 239, y = 160
+'<B1-Motion>', serial = 2455, state = 264, x = 235, y = 158
+'<Motion>', serial = 2455, state = 264, x = 235, y = 158
+'<B1-Motion>', serial = 2458, state = 264, x = 231, y = 154
+'<Motion>', serial = 2458, state = 264, x = 231, y = 154
+'<B1-Motion>', serial = 2461, state = 264, x = 228, y = 153
+'<Motion>', serial = 2461, state = 264, x = 228, y = 153
+'<B1-Motion>', serial = 2464, state = 264, x = 225, y = 152
+'<Motion>', serial = 2464, state = 264, x = 225, y = 152
+'<B1-Motion>', serial = 2467, state = 264, x = 223, y = 151
+'<Motion>', serial = 2467, state = 264, x = 223, y = 151
+'<B1-Motion>', serial = 2470, state = 264, x = 221, y = 149
+'<Motion>', serial = 2470, state = 264, x = 221, y = 149
+'<B1-Motion>', serial = 2473, state = 264, x = 218, y = 147
+'<Motion>', serial = 2473, state = 264, x = 218, y = 147
+'<B1-Motion>', serial = 2476, state = 264, x = 217, y = 145
+'<Motion>', serial = 2476, state = 264, x = 217, y = 145
+'<B1-Motion>', serial = 2479, state = 264, x = 216, y = 144
+'<Motion>', serial = 2479, state = 264, x = 216, y = 144
+'<B1-Motion>', serial = 2482, state = 264, x = 213, y = 144
+'<Motion>', serial = 2482, state = 264, x = 213, y = 144
+'<B1-Motion>', serial = 2485, state = 264, x = 210, y = 142
+'<Motion>', serial = 2485, state = 264, x = 210, y = 142
+'<B1-Motion>', serial = 2488, state = 264, x = 210, y = 141
+'<Motion>', serial = 2488, state = 264, x = 210, y = 141
+'<B1-Motion>', serial = 2491, state = 264, x = 209, y = 140
+'<Motion>', serial = 2491, state = 264, x = 209, y = 140
+'<B1-Motion>', serial = 2494, state = 264, x = 208, y = 139
+'<Motion>', serial = 2494, state = 264, x = 208, y = 139
+'<B1-Motion>', serial = 2497, state = 264, x = 205, y = 138
+'<Motion>', serial = 2497, state = 264, x = 205, y = 138
+'<B1-Motion>', serial = 2500, state = 264, x = 204, y = 136
+'<Motion>', serial = 2500, state = 264, x = 204, y = 136
+'<B1-Motion>', serial = 2503, state = 264, x = 203, y = 136
+'<Motion>', serial = 2503, state = 264, x = 203, y = 136
+'<B1-Motion>', serial = 2506, state = 264, x = 202, y = 135
+'<Motion>', serial = 2506, state = 264, x = 202, y = 135
+'<B1-Motion>', serial = 2509, state = 264, x = 201, y = 135
+'<Motion>', serial = 2509, state = 264, x = 201, y = 135
+'<B1-Motion>', serial = 2512, state = 264, x = 199, y = 132
+'<Motion>', serial = 2512, state = 264, x = 199, y = 132
+'<B1-Motion>', serial = 2515, state = 264, x = 196, y = 131
+'<Motion>', serial = 2515, state = 264, x = 196, y = 131
+'<B1-Motion>', serial = 2518, state = 264, x = 192, y = 129
+'<Motion>', serial = 2518, state = 264, x = 192, y = 129
+'<B1-Motion>', serial = 2521, state = 264, x = 190, y = 127
+'<Motion>', serial = 2521, state = 264, x = 190, y = 127
+'<B1-Motion>', serial = 2524, state = 264, x = 188, y = 126
+'<Motion>', serial = 2524, state = 264, x = 188, y = 126
+'<B1-Motion>', serial = 2527, state = 264, x = 187, y = 126
+'<Motion>', serial = 2527, state = 264, x = 187, y = 126
+'<B1-Motion>', serial = 2530, state = 264, x = 185, y = 124
+'<Motion>', serial = 2530, state = 264, x = 185, y = 124
+'<B1-Motion>', serial = 2533, state = 264, x = 184, y = 123
+'<Motion>', serial = 2533, state = 264, x = 184, y = 123
+'<B1-Motion>', serial = 2536, state = 264, x = 182, y = 122
+'<Motion>', serial = 2536, state = 264, x = 182, y = 122
+'<ButtonRelease-1>', serial = 2539, state = 264, x = 182, y = 122
+'<Motion>', serial = 2551, state = 8, x = 181, y = 122
+'<Motion>', serial = 2551, state = 8, x = 181, y = 124
+'<Motion>', serial = 2561, state = 8, x = 183, y = 125
+'<Motion>', serial = 2566, state = 8, x = 186, y = 130
+'<Motion>', serial = 2566, state = 8, x = 187, y = 130
+'<Motion>', serial = 2566, state = 8, x = 190, y = 131
+'<Motion>', serial = 2566, state = 8, x = 193, y = 133
+'<Motion>', serial = 2566, state = 8, x = 196, y = 134
+'<Motion>', serial = 2566, state = 8, x = 203, y = 138
+'<Motion>', serial = 2566, state = 8, x = 207, y = 140
+'<Motion>', serial = 2566, state = 8, x = 211, y = 140
+'<Motion>', serial = 2566, state = 8, x = 215, y = 141
+'<Motion>', serial = 2566, state = 8, x = 219, y = 143
+'<Motion>', serial = 2566, state = 8, x = 223, y = 144
+'<Motion>', serial = 2566, state = 8, x = 226, y = 145
+'<Motion>', serial = 2566, state = 8, x = 229, y = 146
+'<Motion>', serial = 2566, state = 8, x = 230, y = 146
+'<Motion>', serial = 2566, state = 8, x = 231, y = 146
+'<Motion>', serial = 2566, state = 8, x = 233, y = 146
+'<Motion>', serial = 2566, state = 8, x = 236, y = 146
+'<Motion>', serial = 2566, state = 8, x = 240, y = 146
+'<Motion>', serial = 2566, state = 8, x = 247, y = 145
+'<Motion>', serial = 2566, state = 8, x = 255, y = 142
+'<Motion>', serial = 2566, state = 8, x = 262, y = 141
+'<Motion>', serial = 2566, state = 8, x = 271, y = 140
+'<Motion>', serial = 2566, state = 8, x = 284, y = 137
+'<Motion>', serial = 2566, state = 8, x = 297, y = 133
+'<Motion>', serial = 2566, state = 8, x = 311, y = 129
+'<Motion>', serial = 2566, state = 8, x = 329, y = 123
+'<Motion>', serial = 2566, state = 8, x = 344, y = 120
+'<Motion>', serial = 2566, state = 8, x = 358, y = 116
+'<Motion>', serial = 2566, state = 8, x = 374, y = 113
+'<Motion>', serial = 2566, state = 8, x = 389, y = 109
+'<Motion>', serial = 2566, state = 8, x = 403, y = 106
+'<Motion>', serial = 2566, state = 8, x = 416, y = 100
+'<Motion>', serial = 2566, state = 8, x = 425, y = 98
+'<Motion>', serial = 2566, state = 8, x = 437, y = 95
+'<Motion>', serial = 2566, state = 8, x = 446, y = 94
+'<Motion>', serial = 2566, state = 8, x = 456, y = 91
+'<Motion>', serial = 2566, state = 8, x = 472, y = 85
+'<Motion>', serial = 2566, state = 8, x = 486, y = 81
+'<Motion>', serial = 2566, state = 8, x = 500, y = 78
+'<Motion>', serial = 2566, state = 8, x = 514, y = 74
+'<Motion>', serial = 2566, state = 8, x = 526, y = 70
+'<Motion>', serial = 2566, state = 8, x = 540, y = 66
+'<Motion>', serial = 2566, state = 8, x = 552, y = 63
+'<Motion>', serial = 2566, state = 8, x = 566, y = 59
+'<Motion>', serial = 2566, state = 8, x = 584, y = 53
+'<Motion>', serial = 2566, state = 8, x = 600, y = 49
+'<Motion>', serial = 2566, state = 8, x = 615, y = 45
+'<Motion>', serial = 2566, state = 8, x = 629, y = 42
+'<Motion>', serial = 2566, state = 8, x = 642, y = 35
+'<Motion>', serial = 2566, state = 8, x = 653, y = 31
+'<Motion>', serial = 2566, state = 8, x = 664, y = 25
+'<Motion>', serial = 2566, state = 8, x = 673, y = 21
+'<Motion>', serial = 2566, state = 8, x = 680, y = 18
+'<Motion>', serial = 2566, state = 8, x = 693, y = 11
+'<Motion>', serial = 2566, state = 8, x = 702, y = 5
+'<Motion>', serial = 2566, state = 8, x = 711, y = 1

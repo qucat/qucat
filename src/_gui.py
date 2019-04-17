@@ -42,14 +42,22 @@ def track_event(track_events_to, event, tagOrId = None, sequence=None, func=None
 
 
 def track_scrollbar(track_events_to,direction,*args):
-    pass
+    event_string ='#'+direction
+    for a in args:
+        event_string +=', '+ repr(a)
+    with open(track_events_to,'a') as event_tracking_file:
+        event_tracking_file.write(event_string+'\n')
 
 class TrackableScrollbar(ttk.Scrollbar):
-    def configure(self,track_events_to = None, **options):
-        if track_events_to is not None:
+    def __init__(self, *arg,track_events_to = None,**kwarg):
+        self.track_events_to = track_events_to
+        super(TrackableScrollbar, self).__init__(*arg,**kwarg)
+
+    def configure(self, **options):
+        if self.track_events_to is not None:
             scroll_xy = options['command']
             def tracked_command(*args, **kwargs):
-                track_scrollbar(track_events_to,scroll_xy.__name__[-1],*args)
+                track_scrollbar(self.track_events_to,scroll_xy.__name__[-1],*args)
                 scroll_xy(*args, **kwargs)
             options['command'] = tracked_command
 
@@ -412,8 +420,8 @@ class CircuitEditor(tk.Canvas):
         '''
         
         # Vertical and horizontal scrollbars for canvas
-        self.hbar = TrackableScrollbar(self.frame, orient='horizontal')
-        self.vbar = TrackableScrollbar(self.frame, orient='vertical')
+        self.hbar = TrackableScrollbar(self.frame, track_events_to = self.track_events_to, orient='horizontal')
+        self.vbar = TrackableScrollbar(self.frame, track_events_to = self.track_events_to, orient='vertical')
         self.hbar.grid(row=1, column=0, sticky='we')
         self.vbar.grid(row=0, column=1, sticky='ns')
     def build_canvas(self):
@@ -2630,5 +2638,5 @@ class GuiWindow(ttk.Frame):
             self.mainloop()
 
 if __name__ == '__main__':
-    # GuiWindow('./src/test.txt',_track_events_to='test.txt')
-    GuiWindow('./src/test.txt')
+    GuiWindow('./src/test.txt',_track_events_to='test.txt')
+    # GuiWindow('./src/test.txt')

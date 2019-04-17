@@ -81,7 +81,11 @@ class AutomaticTesting(GuiTestingHandler):
             lines = f.readlines()
             for l in lines:
                 self.gui.canvas.focus_force()
-                exec('self.gui.canvas.event_generate('+l+')', globals(), locals())
+                if l[0] == '#':
+                    # Scrollbar event
+                    exec('self.gui.canvas.scroll_'+l[1]+'('+l[3:]+')', globals(), locals())
+                else:
+                    exec('self.gui.canvas.event_generate('+l+')', globals(), locals())
                 if self.run_slower:
                     self.gui.update()
                     self.gui.canvas.after(10)
@@ -155,7 +159,13 @@ class TestMovingComponentsAround(AutomaticTesting):
         self.launch_gui_testing()
 
     def test_zooming_in_out_then_moving_capacitor(self):
-        self.launch_gui_testing(run_slower=True)
+        self.launch_gui_testing()
+
+    def test_scrolling_with_scrollbars_left_and_right_then_moving_capacitor(self):
+        self.launch_gui_testing()
+
+    def test_scrolling_with_mouse_left_and_right_then_moving_junction(self):
+        self.launch_gui_testing()
 
     def test_rotating_capacitor(self):
         self.launch_gui_testing()
