@@ -160,5 +160,8 @@ class TestMovingComponentsAround(AutomaticTesting):
     def test_moving_parallel_RLCJG(self):
         self.launch_gui_testing()
 
+
+
+
 if __name__ == "__main__":
     unittest.main()

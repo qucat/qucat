@@ -25,6 +25,7 @@ lw_hover = 2.*lw
 lw_select_hover = 5.*lw
 lw_select = 3.*lw
 
+<<<<<<< HEAD
 def track_event(track_events_to, event, tagOrId = None, sequence=None, func=None, add=None):
     to_exclude = ['<Enter>','<Leave>'] # redundant information to store, and impossible to interpret
     if sequence not in to_exclude:
@@ -50,6 +51,16 @@ def track_scrollbar(track_events_to,direction,*args):
 def track_value_label_change(track_events_to,v,l):
     pass
     # print('Changed values to:',v,l)
+=======
+def track_event(event, tagOrId = None, sequence=None, func=None, add=None):
+    print(event)
+
+def track_menu(label):
+    print(label)
+
+def track_scrollbar(direction,*args):
+    print(direction,args)
+>>>>>>> parent of f06205c... Request value trackable
 
 class TrackableScrollbar(ttk.Scrollbar):
     def configure(self,track_events_to = None, **options):
@@ -2519,8 +2530,12 @@ class G(Component):
         super(G,self).add_nodes(to = to, minus = minus, plus = plus)       
 
 class RequestValueLabelWindow(tk.Toplevel):
+<<<<<<< HEAD
 
     def __init__(self, master, component, force_vl = None, track_events_to = None):
+=======
+    def __init__(self, master, component):
+>>>>>>> parent of f06205c... Request value trackable
         tk.Toplevel.__init__(self, master)
         self.track_events_to = track_events_to
         self.component = component
@@ -2559,13 +2574,6 @@ class RequestValueLabelWindow(tk.Toplevel):
         cancel_button = tk.Button(self, text='Cancel', command=self.cancel)
         cancel_button.pack(side=tk.LEFT, padx=5, pady=5)
 
-        if force_vl is not None:
-            # In case we want to emulate the user
-            # entering some values
-            self.entries[0][1].get(force_vl[0])
-            self.entries[1][1].get(force_vl[1])
-            self.ok()
-
     def ok(self):
         value = self.entries[0][1].get()
         label = self.entries[1][1].get()
@@ -2592,8 +2600,11 @@ class RequestValueLabelWindow(tk.Toplevel):
             return None
         else:
             self.component.prop = [v, l]
+<<<<<<< HEAD
             if self.track_events_to is not None:
                 track_value_label_change(track_events_to,v,l)
+=======
+>>>>>>> parent of f06205c... Request value trackable
             self.destroy()
 
     def cancel(self):
