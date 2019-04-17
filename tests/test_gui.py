@@ -36,11 +36,13 @@ class ManualTesting(GuiTestingHandler):
 
 class AutomaticTesting(GuiTestingHandler):
 
-    def launch_gui_testing(self,exclude = None, force_build = False):
+    def launch_gui_testing(self,exclude = None, force_build = False, run_slow = False, run_slower = False):
         self.set_folder_name()
         self.set_file_names()
         self.exclude = exclude
         self.force_build = force_build
+        self.run_slow = run_slow
+        self.run_slower = run_slower
 
         if not self.already_built():
             self.gui_build_test()
@@ -80,6 +82,11 @@ class AutomaticTesting(GuiTestingHandler):
             for l in lines:
                 self.gui.canvas.focus_force()
                 exec('self.gui.canvas.event_generate('+l+')', globals(), locals())
+                if self.run_slower:
+                    self.gui.update()
+                    self.gui.canvas.after(10)
+                elif self.run_slow:
+                    self.gui.update()
         
         self.gui.master.destroy()
 
@@ -148,7 +155,7 @@ class TestMovingComponentsAround(AutomaticTesting):
         self.launch_gui_testing()
 
     def test_zooming_in_out_then_moving_capacitor(self):
-        self.launch_gui_testing()
+        self.launch_gui_testing(run_slower=True)
 
     def test_rotating_capacitor(self):
         self.launch_gui_testing()

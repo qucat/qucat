@@ -30,10 +30,11 @@ def track_event(track_events_to, event, tagOrId = None, sequence=None, func=None
     if sequence not in to_exclude:
         event_string = "'"+sequence+"'"
         for key,value in event.__dict__.items():
-            if key in ["when","above","borderwidth","button","count","data",
+            if (key in ["when","above","borderwidth","button","count","data",
                 "detail","focus","height","keycode","keysym","mode","override","place",
                 "root","rootx","rooty","sendevent","serial","state","subwindow",
-                "warp","width","window","x","y"]:
+                "warp","width","window","x","y"])\
+                or (key == "delta" and "MouseWheel" in sequence):
                 if value != '??':
                     event_string+=(', '+key+' = '+repr(value))
         with open(track_events_to,'a') as event_tracking_file:
