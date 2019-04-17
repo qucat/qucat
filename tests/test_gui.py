@@ -86,8 +86,10 @@ class AutomaticTesting(GuiTestingHandler):
         with open(self.events,'r') as f:
             lines = f.readlines()
             for l in lines:
-                self.gui.canvas.focus_set()
+                self.gui.canvas.focus_force()
                 exec('self.gui.canvas.event_generate('+l+')', globals(), locals())
+                exec('self.gui.event_generate('+l+')', globals(), locals())
+                self.gui.canvas.update()
                 self.gui.update()
         self.close_gui()
 
@@ -152,8 +154,8 @@ class TestOpening(ManualTesting):
 
 class TestMovingComponentsAround(AutomaticTesting):
 
-    # def test_moving_capacitor_horizontally(self):
-    #     self.launch_gui_testing()
+    def test_moving_capacitor_horizontally(self):
+        self.launch_gui_testing()
 
     def test_rotating_capacitor(self):
         self.launch_gui_testing()
@@ -162,15 +164,15 @@ class TestMovingComponentsAround(AutomaticTesting):
         self.launch_gui_testing()
 
 
-    # def test_moving_capacitor_twice(self):
-    #     self.launch_gui_testing()
+    def test_moving_capacitor_twice(self):
+        self.launch_gui_testing()
 
-    # def test_moving_parallel_RLCJG(self):
-    #     self.launch_gui_testing()
+    def test_moving_parallel_RLCJG(self):
+        self.launch_gui_testing()
 
 if __name__ == "__main__":
-    # unittest.main()
+    unittest.main()
     # unittest.main(defaultTest='TestMovingComponentsAround')
-    unittest.main(defaultTest='TestOpening.test_if_opening_blank_test_throws_error')
+    # unittest.main(defaultTest=['TestOpening.test_if_opening_blank_test_throws_error','TestMovingComponentsAround.test_rotating_capacitor'])
     # unittest.main(defaultTest='TestMovingComponentsAround.test_rotating_capacitor')
     # unittest.main(defaultTest='TestMovingComponentsAround.test_rotating_ground')
