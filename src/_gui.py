@@ -989,6 +989,8 @@ class CircuitEditor(tk.Canvas):
             # built at a different location on the canvas
             self.center_window_on_circuit()
 
+            self.set_state(0)
+
     #############################
     # SCROLLING/ZOOMING
     ##############################
@@ -1774,7 +1776,6 @@ class TwoNodeElement(object):
         if s==0:
             self.set_state_0()
 
-
     @property
     def pos(self):
         return []
@@ -1809,12 +1810,17 @@ class TwoNodeElement(object):
         Cancels the creation of the component, which will disappear.
         '''
 
-        self.canvas.in_creation = None
+        self.canvas.set_state(0)
 
-        self.canvas.set_keyboard_shortcuts_element_creation()
-
-        if event.type == tk.EventType.KeyPress and rerun_command:
-            self.canvas.event_generate(event.char)
+        # If the user cancelled by pressing a circuit generating 
+        # key, then that circuit should appear
+        try:
+            if event.type == tk.EventType.KeyPress and rerun_command:
+                self.canvas.event_generate(event.char)
+        except AttributeError:
+            # The user probably clicked Escape
+            # that event does not have a type attribute
+            pass
 
         del self
 
@@ -2527,6 +2533,12 @@ class Component(TwoNodeElement):
         self.canvas.set_keyboard_shortcuts_element_creation()
         self.request_value_label()
         self.canvas.in_creation = None
+
+        # Case where the user clicks cancel in the popup window
+        if self.prop[0] is None and self.prop[1] is None:
+            self.abort_creation(rerun_command = False)
+            self.canvas.track_changes = True
+            return
         self.add_or_replace_label()
         self.canvas.elements.append(self)
         self.set_state(0)
@@ -2878,5 +2890,5 @@ class GuiWindow(ttk.Frame):
             self.mainloop()
 
 if __name__ == '__main__':
-    GuiWindow('./src/test.txt',_track_events_to='test.txt')
-    # GuiWindow('./src/test.txt')
+    # GuiWindow('./src/test.txt',_track_events_to='test.txt')
+    GuiWindow('./src/test.txt')
