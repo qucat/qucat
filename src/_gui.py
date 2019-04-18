@@ -1674,6 +1674,7 @@ class CircuitEditor(tk.Canvas):
     #############################
     #  UTILITIES
     ##############################
+    
     def message(self, text, t = 0.3, x = 5, y = 2,size = 8, weight = 'normal'):
         '''
         Displays a message on the canvas for a given amount of time.
@@ -1808,7 +1809,6 @@ class TwoNodeElement(object):
 
         del self
 
-   
     ###########################################
     # STATE SETTING
     ###########################################
@@ -2059,6 +2059,7 @@ class TwoNodeElement(object):
         do nothing in that case
         '''
         pass
+    
     ###########################################
     # (RE-)DRAWING
     ###########################################
@@ -2099,7 +2100,27 @@ class W(TwoNodeElement):
 
     @property
     def binding_object(self):
+        '''
+        Object to which we bind all mehods
+        '''
         return self.line
+    
+    def delete(self, event=None):
+        self.canvas.elements.remove(self)
+        self.canvas.delete(self.line)
+        self.canvas.delete(self.dot_minus)
+        self.canvas.delete(self.dot_plus)
+        self.canvas.save()
+        del self
+
+
+    #############################
+    # POSITION and PROPERTIES
+    # defined such that
+    # the network is automatically
+    # saved each time these are 
+    # modified
+    ##############################
 
     @property
     def pos(self):
@@ -2122,127 +2143,27 @@ class W(TwoNodeElement):
     def prop(self, prop):
         pass
     
-    def add_nodes(self,to = 'all wires'):
-
-        all_other_elements = [el for el in self.canvas.elements if el != self]
-        for el in all_other_elements:
-            added_a_node = TwoNodeElement.add_nodes(el,to = [self])
-            if added_a_node:
-                return True
-
-        added_a_node = TwoNodeElement.add_nodes(self,to)
-        if added_a_node:
-            return True
-        else:
-            return False
-
-    def box_select(self, x0, y0, x1, y1):
-        xs = [x0, x1]
-        ys = [y0, y1]
-        xm,ym = self.canvas.grid_to_canvas([self.x_minus,self.y_minus])
-        xp,yp = self.canvas.grid_to_canvas([self.x_plus,self.y_plus])
-
-        if min(xs) <= xm <= max(xs) and min(ys) <= ym <= max(ys)\
-                and min(xs) <= xp <= max(xs) and min(ys) <= yp <= max(ys):
-            self.force_select()
-
-    def get_center_pos(self):
-        # returns center in canvas units
-        xm, ym, xp, yp = self.canvas.coords(self.line)
-        return [(xm+xp)/2., (ym+yp)/2.]
-
-    def open_right_click_menu(self, event):
-        menu = tk.Menu(self.canvas, tearoff=0)
-        menu.add_command(label="Delete", command=(lambda :self.canvas.event_generate('<Delete>')))
-        menu.add_command(label="Copy", command=(lambda :self.canvas.event_generate('<Control-c>')))
-        menu.add_command(label="Cut", command=(lambda :self.canvas.event_generate('<Control-x>')))
-        menu.tk_popup(event.x_root, event.y_root)
-        self.canvas.bind("<ButtonRelease-3>", lambda event: None)
-
-    def double_click(self, event=None):
-        pass
-
-    def snap_to_grid(self):
-        # in canvas coordinates
-        xm, ym, xp, yp = self.canvas.coords(self.line)
-        # snapped to grid units
-        xm, ym, xp, yp = [round(p) for p in self.canvas.canvas_to_grid(
-            [xm, ym])+self.canvas.canvas_to_grid([xp, yp])]
-        self.pos = [xm, ym, xp, yp]
-
-        # back to canvas units:
-        xm, ym, xp, yp = self.canvas.grid_to_canvas(
-            [xm, ym])+self.canvas.grid_to_canvas([xp, yp])
-        self.canvas.coords(self.line, xm, ym, xp, yp)
-        self.canvas.update_circle(
-            self.dot_minus, xm, ym, self.canvas.grid_unit*node_dot_radius)
-        self.canvas.update_circle(
-            self.dot_plus, xp, yp, self.canvas.grid_unit*node_dot_radius)
-
-        # Add node if a node of this line is on another line
-        self.add_nodes()
-
-    def init_minus_snap_to_grid(self, event):
-        gu = float(self.canvas.grid_unit)
-        x0, y0 = self.canvas.canvas_center
-        return int(round(float(self.canvas.canvasx(event.x)-x0)/gu)),\
-            int(round(float(self.canvas.canvasy(event.y)-y0)/gu))
-
-    def init_plus_snap_to_grid(self, event):
-
-        xm, ym = self.grid_to_canvas([self.x_minus, self.y_minus])
-        xp = self.canvas.canvasx(event.x)
-        yp = self.canvas.canvasy(event.y)
-        gu = float(self.canvas.grid_unit)
-        x0, y0 = self.canvas.canvas_center
-
-        if abs(xm-xp) > abs(ym-yp):
-            # Horizontal line
-            self.x_plus = int(round(float(self.canvas.canvasx(event.x)-x0)/gu))
-            self.y_plus = self.y_minus
-        else:
-            # Vertical line
-            self.x_plus = self.x_minus
-            self.y_plus = int(round(float(self.canvas.canvasy(event.y)-y0)/gu))
-        
-    def end_line(self, event):
-        self.canvas.delete("temp")
-        self.canvas.bind("<ButtonPress-1>", lambda event: None)
-        self.canvas.bind('<Motion>', lambda event: None)
-        self.canvas.config(cursor='arrow')
-
-        self.init_plus_snap_to_grid(event)
-        self.canvas.set_keyboard_shortcuts_element_creation()
-        self.canvas.in_creation = None
+    ###########################################
+    # CREATION
+    ###########################################  
+    
+    def auto_place(self, auto_place_info):
+        super(W, self).auto_place(auto_place_info)
         self.create()
-        self.track_changes = False
         self.add_nodes()
-        self.track_changes = True
-        self.canvas.save()
+    
+    def abort_creation(self, event=None, rerun_command = True):
+        self.canvas.bind("<ButtonPress-1>", lambda event: None)
+        self.canvas.bind("<Escape>", lambda event: None)
+        self.canvas.config(cursor='arrow')
+        if self.dot_minus is not None:
+            # First node has been created
+            self.canvas.bind("<Motion>", lambda event: None)
+            self.canvas.delete('temp')
+            self.canvas.delete(self.dot_minus)
+        super(W,self).abort_creation(event,rerun_command)
 
-    def move(self, dx, dy):
-        '''
-        Input given in canvas units
-        '''
-        self.canvas.move(self.line, dx, dy)
-        self.canvas.move(self.dot_minus, dx, dy)
-        self.canvas.move(self.dot_plus, dx, dy)
-
-    def add_or_replace_label(self):
-        pass
-
-    def update_graphic(self):
-        if self.selected and self.hover:
-            self.canvas.itemconfig(self.line, fill=blue, width=lw_select_hover*self.canvas.grid_unit)
-        elif self.selected:
-            self.canvas.itemconfig(self.line, fill=light_blue, width=lw_select*self.canvas.grid_unit)
-        elif self.hover:
-            self.canvas.itemconfig(self.line, fill=light_black, width=lw_hover*self.canvas.grid_unit)
-        else:
-            self.canvas.itemconfig(self.line, fill=light_black, width=lw*self.canvas.grid_unit)
-
-    def on_updownleftright(self, event=None, angle = None):
-        pass
+    ###### Arranged in order of calling for a manual placement:
 
     def manual_place(self, event):
         self.canvas.config(cursor='plus')
@@ -2254,11 +2175,6 @@ class W(TwoNodeElement):
         self.canvas.bind('j', self.abort_creation)
         self.canvas.bind('w', self.abort_creation)
         self.canvas.bind('g', self.abort_creation)
-
-    def auto_place(self, auto_place_info):
-        super(W, self).auto_place(auto_place_info)
-        self.create()
-        self.add_nodes()
 
     def start_line(self, event):
         '''
@@ -2280,49 +2196,7 @@ class W(TwoNodeElement):
         self.canvas.bind("<Motion>", self.show_line)
         self.canvas.bind("<ButtonPress-1>", self.end_line)
         self.canvas.in_creation = self
-
-    def abort_creation(self, event=None, rerun_command = True):
-        self.canvas.bind("<ButtonPress-1>", lambda event: None)
-        self.canvas.bind("<Escape>", lambda event: None)
-        self.canvas.config(cursor='arrow')
-        if self.dot_minus is not None:
-            # First node has been created
-            self.canvas.bind("<Motion>", lambda event: None)
-            self.canvas.delete('temp')
-            self.canvas.delete(self.dot_minus)
-        super(W,self).abort_creation(event,rerun_command)
-
-    def delete(self, event=None):
-        self.canvas.elements.remove(self)
-        self.canvas.delete(self.line)
-        self.canvas.delete(self.dot_minus)
-        self.canvas.delete(self.dot_plus)
-        self.canvas.save()
-        del self
-
-    def create(self):
-        canvas_coords_minus = self.grid_to_canvas(self.pos[:2])
-        canvas_coords_plus = self.grid_to_canvas(self.pos[2:])
-        self.line = self.canvas.create_line(
-            *(canvas_coords_minus+canvas_coords_plus),
-            width=lw*self.canvas.grid_unit,
-            fill = light_black)
-        self.add_or_replace_node_dots()
-        self.canvas.elements.append(self)
-        self.set_state(0)
-
-    def adapt_to_grid_unit(self):
-        canvas_coords_minus = self.grid_to_canvas(self.pos[:2])
-        canvas_coords_plus = self.grid_to_canvas(self.pos[2:])
-        self.canvas.coords(
-            self.line, *(canvas_coords_minus+canvas_coords_plus))
-        self.update_graphic()
-        self.add_or_replace_node_dots()
-
-    def init_adapt_to_grid_unit(self, event):
-        self.show_line(event)
-        self.add_or_replace_node_dots(plus = False)
-
+    
     def show_line(self, event):
         self.canvas.delete("temp")
 
@@ -2340,6 +2214,176 @@ class W(TwoNodeElement):
             self.line = self.canvas.create_line(xm, ym, xm, yp, tags='temp',
             width=lw*self.canvas.grid_unit,
             fill = light_black)
+ 
+    def init_minus_snap_to_grid(self, event):
+        gu = float(self.canvas.grid_unit)
+        x0, y0 = self.canvas.canvas_center
+        return int(round(float(self.canvas.canvasx(event.x)-x0)/gu)),\
+            int(round(float(self.canvas.canvasy(event.y)-y0)/gu))
+    
+    def end_line(self, event):
+        self.canvas.delete("temp")
+        self.canvas.bind("<ButtonPress-1>", lambda event: None)
+        self.canvas.bind('<Motion>', lambda event: None)
+        self.canvas.config(cursor='arrow')
+
+        self.init_plus_snap_to_grid(event)
+        self.canvas.set_keyboard_shortcuts_element_creation()
+        self.canvas.in_creation = None
+        self.create()
+        self.track_changes = False
+        self.add_nodes()
+        self.track_changes = True
+        self.canvas.save()
+
+    def init_plus_snap_to_grid(self, event):
+
+        xm, ym = self.grid_to_canvas([self.x_minus, self.y_minus])
+        xp = self.canvas.canvasx(event.x)
+        yp = self.canvas.canvasy(event.y)
+        gu = float(self.canvas.grid_unit)
+        x0, y0 = self.canvas.canvas_center
+
+        if abs(xm-xp) > abs(ym-yp):
+            # Horizontal line
+            self.x_plus = int(round(float(self.canvas.canvasx(event.x)-x0)/gu))
+            self.y_plus = self.y_minus
+        else:
+            # Vertical line
+            self.x_plus = self.x_minus
+            self.y_plus = int(round(float(self.canvas.canvasy(event.y)-y0)/gu))
+    
+    def create(self):
+        canvas_coords_minus = self.grid_to_canvas(self.pos[:2])
+        canvas_coords_plus = self.grid_to_canvas(self.pos[2:])
+        self.line = self.canvas.create_line(
+            *(canvas_coords_minus+canvas_coords_plus),
+            width=lw*self.canvas.grid_unit,
+            fill = light_black)
+        self.add_or_replace_node_dots()
+        self.canvas.elements.append(self)
+        self.set_state(0)
+ 
+    def add_nodes(self,to = 'all wires'):
+
+        all_other_elements = [el for el in self.canvas.elements if el != self]
+        for el in all_other_elements:
+            added_a_node = TwoNodeElement.add_nodes(el,to = [self])
+            if added_a_node:
+                return True
+
+        added_a_node = TwoNodeElement.add_nodes(self,to)
+        if added_a_node:
+            return True
+        else:
+            return False
+ 
+    ###########################################
+    # HOVER BEHAVIOUR
+    ###########################################  
+    
+    def open_right_click_menu(self, event):
+        menu = tk.Menu(self.canvas, tearoff=0)
+        menu.add_command(label="Delete", command=(lambda :self.canvas.event_generate('<Delete>')))
+        menu.add_command(label="Copy", command=(lambda :self.canvas.event_generate('<Control-c>')))
+        menu.add_command(label="Cut", command=(lambda :self.canvas.event_generate('<Control-x>')))
+        menu.tk_popup(event.x_root, event.y_root)
+        self.canvas.bind("<ButtonRelease-3>", lambda event: None)
+
+    def double_click(self, event=None):
+        pass
+
+    ###########################################
+    # DRAGGING BEHAVIOUR
+    ###########################################  
+    
+    def move(self, dx, dy):
+        '''
+        Input given in canvas units
+        '''
+        self.canvas.move(self.line, dx, dy)
+        self.canvas.move(self.dot_minus, dx, dy)
+        self.canvas.move(self.dot_plus, dx, dy)
+    
+    def on_updownleftright(self, event=None, angle = None):
+        pass
+
+    ###########################################
+    # DROPPING BEHAVIOUR
+    ###########################################   
+    
+    def snap_to_grid(self):
+        # in canvas coordinates
+        xm, ym, xp, yp = self.canvas.coords(self.line)
+        # snapped to grid units
+        xm, ym, xp, yp = [round(p) for p in self.canvas.canvas_to_grid(
+            [xm, ym])+self.canvas.canvas_to_grid([xp, yp])]
+        self.pos = [xm, ym, xp, yp]
+
+        # back to canvas units:
+        xm, ym, xp, yp = self.canvas.grid_to_canvas(
+            [xm, ym])+self.canvas.grid_to_canvas([xp, yp])
+        self.canvas.coords(self.line, xm, ym, xp, yp)
+        self.canvas.update_circle(
+            self.dot_minus, xm, ym, self.canvas.grid_unit*node_dot_radius)
+        self.canvas.update_circle(
+            self.dot_plus, xp, yp, self.canvas.grid_unit*node_dot_radius)
+
+        # Add node if a node of this line is on another line
+        self.add_nodes()
+
+    ###########################################
+    # SELECTION
+    ###########################################
+    
+    def box_select(self, x0, y0, x1, y1):
+        xs = [x0, x1]
+        ys = [y0, y1]
+        xm,ym = self.canvas.grid_to_canvas([self.x_minus,self.y_minus])
+        xp,yp = self.canvas.grid_to_canvas([self.x_plus,self.y_plus])
+
+        if min(xs) <= xm <= max(xs) and min(ys) <= ym <= max(ys)\
+                and min(xs) <= xp <= max(xs) and min(ys) <= yp <= max(ys):
+            self.force_select()
+
+    ###########################################
+    # POSITIONING
+    ###########################################
+    
+    def get_center_pos(self):
+        # returns center in canvas units
+        xm, ym, xp, yp = self.canvas.coords(self.line)
+        return [(xm+xp)/2., (ym+yp)/2.]
+
+    ###########################################
+    # (RE-)DRAWING
+    ###########################################
+
+    def add_or_replace_label(self):
+        pass
+
+    def update_graphic(self):
+        if self.selected and self.hover:
+            self.canvas.itemconfig(self.line, fill=blue, width=lw_select_hover*self.canvas.grid_unit)
+        elif self.selected:
+            self.canvas.itemconfig(self.line, fill=light_blue, width=lw_select*self.canvas.grid_unit)
+        elif self.hover:
+            self.canvas.itemconfig(self.line, fill=light_black, width=lw_hover*self.canvas.grid_unit)
+        else:
+            self.canvas.itemconfig(self.line, fill=light_black, width=lw*self.canvas.grid_unit)
+
+    def adapt_to_grid_unit(self):
+        canvas_coords_minus = self.grid_to_canvas(self.pos[:2])
+        canvas_coords_plus = self.grid_to_canvas(self.pos[2:])
+        self.canvas.coords(
+            self.line, *(canvas_coords_minus+canvas_coords_plus))
+        self.update_graphic()
+        self.add_or_replace_node_dots()
+
+    def init_adapt_to_grid_unit(self, event):
+        self.show_line(event)
+        self.add_or_replace_node_dots(plus = False)
+
 
 class Component(TwoNodeElement):
     def __init__(self, canvas, event=None, auto_place_info=None):
@@ -2351,14 +2395,28 @@ class Component(TwoNodeElement):
         self._y_center = None
         self._angle = None
         super(Component, self).__init__(canvas, event, auto_place_info)
-
-    def get_center_pos(self):
-        # returns center in canvas units
-        return self.canvas.coords(self.image)
+    
+    def delete(self, event=None):
+        self.canvas.elements.remove(self)
+        self.canvas.delete(self.image)
+        if self.text is not None:
+            self.canvas.delete(self.text)
+        self.canvas.delete(self.dot_minus)
+        self.canvas.delete(self.dot_plus)
+        self.canvas.save()
+        del self
 
     @property
     def binding_object(self):
         return self.image
+
+    #############################
+    # POSITION and PROPERTIES
+    # defined such that
+    # the network is automatically
+    # saved each time these are 
+    # modified
+    ##############################
 
     @property
     def pos(self):
@@ -2385,45 +2443,10 @@ class Component(TwoNodeElement):
             self._label = prop[1]
             self.canvas.save()
 
-    def set_node_coordinates(self):
-        '''
-        Based on the center position of the component
-        and its orientation, determine the coordinates
-        of the minus and plus nodes.
-        '''
-
-        # positive y points south
-        pos = self.pos
-        if self._angle == SOUTH:
-            self.x_minus = pos[0]
-            self.y_minus = pos[1]-0.5
-            self.x_plus = pos[0]
-            self.y_plus = pos[1]+0.5
-        elif self._angle == NORTH:
-            self.x_minus = pos[0]
-            self.y_minus = pos[1]+0.5
-            self.x_plus = pos[0]
-            self.y_plus = pos[1]-0.5
-
-        elif self._angle == EAST:
-            self.x_minus = pos[0]-0.5
-            self.y_minus = pos[1]
-            self.x_plus = pos[0]+0.5
-            self.y_plus = pos[1]
-        elif self._angle == WEST:
-            self.x_minus = pos[0]+0.5
-            self.y_minus = pos[1]
-            self.x_plus = pos[0]-0.5
-            self.y_plus = pos[1]
-
-    def box_select(self, x0, y0, x1, y1):
-        xs = [x0, x1]
-        ys = [y0, y1]
-        x,y = self.get_center_pos()
-
-        if min(xs) <= x <= max(xs) and min(ys) <= y <= max(ys):
-            self.force_select()
-
+    ###########################################
+    # CREATION
+    ###########################################  
+    
     def manual_place(self, event):
         self.init_create_component(event)
         self.canvas.in_creation = self
@@ -2446,33 +2469,7 @@ class Component(TwoNodeElement):
             else:
                 self.pos = [(self.x_minus+self.x_plus)/2, self.y_minus, WEST]
                 self.create()
-
-    def request_value_label(self):
-        if (self.canvas.track_events_to is None) and (self.canvas.unittesting == False):
-            window = RequestValueLabelWindow(self.canvas.master, self)
-            self.canvas.master.wait_window(window)
-        else:
-            self.prop = [1, 'X']
-
-    def import_image(self):
-        png = type(self).__name__
-        if self.hover:
-            png += '_hover'
-        if self.selected:
-            png += '_selected'
-        png += '.png'
-
-        if self.pos[2] is None:
-            angle = self.init_angle
-        else:
-            angle = self.pos[2]
-
-        img = Image.open(os.path.join(png_directory, png))
-        size = int(self.canvas.grid_unit*(1-1*node_dot_radius))
-        img = img.resize((size, int(size/2)))
-        img = img.rotate(angle,expand = True)
-        self.tk_image = ImageTk.PhotoImage(img)
-
+    
     def create(self):
         self.add_or_replace_node_dots()
         x, y, angle = self.pos
@@ -2482,30 +2479,9 @@ class Component(TwoNodeElement):
         self.add_or_replace_label()
         self.canvas.elements.append(self)
         self.set_state(0)
-
-    def update_graphic(self):
-        self.import_image()
-        self.canvas.itemconfig(self.image, image=self.tk_image)
-
-    def adapt_to_grid_unit(self):
-        self.update_graphic()
-        self.canvas.coords(self.image, *self.grid_to_canvas(self.pos[:2]))
-        self.add_or_replace_label()
-        self.add_or_replace_node_dots()
-        
+ 
     def init_adapt_to_grid_unit(self,event):
         self.update_graphic()
-
-    def double_click(self, event):
-        self.modify_values(self)
-
-    def modify_values(self, event=None):
-        old_prop = self.prop
-        self.request_value_label()
-        if self.prop[0] is None and self.prop[1] is None:
-            self.prop = old_prop
-        else:
-            self.add_or_replace_label()
 
     def init_create_component(self, event, angle=0.):
         if angle == 0. and  not self.canvas.used_arrows:
@@ -2535,15 +2511,6 @@ class Component(TwoNodeElement):
             '<Up>', lambda event: self.init_create_component(event, angle=NORTH))
         self.canvas.bind(
             '<Down>', lambda event: self.init_create_component(event, angle=SOUTH))
-
-    def unset_initialization_bindings(self):
-        self.canvas.bind("<ButtonPress-1>", lambda event: None)
-        self.canvas.bind('<Motion>', lambda event: None)
-        self.canvas.bind('<Left>', lambda event: None)
-        self.canvas.bind('<Right>', lambda event: None)
-        self.canvas.bind('<Up>', lambda event: None)
-        self.canvas.bind('<Down>', lambda event: None)
-        self.canvas.bind('<Escape>', lambda event: None)
 
     def abort_creation(self, event=None, rerun_command = True):
         self.unset_initialization_bindings()
@@ -2581,7 +2548,30 @@ class Component(TwoNodeElement):
 
         if xm<x<xp and ym<y<yp:
             self.hover_enter(event)
+      
+    def init_on_motion(self, event):
+        x, y = self.canvas.coords(self.image)
+        dx = self.canvas.canvasx(event.x) - x
+        dy = self.canvas.canvasy(event.y) - y
+        self.canvas.move(self.image, dx, dy)
 
+    ###########################################
+    # STATE 0 BEHAVIOUR
+    ###########################################    
+    
+    def unset_initialization_bindings(self):
+        self.canvas.bind("<ButtonPress-1>", lambda event: None)
+        self.canvas.bind('<Motion>', lambda event: None)
+        self.canvas.bind('<Left>', lambda event: None)
+        self.canvas.bind('<Right>', lambda event: None)
+        self.canvas.bind('<Up>', lambda event: None)
+        self.canvas.bind('<Down>', lambda event: None)
+        self.canvas.bind('<Escape>', lambda event: None)
+
+    ###########################################
+    # HOVER BEHAVIOUR
+    ########################################### 
+    
     def open_right_click_menu(self, event):
 
         menu = tk.Menu(self.canvas, tearoff=0)
@@ -2599,6 +2589,9 @@ class Component(TwoNodeElement):
         menu.tk_popup(event.x_root, event.y_root)
         self.canvas.bind("<ButtonRelease-3>", lambda event: None)
 
+    ###########################################
+    # DRAGGING BEHAVIOUR
+    ###########################################  
     def rotate(self):
         if self.pos[2] % 180. == 0.:
             self.pos = [self.pos[0]-0.5, self.pos[1] +
@@ -2611,13 +2604,7 @@ class Component(TwoNodeElement):
         self.canvas.coords(self.image, *self.grid_to_canvas(self.pos[:2]))
         self.add_or_replace_label()
         self.add_or_replace_node_dots()
-                
-    def init_on_motion(self, event):
-        x, y = self.canvas.coords(self.image)
-        dx = self.canvas.canvasx(event.x) - x
-        dy = self.canvas.canvasy(event.y) - y
-        self.canvas.move(self.image, dx, dy)
-
+    
     def move(self, dx, dy):
         '''
         Input given in canvas units
@@ -2646,41 +2633,10 @@ class Component(TwoNodeElement):
                 self.canvas.delete(self.dot_plus)
                 self.dot_plus = None
             self.was_rotated = True
-
-    def delete(self, event=None):
-        self.canvas.elements.remove(self)
-        self.canvas.delete(self.image)
-        if self.text is not None:
-            self.canvas.delete(self.text)
-        self.canvas.delete(self.dot_minus)
-        self.canvas.delete(self.dot_plus)
-        self.canvas.save()
-        del self
-
-    def add_or_replace_label(self):
-        gu = self.canvas.grid_unit
-        _, _, angle = self.pos
-        x, y = self.canvas.coords(self.image)
-        value, label = self.prop
-        text = to_string(self.unit, label, value,
-                         use_math=False, use_unicode=True)
-        font = Font(family='Helvetica', size=int(gu/8.), weight='normal')
-        text_position = (0.2)*gu
-        if angle % 180. == 90. and self.text is None:
-            self.text = self.canvas.create_text(
-                x+text_position, y, text=text, anchor=tk.W, font=font)
-        elif angle % 180. == 90. and self.text is not None:
-            self.canvas.coords(self.text, x+text_position, y)
-            self.canvas.itemconfig(self.text,
-                                   text=text, anchor=tk.W, font=font)
-        elif angle % 180. == 0. and self.text is None:
-            self.text = self.canvas.create_text(
-                x, y+text_position, text=text, anchor=tk.N, font=font)
-        elif angle % 180. == 0. and self.text is not None:
-            self.canvas.coords(self.text, x, y+text_position)
-            self.canvas.itemconfig(self.text,
-                                   text=text, anchor=tk.N, font=font)
-
+ 
+    ###########################################
+    # DROPPING BEHAVIOUR
+    ###########################################   
     def snap_to_grid(self, event=None):
         x, y = self.canvas.coords(self.image)
         x0, y0 = self.canvas.canvas_center
@@ -2710,6 +2666,136 @@ class Component(TwoNodeElement):
 
         # Add circles at the nodes of the component
         self.add_or_replace_node_dots()
+
+    ###########################################
+    # SELECTION
+    ###########################################
+
+    def box_select(self, x0, y0, x1, y1):
+        xs = [x0, x1]
+        ys = [y0, y1]
+        x,y = self.get_center_pos()
+
+        if min(xs) <= x <= max(xs) and min(ys) <= y <= max(ys):
+            self.force_select()
+    
+    ###########################################
+    # POSITIONING
+    ###########################################
+    
+    def get_center_pos(self):
+        # returns center in canvas units
+        return self.canvas.coords(self.image)
+    
+    def set_node_coordinates(self):
+        '''
+        Based on the center position of the component
+        and its orientation, determine the coordinates
+        of the minus and plus nodes.
+        '''
+
+        # positive y points south
+        pos = self.pos
+        if self._angle == SOUTH:
+            self.x_minus = pos[0]
+            self.y_minus = pos[1]-0.5
+            self.x_plus = pos[0]
+            self.y_plus = pos[1]+0.5
+        elif self._angle == NORTH:
+            self.x_minus = pos[0]
+            self.y_minus = pos[1]+0.5
+            self.x_plus = pos[0]
+            self.y_plus = pos[1]-0.5
+
+        elif self._angle == EAST:
+            self.x_minus = pos[0]-0.5
+            self.y_minus = pos[1]
+            self.x_plus = pos[0]+0.5
+            self.y_plus = pos[1]
+        elif self._angle == WEST:
+            self.x_minus = pos[0]+0.5
+            self.y_minus = pos[1]
+            self.x_plus = pos[0]-0.5
+            self.y_plus = pos[1]
+
+    ###########################################
+    # (RE-)DRAWING
+    ###########################################
+    
+    def import_image(self):
+        png = type(self).__name__
+        if self.hover:
+            png += '_hover'
+        if self.selected:
+            png += '_selected'
+        png += '.png'
+
+        if self.pos[2] is None:
+            angle = self.init_angle
+        else:
+            angle = self.pos[2]
+
+        img = Image.open(os.path.join(png_directory, png))
+        size = int(self.canvas.grid_unit*(1-1*node_dot_radius))
+        img = img.resize((size, int(size/2)))
+        img = img.rotate(angle,expand = True)
+        self.tk_image = ImageTk.PhotoImage(img)
+      
+    def update_graphic(self):
+        self.import_image()
+        self.canvas.itemconfig(self.image, image=self.tk_image)
+    
+    def adapt_to_grid_unit(self):
+        self.update_graphic()
+        self.canvas.coords(self.image, *self.grid_to_canvas(self.pos[:2]))
+        self.add_or_replace_label()
+        self.add_or_replace_node_dots()
+    
+    def add_or_replace_label(self):
+        gu = self.canvas.grid_unit
+        _, _, angle = self.pos
+        x, y = self.canvas.coords(self.image)
+        value, label = self.prop
+        text = to_string(self.unit, label, value,
+                         use_math=False, use_unicode=True)
+        font = Font(family='Helvetica', size=int(gu/8.), weight='normal')
+        text_position = (0.2)*gu
+        if angle % 180. == 90. and self.text is None:
+            self.text = self.canvas.create_text(
+                x+text_position, y, text=text, anchor=tk.W, font=font)
+        elif angle % 180. == 90. and self.text is not None:
+            self.canvas.coords(self.text, x+text_position, y)
+            self.canvas.itemconfig(self.text,
+                                   text=text, anchor=tk.W, font=font)
+        elif angle % 180. == 0. and self.text is None:
+            self.text = self.canvas.create_text(
+                x, y+text_position, text=text, anchor=tk.N, font=font)
+        elif angle % 180. == 0. and self.text is not None:
+            self.canvas.coords(self.text, x, y+text_position)
+            self.canvas.itemconfig(self.text,
+                                   text=text, anchor=tk.N, font=font)
+    
+    ###########################################
+    # EDITING VALUE/LABEL
+    ###########################################
+  
+    def double_click(self, event):
+        self.modify_values(self)
+
+    def modify_values(self, event=None):
+        old_prop = self.prop
+        self.request_value_label()
+        if self.prop[0] is None and self.prop[1] is None:
+            self.prop = old_prop
+        else:
+            self.add_or_replace_label()
+    
+    def request_value_label(self):
+        if (self.canvas.track_events_to is None) and (self.canvas.unittesting == False):
+            window = RequestValueLabelWindow(self.canvas.master, self)
+            self.canvas.master.wait_window(window)
+        else:
+            self.prop = [1, 'X']
 
 class R(Component):
     """docstring for R"""
@@ -2746,6 +2832,10 @@ class G(Component):
         self.unit = ''
         super(G, self).__init__(canvas, event, auto_place_info)
 
+    ###########################################
+    # Adapt to the fact that 
+    # has no properties
+    ###########################################
     @property
     def prop(self):
         return [None, '']
@@ -2760,6 +2850,11 @@ class G(Component):
     def request_value_label(self):
         pass
 
+    ###########################################
+    # Adapt to the fact that 
+    # has no properties
+    ###########################################
+    
     def open_right_click_menu(self, event):
         menu = tk.Menu(self.canvas, tearoff=0)
         # menu.add_command(label="Rotate", command=self.rotate)
@@ -2771,6 +2866,11 @@ class G(Component):
 
     def add_or_replace_label(self):
         pass
+
+    ###########################################
+    # Adapt to the fact that 
+    # it has only one node
+    ###########################################
 
     def add_or_replace_node_dots(self):
         super(G,self).add_or_replace_node_dots(minus = False)
