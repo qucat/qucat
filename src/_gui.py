@@ -760,17 +760,17 @@ class CircuitEditor(tk.Canvas):
             #TODO replace this with 
             # less verbose code?
             if el[0] == 'W':
-                W(self, auto_place=el)
+                W(self, auto_place_info=el)
             elif el[0] == 'R':
-                R(self, auto_place=el)
+                R(self, auto_place_info=el)
             elif el[0] == 'L':
-                L(self, auto_place=el)
+                L(self, auto_place_info=el)
             elif el[0] == 'J':
-                J(self, auto_place=el)
+                J(self, auto_place_info=el)
             elif el[0] == 'C':
-                C(self, auto_place=el)
+                C(self, auto_place_info=el)
             elif el[0] == 'G':
-                G(self, auto_place=el)
+                G(self, auto_place_info=el)
 
     def on_resize(self, event=None):
         '''
@@ -1733,7 +1733,7 @@ class CircuitEditor(tk.Canvas):
 
 class TwoNodeElement(object):
 
-    def __init__(self, canvas, event=None, auto_place=None):
+    def __init__(self, canvas, event=None, auto_place_info=None):
         self.canvas = canvas
         self.was_moved = False
         self.was_rotated = False
@@ -1742,56 +1742,11 @@ class TwoNodeElement(object):
         self.dot_minus = None
         self.dot_plus = None
 
-        if auto_place is None and event is not None:
+        if auto_place_info is None and event is not None:
             self.manual_place(event)
-
-        elif auto_place is not None and event is None:
-            v = auto_place[3]
-            l = auto_place[4]
-            if l == '':
-                l = None
-
-            if v == '':
-                v = None
-            else:
-                v = float(v)
-
-            self.prop = [v, l]
-
-            self.x_minus, self.y_minus = self.node_string_to_grid(
-                auto_place[1])
-            self.x_plus, self.y_plus = self.node_string_to_grid(
-                auto_place[2])
-            self.auto_place(auto_place)
-    
-    def set_state(self,s):
-        '''Puts the element into state s
-
-        Parameters
-        ----------
-        s:      Integer
-                For example if s=0, the element will go back to the state 
-                it is in upon creation.
-        '''
-        if s==0:
-            self.set_state_0()
-
-    @property
-    def pos(self):
-        return []
-
-    @pos.setter
-    def pos(self, pos):
-        pass
-
-    @property
-    def prop(self):
-        return []
-
-    @prop.setter
-    def prop(self, prop):
-        pass
-
+        else:
+            self.auto_place(auto_place_info)
+        
     def __deepcopy__(self, memo):
         cls = self.__class__
         newone = cls.__new__(cls)
@@ -1801,15 +1756,45 @@ class TwoNodeElement(object):
         newone.prop = deepcopy(self.prop)
         return newone
 
+    ###########################################
+    # CREATION
+    ###########################################
+
+    def auto_place(self,auto_place_info):
+        '''
+        Parse the auto_place_info list defined as:
+        auto_place_info = [<type>, <minus_coords>, <plus_coords>, <value>, <label>]
+        '''
+
+        v = auto_place_info[3]
+        l = auto_place_info[4]
+        if l == '':
+            l = None
+
+        if v == '':
+            v = None
+        else:
+            v = float(v)
+
+        self.prop = [v, l]
+
+        self.x_minus, self.y_minus = self.node_string_to_grid(
+            auto_place_info[1])
+        self.x_plus, self.y_plus = self.node_string_to_grid(
+            auto_place_info[2])
+    
+    
     def abort_creation(self,event = None, rerun_command = True):
         '''
         Called after initializing the creation of a component if the user:
-            * presses escape
-            * initialize the creation of a different componennt 
-        
+        * presses escape
+        * initialize the creation of a different componennt 
+
         Cancels the creation of the component, which will disappear.
         '''
 
+        # Remove all bindings related to element creation
+        # and reinstate state 0
         self.canvas.set_state(0)
 
         # If the user cancelled by pressing a circuit generating 
@@ -1824,128 +1809,62 @@ class TwoNodeElement(object):
 
         del self
 
-    def set_nodes(self):
-        pass
+   
+    ###########################################
+    # STATE SETTING
+    ###########################################
+    
+    def set_state(self,s):
+        '''Puts the element into state s
 
-    def grid_to_node_string(self, x, y):
-        gu = self.canvas.grid_unit
-        return "%d,%d" % (int(x), int(y))
-
-    def node_string_to_grid(self, node):
-        xy = node.split(',')
-        x = int(xy[0])
-        y = int(xy[1])
-        return x, y
-
-    def grid_to_canvas(self, pos):
-        return self.canvas.grid_to_canvas(pos)
-
-    def deselect(self):
-        pass
-
-    def force_select(self):
-        pass
-
-    def on_click(self, event, shift_control=False):
-
-        if self.selected is False and shift_control is False:
-            self.canvas.deselect_all()
-
-        self.canvas.bind(
-            '<Left>', lambda event: self.on_updownleftright(event, angle=WEST))
-        self.canvas.bind(
-            '<Right>', lambda event: self.on_updownleftright(event, angle=EAST))
-        self.canvas.bind(
-            '<Up>', lambda event: self.on_updownleftright(event, angle=NORTH))
-        self.canvas.bind(
-            '<Down>', lambda event: self.on_updownleftright(event, angle=SOUTH))
-
-    def on_motion(self, event):
-        x, y = self.get_center_pos()
-        dx = self.canvas.canvasx(event.x) - x
-        dy = self.canvas.canvasy(event.y) - y
-        for el in self.canvas.elements:
-            if el.selected or el == self:
-                el.move(dx, dy)
-        self.was_moved = True
-
-    def release_motion(self, event, shift_control=False):
+        Parameters
+        ----------
+        s:      Integer
+                For example if s=0, the element will go back to the state 
+                it is in upon creation.
         '''
-        Called when dropping in a dragging/dropping action
-        and indirectly when pasting.
+        if s==0:
+            self.set_state_0()
+    
+    def set_state_0(self):
+        self.canvas.tag_bind(self.binding_object, "<Enter>", self.hover_enter)
+        self.canvas.tag_bind(self.binding_object, "<Leave>", self.hover_leave)
+        self.canvas.tag_bind(self.binding_object, "<Button-3>", self.right_click)
 
-        Bound when hovering over a component or called
-        in the paste functions; release_motion_paste_single
-        and release_motion_paste.
-        '''
-        
-        self.canvas.track_changes = False
-
-        for el in self.canvas.elements:
-            if el.selected or el == self:
-                el.snap_to_grid()
-                el.add_or_replace_label()
-
-        if self.was_rotated:
-            self.set_nodes()
-            self.was_rotated = False
-
-        self.canvas.track_changes = True
-        self.canvas.save()
-        self.canvas.bind('<Left>', lambda event: None)
-        self.canvas.bind('<Right>', lambda event: None)
-        self.canvas.bind('<Up>', lambda event: None)
-        self.canvas.bind('<Down>', lambda event: None)
-
-        if self.was_moved:
-            self.force_select()
-            self.was_moved = False
-        elif shift_control:
-            self.ctrl_shift_select()
-        else:
-            self.select()
-
-    def release_motion_paste(self, event):
-        self.release_motion(event)
-        self.canvas.bind("<Motion>", lambda event: None)
-        self.canvas.bind("<ButtonPress-1>", lambda event: None)
-
-    def release_motion_paste_single(self, event):
-        self.release_motion_paste(event)
-        self.canvas.bind('<Left>', lambda event: None)
-        self.canvas.bind('<Right>', lambda event: None)
-        self.canvas.bind('<Up>', lambda event: None)
-        self.canvas.bind('<Down>', lambda event: None)
+    ###########################################
+    # STATE 0 BEHAVIOUR
+    ###########################################    
 
     def hover_enter(self, event):
         self.hover = True
         self.update_graphic()
 
         self.canvas.tag_bind(self.binding_object, "<ButtonPress-1>", self.on_click)
-        self.canvas.tag_bind(self.binding_object, "<Shift-ButtonPress-1>",
-                             lambda event: self.on_click(event, shift_control=True))
-        self.canvas.tag_bind(self.binding_object, "<Control-ButtonPress-1>",
-                             lambda event: self.on_click(event, shift_control=True))
-        self.canvas.tag_bind(self.binding_object,
-                             "<B1-Motion>", self.on_motion)
-        self.canvas.tag_bind(
-            self.binding_object, "<ButtonRelease-1>", self.release_motion)
-        self.canvas.tag_bind(
-            self.binding_object, '<Double-ButtonPress-1>', self.double_click)
-        self.canvas.tag_bind(self.binding_object, "<Shift-ButtonRelease-1>",
-                             lambda event: self.release_motion(event, shift_control=True))
-        self.canvas.tag_bind(self.binding_object, "<Control-ButtonRelease-1>",
-                             lambda event: self.release_motion(event, shift_control=True))
-
-    def set_state_0(self):
-        self.canvas.tag_bind(self.binding_object, "<Enter>", self.hover_enter)
-        self.canvas.tag_bind(self.binding_object, "<Leave>", self.hover_leave)
-        self.canvas.tag_bind(self.binding_object,
-                             "<Button-3>", self.right_click)
+        self.canvas.tag_bind(self.binding_object, "<Shift-ButtonPress-1>",lambda event: self.on_click(event, shift_control=True))
+        self.canvas.tag_bind(self.binding_object, "<Control-ButtonPress-1>",lambda event: self.on_click(event, shift_control=True))
+        self.canvas.tag_bind(self.binding_object, "<B1-Motion>", self.on_motion)
+        self.canvas.tag_bind(self.binding_object, "<ButtonRelease-1>", self.release_motion)
+        self.canvas.tag_bind(self.binding_object, '<Double-ButtonPress-1>', self.double_click)
+        self.canvas.tag_bind(self.binding_object, "<Shift-ButtonRelease-1>", lambda event: self.release_motion(event, shift_control=True))
+        self.canvas.tag_bind(self.binding_object, "<Control-ButtonRelease-1>", lambda event: self.release_motion(event, shift_control=True))
 
     def hover_leave(self, event):
         self.hover = False
         self.update_graphic()
+
+    ###########################################
+    # HOVER BEHAVIOUR
+    ###########################################  
+    
+    def on_click(self, event, shift_control=False):
+
+        if self.selected is False and shift_control is False:
+            self.canvas.deselect_all()
+
+        self.canvas.bind('<Left>', lambda event: self.on_updownleftright(event, angle=WEST))
+        self.canvas.bind('<Right>', lambda event: self.on_updownleftright(event, angle=EAST))
+        self.canvas.bind('<Up>', lambda event: self.on_updownleftright(event, angle=NORTH))
+        self.canvas.bind('<Down>', lambda event: self.on_updownleftright(event, angle=SOUTH))
 
     def right_click(self, event):
         if self.canvas.is_more_than_one_selected() and self.selected:
@@ -1955,28 +1874,30 @@ class TwoNodeElement(object):
             self.select()
             self.canvas.bind("<ButtonRelease-3>", self.open_right_click_menu)
 
-    def select(self):
-        self.canvas.deselect_all()
-        if self.selected is False:
-            self.selected = True
-            self.update_graphic()
-
-    def ctrl_shift_select(self):
-        if self.selected is False:
-            self.selected = True
-            self.update_graphic()
-        elif self.selected is True:
-            self.deselect()
-
-    def force_select(self):
-        self.selected = True
-        self.update_graphic()
-
-    def deselect(self):
-        self.selected = False
-        self.update_graphic()
-        
+    ###########################################
+    # DRAGGING BEHAVIOUR
+    ###########################################  
+    
+    def on_motion(self, event):
+        x, y = self.get_center_pos()
+        dx = self.canvas.canvasx(event.x) - x
+        dy = self.canvas.canvasy(event.y) - y
+        for el in self.canvas.elements:
+            if el.selected or el == self:
+                el.move(dx, dy)
+        self.was_moved = True
+    
+    ###########################################
+    # DROPPING BEHAVIOUR
+    ###########################################  
+    
     def add_nodes(self, to = 'all wires', minus = True, plus = True):
+        '''
+        Upon dropping an element check if one of its nodes intersects
+        a wire. If that is the case, split the wire into two, 
+        such that the intersection point is now a node of each of the
+        new wires.
+        '''
 
         # Check if one of the nodes of this component/wire 
         # is on a wire
@@ -1997,9 +1918,9 @@ class TwoNodeElement(object):
                     ym = w.y_minus
                     yp = w.y_plus
                     w.delete()
-                    W(self.canvas,auto_place=['W','%d,%d'%(x,ym),
+                    W(self.canvas,auto_place_info=['W','%d,%d'%(x,ym),
                         '%d,%d'%(x,self.y_minus),'',''])
-                    W(self.canvas,auto_place=['W','%d,%d'%(x,yp),
+                    W(self.canvas,auto_place_info=['W','%d,%d'%(x,yp),
                         '%d,%d'%(x,self.y_minus),'',''])
                     return True
 
@@ -2011,9 +1932,9 @@ class TwoNodeElement(object):
                     xp = w.x_plus
                     y = w.y_minus
                     w.delete()
-                    W(self.canvas,auto_place=['W','%d,%d'%(xm,y),
+                    W(self.canvas,auto_place_info=['W','%d,%d'%(xm,y),
                         '%d,%d'%(self.x_minus,y),'',''])
-                    W(self.canvas,auto_place=['W','%d,%d'%(xp,y),
+                    W(self.canvas,auto_place_info=['W','%d,%d'%(xp,y),
                         '%d,%d'%(self.x_minus,y),'',''])
                     return True
             elif w.x_minus == w.x_plus == self.x_plus and plus:
@@ -2024,9 +1945,9 @@ class TwoNodeElement(object):
                     ym = w.y_minus
                     yp = w.y_plus
                     w.delete()
-                    W(self.canvas,auto_place=['W','%d,%d'%(x,ym),
+                    W(self.canvas,auto_place_info=['W','%d,%d'%(x,ym),
                         '%d,%d'%(x,self.y_plus),'',''])
-                    W(self.canvas,auto_place=['W','%d,%d'%(x,yp),
+                    W(self.canvas,auto_place_info=['W','%d,%d'%(x,yp),
                         '%d,%d'%(x,self.y_plus),'',''])
                     return True
 
@@ -2038,12 +1959,123 @@ class TwoNodeElement(object):
                     xp = w.x_plus
                     y = w.y_minus
                     w.delete()
-                    W(self.canvas,auto_place=['W','%d,%d'%(xm,y),
+                    W(self.canvas,auto_place_info=['W','%d,%d'%(xm,y),
                         '%d,%d'%(self.x_plus,y),'',''])
-                    W(self.canvas,auto_place=['W','%d,%d'%(xp,y),
+                    W(self.canvas,auto_place_info=['W','%d,%d'%(xp,y),
                         '%d,%d'%(self.x_plus,y),'',''])
                     return True
         return False
+
+    def release_motion(self, event, shift_control=False):
+        '''
+        Called when dropping in a dragging/dropping action
+        and indirectly when pasting.
+
+        Bound when hovering over a component or called
+        in the paste functions; release_motion_paste_single
+        and release_motion_paste.
+        '''
+        
+        self.canvas.track_changes = False
+
+        for el in self.canvas.elements:
+            if el.selected or el == self:
+                el.snap_to_grid()
+                el.add_or_replace_label()
+
+        if self.was_rotated:
+            self.set_node_coordinates()
+            self.was_rotated = False
+
+        self.canvas.track_changes = True
+        self.canvas.save()
+        self.canvas.set_state(0)
+
+        if self.was_moved:
+            self.force_select()
+            self.was_moved = False
+        elif shift_control:
+            self.ctrl_shift_select()
+        else:
+            self.select()
+
+    def release_motion_paste(self, event):
+        self.release_motion(event)
+        self.canvas.bind("<Motion>", lambda event: None)
+        self.canvas.bind("<ButtonPress-1>", lambda event: None)
+
+    def release_motion_paste_single(self, event):
+        self.release_motion_paste(event)
+        self.canvas.bind('<Left>', lambda event: None)
+        self.canvas.bind('<Right>', lambda event: None)
+        self.canvas.bind('<Up>', lambda event: None)
+        self.canvas.bind('<Down>', lambda event: None)
+ 
+ 
+    ###########################################
+    # SELECTION
+    ###########################################
+    
+    def select(self):
+        self.canvas.deselect_all()
+        if self.selected is False:
+            self.selected = True
+            self.update_graphic()
+
+    def ctrl_shift_select(self):
+        if self.selected is False:
+            self.selected = True
+            self.update_graphic()
+        elif self.selected is True:
+            self.deselect()
+
+    def force_select(self):
+        self.selected = True
+        self.update_graphic()
+
+    def deselect(self):
+        self.selected = False
+        self.update_graphic()
+
+    ###########################################
+    # POSITIONING
+    ###########################################
+
+    @property
+    def pos(self):
+        return []
+
+    @pos.setter
+    def pos(self, pos):
+        pass
+
+    def grid_to_node_string(self, x, y):
+
+        gu = self.canvas.grid_unit
+        return "%d,%d" % (int(x), int(y))
+
+    def node_string_to_grid(self, node):
+        xy = node.split(',')
+        x = int(xy[0])
+        y = int(xy[1])
+        return x, y
+
+    def grid_to_canvas(self, pos):
+        return self.canvas.grid_to_canvas(pos)
+
+    def set_node_coordinates(self):
+        '''
+        Based on the center position of the component
+        and its orientation, determine the coordinates
+        of the minus and plus nodes.
+
+        The wire has no center position and hence this function will
+        do nothing in that case
+        '''
+        pass
+    ###########################################
+    # (RE-)DRAWING
+    ###########################################
 
     def add_or_replace_node_dots(self, plus = True, minus = True):
         gu = self.canvas.grid_unit
@@ -2069,14 +2101,16 @@ class TwoNodeElement(object):
 
             self.canvas.tag_raise(self.dot_plus)
 
+
+      
 class W(TwoNodeElement):
 
-    def __init__(self, canvas, event=None, auto_place=None):
+    def __init__(self, canvas, event=None, auto_place_info=None):
         self.x_minus = None
         self.y_minus = None
         self.x_plus = None
         self.y_plus = None
-        super(W, self).__init__(canvas, event, auto_place)
+        super(W, self).__init__(canvas, event, auto_place_info)
 
     @property
     def binding_object(self):
@@ -2237,6 +2271,7 @@ class W(TwoNodeElement):
         self.canvas.bind('g', self.abort_creation)
 
     def auto_place(self, auto_place_info):
+        super(W, self).auto_place(auto_place_info)
         self.create()
         self.add_nodes()
 
@@ -2322,7 +2357,7 @@ class W(TwoNodeElement):
             fill = light_black)
 
 class Component(TwoNodeElement):
-    def __init__(self, canvas, event=None, auto_place=None):
+    def __init__(self, canvas, event=None, auto_place_info=None):
         self.image = None
         self._value = None
         self._label = None
@@ -2330,7 +2365,7 @@ class Component(TwoNodeElement):
         self._x_center = None
         self._y_center = None
         self._angle = None
-        super(Component, self).__init__(canvas, event, auto_place)
+        super(Component, self).__init__(canvas, event, auto_place_info)
 
     def get_center_pos(self):
         # returns center in canvas units
@@ -2351,7 +2386,7 @@ class Component(TwoNodeElement):
             self._x_center = pos[0]
             self._y_center = pos[1]
             self._angle = pos[2]
-            self.set_nodes()
+            self.set_node_coordinates()
             self.canvas.save()
 
     @property
@@ -2365,7 +2400,12 @@ class Component(TwoNodeElement):
             self._label = prop[1]
             self.canvas.save()
 
-    def set_nodes(self):
+    def set_node_coordinates(self):
+        '''
+        Based on the center position of the component
+        and its orientation, determine the coordinates
+        of the minus and plus nodes.
+        '''
 
         # positive y points south
         pos = self.pos
@@ -2404,6 +2444,7 @@ class Component(TwoNodeElement):
         self.canvas.in_creation = self
 
     def auto_place(self, auto_place_info):
+        super(Component, self).auto_place(auto_place_info)
 
         if self.x_minus == self.x_plus:
             # increasing y = SOUTH in tkinter
@@ -2688,37 +2729,37 @@ class Component(TwoNodeElement):
 class R(Component):
     """docstring for R"""
 
-    def __init__(self, canvas, event=None, auto_place=None):
+    def __init__(self, canvas, event=None, auto_place_info=None):
         self.unit = r'$\Omega$'
-        super(R, self).__init__(canvas, event, auto_place)
+        super(R, self).__init__(canvas, event, auto_place_info)
 
 class L(Component):
     """docstring for L"""
 
-    def __init__(self, canvas, event=None, auto_place=None):
+    def __init__(self, canvas, event=None, auto_place_info=None):
         self.unit = 'H'
-        super(L, self).__init__(canvas, event, auto_place)
+        super(L, self).__init__(canvas, event, auto_place_info)
 
 class C(Component):
     """docstring for C"""
 
-    def __init__(self, canvas, event=None, auto_place=None):
+    def __init__(self, canvas, event=None, auto_place_info=None):
         self.unit = 'F'
-        super(C, self).__init__(canvas, event, auto_place)
+        super(C, self).__init__(canvas, event, auto_place_info)
 
 class J(Component):
     """docstring for J"""
 
-    def __init__(self, canvas, event=None, auto_place=None):
+    def __init__(self, canvas, event=None, auto_place_info=None):
         self.unit = 'H'
-        super(J, self).__init__(canvas, event, auto_place)
+        super(J, self).__init__(canvas, event, auto_place_info)
 
 class G(Component):
     """docstring for J"""
 
-    def __init__(self, canvas, event=None, auto_place=None):
+    def __init__(self, canvas, event=None, auto_place_info=None):
         self.unit = ''
-        super(G, self).__init__(canvas, event, auto_place)
+        super(G, self).__init__(canvas, event, auto_place_info)
 
     @property
     def prop(self):
