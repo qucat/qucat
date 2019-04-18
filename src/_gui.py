@@ -1740,12 +1740,20 @@ class TwoNodeElement(object):
 
     def abort_creation(self,event = None, rerun_command = True):
         '''
-        Called when the user presses escape after creating 
+        Called after initializing the creation of a component if the user:
+            * presses escape
+            * initialize the creation of a different componennt 
+        
+        Cancels the creation of the component, which will disappear.
         '''
+
         self.canvas.in_creation = None
+
         self.canvas.set_keyboard_shortcuts_element_creation()
+
         if event.type == tk.EventType.KeyPress and rerun_command:
             self.canvas.event_generate(event.char)
+
         del self
 
     def set_nodes(self):
@@ -1794,13 +1802,19 @@ class TwoNodeElement(object):
         self.was_moved = True
 
     def release_motion(self, event, shift_control=False):
-        N_selected = 0
-        self.canvas.track_changes = False
+        '''
+        Called when dropping in a dragging/dropping action
+        and indirectly when pasting.
 
+        Bound when hovering over a component or called
+        in the paste functions; release_motion_paste_single
+        and release_motion_paste.
+        '''
+        
+        self.canvas.track_changes = False
 
         for el in self.canvas.elements:
             if el.selected or el == self:
-                N_selected += 1
                 el.snap_to_grid()
                 el.add_or_replace_label()
 
@@ -2772,9 +2786,18 @@ class GuiWindow(ttk.Frame):
         self.master.rowconfigure(0, weight=1)
         self.master.columnconfigure(0, weight=1)
 
+        if _track_events_to is not None:
+            with open(_track_events_to,'w'):
+                # Creates the file or, if the file was already used, clears it of content
+                pass
+
         # Populate that grid with the circuit editor
         self.canvas = CircuitEditor(
-            self.master, netlist_filename=netlist_filename, grid_unit=60, track_events_to=_track_events_to, unittesting = _unittesting)
+            self.master, 
+            netlist_filename=netlist_filename, 
+            grid_unit=60, 
+            track_events_to=_track_events_to, 
+            unittesting = _unittesting)
 
         if _unittesting:
             self.update()

@@ -10,6 +10,15 @@ class GuiTestingHandler(unittest.TestCase):
     pass    
 
 class ManualTesting(GuiTestingHandler):
+    '''
+    Example code:
+    
+    def test_if_opening_blank_test_throws_error(self):
+        filename = self.write_netlist_file('')
+        self.gui = GuiWindow(filename, _unittesting = True)
+        self.gui.master.destroy()
+        self.assertEqual('',self.read_netlist_file())
+    '''
 
     def get_netlist_filename(self):
         curframe = inspect.currentframe()
@@ -32,6 +41,8 @@ class ManualTesting(GuiTestingHandler):
         with open(self.get_netlist_filename(),'r') as netlist_file:
             contents = netlist_file.read()
         return contents
+
+
 
 
 class AutomaticTesting(GuiTestingHandler):
@@ -144,13 +155,10 @@ class AutomaticTesting(GuiTestingHandler):
             
         return True
 
-class TestOpening(ManualTesting):
-
+class TestOpening(AutomaticTesting):
+    
     def test_if_opening_blank_test_throws_error(self):
-        filename = self.write_netlist_file('')
-        self.gui = GuiWindow(filename, _unittesting = True)
-        self.gui.master.destroy()
-        self.assertEqual('',self.read_netlist_file())
+        self.launch_gui_testing()
 
 class TestMovingComponentsAround(AutomaticTesting):
 
