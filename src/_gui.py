@@ -1307,7 +1307,7 @@ class CircuitEditor(tk.Canvas):
             #########################
             # Note: all the bindings below need only
             # be applied to a single element since
-            # "on_motion", "release_motion_paste" acts
+            # "on_motion", "release_motion" acts
             # on all the selected elements
             # and we have set all the pasted elements to 
             # be selected above
@@ -1322,7 +1322,7 @@ class CircuitEditor(tk.Canvas):
                 
                 # Snaps the element to the grid and removes the binding 
                 # of arrow keys and replaces binding of button-press to box selection
-                self.bind("<ButtonPress-1>", el.release_motion_paste_single)
+                self.bind("<ButtonPress-1>", el.release_motion)
 
                 # If only a single element is pasted, allow the user to rotate that 
                 # element with arrows
@@ -1333,7 +1333,7 @@ class CircuitEditor(tk.Canvas):
             else:
                 # Snaps the elements (the selection) to the grid and
                 # replaces binding of button-press to box selection
-                self.bind("<ButtonPress-1>", el.release_motion_paste)
+                self.bind("<ButtonPress-1>", el.release_motion)
 
 
     #############################
@@ -1783,7 +1783,6 @@ class TwoNodeElement(object):
         self.x_plus, self.y_plus = self.node_string_to_grid(
             auto_place_info[2])
     
-    
     def abort_creation(self,event = None, rerun_command = True):
         '''
         Called after initializing the creation of a component if the user:
@@ -1969,11 +1968,9 @@ class TwoNodeElement(object):
     def release_motion(self, event, shift_control=False):
         '''
         Called when dropping in a dragging/dropping action
-        and indirectly when pasting.
+        and when pasting.
 
-        Bound when hovering over a component or called
-        in the paste functions; release_motion_paste_single
-        and release_motion_paste.
+        Bound when hovering over a component or pasting
         '''
         
         self.canvas.track_changes = False
@@ -1989,6 +1986,8 @@ class TwoNodeElement(object):
 
         self.canvas.track_changes = True
         self.canvas.save()
+
+        # Will remove all temporary bindings
         self.canvas.set_state(0)
 
         if self.was_moved:
@@ -1998,19 +1997,6 @@ class TwoNodeElement(object):
             self.ctrl_shift_select()
         else:
             self.select()
-
-    def release_motion_paste(self, event):
-        self.release_motion(event)
-        self.canvas.bind("<Motion>", lambda event: None)
-        self.canvas.bind("<ButtonPress-1>", lambda event: None)
-
-    def release_motion_paste_single(self, event):
-        self.release_motion_paste(event)
-        self.canvas.bind('<Left>', lambda event: None)
-        self.canvas.bind('<Right>', lambda event: None)
-        self.canvas.bind('<Up>', lambda event: None)
-        self.canvas.bind('<Down>', lambda event: None)
- 
  
     ###########################################
     # SELECTION
@@ -2102,7 +2088,6 @@ class TwoNodeElement(object):
             self.canvas.tag_raise(self.dot_plus)
 
 
-      
 class W(TwoNodeElement):
 
     def __init__(self, canvas, event=None, auto_place_info=None):
