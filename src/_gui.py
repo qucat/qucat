@@ -42,7 +42,6 @@ def track_event(track_events_to, event,sequence):
     sequence:           string
                         For example '<ButtonRelease-1>' or 'c'
     '''
-
     # sequences to not save
     to_exclude = [
         '<Enter>','<Leave>'] # Enter and leave will be triggered by mouse motion anyway
@@ -238,6 +237,9 @@ class CircuitEditor(tk.Canvas):
 
     """
     def __init__(self, master, grid_unit, netlist_filename, track_events_to = None, unittesting = False):
+        
+        # The root window (tk.Tk())
+        self.master = master
 
         self.track_events_to = track_events_to
         '''
@@ -307,14 +309,11 @@ class CircuitEditor(tk.Canvas):
 
         self.initialize_user_knowledge_tracking_variables()
         self.build_gridframe()
-        self.build_menubar(master)
+        self.build_menubar()
         self.build_scrollbars()
         self.build_canvas()
         self.configure_scrollbars()
         self.set_canvas_center()
-        self.configure_canvas()
-        self.set_keyboard_shortcuts_element_creation()
-        self.set_keyboard_shortcuts_other(master)
         self.load_or_create_netlist_file()
         self.center_window_on_circuit()
 
@@ -327,12 +326,17 @@ class CircuitEditor(tk.Canvas):
         # the one towards which key strokes will be 
         # directed to be this circuit editor
         self.focus_set()
+
+        # Puts the Editor in state 0: 
+        # sets all the right bindings, etc ...
+        self.set_state(0)
+        
         
     ###########################
     # Initialization functions
     ###########################
     
-    def build_menubar(self,master):
+    def build_menubar(self):
         '''
         Builds the File, Edit, ... menu bar situated at the top of
         the window.
@@ -504,7 +508,7 @@ class CircuitEditor(tk.Canvas):
             font=menu_font)
 
         # Add the menubar to the application
-        master.config(menu=self.menubar)
+        self.master.config(menu=self.menubar)
     def build_gridframe(self):
         '''
         Builds the main area of the window (called a frame), 
@@ -595,80 +599,7 @@ class CircuitEditor(tk.Canvas):
         # the window. 
         self.bind("<Configure>", self.on_resize)
 
-        # This function is only useful if we 
-        # are tracking the actions of the user.
-        # Mouse motion is by default not binded to 
-        # any function, here we bind it to a function
-        # which does nothing, but, if tracking is turned
-        # on, this function will be appended with tracking
-        # functionalities.
-        self.bind("<Motion>", lambda event: None)
 
-    def set_keyboard_shortcuts_element_creation(self):
-        '''
-            Assign key R to the creation of a resistor, 
-            C to a capacitor, etc...
-        '''
-        self.bind('r', lambda event: R(self, event))
-        self.bind('l', lambda event: L(self, event))
-        self.bind('c', lambda event: C(self, event))
-        self.bind('j', lambda event: J(self, event))
-        self.bind('w', lambda event: W(self, event))
-        self.bind('g', lambda event: G(self, event))
-    def set_keyboard_shortcuts_other(self,master):
-        '''
-        Assign keystrokes to functionalities
-        accessible in the FILE, EDIT, VIEW menus, 
-        as well as configure what happens when the 
-        user scrolls in combination with CTRL/SHIFT.
-        '''
-        
-        #############################
-        # FILE menu functionalities
-        #############################
-        self.bind('<Control-q>', lambda event: master.destroy())
-        self.bind('<Control-o>', self.file_open)
-        self.bind('<Control-s>', self.save)
-
-        #############################
-        # EDIT menu functionalities
-        #############################
-        self.bind('<Delete>', self.delete_selection)
-        self.bind('<Control-c>', self.copy_selection)
-        self.bind('<Control-x>', self.cut_selection)
-        self.bind('<Control-v>', self.paste)
-        self.bind('<Control-a>', self.select_all)
-        self.bind('<Control-y>', self.ctrl_y)
-        self.bind('<Control-z>', self.ctrl_z)
-
-        #############################
-        # VIEW menu functionalities
-        #############################
-        self.bind('<Control-r>', self.center_window_on_circuit)
-        
-
-        #############################
-        # Mouse wheel functionalities
-        #############################
-
-        # zoom for Windows and MacOS, but not Linux
-        self.bind('<Control-MouseWheel>', self.scroll_zoom)
-        # zoom for Linux, wheel scroll down
-        self.bind('<Control-Button-5>',   self.scroll_zoom)
-        # zoom for Linux, wheel scroll up
-        self.bind('<Control-Button-4>',   self.scroll_zoom)
-        # zoom for Windows and MacOS, but not Linux
-        self.bind('<Shift-MouseWheel>', self.scroll_x_wheel)
-        # zoom for Linux, wheel scroll down
-        self.bind('<Shift-Button-5>',   self.scroll_x_wheel)
-        # zoom for Linux, wheel scroll up
-        self.bind('<Shift-Button-4>',   self.scroll_x_wheel)
-        # zoom for Windows and MacOS, but not Linux
-        self.bind('<MouseWheel>', self.scroll_y_wheel)
-        # zoom for Linux, wheel scroll down
-        self.bind('<Button-5>',   self.scroll_y_wheel)
-        # zoom for Linux, wheel scroll up
-        self.bind('<Button-4>',   self.scroll_y_wheel)
     def load_or_create_netlist_file(self):
         '''
         If the file called "self.netlist_filename" is found, load it, if not, create 
@@ -700,6 +631,45 @@ class CircuitEditor(tk.Canvas):
     #############################
     #  CORE functions
     ##############################
+
+    def set_state(self,s):
+        '''Puts the CircuitEditor into state s
+
+        Parameters
+        ----------
+        s:      Integer
+                For example if s=0, the Editor will go back to the state 
+                it is in upon opening.
+        '''
+        if s==0:
+            self.set_state_0()
+    
+    def set_state_0(self):
+        '''
+        Puts the editor in state 0, as it is upon opening
+        Unsets, resets bindings and draws the grid.
+        '''
+
+        self.in_creation = None
+
+        # unset commong bindings that may have been created elsewhere
+        self.unset_temporary_bindings()
+
+        # 
+        self.configure_canvas()
+
+        # The cursor should be an arrow
+        self.config(cursor='arrow')
+
+        # set bindings
+        self.set_keyboard_shortcuts_element_creation()
+        self.set_keyboard_shortcuts_other()
+
+        # Redraws grid and binds clicking the grid
+        self.draw_grid()
+
+        for el in self.elements:
+            el.set_state(0)
 
     def elements_list_to_netlist_string(self):
         '''
@@ -872,7 +842,6 @@ class CircuitEditor(tk.Canvas):
         else:
             super(CircuitEditor, self).bind(sequence,func,add)
 
-
     def tag_bind(self, tagOrId, sequence=None, func=None, add=None):
         '''
         Modifies the "tag_bind" method of tk.Canvas such that
@@ -890,7 +859,87 @@ class CircuitEditor(tk.Canvas):
         else:
             super(CircuitEditor, self).tag_bind(tagOrId,sequence,func,add)
 
+    ###########################
+    # BINDINGS
+    ###########################
 
+    def set_keyboard_shortcuts_element_creation(self):
+        '''
+            Assign key R to the creation of a resistor, 
+            C to a capacitor, etc...
+        '''
+        self.bind('r', lambda event: R(self, event))
+        self.bind('l', lambda event: L(self, event))
+        self.bind('c', lambda event: C(self, event))
+        self.bind('j', lambda event: J(self, event))
+        self.bind('w', lambda event: W(self, event))
+        self.bind('g', lambda event: G(self, event))
+    def set_keyboard_shortcuts_other(self):
+        '''
+        Assign keystrokes to functionalities
+        accessible in the FILE, EDIT, VIEW menus, 
+        as well as configure what happens when the 
+        user scrolls in combination with CTRL/SHIFT.
+        '''
+        
+        #############################
+        # FILE menu functionalities
+        #############################
+        self.bind('<Control-q>', lambda event: self.master.destroy())
+        self.bind('<Control-o>', self.file_open)
+        self.bind('<Control-s>', self.save)
+
+        #############################
+        # EDIT menu functionalities
+        #############################
+        self.bind('<Delete>', self.delete_selection)
+        self.bind('<Control-c>', self.copy_selection)
+        self.bind('<Control-x>', self.cut_selection)
+        self.bind('<Control-v>', self.paste)
+        self.bind('<Control-a>', self.select_all)
+        self.bind('<Control-y>', self.ctrl_y)
+        self.bind('<Control-z>', self.ctrl_z)
+
+        #############################
+        # VIEW menu functionalities
+        #############################
+        self.bind('<Control-r>', self.center_window_on_circuit)
+        
+
+        #############################
+        # Mouse wheel functionalities
+        #############################
+
+        # zoom for Windows and MacOS, but not Linux
+        self.bind('<Control-MouseWheel>', self.scroll_zoom)
+        # zoom for Linux, wheel scroll down
+        self.bind('<Control-Button-5>',   self.scroll_zoom)
+        # zoom for Linux, wheel scroll up
+        self.bind('<Control-Button-4>',   self.scroll_zoom)
+        # zoom for Windows and MacOS, but not Linux
+        self.bind('<Shift-MouseWheel>', self.scroll_x_wheel)
+        # zoom for Linux, wheel scroll down
+        self.bind('<Shift-Button-5>',   self.scroll_x_wheel)
+        # zoom for Linux, wheel scroll up
+        self.bind('<Shift-Button-4>',   self.scroll_x_wheel)
+        # zoom for Windows and MacOS, but not Linux
+        self.bind('<MouseWheel>', self.scroll_y_wheel)
+        # zoom for Linux, wheel scroll down
+        self.bind('<Button-5>',   self.scroll_y_wheel)
+        # zoom for Linux, wheel scroll up
+        self.bind('<Button-4>',   self.scroll_y_wheel)
+
+    def unset_temporary_bindings(self):
+        '''
+        Unsets all temporary bindings.
+        '''
+        for sequence in [
+            "<Escape>","<Motion>",'<Left>','<Right>','<Up>', '<Down>',
+            "<ButtonPress-1>","<ButtonRelease-1>","<B1-Motion>",'<Shift-ButtonPress-1>',
+            '<Control-ButtonPress-1>','<Shift-ButtonRelease-1>','<Control-ButtonRelease-1>', 
+            '<Double-ButtonPress-1>', '<ButtonPress-3>','<ButtonRelease-3>', '<Return>',
+        ]:
+            self.bind(sequence, lambda event: None)
 
     ###########################
     # FILE menu functionalities
@@ -1712,6 +1761,19 @@ class TwoNodeElement(object):
             self.x_plus, self.y_plus = self.node_string_to_grid(
                 auto_place[2])
             self.auto_place(auto_place)
+    
+    def set_state(self,s):
+        '''Puts the element into state s
+
+        Parameters
+        ----------
+        s:      Integer
+                For example if s=0, the element will go back to the state 
+                it is in upon creation.
+        '''
+        if s==0:
+            self.set_state_0()
+
 
     @property
     def pos(self):
@@ -1853,23 +1915,23 @@ class TwoNodeElement(object):
         self.hover = True
         self.update_graphic()
 
-        self.canvas.tag_bind(self.binding_object, "<Button-1>", self.on_click)
-        self.canvas.tag_bind(self.binding_object, "<Shift-Button-1>",
+        self.canvas.tag_bind(self.binding_object, "<ButtonPress-1>", self.on_click)
+        self.canvas.tag_bind(self.binding_object, "<Shift-ButtonPress-1>",
                              lambda event: self.on_click(event, shift_control=True))
-        self.canvas.tag_bind(self.binding_object, "<Control-Button-1>",
+        self.canvas.tag_bind(self.binding_object, "<Control-ButtonPress-1>",
                              lambda event: self.on_click(event, shift_control=True))
         self.canvas.tag_bind(self.binding_object,
                              "<B1-Motion>", self.on_motion)
         self.canvas.tag_bind(
             self.binding_object, "<ButtonRelease-1>", self.release_motion)
         self.canvas.tag_bind(
-            self.binding_object, '<Double-Button-1>', self.double_click)
+            self.binding_object, '<Double-ButtonPress-1>', self.double_click)
         self.canvas.tag_bind(self.binding_object, "<Shift-ButtonRelease-1>",
                              lambda event: self.release_motion(event, shift_control=True))
         self.canvas.tag_bind(self.binding_object, "<Control-ButtonRelease-1>",
                              lambda event: self.release_motion(event, shift_control=True))
 
-    def set_allstate_bindings(self):
+    def set_state_0(self):
         self.canvas.tag_bind(self.binding_object, "<Enter>", self.hover_enter)
         self.canvas.tag_bind(self.binding_object, "<Leave>", self.hover_leave)
         self.canvas.tag_bind(self.binding_object,
@@ -2034,6 +2096,7 @@ class W(TwoNodeElement):
     @prop.setter
     def prop(self, prop):
         pass
+    
     def add_nodes(self,to = 'all wires'):
 
         all_other_elements = [el for el in self.canvas.elements if el != self]
@@ -2119,7 +2182,7 @@ class W(TwoNodeElement):
         
     def end_line(self, event):
         self.canvas.delete("temp")
-        self.canvas.bind("<Button-1>", lambda event: None)
+        self.canvas.bind("<ButtonPress-1>", lambda event: None)
         self.canvas.bind('<Motion>', lambda event: None)
         self.canvas.config(cursor='arrow')
 
@@ -2158,7 +2221,7 @@ class W(TwoNodeElement):
 
     def manual_place(self, event):
         self.canvas.config(cursor='plus')
-        self.canvas.bind("<Button-1>", self.start_line)
+        self.canvas.bind("<ButtonPress-1>", self.start_line)
         self.canvas.bind("<Escape>", lambda event: self.abort_creation(event, rerun_command = False))
         self.canvas.bind('r', self.abort_creation)
         self.canvas.bind('l', self.abort_creation)
@@ -2172,18 +2235,28 @@ class W(TwoNodeElement):
         self.add_nodes()
 
     def start_line(self, event):
+        '''
+        Called when we place click to place the first (minus)
+        node of the wire.
+
+        Bound in "manual_place" to "<ButtonPress-1>"
+        '''
+
+        # Set the coordinates of the first (minus) node of the wire
         self.x_minus, self.y_minus = self.init_minus_snap_to_grid(event)
 
+        # Place the circle representing the node
         gu = self.canvas.grid_unit
         self.dot_minus = self.canvas.create_circle(
             *(self.canvas.grid_to_canvas([self.x_minus,self.y_minus])), gu*node_dot_radius)
 
+
         self.canvas.bind("<Motion>", self.show_line)
-        self.canvas.bind("<Button-1>", self.end_line)
+        self.canvas.bind("<ButtonPress-1>", self.end_line)
         self.canvas.in_creation = self
 
     def abort_creation(self, event=None, rerun_command = True):
-        self.canvas.bind("<Button-1>", lambda event: None)
+        self.canvas.bind("<ButtonPress-1>", lambda event: None)
         self.canvas.bind("<Escape>", lambda event: None)
         self.canvas.config(cursor='arrow')
         if self.dot_minus is not None:
@@ -2210,7 +2283,7 @@ class W(TwoNodeElement):
             fill = light_black)
         self.add_or_replace_node_dots()
         self.canvas.elements.append(self)
-        self.set_allstate_bindings()
+        self.set_state(0)
 
     def adapt_to_grid_unit(self):
         canvas_coords_minus = self.grid_to_canvas(self.pos[:2])
@@ -2376,7 +2449,7 @@ class Component(TwoNodeElement):
             *self.grid_to_canvas([x, y]), image=self.tk_image)
         self.add_or_replace_label()
         self.canvas.elements.append(self)
-        self.set_allstate_bindings()
+        self.set_state(0)
 
     def update_graphic(self):
         self.import_image()
@@ -2413,7 +2486,7 @@ class Component(TwoNodeElement):
         self.image = self.canvas.create_image(
             self.canvas.canvasx(event.x), self.canvas.canvasy(event.y), image=self.tk_image)
 
-        self.canvas.bind("<Button-1>", self.init_release)
+        self.canvas.bind("<ButtonPress-1>", self.init_release)
         self.canvas.bind('<Motion>', self.init_on_motion)
         self.canvas.bind('<Escape>', lambda event: self.abort_creation(event, rerun_command = False))
         self.canvas.bind('r', self.abort_creation)
@@ -2432,7 +2505,7 @@ class Component(TwoNodeElement):
             '<Down>', lambda event: self.init_create_component(event, angle=SOUTH))
 
     def unset_initialization_bindings(self):
-        self.canvas.bind("<Button-1>", lambda event: None)
+        self.canvas.bind("<ButtonPress-1>", lambda event: None)
         self.canvas.bind('<Motion>', lambda event: None)
         self.canvas.bind('<Left>', lambda event: None)
         self.canvas.bind('<Right>', lambda event: None)
@@ -2456,7 +2529,7 @@ class Component(TwoNodeElement):
         self.canvas.in_creation = None
         self.add_or_replace_label()
         self.canvas.elements.append(self)
-        self.set_allstate_bindings()
+        self.set_state(0)
         self.canvas.track_changes = True
         self.canvas.save()
 

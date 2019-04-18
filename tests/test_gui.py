@@ -160,18 +160,21 @@ class TestOpening(AutomaticTesting):
     def test_if_opening_blank_test_throws_error(self):
         self.launch_gui_testing()
 
+    def test_opening_complicated_wire_network(self):
+        self.launch_gui_testing()
+
+    def test_opening_complicated_circuit(self):
+        self.launch_gui_testing()
+
+class TestComponentCreation(AutomaticTesting):
+    def test_building_wire(self):
+        self.launch_gui_testing(run_slower=True)
+    def test_building_complicated_circuit(self):
+        self.launch_gui_testing()
+
 class TestMovingComponentsAround(AutomaticTesting):
 
     def test_moving_capacitor_horizontally(self):
-        self.launch_gui_testing()
-
-    def test_zooming_in_out_then_moving_capacitor(self):
-        self.launch_gui_testing()
-
-    def test_scrolling_with_scrollbars_left_and_right_then_moving_capacitor(self):
-        self.launch_gui_testing()
-
-    def test_scrolling_with_mouse_left_and_right_then_moving_junction(self):
         self.launch_gui_testing()
 
     def test_rotating_capacitor(self):
@@ -185,6 +188,18 @@ class TestMovingComponentsAround(AutomaticTesting):
 
     def test_moving_parallel_RLCJG(self):
         self.launch_gui_testing()
+
+class TestZooming(AutomaticTesting):
+    def test_zooming_in_out_then_moving_capacitor(self):
+        self.launch_gui_testing()
+
+class TestScrolling(AutomaticTesting):
+    def test_scrolling_with_scrollbars_left_and_right_then_moving_capacitor(self):
+        self.launch_gui_testing()
+
+    def test_scrolling_with_mouse_left_and_right_then_moving_junction(self):
+        self.launch_gui_testing()
+
 
 if __name__ == "__main__":
     unittest.main()
