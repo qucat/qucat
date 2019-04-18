@@ -144,7 +144,6 @@ class AutomaticTesting(GuiTestingHandler):
             
         return True
 
-
 class TestOpening(ManualTesting):
 
     def test_if_opening_blank_test_throws_error(self):
@@ -178,9 +177,6 @@ class TestMovingComponentsAround(AutomaticTesting):
 
     def test_moving_parallel_RLCJG(self):
         self.launch_gui_testing()
-
-
-
 
 if __name__ == "__main__":
     unittest.main()
