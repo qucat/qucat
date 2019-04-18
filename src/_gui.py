@@ -119,7 +119,6 @@ def track_scrollbar(track_events_to,direction,*args):
     with open(track_events_to,'a') as event_tracking_file:
         event_tracking_file.write(event_string+'\n')
 
-
 class TrackableScrollbar(ttk.Scrollbar):
     '''Scrollbars where we can keep track of a users scrolling.
 
@@ -874,6 +873,7 @@ class CircuitEditor(tk.Canvas):
         self.bind('j', lambda event: J(self, event))
         self.bind('w', lambda event: W(self, event))
         self.bind('g', lambda event: G(self, event))
+    
     def set_keyboard_shortcuts_other(self):
         '''
         Assign keystrokes to functionalities
@@ -2447,10 +2447,6 @@ class Component(TwoNodeElement):
     # CREATION
     ###########################################  
     
-    def manual_place(self, event):
-        self.init_create_component(event)
-        self.canvas.in_creation = self
-
     def auto_place(self, auto_place_info):
         super(Component, self).auto_place(auto_place_info)
 
@@ -2469,7 +2465,7 @@ class Component(TwoNodeElement):
             else:
                 self.pos = [(self.x_minus+self.x_plus)/2, self.y_minus, WEST]
                 self.create()
-    
+
     def create(self):
         self.add_or_replace_node_dots()
         x, y, angle = self.pos
@@ -2479,9 +2475,19 @@ class Component(TwoNodeElement):
         self.add_or_replace_label()
         self.canvas.elements.append(self)
         self.set_state(0)
- 
-    def init_adapt_to_grid_unit(self,event):
-        self.update_graphic()
+     
+    def abort_creation(self, event=None, rerun_command = True):
+        self.canvas.delete(self.image)
+        self.canvas.delete(self.dot_minus)
+        self.canvas.delete(self.dot_plus)
+        self.canvas.set_state(0)
+        super(Component,self).abort_creation(event, rerun_command)
+
+    ###### Arranged in order of calling for a manual placement:    
+    
+    def manual_place(self, event):
+        self.init_create_component(event)
+        self.canvas.in_creation = self
 
     def init_create_component(self, event, angle=0.):
         if angle == 0. and  not self.canvas.used_arrows:
@@ -2512,15 +2518,14 @@ class Component(TwoNodeElement):
         self.canvas.bind(
             '<Down>', lambda event: self.init_create_component(event, angle=SOUTH))
 
-    def abort_creation(self, event=None, rerun_command = True):
-        self.unset_initialization_bindings()
-        self.canvas.delete(self.image)
-        self.canvas.delete(self.dot_minus)
-        self.canvas.delete(self.dot_plus)
-        super(Component,self).abort_creation(event, rerun_command)
-
+    def init_on_motion(self, event):
+        x, y = self.canvas.coords(self.image)
+        dx = self.canvas.canvasx(event.x) - x
+        dy = self.canvas.canvasy(event.y) - y
+        self.canvas.move(self.image, dx, dy)
+    
     def init_release(self, event):
-        self.unset_initialization_bindings()
+        
         self.canvas.track_changes = False
         self.snap_to_grid()
         self.canvas.set_keyboard_shortcuts_element_creation()
@@ -2549,24 +2554,6 @@ class Component(TwoNodeElement):
         if xm<x<xp and ym<y<yp:
             self.hover_enter(event)
       
-    def init_on_motion(self, event):
-        x, y = self.canvas.coords(self.image)
-        dx = self.canvas.canvasx(event.x) - x
-        dy = self.canvas.canvasy(event.y) - y
-        self.canvas.move(self.image, dx, dy)
-
-    ###########################################
-    # STATE 0 BEHAVIOUR
-    ###########################################    
-    
-    def unset_initialization_bindings(self):
-        self.canvas.bind("<ButtonPress-1>", lambda event: None)
-        self.canvas.bind('<Motion>', lambda event: None)
-        self.canvas.bind('<Left>', lambda event: None)
-        self.canvas.bind('<Right>', lambda event: None)
-        self.canvas.bind('<Up>', lambda event: None)
-        self.canvas.bind('<Down>', lambda event: None)
-        self.canvas.bind('<Escape>', lambda event: None)
 
     ###########################################
     # HOVER BEHAVIOUR
@@ -2751,6 +2738,10 @@ class Component(TwoNodeElement):
         self.add_or_replace_label()
         self.add_or_replace_node_dots()
     
+    def init_adapt_to_grid_unit(self,event):
+        self.update_graphic()
+
+        
     def add_or_replace_label(self):
         gu = self.canvas.grid_unit
         _, _, angle = self.pos
