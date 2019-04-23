@@ -233,6 +233,13 @@ class TestMovingComponentsAround(AutomaticTesting):
     def test_moving_parallel_RLCJG(self):
         self.launch_gui_testing()
 
+    def test_move_ground_with_rotation(self):
+        self.launch_gui_testing(run_slower=False)
+        
+    def test_moving_two_elements_and_trying_to_rotate(self):
+        self.launch_gui_testing(run_slower=False)
+
+
 class TestZooming(AutomaticTesting):
     def test_zooming_in_out_then_moving_capacitor(self):
         self.launch_gui_testing()

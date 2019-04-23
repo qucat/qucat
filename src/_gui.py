@@ -19,6 +19,7 @@ from Qcircuits.src._constants import *
 from copy import deepcopy
 import time
 
+
 png_directory = os.path.join(os.path.dirname(__file__), ".graphics")
 node_dot_radius = 1./30.
 lw = 1./50.
@@ -1987,10 +1988,11 @@ class TwoNodeElement(object):
         if self.selected is False and shift_control is False:
             self.canvas.deselect_all()
 
-        self.canvas.bind('<Left>', lambda event: self.on_updownleftright(event, angle=WEST))
-        self.canvas.bind('<Right>', lambda event: self.on_updownleftright(event, angle=EAST))
-        self.canvas.bind('<Up>', lambda event: self.on_updownleftright(event, angle=NORTH))
-        self.canvas.bind('<Down>', lambda event: self.on_updownleftright(event, angle=SOUTH))
+        if not self.canvas.is_more_than_one_selected():
+            self.canvas.bind('<Left>', lambda event: self.on_updownleftright(event, angle=WEST))
+            self.canvas.bind('<Right>', lambda event: self.on_updownleftright(event, angle=EAST))
+            self.canvas.bind('<Up>', lambda event: self.on_updownleftright(event, angle=NORTH))
+            self.canvas.bind('<Down>', lambda event: self.on_updownleftright(event, angle=SOUTH))
 
     def right_click(self, event):
         if self.canvas.is_more_than_one_selected() and self.selected:
