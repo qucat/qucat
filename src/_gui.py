@@ -156,6 +156,25 @@ class TrackableScrollbar(ttk.Scrollbar):
 
         super(TrackableScrollbar, self).configure(**options)
 
+
+
+# EEEEEEEEEEEEEEEEEEEEEE            d::::::d  iiii           tttt                                               
+# E::::::::::::::::::::E            d::::::d i::::i       ttt:::t                                               
+# E::::::::::::::::::::E            d::::::d  iiii        t:::::t                                               
+# EE::::::EEEEEEEEE::::E            d:::::d               t:::::t                                               
+#   E:::::E       EEEEEE    ddddddddd:::::d iiiiiii ttttttt:::::ttttttt       ooooooooooo   rrrrr   rrrrrrrrr   
+#   E:::::E               dd::::::::::::::d i:::::i t:::::::::::::::::t     oo:::::::::::oo r::::rrr:::::::::r  
+#   E::::::EEEEEEEEEE    d::::::::::::::::d  i::::i t:::::::::::::::::t    o:::::::::::::::or:::::::::::::::::r 
+#   E:::::::::::::::E   d:::::::ddddd:::::d  i::::i tttttt:::::::tttttt    o:::::ooooo:::::orr::::::rrrrr::::::r
+#   E:::::::::::::::E   d::::::d    d:::::d  i::::i       t:::::t          o::::o     o::::o r:::::r     r:::::r
+#   E::::::EEEEEEEEEE   d:::::d     d:::::d  i::::i       t:::::t          o::::o     o::::o r:::::r     rrrrrrr
+#   E:::::E             d:::::d     d:::::d  i::::i       t:::::t          o::::o     o::::o r:::::r            
+#   E:::::E       EEEEEEd:::::d     d:::::d  i::::i       t:::::t    tttttto::::o     o::::o r:::::r            
+# EE::::::EEEEEEEE:::::Ed::::::ddddd::::::ddi::::::i      t::::::tttt:::::to:::::ooooo:::::o r:::::r            
+# E::::::::::::::::::::E d:::::::::::::::::di::::::i      tt::::::::::::::to:::::::::::::::o r:::::r            
+# E::::::::::::::::::::E  d:::::::::ddd::::di::::::i        tt:::::::::::tt oo:::::::::::oo  r:::::r            
+# EEEEEEEEEEEEEEEEEEEEEE   ddddddddd   dddddiiiiiiii          ttttttttttt     ooooooooooo    rrrrrrr            
+
 class CircuitEditor(tk.Canvas):
     """
     The CircuitEditor is the only widget which populates the MainWindow of the application.
@@ -329,7 +348,7 @@ class CircuitEditor(tk.Canvas):
 
         # Puts the Editor in state 0: 
         # sets all the right bindings, etc ...
-        self.set_state(0)
+        self.set_state_0()
         
     ###########################
     # Initialization functions
@@ -644,18 +663,6 @@ class CircuitEditor(tk.Canvas):
     #############################
     #  CORE functions
     ##############################
-
-    def set_state(self,s):
-        '''Puts the CircuitEditor into state s
-
-        Parameters
-        ----------
-        s:      Integer
-                For example if s=0, the Editor will go back to the state 
-                it is in upon opening.
-        '''
-        if s==0:
-            self.set_state_0()
     
     def set_state_0(self):
         '''
@@ -682,7 +689,24 @@ class CircuitEditor(tk.Canvas):
         self.draw_grid()
 
         for el in self.elements:
-            el.set_state(0)
+            el.set_state_0()
+
+    def set_state_1(self):
+        '''To set when before we start dragging
+        '''
+        
+        # unset commong bindings that may have been created elsewhere
+        self.unset_temporary_bindings()
+
+        # Disactivate box selection and right clicking on 
+        # background when pasting elements by redrawing the 
+        # grid with no bindings
+        self.draw_grid(set_bindings = False)
+        
+        for el in self.elements:
+            el.set_state_1()
+
+        
 
     def elements_list_to_netlist_string(self):
         '''
@@ -1004,7 +1028,7 @@ class CircuitEditor(tk.Canvas):
             # built at a different location on the canvas
             self.center_window_on_circuit()
 
-            self.set_state(0)
+            self.set_state_0()
 
     #############################
     # SCROLLING/ZOOMING
@@ -1277,7 +1301,7 @@ class CircuitEditor(tk.Canvas):
         and has them hover under the users mouse until
         he clicks somewhere, snapping them in place on the grid.
         '''
-
+        
         if len(self.copied_elements) > 0:
             self.deselect_all()
 
@@ -1327,6 +1351,10 @@ class CircuitEditor(tk.Canvas):
             # and we have set all the pasted elements to 
             # be selected above
             #########################
+
+            # Default settings for a 
+            # dragging situation
+            self.set_state_1()
 
             # Ensure that when the mouse moves, the selection 
             # moves such that the top left of the circuit lies
@@ -1765,6 +1793,27 @@ class CircuitEditor(tk.Canvas):
                 self.add_nodes()
                 return
 
+
+                                                                          
+# EEEEEEEEEEEEEEEEEEEEEElllllll                                             
+# E::::::::::::::::::::El:::::l                                             
+# E::::::::::::::::::::El:::::l                                             
+# EE::::::EEEEEEEEE::::El:::::l                                             
+#   E:::::E       EEEEEE l::::l     eeeeeeeeeeee       mmmmmmm    mmmmmmm   
+#   E:::::E              l::::l   ee::::::::::::ee   mm:::::::m  m:::::::mm 
+#   E::::::EEEEEEEEEE    l::::l  e::::::eeeee:::::eem::::::::::mm::::::::::m
+#   E:::::::::::::::E    l::::l e::::::e     e:::::em::::::::::::::::::::::m
+#   E:::::::::::::::E    l::::l e:::::::eeeee::::::em:::::mmm::::::mmm:::::m
+#   E::::::EEEEEEEEEE    l::::l e:::::::::::::::::e m::::m   m::::m   m::::m
+#   E:::::E              l::::l e::::::eeeeeeeeeee  m::::m   m::::m   m::::m
+#   E:::::E       EEEEEE l::::l e:::::::e           m::::m   m::::m   m::::m
+# EE::::::EEEEEEEE:::::El::::::le::::::::e          m::::m   m::::m   m::::m
+# E::::::::::::::::::::El::::::l e::::::::eeeeeeee  m::::m   m::::m   m::::m
+# E::::::::::::::::::::El::::::l  ee:::::::::::::e  m::::m   m::::m   m::::m
+# EEEEEEEEEEEEEEEEEEEEEEllllllll    eeeeeeeeeeeeee  mmmmmm   mmmmmm   mmmmmm
+                                                                          
+                                                                                                                                                                                                                
+
 class TwoNodeElement(object):
 
     def __init__(self, canvas, event=None, auto_place_info=None):
@@ -1800,11 +1849,6 @@ class TwoNodeElement(object):
     # CREATION
     ###########################################
 
-    def manual_place(self,event):
-        # Disactivate box selection and right clicking on 
-        # background when creating an element
-        self.canvas.draw_grid(set_bindings = False)
-
     def auto_place(self,auto_place_info):
         '''
         Parse the auto_place_info list defined as:
@@ -1839,7 +1883,7 @@ class TwoNodeElement(object):
 
         # Remove all bindings related to element creation
         # and reinstate state 0
-        self.canvas.set_state(0)
+        self.canvas.set_state_0()
 
         # If the user cancelled by pressing a circuit generating 
         # key, then that circuit should appear
@@ -1856,29 +1900,42 @@ class TwoNodeElement(object):
     ###########################################
     # STATE SETTING
     ###########################################
-    
-    def set_state(self,s):
-        '''Puts the element into state s
 
-        Parameters
-        ----------
-        s:      Integer
-                For example if s=0, the element will go back to the state 
-                it is in upon creation.
-        '''
-        if s==0:
-            self.set_state_0()
     
     def set_state_0(self):
+        '''Default state 
+        '''
         self.canvas.tag_bind(self.binding_object, "<Enter>", self.hover_enter)
         self.canvas.tag_bind(self.binding_object, "<Leave>", self.hover_leave)
         self.canvas.tag_bind(self.binding_object, "<Button-3>", self.right_click)
+
+        
+        # If mouse is on top of component,
+        # act as if one had hovered on top of component
+
+        x,y = self.canvas.get_mouse_location()
+
+        # bounding box of image
+        xm,ym,xp,yp = self.canvas.bbox(self.image)
+
+        if xm<x<xp and ym<y<yp:
+            self.hover_enter()
+        else:
+            self.hover_leave()
+        
+    def set_state_1(self):
+        '''When dragging
+        '''
+        self.hover_leave()
+        self.canvas.tag_bind(self.binding_object, "<Enter>", lambda event:None)
+        self.canvas.tag_bind(self.binding_object, "<Leave>", lambda event:None)
+        self.canvas.tag_bind(self.binding_object, "<Button-3>", lambda event:None)
 
     ###########################################
     # STATE 0 BEHAVIOUR
     ###########################################    
 
-    def hover_enter(self, event):
+    def hover_enter(self, event = None):
         self.hover = True
         self.update_graphic()
 
@@ -1891,7 +1948,7 @@ class TwoNodeElement(object):
         self.canvas.tag_bind(self.binding_object, "<Shift-ButtonRelease-1>", lambda event: self.release_motion(event, shift_control=True))
         self.canvas.tag_bind(self.binding_object, "<Control-ButtonRelease-1>", lambda event: self.release_motion(event, shift_control=True))
 
-    def hover_leave(self, event):
+    def hover_leave(self, event = None):
         self.hover = False
         self.update_graphic()
 
@@ -2055,7 +2112,7 @@ class TwoNodeElement(object):
 
         # Will remove all temporary bindings
         # and reset the canvas to default state
-        self.canvas.set_state(0)
+        self.canvas.set_state_0()
 
         # selection in case of movement
         if self.was_moved:
@@ -2159,7 +2216,23 @@ class TwoNodeElement(object):
                     *canvas_coords_plus, gu*node_dot_radius)
 
             self.canvas.tag_raise(self.dot_plus)
-
+                                                                                           
+# WWWWWWWW                           WWWWWWWW  iiii                                          
+# W::::::W                           W::::::W i::::i                                         
+# W::::::W                           W::::::W  iiii                                          
+# W::::::W                           W::::::W                                                
+#  W:::::W           WWWWW           W:::::W iiiiiii rrrrr   rrrrrrrrr       eeeeeeeeeeee    
+#   W:::::W         W:::::W         W:::::W  i:::::i r::::rrr:::::::::r    ee::::::::::::ee  
+#    W:::::W       W:::::::W       W:::::W    i::::i r:::::::::::::::::r  e::::::eeeee:::::ee
+#     W:::::W     W:::::::::W     W:::::W     i::::i rr::::::rrrrr::::::re::::::e     e:::::e
+#      W:::::W   W:::::W:::::W   W:::::W      i::::i  r:::::r     r:::::re:::::::eeeee::::::e
+#       W:::::W W:::::W W:::::W W:::::W       i::::i  r:::::r     rrrrrrre:::::::::::::::::e 
+#        W:::::W:::::W   W:::::W:::::W        i::::i  r:::::r            e::::::eeeeeeeeeee  
+#         W:::::::::W     W:::::::::W         i::::i  r:::::r            e:::::::e           
+#          W:::::::W       W:::::::W         i::::::i r:::::r            e::::::::e          
+#           W:::::W         W:::::W          i::::::i r:::::r             e::::::::eeeeeeee  
+#            W:::W           W:::W           i::::::i r:::::r              ee:::::::::::::e  
+#             WWW             WWW            iiiiiiii rrrrrrr                eeeeeeeeeeeeee  
 
 class W(TwoNodeElement):
 
@@ -2242,7 +2315,7 @@ class W(TwoNodeElement):
     ###### Arranged in order of calling for a manual placement:
 
     def manual_place(self, event):
-        super(W, self).manual_place(event)
+        self.canvas.set_state_1()
         self.canvas.config(cursor='plus')
         self.canvas.bind("<ButtonPress-1>", self.start_line)
         self.canvas.bind("<Escape>", lambda event: self.abort_creation(event, rerun_command = False))
@@ -2338,7 +2411,7 @@ class W(TwoNodeElement):
             fill = light_black)
         self.add_or_replace_node_dots()
         self.canvas.elements.append(self)
-        self.canvas.set_state(0)
+        self.canvas.set_state_0()
 
  
     ###########################################
@@ -2446,6 +2519,29 @@ class W(TwoNodeElement):
         self.add_or_replace_node_dots(plus = False)
 
 
+
+#    CC:::::::::::::::C                                                             
+#   C:::::CCCCCCCC::::C                                                             
+#  C:::::C       CCCCCC   ooooooooooo      mmmmmmm    mmmmmmm   ppppp   ppppppppp   
+# C:::::C               oo:::::::::::oo  mm:::::::m  m:::::::mm p::::ppp:::::::::p  
+# C:::::C              o:::::::::::::::om::::::::::mm::::::::::mp:::::::::::::::::p 
+# C:::::C              o:::::ooooo:::::om::::::::::::::::::::::mpp::::::ppppp::::::p
+# C:::::C              o::::o     o::::om:::::mmm::::::mmm:::::m p:::::p     p:::::p
+# C:::::C              o::::o     o::::om::::m   m::::m   m::::m p:::::p     p:::::p
+# C:::::C              o::::o     o::::om::::m   m::::m   m::::m p:::::p     p:::::p
+#  C:::::C       CCCCCCo::::o     o::::om::::m   m::::m   m::::m p:::::p    p::::::p
+#   C:::::CCCCCCCC::::Co:::::ooooo:::::om::::m   m::::m   m::::m p:::::ppppp:::::::p
+#    CC:::::::::::::::Co:::::::::::::::om::::m   m::::m   m::::m p::::::::::::::::p 
+#      CCC::::::::::::C oo:::::::::::oo m::::m   m::::m   m::::m p::::::::::::::pp  
+#         CCCCCCCCCCCCC   ooooooooooo   mmmmmm   mmmmmm   mmmmmm p::::::pppppppp    
+#                                                                p:::::p            
+#                                                                p:::::p            
+#                                                               p:::::::p           
+#                                                               p:::::::p           
+#                                                               p:::::::p           
+#                                                               ppppppppp           
+                                                                                 
+
 class Component(TwoNodeElement):
     def __init__(self, canvas, event=None, auto_place_info=None):
         self.image = None
@@ -2535,19 +2631,19 @@ class Component(TwoNodeElement):
             *self.grid_to_canvas([x, y]), image=self.tk_image)
         self.add_or_replace_label()
         self.canvas.elements.append(self)
-        self.canvas.set_state(0)
+        self.canvas.set_state_0()
      
     def abort_creation(self, event=None, rerun_command = True):
         self.canvas.delete(self.image)
         self.canvas.delete(self.dot_minus)
         self.canvas.delete(self.dot_plus)
-        self.canvas.set_state(0)
+        self.canvas.set_state_0()
         super(Component,self).abort_creation(event, rerun_command)
 
     ###### Arranged in order of calling for a manual placement:    
     
     def manual_place(self, event):
-        super(Component, self).manual_place(event)
+        self.canvas.set_state_1()
         self.init_create_component(event)
         self.canvas.in_creation = self
 
@@ -2608,21 +2704,8 @@ class Component(TwoNodeElement):
         self.canvas.track_changes = True
         self.canvas.save()
 
-        self.canvas.set_state(0)  
+        self.canvas.set_state_0()  
 
-        # If mouse is still on top of component,
-        # act as if one had hovered on top of component
-
-        x,y = self.canvas.get_mouse_location()
-
-        # bounding box of image
-        xm,ym,xp,yp = self.canvas.bbox(self.image)
-
-        if xm<x<xp and ym<y<yp:
-            self.hover_enter(event)
-        else:
-            self.hover_leave(event)
-    
 
     ###########################################
     # HOVER BEHAVIOUR
@@ -3076,5 +3159,5 @@ class GuiWindow(ttk.Frame):
             self.mainloop()
 
 if __name__ == '__main__':
-    # GuiWindow('./src/test.txt',_track_events_to='test.txt')
-    GuiWindow('./src/test.txt')
+    GuiWindow('./src/test.txt',_track_events_to='test.txt')
+    # GuiWindow('./src/test.txt')
