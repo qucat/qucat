@@ -197,14 +197,12 @@ class TestCutCopyPaste(AutomaticTesting):
     def test_copy_paste__paste_capacitor_to_intersect_wire(self):
         self.launch_gui_testing()
 
-    # def test_cut_paste__box_select_cut_paste_random_complicated_circuit(self):
-    #     self.launch_gui_testing()
-    # def test_copy_paste__box_select_copy_paste_random_complicated_circuit(self):
-    #     self.launch_gui_testing()
-    # def test_cut_paste__select_all_cut_paste_random_complicated_circuit(self):
-    #     self.launch_gui_testing()
-    # def test_copy_paste__select_all_copy_paste_random_complicated_circuit(self):
-    #     self.launch_gui_testing(run_slower=True)
+    def test_cut_paste__box_select_cut_paste_random_complicated_circuit(self):
+        self.launch_gui_testing()
+    def test_cut_paste__select_all_cut_paste_random_complicated_circuit(self):
+        self.launch_gui_testing()
+    def test_copy_paste__select_all_copy_paste_random_complicated_circuit(self):
+        self.launch_gui_testing()
 
 
 class TestMovingComponentsAround(AutomaticTesting):
