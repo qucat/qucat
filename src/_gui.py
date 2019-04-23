@@ -1910,19 +1910,6 @@ class TwoNodeElement(object):
         self.canvas.tag_bind(self.binding_object, "<Button-3>", self.right_click)
 
         
-        # If mouse is on top of component,
-        # act as if one had hovered on top of component
-
-        x,y = self.canvas.get_mouse_location()
-
-        # bounding box of image
-        xm,ym,xp,yp = self.canvas.bbox(self.image)
-
-        if xm<x<xp and ym<y<yp:
-            self.hover_enter()
-        else:
-            self.hover_leave()
-        
     def set_state_1(self):
         '''When dragging
         '''
@@ -2599,6 +2586,30 @@ class Component(TwoNodeElement):
             self._value = prop[0]
             self._label = prop[1]
             self.canvas.save()
+
+    ###########################################
+    # STATE SETTING
+    ###########################################
+
+    
+    def set_state_0(self):
+        '''Default state 
+        '''
+        super(Component, self).set_state_0()
+
+        # If mouse is on top of component,
+        # act as if one had hovered on top of component
+
+        x,y = self.canvas.get_mouse_location()
+
+        # bounding box of image
+        xm,ym,xp,yp = self.canvas.bbox(self.image)
+
+        if xm<x<xp and ym<y<yp:
+            self.hover_enter()
+        else:
+            self.hover_leave()
+
 
     ###########################################
     # CREATION
