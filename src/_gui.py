@@ -3194,5 +3194,5 @@ class GuiWindow(ttk.Frame):
             self.mainloop()
 
 if __name__ == '__main__':
-    GuiWindow('./src/test.txt',_track_events_to='test.txt')
-    # GuiWindow('./src/test.txt')
+    # GuiWindow('./src/test.txt',_track_events_to='test.txt')
+    GuiWindow('./src/test.txt')

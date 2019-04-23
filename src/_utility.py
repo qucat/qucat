@@ -90,11 +90,17 @@ def pretty_value(v, use_power_10=False, use_math=True, use_unicode=False):
             exponent_part = ' '+exponent_to_letter_math[exponent_3]
         else:
             exponent_part = ' '+exponent_to_letter[exponent_3]
-    if float_part >= 10.:
-        pretty = "%.0f%s" % (float_part, exponent_part)
+
+    if ("%.7f"%float_part)[-1] != '0':
+        float_part ="%.6f.."%float_part
     else:
-        pretty = "%.1f%s" % (float_part, exponent_part)
-    return sign+pretty
+        float_part ="%.6f"%float_part
+        while float_part[-1]=="0":
+            float_part = float_part[:-1]
+        if float_part[-1]==".":
+            float_part = float_part[:-1]
+
+    return sign + float_part + exponent_part
 
 def check_there_are_no_iterables_in_kwarg(**kwargs):
     for el, value in kwargs.items():
