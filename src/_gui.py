@@ -793,7 +793,7 @@ class CircuitEditor(tk.Canvas):
         self.configure_scrollregion()
         self.draw_grid(event)
 
-    def draw_grid(self, event=None, set_bindings = False):
+    def draw_grid(self, event=None, set_bindings = True):
         '''
         Called when the user resizes the window. 
         Will delete and rebuild the grid.
