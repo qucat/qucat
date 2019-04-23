@@ -706,6 +706,14 @@ class CircuitEditor(tk.Canvas):
         for el in self.elements:
             el.set_state_1()
 
+    def exit_state_1(self):
+        '''When dragging
+        '''
+        self.track_changes = False
+        self.add_nodes()
+        self.track_changes = True
+        self.save()
+        self.set_state_0()
         
 
     def elements_list_to_netlist_string(self):
@@ -753,25 +761,35 @@ class CircuitEditor(tk.Canvas):
         # of all the elements on the canvas       
         netlist_string = self.elements_list_to_netlist_string()
 
-        # Write that netlist string to the file
-        with open(self.netlist_filename, 'w') as f:
-            f.write(netlist_string)
+        try:
+            previously_saved_netlist_string = self.history[self.history_location]
+        except IndexError:
+            # First time we save save: the history array is empty
+            previously_saved_netlist_string = []
+        
+        # If there actually was a change to the circuit
+        if netlist_string != previously_saved_netlist_string:
 
-        # If we are tracking the changes made to the circuit
-        if self.track_changes:
-            
-            # In case we just used undo (ctrl-z), 
-            # we first want to delete the all entries 
-            # in history which are after the current state of the circuit
-            del self.history[self.history_location+1:]
+            # Write that netlist string to the file
+            with open(self.netlist_filename, 'w') as f:
+                f.write(netlist_string)
 
-            # we append all the information about the current circuit
-            # to the history list
-            self.history.append(netlist_string)
+            # If we are tracking the changes made to the circuit
+            if self.track_changes:
 
-            # and increase our location in the history 
-            # lsit by one
-            self.history_location += 1
+                
+                # In case we just used undo (ctrl-z), 
+                # we first want to delete the all entries 
+                # in history which are after the current state of the circuit
+                del self.history[self.history_location+1:]
+
+                # we append all the information about the current circuit
+                # to the history list
+                self.history.append(netlist_string)
+
+                # and increase our location in the history 
+                # lsit by one
+                self.history_location += 1
 
         # Inform the user that the circuit was just saved
         self.message("Saving...")
@@ -1775,23 +1793,26 @@ class CircuitEditor(tk.Canvas):
                     return True
         return False
 
-    def add_nodes(self):
+    def add_nodes(self, save_at_the_end = False):
         '''Add nodes where a node of an element intersects a wire
         '''
+        def to_iterate():
+            for el in self.elements:
+                # Element method which goes through all other wires
+                # if the node of el intersects with a wire, 
+                # a node will be added, the wire deleted, two wires placed
+                # in its stead, and added_a_node = True
+                # otherwise added_a_node = False
+                added_a_node = el.add_nodes()
 
-        for el in self.elements:
-            # Element method which goes through all other wires
-            # if the node of el intersects with a wire, 
-            # a node will be added, the wire deleted, two wires placed
-            # in its stead, and added_a_node = True
-            # otherwise added_a_node = False
-            added_a_node = el.add_nodes()
-
-            # If a node was added, the list of elements is now 
-            # different, so we start this routine from scratch
-            if added_a_node:
-                self.add_nodes()
-                return
+                # If a node was added, the list of elements is now 
+                # different, so we start this routine from scratch
+                if added_a_node:
+                    to_iterate()
+                    return
+        to_iterate()
+        if save_at_the_end:
+            self.save()
 
 
                                                                           
@@ -1909,7 +1930,6 @@ class TwoNodeElement(object):
         self.canvas.tag_bind(self.binding_object, "<Leave>", self.hover_leave)
         self.canvas.tag_bind(self.binding_object, "<Button-3>", self.right_click)
 
-        
     def set_state_1(self):
         '''When dragging
         '''
@@ -1917,6 +1937,7 @@ class TwoNodeElement(object):
         self.canvas.tag_bind(self.binding_object, "<Enter>", lambda event:None)
         self.canvas.tag_bind(self.binding_object, "<Leave>", lambda event:None)
         self.canvas.tag_bind(self.binding_object, "<Button-3>", lambda event:None)
+
 
     ###########################################
     # STATE 0 BEHAVIOUR
@@ -2093,14 +2114,6 @@ class TwoNodeElement(object):
             self.set_node_coordinates()
             self.was_rotated = False
 
-        # Track the changes made to the network
-        self.canvas.track_changes = True
-        self.canvas.save()
-
-        # Will remove all temporary bindings
-        # and reset the canvas to default state
-        self.canvas.set_state_0()
-
         # selection in case of movement
         if self.was_moved:
             self.force_select()
@@ -2112,7 +2125,8 @@ class TwoNodeElement(object):
             self.select()
 
         # Check if elements are intersecting a wire
-        self.canvas.add_nodes()
+        # save, go back to state 0
+        self.canvas.exit_state_1()
  
     ###########################################
     # SELECTION
@@ -2282,11 +2296,6 @@ class W(TwoNodeElement):
     def auto_place(self, auto_place_info):
         super(W, self).auto_place(auto_place_info)
         self.create()
-
-        # When wires are automatically created
-        # upon being split due to an intersection
-        # we want to re-check if there are intersections
-        self.canvas.add_nodes()
     
     def abort_creation(self, event=None, rerun_command = True):
         self.canvas.bind("<ButtonPress-1>", lambda event: None)
@@ -2367,10 +2376,10 @@ class W(TwoNodeElement):
         self.init_plus_snap_to_grid(event)
         self.canvas.in_creation = None
         self.create()
-        self.track_changes = False
-        self.canvas.add_nodes()
-        self.track_changes = True
-        self.canvas.save()
+        # Check if elements are intersecting a wire
+        # save, go back to state 0
+        self.canvas.exit_state_1()
+        
 
     def init_plus_snap_to_grid(self, event):
 
@@ -2398,7 +2407,6 @@ class W(TwoNodeElement):
             fill = light_black)
         self.add_or_replace_node_dots()
         self.canvas.elements.append(self)
-        self.canvas.set_state_0()
 
  
     ###########################################
@@ -2648,7 +2656,7 @@ class Component(TwoNodeElement):
         self.canvas.delete(self.image)
         self.canvas.delete(self.dot_minus)
         self.canvas.delete(self.dot_plus)
-        self.canvas.set_state_0()
+        self.canvas.exit_state_1()
         super(Component,self).abort_creation(event, rerun_command)
 
     ###### Arranged in order of calling for a manual placement:    
@@ -2706,16 +2714,12 @@ class Component(TwoNodeElement):
         # Case where the user clicks cancel in the popup window
         if self.prop[0] is None and self.prop[1] is None:
             self.abort_creation(rerun_command = False)
-            self.canvas.track_changes = True
             return
 
         self.add_or_replace_label()
         self.canvas.elements.append(self)
-        self.canvas.add_nodes()
-        self.canvas.track_changes = True
-        self.canvas.save()
-
-        self.canvas.set_state_0()  
+        self.canvas.exit_state_1()
+        
 
 
     ###########################################

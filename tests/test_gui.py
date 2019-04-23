@@ -47,12 +47,11 @@ class ManualTesting(GuiTestingHandler):
 
 class AutomaticTesting(GuiTestingHandler):
 
-    def launch_gui_testing(self,exclude = None, force_build = False, run_slow = False, run_slower = False):
+    def launch_gui_testing(self,exclude = None, force_build = False, run_slower = False):
         self.set_folder_name()
         self.set_file_names()
         self.exclude = exclude
         self.force_build = force_build
-        self.run_slow = run_slow
         self.run_slower = run_slower
 
         if not self.already_built():
@@ -101,8 +100,11 @@ class AutomaticTesting(GuiTestingHandler):
                 if self.run_slower:
                     self.gui.update()
                     self.gui.canvas.after(10)
-        
-        self.gui.master.destroy()
+
+        if self.run_slower:
+            self.gui.master.mainloop()
+        else:
+            self.gui.master.destroy()
 
     def gui_build_test(self):
 
@@ -186,15 +188,23 @@ class TestComponentCreation(AutomaticTesting):
     def test_building_transmon(self):
         self.launch_gui_testing()
     
-# class TestCutCopyPaste(AutomaticTesting):
-#     def test_cut_paste__box_select_cut_paste_random_complicated_circuit(self):
-#         self.launch_gui_testing()
-#     def test_copy_paste__box_select_copy_paste_random_complicated_circuit(self):
-#         self.launch_gui_testing()
-#     def test_cut_paste__select_all_cut_paste_random_complicated_circuit(self):
-#         self.launch_gui_testing()
-#     def test_copy_paste__select_all_copy_paste_random_complicated_circuit(self):
-#         self.launch_gui_testing(run_slower=True)
+class TestCutCopyPaste(AutomaticTesting):
+
+    def test_cut_paste__cut_paste_inductor(self):
+        self.launch_gui_testing()
+    def test_copy_paste__copy_paste_capacitor(self):
+        self.launch_gui_testing()
+    def test_copy_paste__paste_capacitor_to_intersect_wire(self):
+        self.launch_gui_testing()
+
+    # def test_cut_paste__box_select_cut_paste_random_complicated_circuit(self):
+    #     self.launch_gui_testing()
+    # def test_copy_paste__box_select_copy_paste_random_complicated_circuit(self):
+    #     self.launch_gui_testing()
+    # def test_cut_paste__select_all_cut_paste_random_complicated_circuit(self):
+    #     self.launch_gui_testing()
+    # def test_copy_paste__select_all_copy_paste_random_complicated_circuit(self):
+    #     self.launch_gui_testing(run_slower=True)
 
 
 class TestMovingComponentsAround(AutomaticTesting):
