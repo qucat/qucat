@@ -1747,6 +1747,24 @@ class CircuitEditor(tk.Canvas):
                     return True
         return False
 
+    def add_nodes(self):
+        '''Add nodes where a node of an element intersects a wire
+        '''
+
+        for el in self.elements:
+            # Element method which goes through all other wires
+            # if the node of el intersects with a wire, 
+            # a node will be added, the wire deleted, two wires placed
+            # in its stead, and added_a_node = True
+            # otherwise added_a_node = False
+            added_a_node = el.add_nodes()
+
+            # If a node was added, the list of elements is now 
+            # different, so we start this routine from scratch
+            if added_a_node:
+                self.add_nodes()
+                return
+
 class TwoNodeElement(object):
 
     def __init__(self, canvas, event=None, auto_place_info=None):
@@ -1760,12 +1778,18 @@ class TwoNodeElement(object):
 
         if auto_place_info is None and event is not None:
             self.manual_place(event)
-        else:
+        elif auto_place_info is not None and event is None:
             self.auto_place(auto_place_info)
         
     def __deepcopy__(self, memo):
+
+        # cls would be R if we are copying a resistor for example
         cls = self.__class__
+
+        # We make a new instance of this class
         newone = cls.__new__(cls)
+
+        # We initialize that instance
         newone.__init__(self.canvas)
         memo[id(self)] = newone
         newone.pos = deepcopy(self.pos)
@@ -1910,24 +1934,38 @@ class TwoNodeElement(object):
     # DROPPING BEHAVIOUR
     ###########################################  
     
-    def add_nodes(self, to = 'all wires', minus = True, plus = True):
+    def add_nodes(self, minus = True, plus = True):
         '''
         Upon dropping an element check if one of its nodes intersects
         a wire. If that is the case, split the wire into two, 
         such that the intersection point is now a node of each of the
         new wires.
+
+        Called in CircuitEditor.add_nodes
+
+        Parameters
+        ----------
+        minus:  Boolean
+                If True, nodes will be created where the minus node of this element
+                intersects a wire
+        plus:   Boolean
+                If True, nodes will be created where the plus node of this element
+                intersects a wire
+
+        Returns
+        -------
+        added_a_node:   True if a node was created, False otherwise
+                        This method is called until all nodes have been created
         '''
+
 
         # Check if one of the nodes of this component/wire 
         # is on a wire
-        if to == 'all wires':
-            to_nodify = []
-            for el in self.canvas.elements:
-                if type(el) == W and el != self:
-                    to_nodify.append(el)
-        else:
-            to_nodify = to
-        
+        to_nodify = []
+        for el in self.canvas.elements:
+            if type(el) == W and el != self:
+                to_nodify.append(el)
+    
         for w in to_nodify:
             if w.x_minus == w.x_plus == self.x_minus and minus:
                 # vertical wire, minus node
@@ -1943,7 +1981,7 @@ class TwoNodeElement(object):
                         '%d,%d'%(x,self.y_minus),'',''])
                     return True
 
-            elif w.y_minus == w.y_plus == self.y_minus and minus:
+            if w.y_minus == w.y_plus == self.y_minus and minus:
                 # horizontal wire, minus node
                 if self.x_minus in range(min(w.x_minus,w.x_plus)+1,
                                     max(w.x_minus,w.x_plus)):
@@ -1956,7 +1994,8 @@ class TwoNodeElement(object):
                     W(self.canvas,auto_place_info=['W','%d,%d'%(xp,y),
                         '%d,%d'%(self.x_minus,y),'',''])
                     return True
-            elif w.x_minus == w.x_plus == self.x_plus and plus:
+
+            if w.x_minus == w.x_plus == self.x_plus and plus:
                 # vertical wire, positive node
                 if self.y_plus in range(min(w.y_minus,w.y_plus)+1,
                                     max(w.y_minus,w.y_plus)):
@@ -1970,7 +2009,7 @@ class TwoNodeElement(object):
                         '%d,%d'%(x,self.y_plus),'',''])
                     return True
 
-            elif w.y_minus == w.y_plus == self.y_plus and plus:
+            if w.y_minus == w.y_plus == self.y_plus and plus:
                 # horizontal wire, positive node
                 if self.x_plus in range(min(w.x_minus,w.x_plus)+1,
                                     max(w.x_minus,w.x_plus)):
@@ -1987,36 +2026,49 @@ class TwoNodeElement(object):
 
     def release_motion(self, event, shift_control=False):
         '''
-        Called when dropping in a dragging/dropping action
-        and when pasting.
+        Called when:
+        * dropping in a dragging/dropping action
+        * pasting then dropping
+        * just clicking (i.e. dropping without dragging)
 
-        Bound when hovering over a component or pasting
+        Bound when hovering over a component or upon pasting.
         '''
         
         self.canvas.track_changes = False
 
+        # Snap all the released elements to the grid
         for el in self.canvas.elements:
             if el.selected or el == self:
                 el.snap_to_grid()
                 el.add_or_replace_label()
+               
 
+        # This was only occur if 
+        # a single element was selected and moved
         if self.was_rotated:
             self.set_node_coordinates()
             self.was_rotated = False
 
+        # Track the changes made to the network
         self.canvas.track_changes = True
         self.canvas.save()
 
         # Will remove all temporary bindings
+        # and reset the canvas to default state
         self.canvas.set_state(0)
 
+        # selection in case of movement
         if self.was_moved:
             self.force_select()
             self.was_moved = False
+        # selection in case of only clicking
         elif shift_control:
             self.ctrl_shift_select()
         else:
             self.select()
+
+        # Check if elements are intersecting a wire
+        self.canvas.add_nodes()
  
     ###########################################
     # SELECTION
@@ -2170,7 +2222,11 @@ class W(TwoNodeElement):
     def auto_place(self, auto_place_info):
         super(W, self).auto_place(auto_place_info)
         self.create()
-        self.add_nodes()
+
+        # When wires are automatically created
+        # upon being split due to an intersection
+        # we want to re-check if there are intersections
+        self.canvas.add_nodes()
     
     def abort_creation(self, event=None, rerun_command = True):
         self.canvas.bind("<ButtonPress-1>", lambda event: None)
@@ -2252,7 +2308,7 @@ class W(TwoNodeElement):
         self.canvas.in_creation = None
         self.create()
         self.track_changes = False
-        self.add_nodes()
+        self.canvas.add_nodes()
         self.track_changes = True
         self.canvas.save()
 
@@ -2283,20 +2339,7 @@ class W(TwoNodeElement):
         self.add_or_replace_node_dots()
         self.canvas.elements.append(self)
         self.canvas.set_state(0)
- 
-    def add_nodes(self,to = 'all wires'):
 
-        all_other_elements = [el for el in self.canvas.elements if el != self]
-        for el in all_other_elements:
-            added_a_node = TwoNodeElement.add_nodes(el,to = [self])
-            if added_a_node:
-                return True
-
-        added_a_node = TwoNodeElement.add_nodes(self,to)
-        if added_a_node:
-            return True
-        else:
-            return False
  
     ###########################################
     # HOVER BEHAVIOUR
@@ -2348,9 +2391,7 @@ class W(TwoNodeElement):
             self.dot_minus, xm, ym, self.canvas.grid_unit*node_dot_radius)
         self.canvas.update_circle(
             self.dot_plus, xp, yp, self.canvas.grid_unit*node_dot_radius)
-
-        # Add node if a node of this line is on another line
-        self.add_nodes()
+ 
 
     ###########################################
     # SELECTION
@@ -2563,6 +2604,7 @@ class Component(TwoNodeElement):
 
         self.add_or_replace_label()
         self.canvas.elements.append(self)
+        self.canvas.add_nodes()
         self.canvas.track_changes = True
         self.canvas.save()
 
@@ -2678,8 +2720,6 @@ class Component(TwoNodeElement):
                 angle]
             self.canvas.coords(self.image, *self.grid_to_canvas(self.pos[:2]))
 
-        # Add nodes in case of intersection with a wire
-        self.add_nodes()
 
         # Add circles at the nodes of the component
         self.add_or_replace_node_dots()
@@ -2895,8 +2935,8 @@ class G(Component):
     def add_or_replace_node_dots(self):
         super(G,self).add_or_replace_node_dots(minus = False)
 
-    def add_nodes(self, to = 'all wires', minus = False, plus = True):   
-        super(G,self).add_nodes(to = to, minus = minus, plus = plus)       
+    def add_nodes(self, minus = False, plus = True):   
+        super(G,self).add_nodes( minus = minus, plus = plus)       
 
 class RequestValueLabelWindow(tk.Toplevel):
     def __init__(self, master, component):
