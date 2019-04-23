@@ -2249,7 +2249,6 @@ class W(TwoNodeElement):
         self.canvas.config(cursor='arrow')
 
         self.init_plus_snap_to_grid(event)
-        self.canvas.set_keyboard_shortcuts_element_creation()
         self.canvas.in_creation = None
         self.create()
         self.track_changes = False
@@ -2283,7 +2282,7 @@ class W(TwoNodeElement):
             fill = light_black)
         self.add_or_replace_node_dots()
         self.canvas.elements.append(self)
-        self.set_state(0)
+        self.canvas.set_state(0)
  
     def add_nodes(self,to = 'all wires'):
 
@@ -2495,7 +2494,7 @@ class Component(TwoNodeElement):
             *self.grid_to_canvas([x, y]), image=self.tk_image)
         self.add_or_replace_label()
         self.canvas.elements.append(self)
-        self.set_state(0)
+        self.canvas.set_state(0)
      
     def abort_creation(self, event=None, rerun_command = True):
         self.canvas.delete(self.image)
@@ -2549,11 +2548,10 @@ class Component(TwoNodeElement):
     
     def init_release(self, event):
 
-        self.canvas.bind('<Motion>', lambda event: None)
         
+        self.canvas.bind('<Motion>', lambda event:None)
         self.canvas.track_changes = False
         self.snap_to_grid()
-        self.canvas.set_keyboard_shortcuts_element_creation()
         self.request_value_label()
         self.canvas.in_creation = None
 
@@ -2562,11 +2560,13 @@ class Component(TwoNodeElement):
             self.abort_creation(rerun_command = False)
             self.canvas.track_changes = True
             return
+
         self.add_or_replace_label()
         self.canvas.elements.append(self)
-        self.set_state(0)
         self.canvas.track_changes = True
         self.canvas.save()
+
+        self.canvas.set_state(0)  
 
         # If mouse is still on top of component,
         # act as if one had hovered on top of component
@@ -2578,7 +2578,9 @@ class Component(TwoNodeElement):
 
         if xm<x<xp and ym<y<yp:
             self.hover_enter(event)
-      
+        else:
+            self.hover_leave(event)
+    
 
     ###########################################
     # HOVER BEHAVIOUR
@@ -3034,5 +3036,5 @@ class GuiWindow(ttk.Frame):
             self.mainloop()
 
 if __name__ == '__main__':
-    GuiWindow('./src/test.txt',_track_events_to='test.txt')
-    # GuiWindow('./src/test.txt')
+    # GuiWindow('./src/test.txt',_track_events_to='test.txt')
+    GuiWindow('./src/test.txt')

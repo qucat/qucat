@@ -97,11 +97,10 @@ class AutomaticTesting(GuiTestingHandler):
                     exec('self.gui.canvas.scroll_'+l[1]+'('+l[3:]+')', globals(), locals())
                 else:
                     exec('self.gui.canvas.event_generate('+l+')', globals(), locals())
+
                 if self.run_slower:
                     self.gui.update()
                     self.gui.canvas.after(10)
-                elif self.run_slow:
-                    self.gui.update()
         
         self.gui.master.destroy()
 
@@ -175,10 +174,27 @@ class TestComponentCreation(AutomaticTesting):
         
     def test_building_capacitor(self):
         self.launch_gui_testing()
+    def test_building_resistor(self):
+        self.launch_gui_testing()
+    def test_building_junction(self):
+        self.launch_gui_testing()
+    def test_building_ground(self):
+        self.launch_gui_testing()
+    def test_building_inductor(self):
+        self.launch_gui_testing()
 
     def test_building_transmon(self):
         self.launch_gui_testing()
     
+# class TestCutCopyPaste(AutomaticTesting):
+#     def test_box_select_cut_paste_random_complicated_circuit(self):
+#         self.launch_gui_testing()
+#     def test_box_select_copy_paste_random_complicated_circuit(self):
+#         self.launch_gui_testing()
+#     def test_select_all_cut_paste_random_complicated_circuit(self):
+#         self.launch_gui_testing()
+#     def test_select_all_copy_paste_random_complicated_circuit(self):
+#         self.launch_gui_testing()
 
 
 class TestMovingComponentsAround(AutomaticTesting):
