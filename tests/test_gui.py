@@ -26,7 +26,7 @@ class ManualTesting(GuiTestingHandler):
         calling_function_name = calframe[2][3]
         filename = os.path.join(\
             os.path.dirname(__file__),\
-            ".gui_testing_files",\
+            "gui_testing_files",\
             calling_function_name+\
             "_netlist.txt")
         return filename
@@ -80,7 +80,7 @@ class AutomaticTesting(GuiTestingHandler):
                 
         self.folder = os.path.join(\
             os.path.dirname(__file__),\
-            ".gui_testing_files",\
+            "gui_testing_files",\
             calling_function_name)
 
     def run_events(self):
@@ -168,9 +168,18 @@ class TestOpening(AutomaticTesting):
 
 class TestComponentCreation(AutomaticTesting):
     def test_building_wire(self):
-        self.launch_gui_testing(run_slower=True)
-    def test_building_complicated_circuit(self):
         self.launch_gui_testing()
+
+    def test_building_overlapping_and_intersecting_wires(self):
+        self.launch_gui_testing()
+        
+    def test_building_capacitor(self):
+        self.launch_gui_testing()
+
+    def test_building_transmon(self):
+        self.launch_gui_testing()
+    
+
 
 class TestMovingComponentsAround(AutomaticTesting):
 

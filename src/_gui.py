@@ -42,6 +42,7 @@ def track_event(track_events_to, event,sequence):
     sequence:           string
                         For example '<ButtonRelease-1>' or 'c'
     '''
+    print(sequence)
     # sequences to not save
     to_exclude = [
         '<Enter>','<Leave>'] # Enter and leave will be triggered by mouse motion anyway
@@ -330,7 +331,6 @@ class CircuitEditor(tk.Canvas):
         # sets all the right bindings, etc ...
         self.set_state(0)
         
-        
     ###########################
     # Initialization functions
     ###########################
@@ -508,6 +508,7 @@ class CircuitEditor(tk.Canvas):
 
         # Add the menubar to the application
         self.master.config(menu=self.menubar)
+    
     def build_gridframe(self):
         '''
         Builds the main area of the window (called a frame), 
@@ -530,6 +531,7 @@ class CircuitEditor(tk.Canvas):
         self.frame.grid(sticky='nswe')  # make frame container sticky
         self.frame.rowconfigure(0, weight=1)  # make canvas expandable in x
         self.frame.columnconfigure(0, weight=1)  # make canvas expandable in y
+    
     def build_scrollbars(self):
         '''
         Builds horizontal and vertical scrollbars and places
@@ -541,6 +543,7 @@ class CircuitEditor(tk.Canvas):
         self.vbar = TrackableScrollbar(self.frame, track_events_to = self.track_events_to, orient='vertical')
         self.hbar.grid(row=1, column=0, sticky='we')
         self.vbar.grid(row=0, column=1, sticky='ns')
+    
     def build_canvas(self):
         '''
         Initializes the canvas from which this object inherits and 
@@ -569,6 +572,7 @@ class CircuitEditor(tk.Canvas):
         '''
         self.hbar.configure(command=self.scroll_x)
         self.vbar.configure(command=self.scroll_y)
+    
     def set_canvas_center(self):
         '''
         Calculate the center of the canvas in 
@@ -587,17 +591,26 @@ class CircuitEditor(tk.Canvas):
         self.canvas_center = [
             self.canvasx(self.winfo_width()/2.),
             self.canvasy(self.winfo_height()/2.)]
+    
     def configure_canvas(self):
         '''
         Configures the canvas. This is a collection of small things 
         we still have to do to the canvas
         '''
+        
+        # This function is only useful if we 
+        # are tracking the actions of the user.
+        # Mouse motion is by default not binded to 
+        # any function, here we bind it to a function
+        # which does nothing, but, if tracking is turned
+        # on, this function will be appended with tracking
+        # functionalities.
+        self.bind("<Motion>", lambda event: None)
 
         # Ensure that the function "on_resize"
         # is called each time the user resizes
         # the window. 
         self.bind("<Configure>", self.on_resize)
-
 
     def load_or_create_netlist_file(self):
         '''
@@ -613,6 +626,7 @@ class CircuitEditor(tk.Canvas):
             with open(self.netlist_filename, 'w') as f:
                 pass
         self.load_netlist(netlist_file_string)
+
     def initialize_user_knowledge_tracking_variables(self):
         '''
         Initialize a set of variables which will allow us
@@ -779,7 +793,7 @@ class CircuitEditor(tk.Canvas):
         self.configure_scrollregion()
         self.draw_grid(event)
 
-    def draw_grid(self, event=None):
+    def draw_grid(self, event=None, set_bindings = False):
         '''
         Called when the user resizes the window. 
         Will delete and rebuild the grid.
@@ -819,10 +833,11 @@ class CircuitEditor(tk.Canvas):
         self.tag_lower('grid')
 
         # Determine what happens when the user clicks on the background
-        self.tag_bind('grid', '<ButtonPress-1>', self.start_selection_field)
-        self.tag_bind('grid', "<B1-Motion>", self.expand_selection_field)
-        self.tag_bind('grid', "<ButtonRelease-1>", self.end_selection_field)
-        self.tag_bind('grid', "<Button-3>", self.right_click)
+        if set_bindings:
+            self.tag_bind('grid', '<ButtonPress-1>', self.start_selection_field)
+            self.tag_bind('grid', "<B1-Motion>", self.expand_selection_field)
+            self.tag_bind('grid', "<ButtonRelease-1>", self.end_selection_field)
+            self.tag_bind('grid', "<Button-3>", self.right_click)
         
     def bind(self, sequence=None, func=None, add=None):
         '''
@@ -939,7 +954,7 @@ class CircuitEditor(tk.Canvas):
             '<Control-ButtonPress-1>','<Shift-ButtonRelease-1>','<Control-ButtonRelease-1>', 
             '<Double-ButtonPress-1>', '<ButtonPress-3>','<ButtonRelease-3>', '<Return>',
         ]:
-            self.bind(sequence, lambda event: None)
+            self.unbind(sequence)
 
     ###########################
     # FILE menu functionalities
@@ -1761,6 +1776,11 @@ class TwoNodeElement(object):
     # CREATION
     ###########################################
 
+    def manual_place(self,event):
+        # Disactivate box selection and right clicking on 
+        # background when creating an element
+        self.canvas.draw_grid(set_bindings = False)
+
     def auto_place(self,auto_place_info):
         '''
         Parse the auto_place_info list defined as:
@@ -2166,6 +2186,7 @@ class W(TwoNodeElement):
     ###### Arranged in order of calling for a manual placement:
 
     def manual_place(self, event):
+        super(W, self).manual_place(event)
         self.canvas.config(cursor='plus')
         self.canvas.bind("<ButtonPress-1>", self.start_line)
         self.canvas.bind("<Escape>", lambda event: self.abort_creation(event, rerun_command = False))
@@ -2486,21 +2507,27 @@ class Component(TwoNodeElement):
     ###### Arranged in order of calling for a manual placement:    
     
     def manual_place(self, event):
+        super(Component, self).manual_place(event)
         self.init_create_component(event)
         self.canvas.in_creation = self
 
     def init_create_component(self, event, angle=0.):
+
+        # If the user has not used arrows to rotate a component, 
+        # provide a help message.
         if angle == 0. and  not self.canvas.used_arrows:
             self.canvas.message("Use arrows to rotate",t = 2)
         if angle != 0.:
             self.canvas.used_arrows = True
 
         self.init_angle = angle
+
+        # Impor the image and plot it on the canvas
         self.import_image()
         self.image = self.canvas.create_image(
             self.canvas.canvasx(event.x), self.canvas.canvasy(event.y), image=self.tk_image)
 
-        self.canvas.bind("<ButtonPress-1>", self.init_release)
+        self.canvas.bind("<ButtonRelease-1>", self.init_release)
         self.canvas.bind('<Motion>', self.init_on_motion)
         self.canvas.bind('<Escape>', lambda event: self.abort_creation(event, rerun_command = False))
         self.canvas.bind('r', self.abort_creation)
@@ -2509,14 +2536,10 @@ class Component(TwoNodeElement):
         self.canvas.bind('j', self.abort_creation)
         self.canvas.bind('w', self.abort_creation)
         self.canvas.bind('g', self.abort_creation)
-        self.canvas.bind(
-            '<Left>', lambda event: self.init_create_component(event, angle=WEST))
-        self.canvas.bind(
-            '<Right>', lambda event: self.init_create_component(event, angle=EAST))
-        self.canvas.bind(
-            '<Up>', lambda event: self.init_create_component(event, angle=NORTH))
-        self.canvas.bind(
-            '<Down>', lambda event: self.init_create_component(event, angle=SOUTH))
+        self.canvas.bind('<Left>', lambda event: self.init_create_component(event, angle=WEST))
+        self.canvas.bind('<Right>', lambda event: self.init_create_component(event, angle=EAST))
+        self.canvas.bind('<Up>', lambda event: self.init_create_component(event, angle=NORTH))
+        self.canvas.bind('<Down>', lambda event: self.init_create_component(event, angle=SOUTH))
 
     def init_on_motion(self, event):
         x, y = self.canvas.coords(self.image)
@@ -2525,6 +2548,8 @@ class Component(TwoNodeElement):
         self.canvas.move(self.image, dx, dy)
     
     def init_release(self, event):
+
+        self.canvas.bind('<Motion>', lambda event: None)
         
         self.canvas.track_changes = False
         self.snap_to_grid()
@@ -2625,6 +2650,9 @@ class Component(TwoNodeElement):
     # DROPPING BEHAVIOUR
     ###########################################   
     def snap_to_grid(self, event=None):
+        '''
+        Called in release_motion or init_release
+        '''
         x, y = self.canvas.coords(self.image)
         x0, y0 = self.canvas.canvas_center
         gu = float(self.canvas.grid_unit)
@@ -2741,7 +2769,6 @@ class Component(TwoNodeElement):
     def init_adapt_to_grid_unit(self,event):
         self.update_graphic()
 
-        
     def add_or_replace_label(self):
         gu = self.canvas.grid_unit
         _, _, angle = self.pos
@@ -3007,5 +3034,5 @@ class GuiWindow(ttk.Frame):
             self.mainloop()
 
 if __name__ == '__main__':
-    # GuiWindow('./src/test.txt',_track_events_to='test.txt')
-    GuiWindow('./src/test.txt')
+    GuiWindow('./src/test.txt',_track_events_to='test.txt')
+    # GuiWindow('./src/test.txt')
