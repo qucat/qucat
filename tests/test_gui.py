@@ -190,6 +190,8 @@ class TestComponentCreation(AutomaticTesting):
     
 class TestCutCopyPaste(AutomaticTesting):
 
+    def test_copy_paste__copying_nothing(self):
+        self.launch_gui_testing()
     def test_cut_paste__cut_paste_inductor(self):
         self.launch_gui_testing()
     def test_copy_paste__copy_paste_capacitor(self):
@@ -203,6 +205,11 @@ class TestCutCopyPaste(AutomaticTesting):
         self.launch_gui_testing()
     def test_copy_paste__select_all_copy_paste_random_complicated_circuit(self):
         self.launch_gui_testing()
+
+class TestUndoRedo(AutomaticTesting):
+
+    def test_complex_random(self):
+        self.launch_gui_testing(run_slower=True)
 
 
 class TestMovingComponentsAround(AutomaticTesting):

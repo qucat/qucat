@@ -692,7 +692,7 @@ class CircuitEditor(tk.Canvas):
             el.set_state_0()
 
     def set_state_1(self):
-        '''To set when before we start dragging
+        '''To set before we start dragging
         '''
         
         # unset commong bindings that may have been created elsewhere
@@ -1308,8 +1308,14 @@ class CircuitEditor(tk.Canvas):
         # we forbid any additions the history variable to be on the safe side
         self.track_changes = False
 
-        self.copied_elements = [deepcopy(el)
-                                for el in self.elements if el.selected]
+        to_copy = [el for el in self.elements if el.selected]
+
+        # If somthing has been copied 
+        # and then you do CTRL-C with nothing selected
+        # the previously copied elements remained copied
+        if len(to_copy)>0:
+            self.copied_elements = [deepcopy(el) for el in to_copy]
+
         self.track_changes = True
 
     def paste(self, event=None):
