@@ -207,10 +207,14 @@ class TestCutCopyPaste(AutomaticTesting):
         self.launch_gui_testing()
 
 class TestUndoRedo(AutomaticTesting):
-
+    def test_undo_deletion(self):
+        self.launch_gui_testing(run_slower=False)
+    def test_undo_movement_of_capacitor(self):
+        self.launch_gui_testing(run_slower=False)
+    def test_undo_deletion_redo(self):
+        self.launch_gui_testing(run_slower=False)
     def test_complex_random(self):
-        self.launch_gui_testing(run_slower=True)
-
+        self.launch_gui_testing(run_slower=False)
 
 class TestMovingComponentsAround(AutomaticTesting):
 
