@@ -17,6 +17,7 @@ import os
 from Qcircuits.src._utility import to_string
 from Qcircuits.src._constants import *
 from copy import deepcopy
+import time
 
 png_directory = os.path.join(os.path.dirname(__file__), ".graphics")
 node_dot_radius = 1./30.
@@ -692,7 +693,7 @@ class CircuitEditor(tk.Canvas):
             el.set_state_0()
 
     def set_state_1(self):
-        '''To set before we start dragging
+        '''To set before we start dragging or creating somthing
         '''
         
         # unset commong bindings that may have been created elsewhere
@@ -832,6 +833,7 @@ class CircuitEditor(tk.Canvas):
         Called when the user resizes the window, see configure_scrollregion
         and draw_grid for more detail
         '''
+        print('resize event')
         self.configure_scrollregion()
         self.draw_grid(event)
 
@@ -840,9 +842,18 @@ class CircuitEditor(tk.Canvas):
         Called when the user resizes the window. 
         Will delete and rebuild the grid.
         '''
-
-        # Delete old grid
-        self.delete("grid")
+        print('drawing grid with set_bindings = '+str(set_bindings))
+        
+        try:
+            # Delete old grid
+            self.delete( self.grid_id)
+        except AttributeError:
+            # First iteration of this method
+            pass
+        
+        # generate a tag for the grid based on a timestamp
+        # this seems to be the only way to remove the tag bindings
+        self.grid_id = 'grid_'+str(time.time())
 
         # Get visible area of the canvas in canvas units
         box_canvas = (self.canvasx(0),  
@@ -853,7 +864,7 @@ class CircuitEditor(tk.Canvas):
         # Create a white background
         # it is invisible, but we can assign actions to the user clicking on it
         self.background = self.create_rectangle(
-            *box_canvas, fill='white', outline='', tags='grid')
+            *box_canvas, fill='white', outline='', tags= self.grid_id)
 
         # Create x and y coordinates for the grid
         grid_x = np.arange(
@@ -868,18 +879,19 @@ class CircuitEditor(tk.Canvas):
         # write the grid lines
         for x in grid_x:
             for y in grid_y:
-                self.create_line(x-1, y, x+2, y, tags='grid')
-                self.create_line(x, y-1, x, y+2, tags='grid')
+                self.create_line(x-1, y, x+2, y, tags= self.grid_id)
+                self.create_line(x, y-1, x, y+2, tags= self.grid_id)
 
         # Put the grid behind all other elements of the canvas
-        self.tag_lower('grid')
+        self.tag_lower( self.grid_id)
 
         # Determine what happens when the user clicks on the background
         if set_bindings:
-            self.tag_bind('grid', '<ButtonPress-1>', self.start_selection_field)
-            self.tag_bind('grid', "<B1-Motion>", self.expand_selection_field)
-            self.tag_bind('grid', "<ButtonRelease-1>", self.end_selection_field)
-            self.tag_bind('grid', "<Button-3>", self.right_click)
+            print('setting grid bindings')
+            self.tag_bind( self.grid_id, '<ButtonPress-1>', self.start_selection_field)
+            self.tag_bind( self.grid_id, "<B1-Motion>", self.expand_selection_field)
+            self.tag_bind( self.grid_id, "<ButtonRelease-1>", self.end_selection_field)
+            self.tag_bind( self.grid_id, "<Button-3>", self.right_click)
         
     def bind(self, sequence=None, func=None, add=None):
         '''
