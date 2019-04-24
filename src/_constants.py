@@ -1,3 +1,7 @@
+import sys
+max_float = (sys.float_info.max)
+min_float = (sys.float_info.min)
+
 # Colors
 gray = "#666666"
 light_black = "#1c1c1c"

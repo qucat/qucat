@@ -3096,11 +3096,18 @@ class RequestValueLabelWindow(tk.Toplevel):
         cancel_button.pack(side=tk.LEFT, padx=5, pady=5)
 
     def ok(self):
+
+        # Extract value and label
         value = self.entries[0][1].get()
         label = self.entries[1][1].get()
+
+        # Remove spaces from value and check if it is empty
         if value.replace(' ', '') == "":
             v = None
+
         else:
+
+            # Check if value is a float
             try:
                 v = float(value)
             except ValueError:
@@ -3108,18 +3115,43 @@ class RequestValueLabelWindow(tk.Toplevel):
                     "Incorrect value", "Enter a python style float, for example: 1e-2 or 0.01")
                 self.focus_force()
                 return None
+                
+            # Check its not too big, too small, or negative
+            # Note that values above max(min)_float would then
+            # be interpreted as infinity (or zero)
+            if v>max_float:
+                messagebox.showinfo(
+                    "Too large value", "Maximum allowed value is %.2e"%max_float)
+                self.focus_force()
+                return None
+            elif v<0:
+                messagebox.showinfo(
+                    "Negative value", "Value should be a positive float")
+                self.focus_force()
+                return None
+            elif 0<=v<min_float:
+                messagebox.showinfo(
+                    "Too small value", "Minimum allowed value is %.2e"%min_float)
+                self.focus_force()
+                return None
 
+        # Remove spaces in the label
         if label.replace(' ', '') == "":
             l = None
         else:
             l = label
 
+        # Make sure at least one label or one value was 
+        # provided
         if l is None and v is None:
             messagebox.showinfo(
                 "No inputs", "Enter a value or a label or both")
             self.focus_force()
             return None
         else:
+
+            # Set the value and label for the component
+            # and close down window
             self.component.prop = [v, l]
             self.destroy()
 

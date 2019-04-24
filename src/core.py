@@ -1327,6 +1327,16 @@ class Component(Circuit):
             else:
                 self.value = float(a)
 
+                # Check its not too big, too small, or negative
+                # Note that values above max(min)_float would then
+                # be interpreted as infinity (or zero)
+                if self.value>max_float:
+                    raise ValueError("Maximum allowed value is %.2e"%max_float)
+                elif self.value<0:
+                    raise ValueError("Value should be a positive float")
+                elif 0<=self.value<min_float:
+                    raise ValueError("Minimum allowed value is %.2e"%min_float)
+
     def __hash__(self):
         if self.label is None:
             return hash(str(self.value)+self.unit)
