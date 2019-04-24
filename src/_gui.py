@@ -18,14 +18,7 @@ from Qcircuits.src._utility import to_string
 from Qcircuits.src._constants import *
 from copy import deepcopy
 import time
-
-
-png_directory = os.path.join(os.path.dirname(__file__), ".graphics")
-node_dot_radius = 1./30.
-lw = 1./50.
-lw_hover = 2.*lw
-lw_select_hover = 5.*lw
-lw_select = 3.*lw
+ 
 
 def track_event(track_events_to, event,sequence):
     '''Writes all details necessary to generate event to a file.
@@ -328,6 +321,7 @@ class CircuitEditor(tk.Canvas):
         save, which will add an entry to self.history.
         '''
 
+
         self.initialize_user_knowledge_tracking_variables()
         self.build_gridframe()
         self.build_menubar()
@@ -351,6 +345,7 @@ class CircuitEditor(tk.Canvas):
         # Puts the Editor in state 0: 
         # sets all the right bindings, etc ...
         self.set_state_0()
+
         
     ###########################
     # Initialization functions
@@ -584,7 +579,24 @@ class CircuitEditor(tk.Canvas):
             yscrollcommand=self.vbar.set, 
             confine=False, 
             bg="white")
+
         self.grid(row=0, column=0, sticky='nswe')
+
+        if not self.unittesting:
+            self.message = ""
+            self.messaging_time = 1
+            self.text_widget = self.create_text(
+                self.canvasx(5), 
+                self.canvasy(-8), 
+                text=self.message, 
+                anchor=tk.NW,
+                font=Font(family='Helvetica', 
+                size=8, 
+                weight='normal'))
+        '''Parameters of the message to be displayed on the top left of the
+        canvas. The message string will be prepended, and ends of
+        the string will be removed as messages appear/disappear.
+        '''
 
     def configure_scrollbars(self):
         '''
@@ -616,7 +628,8 @@ class CircuitEditor(tk.Canvas):
     def configure_canvas(self):
         '''
         Configures the canvas. This is a collection of small things 
-        we still have to do to the canvas
+        we still have to do to the canvas. And it is part of 
+        setting state 0
         '''
         
         # This function is only useful if we 
@@ -632,6 +645,7 @@ class CircuitEditor(tk.Canvas):
         # is called each time the user resizes
         # the window. 
         self.bind("<Configure>", self.on_resize)
+        
 
     def load_or_create_netlist_file(self):
         '''
@@ -794,7 +808,7 @@ class CircuitEditor(tk.Canvas):
                 self.history_location += 1
 
         # Inform the user that the circuit was just saved
-        self.message("Saving...")
+        self.write_message("Saving...")
     
     def load_netlist(self, lines):
         '''
@@ -1045,11 +1059,11 @@ class CircuitEditor(tk.Canvas):
                 self.load_netlist(netlist_file_string)
             except Exception as e:
                 # in case the content of the file was not in the right format
-                self.message("Not all components of the file could be loaded")
+                self.write_message("Not all components of the file could be loaded")
                 print("Loading file failed with error:")
                 print(e)
             else:
-                self.message("File succesfully loaded")
+                self.write_message("File succesfully loaded")
             
             # Save changes and turn change tracker back on
             self.track_changes = True
@@ -1164,9 +1178,9 @@ class CircuitEditor(tk.Canvas):
         # smallest/largest grid unit size, just
         # display a message
         if smallest_grid_unit > new_grid_unit:
-            self.message("Can't zoom out more")
+            self.write_message("Can't zoom out more")
         elif new_grid_unit > largest_grid_unit:
-            self.message("Can't zoom in more")
+            self.write_message("Can't zoom in more")
 
         else:
 
@@ -1436,7 +1450,7 @@ class CircuitEditor(tk.Canvas):
             self.save()
             self.track_changes = True
         else:
-            self.message('Nothing to undo')
+            self.write_message('Nothing to undo')
 
     def ctrl_y(self, event=None):
         '''
@@ -1457,7 +1471,7 @@ class CircuitEditor(tk.Canvas):
             self.load_netlist(self.history[self.history_location].split('\n'))
             self.track_changes = True
         else:
-            self.message('Nothing to redo')
+            self.write_message('Nothing to redo')
 
     #############################
     #  RIGHT CLICK
@@ -1755,7 +1769,7 @@ class CircuitEditor(tk.Canvas):
     #  UTILITIES
     ##############################
     
-    def message(self, text, t = 0.3, x = 5, y = 2,size = 8, weight = 'normal'):
+    def write_message(self, text):
         '''
         Displays a message on the canvas for a given amount of time.
         Called each time the circuit is saved, or to 
@@ -1768,32 +1782,19 @@ class CircuitEditor(tk.Canvas):
         ----------
         text:   string
                 message to be displayed
-        t:      float, optional
-                Amount of time to display the message (in seconds).
-                Default is 0.3
-        x:      float, optional
-                Distance of the message with respect to the left
-                side of the window, in window units. Default is 5
-        y:      float, optional
-                Distance of the message with respect to the top
-                side of the window, in window units. Default is 2
-        size:   float, optional
-                Fontsize to use. Default is 8
-        weight: string, optional
-                Font weight. Default is 'normal'
+        
         '''
         if not self.unittesting:
-            saved_message = self.create_text(
-                self.canvasx(x), 
-                self.canvasy(y), 
-                text=text, 
-                anchor=tk.NW,
-                font=Font(family='Helvetica', 
-                size=size, 
-                weight=weight))
+            self.message =  '\n'+text+self.message
+            self.itemconfig(self.text_widget,text=self.message)
+            self.after(int(1000*self.messaging_time), self.end_message)
+
+    def end_message(self):
+        if not self.unittesting:
+            self.message = ('\n').join((self.message.split('\n'))[:-1])
+            self.itemconfig(self.text_widget,text=self.message)
 
 
-            self.after(int(1000*t), lambda: self.delete(saved_message))
 
     def is_more_than_one_selected(self):
         '''
@@ -1864,6 +1865,9 @@ class TwoNodeElement(object):
         self.selected = False
         self.dot_minus = None
         self.dot_plus = None
+
+        # Radius of the node dot, in grid units
+        self.node_dot_radius = 1./30.
 
         if auto_place_info is None and event is not None:
             self.manual_place(event)
@@ -2221,20 +2225,20 @@ class TwoNodeElement(object):
         if minus:
             if self.dot_minus is None:
                 self.dot_minus = self.canvas.create_circle(
-                    *canvas_coords_minus, gu*node_dot_radius)
+                    *canvas_coords_minus, gu*self.node_dot_radius)
             else:
                 self.canvas.update_circle(self.dot_minus,
-                    *canvas_coords_minus, gu*node_dot_radius)
+                    *canvas_coords_minus, gu*self.node_dot_radius)
             self.canvas.tag_raise(self.dot_minus)
 
         if plus:
             canvas_coords_plus = self.grid_to_canvas([self.x_plus,self.y_plus])
             if self.dot_plus is None:
                 self.dot_plus = self.canvas.create_circle(
-                    *canvas_coords_plus, gu*node_dot_radius)
+                    *canvas_coords_plus, gu*self.node_dot_radius)
             else:
                 self.canvas.update_circle(self.dot_plus,
-                    *canvas_coords_plus, gu*node_dot_radius)
+                    *canvas_coords_plus, gu*self.node_dot_radius)
 
             self.canvas.tag_raise(self.dot_plus)
                                                                                            
@@ -2262,6 +2266,10 @@ class W(TwoNodeElement):
         self.y_minus = None
         self.x_plus = None
         self.y_plus = None
+        
+        # Width of the wires in grid units
+        self.lw = 1./50.
+
         super(W, self).__init__(canvas, event, auto_place_info)
 
     @property
@@ -2356,7 +2364,7 @@ class W(TwoNodeElement):
         # Place the circle representing the node
         gu = self.canvas.grid_unit
         self.dot_minus = self.canvas.create_circle(
-            *(self.canvas.grid_to_canvas([self.x_minus,self.y_minus])), gu*node_dot_radius)
+            *(self.canvas.grid_to_canvas([self.x_minus,self.y_minus])), gu*self.node_dot_radius)
 
 
         self.canvas.bind("<Motion>", self.show_line)
@@ -2373,12 +2381,12 @@ class W(TwoNodeElement):
         if abs(xm-xp) > abs(ym-yp):
             # Horizontal line
             self.line = self.canvas.create_line(xm, ym, xp, ym, tags='temp',
-            width=lw*self.canvas.grid_unit,
+            width=self.canvas.self.lw*self.canvas.grid_unit,
             fill = light_black)
         else:
             # Vertical line
             self.line = self.canvas.create_line(xm, ym, xm, yp, tags='temp',
-            width=lw*self.canvas.grid_unit,
+            width=self.lw*self.canvas.grid_unit,
             fill = light_black)
  
     def init_minus_snap_to_grid(self, event):
@@ -2423,7 +2431,7 @@ class W(TwoNodeElement):
         canvas_coords_plus = self.grid_to_canvas(self.pos[2:])
         self.line = self.canvas.create_line(
             *(canvas_coords_minus+canvas_coords_plus),
-            width=lw*self.canvas.grid_unit,
+            width=self.lw*self.canvas.grid_unit,
             fill = light_black)
         self.add_or_replace_node_dots()
         self.canvas.elements.append(self)
@@ -2476,9 +2484,9 @@ class W(TwoNodeElement):
             [xm, ym])+self.canvas.grid_to_canvas([xp, yp])
         self.canvas.coords(self.line, xm, ym, xp, yp)
         self.canvas.update_circle(
-            self.dot_minus, xm, ym, self.canvas.grid_unit*node_dot_radius)
+            self.dot_minus, xm, ym, self.canvas.grid_unit*self.node_dot_radius)
         self.canvas.update_circle(
-            self.dot_plus, xp, yp, self.canvas.grid_unit*node_dot_radius)
+            self.dot_plus, xp, yp, self.canvas.grid_unit*self.node_dot_radius)
  
 
     ###########################################
@@ -2512,14 +2520,19 @@ class W(TwoNodeElement):
         pass
 
     def update_graphic(self):
+        
+
         if self.selected and self.hover:
+            lw_select_hover = 5.*self.lw
             self.canvas.itemconfig(self.line, fill=blue, width=lw_select_hover*self.canvas.grid_unit)
         elif self.selected:
+            lw_select = 3.*self.lw
             self.canvas.itemconfig(self.line, fill=light_blue, width=lw_select*self.canvas.grid_unit)
         elif self.hover:
+            lw_hover = 2.*self.lw
             self.canvas.itemconfig(self.line, fill=light_black, width=lw_hover*self.canvas.grid_unit)
         else:
-            self.canvas.itemconfig(self.line, fill=light_black, width=lw*self.canvas.grid_unit)
+            self.canvas.itemconfig(self.line, fill=light_black, width=self.lw*self.canvas.grid_unit)
 
     def adapt_to_grid_unit(self):
         canvas_coords_minus = self.grid_to_canvas(self.pos[:2])
@@ -2691,7 +2704,7 @@ class Component(TwoNodeElement):
         # If the user has not used arrows to rotate a component, 
         # provide a help message.
         if angle == 0. and  not self.canvas.used_arrows:
-            self.canvas.message("Use arrows to rotate",t = 2)
+            self.canvas.write_message("Use arrows to rotate")
         if angle != 0.:
             self.canvas.used_arrows = True
 
@@ -2910,8 +2923,10 @@ class Component(TwoNodeElement):
         else:
             angle = self.pos[2]
 
+        # Location to store the inductor/capacitor/.. graphics
+        png_directory = os.path.join(os.path.dirname(__file__), ".graphics")
         img = Image.open(os.path.join(png_directory, png))
-        size = int(self.canvas.grid_unit*(1-1*node_dot_radius))
+        size = int(self.canvas.grid_unit*(1-1*self.node_dot_radius))
         img = img.resize((size, int(size/2)))
         img = img.rotate(angle,expand = True)
         self.tk_image = ImageTk.PhotoImage(img)
