@@ -346,7 +346,7 @@ class CircuitEditor(tk.Canvas):
         # Sets the "active window" in your OS, 
         # the one towards which key strokes will be 
         # directed to be this circuit editor
-        self.focus_set()
+        self.focus_force()
 
         # Puts the Editor in state 0: 
         # sets all the right bindings, etc ...
@@ -3187,6 +3187,11 @@ class GuiWindow(ttk.Frame):
             grid_unit=60, 
             track_events_to=_track_events_to, 
             unittesting = _unittesting)
+
+        # Bring the window to the front
+        self.master.lift()
+        self.master.attributes('-topmost', True)
+        self.master.attributes('-topmost', False)
 
         if _unittesting:
             self.update()
