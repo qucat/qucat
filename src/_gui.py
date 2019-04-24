@@ -129,14 +129,12 @@ class TrackableScrollbar(ttk.Scrollbar):
         self.track_events_to = track_events_to
         super(TrackableScrollbar, self).__init__(*arg,**kwarg)
 
-    def set_state_2(self):
+    def freeze(self):
         def void(*args,**kwargs):
             return None
         super(TrackableScrollbar, self).configure(command = void)
-    def exit_state_2(self):
+    def unfreeze(self):
         super(TrackableScrollbar, self).configure(command = self.command)
-
-
     def configure(self, **options):
 
         # If track_events_to is not None, for example when we
@@ -330,6 +328,8 @@ class CircuitEditor(tk.Canvas):
         save, which will add an entry to self.history.
         '''
 
+        self.selection_rectangle_x_start = None
+        self.selection_rectangle_y_start = None
 
         self.initialize_user_knowledge_tracking_variables()
         self.build_gridframe()
@@ -567,7 +567,7 @@ class CircuitEditor(tk.Canvas):
         self.vbar = TrackableScrollbar(self.frame, track_events_to = self.track_events_to, orient='vertical')
         self.hbar.grid(row=1, column=0, sticky='we')
         self.vbar.grid(row=0, column=1, sticky='ns')
-    
+
     def build_canvas(self):
         '''
         Initializes the canvas from which this object inherits and 
@@ -715,6 +715,10 @@ class CircuitEditor(tk.Canvas):
         # Redraws grid and binds clicking the grid
         self.draw_grid()
 
+        # Unfreeze scrollbars
+        self.hbar.unfreeze()
+        self.vbar.unfreeze()
+        
         for el in self.elements:
             el.set_state_0()
 
@@ -730,6 +734,10 @@ class CircuitEditor(tk.Canvas):
         # Set keyboard bindings other than element creation
         # (these can be used to cancel an elemnt creation for example)
         self.set_keyboard_shortcuts_other()
+
+        # Unfreeze scrollbars
+        self.hbar.unfreeze()
+        self.vbar.unfreeze()
 
         # Disactivate box selection and right clicking on 
         # background when pasting elements by redrawing the 
@@ -766,8 +774,8 @@ class CircuitEditor(tk.Canvas):
         self.draw_grid(set_bindings = False)
 
         # Freeze scrollbars
-        self.hbar.set_state_2()
-        self.vbar.set_state_2()
+        self.hbar.freeze()
+        self.vbar.freeze()
 
         
         # Make all elements unresponsive by
@@ -779,16 +787,34 @@ class CircuitEditor(tk.Canvas):
         '''Freeze the Editor
         '''
         print('exit state 2')
-        
-        # Unfreeze scrollbars
-        self.hbar.exit_state_2()
-        self.vbar.exit_state_2()
-        
-        # Unfreeze menubar
-
         self.set_state(self.previous_state)
 
+    def set_state_3(self):
+        '''When we are using the box selection tool
+        '''
+        print('entering state 3')
         
+        # unset commong bindings that may have been created elsewhere
+        self.unset_permenant_bindings()
+
+        # Disactivate right-clicking the background
+        self.tag_bind( self.grid_id, "<Button-3>", lambda event:None)
+
+        # Freeze scrollbars
+        self.hbar.freeze()
+        self.vbar.freeze()
+
+        # Make all elements unresponsive by
+        # ubinding hover/leave/right-clicking
+        for el in self.elements:
+            el.set_state_3()
+
+        
+    def exit_state_3(self):
+        '''When we are using the box selection tool
+        '''
+        print('exit state 3')
+        self.set_state_0()
 
     def elements_list_to_netlist_string(self):
         '''
@@ -964,9 +990,8 @@ class CircuitEditor(tk.Canvas):
         # Determine what happens when the user clicks on the background
         if set_bindings:
             print('setting grid bindings')
-            self.tag_bind( self.grid_id, '<ButtonPress-1>', self.start_selection_field)
+            self.tag_bind( self.grid_id, '<ButtonPress-1>', self.on_click)
             self.tag_bind( self.grid_id, "<B1-Motion>", self.expand_selection_field)
-            self.tag_bind( self.grid_id, "<ButtonRelease-1>", self.end_selection_field)
             self.tag_bind( self.grid_id, "<Button-3>", self.right_click)
         
     def bind(self, sequence=None, func=None, add=None):
@@ -1572,39 +1597,45 @@ class CircuitEditor(tk.Canvas):
     #  SELECTING
     ##############################
 
-    def start_selection_field(self, event):
+    def on_click(self, event):
         '''
         Called when user clicks on the grid or the background of the canvas.
-        Builds the dashed selection box (initially with zero area) 
-        where the one corner is located at the click position, and the other
-        is located at the current mouses position.
-        The box will be deleted when the click is released.
         '''
-
         self.deselect_all()
-
-        # Store location at which the user clicks 
-        # in canvas units.
-        # This will form one corner of the selection box.
-        self.selection_rectangle_x_start = self.canvasx(event.x)
-        self.selection_rectangle_y_start = self.canvasy(event.y)
-
-        # Create the dashed box.
-        # The other corner of the selection box is determined by the position
-        # the mouse (for the moment the box has zero area).
-        self.selection_rectangle = self.create_rectangle(
-            self.canvasx(event.x), self.canvasy(event.y), self.canvasx(event.x), self.canvasy(event.y), 
-            dash=(3, 5))
 
     def expand_selection_field(self, event):
         '''
         Called when user clicks+drags the mouse
         on the grid or the background of the canvas.
+        Builds the dashed selection box (initially with zero area) 
+        where the one corner is located at the click position, and the other
+        is located at the current mouses position.
+        The box will be deleted when the click is released.
         Will continuously deselct all the components, then go through all
         the components and selecting those contained in the selection box.
         Wheter a component is in or out of the box is determined by the components
         box_select method which takes the coordinates of the selection rectangle as arguments.
         '''
+        
+        if self.selection_rectangle_x_start is None:
+            self.set_state_3()
+
+            # Store location at which the user clicks 
+            # in canvas units.
+            # This will form one corner of the selection box.
+            self.selection_rectangle_x_start = self.canvasx(event.x)
+            self.selection_rectangle_y_start = self.canvasy(event.y)
+
+            # Create the dashed box.
+            # The other corner of the selection box is determined by the position
+            # the mouse (for the moment the box has zero area).
+            self.selection_rectangle = self.create_rectangle(
+                self.canvasx(event.x), self.canvasy(event.y), self.canvasx(event.x), self.canvasy(event.y), 
+                dash=(3, 5))
+            
+            # End the selection field when user releases his click
+            self.tag_bind( self.grid_id, "<ButtonRelease-1>", self.end_selection_field)
+
         self.deselect_all()
         self.coords(self.selection_rectangle,
                     min(self.canvasx(event.x), self.selection_rectangle_x_start),
@@ -1620,6 +1651,9 @@ class CircuitEditor(tk.Canvas):
         Will delete the selection rectangle.
         '''
         self.delete(self.selection_rectangle)
+        self.selection_rectangle_x_start = None
+        self.selection_rectangle_y_start = None
+        self.exit_state_3()
 
     def deselect_all(self, event=None):
         '''
@@ -2053,6 +2087,23 @@ class TwoNodeElement(object):
         self.canvas.tag_bind(self.binding_object, '<Double-ButtonPress-1>', lambda event:None)
         self.canvas.tag_bind(self.binding_object, "<Shift-ButtonRelease-1>", lambda event: None)
         self.canvas.tag_bind(self.binding_object, "<Control-ButtonRelease-1>", lambda event:None)
+
+    def set_state_3(self):
+        '''During box selection: make all the elements un-responsive
+        '''
+        self.canvas.tag_bind(self.binding_object, "<Enter>", lambda event:None)
+        self.canvas.tag_bind(self.binding_object, "<Leave>", lambda event:None)
+        self.canvas.tag_bind(self.binding_object, "<Button-3>", lambda event:None)
+        self.canvas.tag_bind(self.binding_object, "<ButtonPress-1>", lambda event:None)
+        self.canvas.tag_bind(self.binding_object, "<Shift-ButtonPress-1>",lambda event:None)
+        self.canvas.tag_bind(self.binding_object, "<Control-ButtonPress-1>",lambda event:None)
+        self.canvas.tag_bind(self.binding_object, "<B1-Motion>", lambda event:None)
+        self.canvas.tag_bind(self.binding_object, "<ButtonRelease-1>", lambda event:None)
+        self.canvas.tag_bind(self.binding_object, '<Double-ButtonPress-1>', lambda event:None)
+        self.canvas.tag_bind(self.binding_object, "<Shift-ButtonRelease-1>", lambda event: None)
+        self.canvas.tag_bind(self.binding_object, "<Control-ButtonRelease-1>", lambda event:None)
+
+
 
 
     ###########################################
