@@ -1712,6 +1712,8 @@ class CircuitEditor(tk.Canvas):
             # unresponsive
             self.set_state_3()
 
+            # Construct a list of all components which 
+            # where already selected
             if deselect:
                 self.selected_without_selection_rectangle = []
             else:
@@ -1735,15 +1737,22 @@ class CircuitEditor(tk.Canvas):
             # End the selection field when user releases his click
             self.tag_bind( self.grid_id, "<ButtonRelease-1>", self.end_selection_field)
 
+        # Deselect all components
         self.deselect_all()
+
+        # Reselect all components which should be unaffected
+        # by the selection rectangle
         for el in self.selected_without_selection_rectangle:
             el.force_select()
 
+        # Calculate coordinates of selection rectangle
         self.coords(self.selection_rectangle,
                     min(self.canvasx(event.x), self.selection_rectangle_x_start),
                     min(self.canvasy(event.y), self.selection_rectangle_y_start),
                     max(self.canvasx(event.x), self.selection_rectangle_x_start),
                     max(self.canvasy(event.y), self.selection_rectangle_y_start))
+
+        # Select all components in the selection rectangle
         for el in self.elements:
             el.box_select(*self.coords(self.selection_rectangle))
 
@@ -1753,8 +1762,14 @@ class CircuitEditor(tk.Canvas):
         Will delete the selection rectangle.
         '''
         self.delete(self.selection_rectangle)
+
+        # Resets the initial rectangle corner to None
+        # this signals that the next time a B1-Motion event
+        # occurs, the selection rectangle should be rebuilt
         self.selection_rectangle_x_start = None
         self.selection_rectangle_y_start = None
+
+        # Reinstate all features cancelled during the box selection
         self.exit_state_3()
 
     def deselect_all(self, event=None):
@@ -1978,7 +1993,7 @@ class CircuitEditor(tk.Canvas):
     
     def write_message(self, text):
         '''
-        Displays a message on the canvas for a given amount of time.
+        Displays a message on the canvas.
         Called each time the circuit is saved, or to 
         inform the user he cannot zoom anymore, etc...
 
@@ -1993,17 +2008,19 @@ class CircuitEditor(tk.Canvas):
         '''
         if not self.unittesting:
             
-            
-            # Prepend text to message
+            # Prepend text to message conten already on screen
             self.message =  '\n'+text+self.message
 
-            # Update message
+            # Upload that content to the on-screen text widget
             self.text_widget.config(text=self.message[1:])
 
             # Setup removal of message after a time
             self.after(int(1000*self.messaging_time), self.end_message)
 
     def end_message(self):
+        '''Removes the oldest message from the on-screen Text widget.
+        Called by write_message
+        '''
         if not self.unittesting:
             self.message = ('\n').join((self.message.split('\n'))[:-1])
             self.text_widget.config(text=self.message[1:])
