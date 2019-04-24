@@ -255,6 +255,8 @@ class TestScrolling(AutomaticTesting):
 class TestSelection(AutomaticTesting):
     def test_selection__multiple_shift_box_selects(self):
         self.launch_gui_testing()
+    def test_selection__shift_box_select_over_components_and_back(self):
+        self.launch_gui_testing()
 
 
 

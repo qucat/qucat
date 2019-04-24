@@ -130,10 +130,14 @@ class TrackableScrollbar(ttk.Scrollbar):
         super(TrackableScrollbar, self).__init__(*arg,**kwarg)
 
     def freeze(self):
+        '''Stops the scrollbars from scrolling
+        '''
         def void(*args,**kwargs):
             return None
         super(TrackableScrollbar, self).configure(command = void)
     def unfreeze(self):
+        '''Makes the scrollbars scroll again
+        '''
         super(TrackableScrollbar, self).configure(command = self.command)
     def configure(self, **options):
 
@@ -238,6 +242,25 @@ class CircuitEditor(tk.Canvas):
     
     However, if two wires cross, such that neither has a node placed on a wire, there will be no
     splitting of wires or creation of new nodes. This case implements a cros-over.
+    
+    States
+    ==============================
+
+    We are implementing a pretty loose "finite state machine"
+    system (see https://en.wikipedia.org/wiki/Finite-state_machine).
+    The editor can be placed in certain states, which will activate
+    or disactivate certain functionalities, and exit that state
+    which may steer the system towards another state. For example,
+    when using the box selection tool, we do not want to allow the 
+    user to create components, and as soon as the selection is done
+    we go towards a state which allows it. The different states currently
+    implemented are:
+    * 0:    The default state of the system, entered when starting up the 
+            eidtor for example
+    * 1:    When we are moving components around or when we are creating
+            a component.
+    * 2:    Frozen editor when another window is open
+    * 3:    Box selection
 
     Parameters
     ----------
@@ -327,9 +350,13 @@ class CircuitEditor(tk.Canvas):
         delete all components, set track changes to true and finally
         save, which will add an entry to self.history.
         '''
-
+        
         self.selection_rectangle_x_start = None
         self.selection_rectangle_y_start = None
+        '''If we start click and drag accross the 
+        canvas, and these are set to None, the 
+        selection rectangle will be instantiated
+        '''
 
         self.initialize_user_knowledge_tracking_variables()
         self.build_gridframe()
@@ -686,17 +713,19 @@ class CircuitEditor(tk.Canvas):
     #  CORE functions
     ##############################
     def set_state(self,n):
+        '''Puts Editor into state n
+        '''
         exec("self.set_state_%d()"%n)
     
     def set_state_0(self):
         '''
         Puts the editor in state 0, as it is upon opening
-        Unsets, resets bindings and draws the grid.
         '''
         print('entering state 0')
 
         self.state = 0
 
+        # No components are currently in creation
         self.in_creation = None
 
         # unset commong bindings that may have been created elsewhere
@@ -710,7 +739,7 @@ class CircuitEditor(tk.Canvas):
 
         # set all permenant bindings
         self.set_keyboard_shortcuts_element_creation()
-        self.set_keyboard_shortcuts_other()
+        self.set_permenant_bindings()
 
         # Redraws grid and binds clicking the grid
         self.draw_grid()
@@ -733,7 +762,7 @@ class CircuitEditor(tk.Canvas):
 
         # Set keyboard bindings other than element creation
         # (these can be used to cancel an elemnt creation for example)
-        self.set_keyboard_shortcuts_other()
+        self.set_permenant_bindings()
 
         # Unfreeze scrollbars
         self.hbar.unfreeze()
@@ -744,23 +773,35 @@ class CircuitEditor(tk.Canvas):
         # grid with no bindings
         self.draw_grid(set_bindings = False)
         
+        # Make it impossible to hover over componentes
         for el in self.elements:
             el.set_state_1()
 
     def exit_state_1(self):
-        '''When dragging
+        '''When finished dragging or creating something
         '''
         print('exit state 1')
+
+        # We just dragged and dropped a component
+        # so we check if nodes of that component 
+        # intersect a wire
         self.track_changes = False
         self.add_nodes()
         self.track_changes = True
+
+        # Save the changes that have occured
         self.save()
+
+        # Go back to state 0
         self.set_state_0()
 
     def set_state_2(self):
         '''Freeze the Editor
         '''
         print('entering state 2')
+
+        # Save previous state, as we will go back 
+        # to it when exiting this state
         self.previous_state = self.state 
         self.state = 2
         
@@ -784,7 +825,8 @@ class CircuitEditor(tk.Canvas):
             el.set_state_2()
 
     def exit_state_2(self):
-        '''Freeze the Editor
+        '''Un-freeze the Editor, go back to the state it 
+        was in upon freezing.
         '''
         print('exit state 2')
         self.set_state(self.previous_state)
@@ -811,7 +853,8 @@ class CircuitEditor(tk.Canvas):
 
         
     def exit_state_3(self):
-        '''When we are using the box selection tool
+        '''When we have stopped using the box selection 
+        tool, go back to state 0.
         '''
         print('exit state 3')
         self.set_state_0()
@@ -855,6 +898,15 @@ class CircuitEditor(tk.Canvas):
         Save the current state of the circuit to the file.
         If we are tracking changes (self.track_changes == True)
         also append the history list.
+
+        Parameters
+        ----------
+        force_display_message: Boolean, optional
+                                When False (default), a "Saving..." message
+                                will only be displayed if something actually changed
+                                in the network. However we want to always display the
+                                message when a user CTRL-S himself, to reassure him
+                                that his work is saved.
         '''
 
         # Obtain the string representation 
@@ -896,7 +948,6 @@ class CircuitEditor(tk.Canvas):
         elif force_display_message:
             self.write_message("Saving...")
 
-    
     def load_netlist(self, lines):
         '''
         Loads a circuit stored as a list of strings, each string
@@ -943,9 +994,19 @@ class CircuitEditor(tk.Canvas):
         '''
         Called when the user resizes the window. 
         Will delete and rebuild the grid.
+        
+        Parameters
+        ----------
+        set_bindings:   Boolean, optional
+                        If True (default), left(right)-clicking
+                        on the background will start a selection
+                        box (open a menu)
+                        We want to set it to False in state1, when we
+                        are drag/dropping or creating an element.
         '''
         print('drawing grid with set_bindings = '+str(set_bindings))
         
+
         try:
             # Delete old grid
             self.delete( self.grid_id)
@@ -954,7 +1015,10 @@ class CircuitEditor(tk.Canvas):
             pass
         
         # generate a tag for the grid based on a timestamp
-        # this seems to be the only way to remove the tag bindings
+        # this seems to be the only way to remove the tag bindings.
+        # if we would stick with a single grid_id, when we redraw the 
+        # grid without setting the bindings, it remembers the bindings
+        # created in the past.
         self.grid_id = 'grid_'+str(time.time())
 
         # Get visible area of the canvas in canvas units
@@ -989,11 +1053,21 @@ class CircuitEditor(tk.Canvas):
 
         # Determine what happens when the user clicks on the background
         if set_bindings:
-            print('setting grid bindings')
-            self.tag_bind( self.grid_id, '<Shift-ButtonPress-1>', lambda event:None)
+
+            # Clicking on the background should deselect unless the user
+            # is holding down shift/control
             self.tag_bind( self.grid_id, '<ButtonPress-1>', self.on_click)
-            self.tag_bind( self.grid_id, "<Shift-B1-Motion>", lambda event:self.expand_selection_field(event,deselect = False))
+            self.tag_bind( self.grid_id, '<Shift-ButtonPress-1>', lambda event:None)
+            self.tag_bind( self.grid_id, '<Control-ButtonPress-1>', lambda event:None)
+
+            # Dragging deselects + creates a selection rectangle
             self.tag_bind( self.grid_id, "<B1-Motion>", self.expand_selection_field)
+
+            # ctrl/shift+Dragging creates a selection rectangle (without deselecting)
+            self.tag_bind( self.grid_id, "<Shift-B1-Motion>", lambda event:self.expand_selection_field(event,deselect = False))
+            self.tag_bind( self.grid_id, "<Control-B1-Motion>", lambda event:self.expand_selection_field(event,deselect = False))
+
+            # right-clicking opens a menu
             self.tag_bind( self.grid_id, "<Button-3>", self.right_click)
         
     def bind(self, sequence=None, func=None, add=None):
@@ -1050,7 +1124,7 @@ class CircuitEditor(tk.Canvas):
         for binding in self.keyboard_shortcuts_element_creation_bindings:
             self.bind(*binding)
     
-    def set_keyboard_shortcuts_other(self):
+    def set_permenant_bindings(self):
         '''
         Assign keystrokes to functionalities
         accessible in the FILE, EDIT, VIEW menus, 
@@ -1058,7 +1132,7 @@ class CircuitEditor(tk.Canvas):
         user scrolls in combination with CTRL/SHIFT.
         '''
         
-        self.keyboard_shortcuts_other_bindings = [
+        self.permenant_bindings = [
         #############################
         # FILE menu functionalities
         #############################
@@ -1101,7 +1175,7 @@ class CircuitEditor(tk.Canvas):
         # zoom for Linux, wheel scroll up
         ['<Button-4>',   self.scroll_y_wheel]
         ]
-        for binding in self.keyboard_shortcuts_other_bindings:
+        for binding in self.permenant_bindings:
             self.bind(*binding)
 
     def unset_temporary_bindings(self):
@@ -1110,7 +1184,7 @@ class CircuitEditor(tk.Canvas):
         '''
         for sequence in [
             "<Escape>","<Motion>",'<Left>','<Right>','<Up>', '<Down>',
-            "<ButtonPress-1>","<ButtonRelease-1>","<B1-Motion>",'<Shift-ButtonPress-1>',
+            "<ButtonPress-1>","<ButtonRelease-1>","<Shift-B1-Motion>","<Control-B1-Motion>","<B1-Motion>",'<Shift-ButtonPress-1>',
             '<Control-ButtonPress-1>','<Shift-ButtonRelease-1>','<Control-ButtonRelease-1>', 
             '<Double-ButtonPress-1>', '<ButtonPress-3>','<ButtonRelease-3>', '<Return>',
         ]:
@@ -1120,7 +1194,7 @@ class CircuitEditor(tk.Canvas):
         '''
         Unsets all temporary bindings.
         '''
-        for bindings in self.keyboard_shortcuts_element_creation_bindings+self.keyboard_shortcuts_other_bindings:
+        for bindings in self.keyboard_shortcuts_element_creation_bindings+self.permenant_bindings:
             self.unbind(bindings[0])
 
     ###########################
@@ -1602,6 +1676,7 @@ class CircuitEditor(tk.Canvas):
     def on_click(self, event):
         '''
         Called when user clicks on the grid or the background of the canvas.
+        Deselects all components
         '''
         self.deselect_all()
 
@@ -1609,18 +1684,40 @@ class CircuitEditor(tk.Canvas):
         '''
         Called when user clicks+drags the mouse
         on the grid or the background of the canvas.
+
         Builds the dashed selection box (initially with zero area) 
         where the one corner is located at the click position, and the other
         is located at the current mouses position.
+
         The box will be deleted when the click is released.
-        Will continuously deselct all the components, then go through all
-        the components and selecting those contained in the selection box.
+
+        As draggin ensues the function continuously deselct all the components, then goes through all
+        the components and selects those contained in the selection box.
+
         Wheter a component is in or out of the box is determined by the components
         box_select method which takes the coordinates of the selection rectangle as arguments.
+
+        Parameters:
+        -----------
+        deselect:   Boolean, optional
+                    When True (default), only components in the selection box will be selected
+                    When False, components which where already selected remain selected
         '''
         
         if self.selection_rectangle_x_start is None:
+            # Initialize the box-selection process
+            ######################################
+            
+            # Make all components and navigation
+            # unresponsive
             self.set_state_3()
+
+            if deselect:
+                self.selected_without_selection_rectangle = []
+            else:
+                self.selected_without_selection_rectangle = [
+                    el for el in self.elements if el.selected ]
+
 
             # Store location at which the user clicks 
             # in canvas units.
@@ -1638,8 +1735,10 @@ class CircuitEditor(tk.Canvas):
             # End the selection field when user releases his click
             self.tag_bind( self.grid_id, "<ButtonRelease-1>", self.end_selection_field)
 
-        if deselect:
-            self.deselect_all()
+        self.deselect_all()
+        for el in self.selected_without_selection_rectangle:
+            el.force_select()
+
         self.coords(self.selection_rectangle,
                     min(self.canvasx(event.x), self.selection_rectangle_x_start),
                     min(self.canvasy(event.y), self.selection_rectangle_y_start),
