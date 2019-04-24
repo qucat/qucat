@@ -585,14 +585,12 @@ class CircuitEditor(tk.Canvas):
         if not self.unittesting:
             self.message = ""
             self.messaging_time = 1
-            self.text_widget = self.create_text(
-                self.canvasx(5), 
-                self.canvasy(-8), 
-                text=self.message, 
-                anchor=tk.NW,
-                font=Font(family='Helvetica', 
-                size=8, 
-                weight='normal'))
+            self.text_widget = tk.Label(self.frame, 
+                                text = '',
+                                font=Font(family='Helvetica', 
+                                size=8, 
+                                weight='normal'))
+            self.text_widget.grid(row=0, column=0, sticky='nw')
         '''Parameters of the message to be displayed on the top left of the
         canvas. The message string will be prepended, and ends of
         the string will be removed as messages appear/disappear.
@@ -766,7 +764,7 @@ class CircuitEditor(tk.Canvas):
                 v, l))
         return netlist_string
 
-    def save(self, event=None):
+    def save(self, event=None, force_display_message = False):
         '''
         Save the current state of the circuit to the file.
         If we are tracking changes (self.track_changes == True)
@@ -807,8 +805,11 @@ class CircuitEditor(tk.Canvas):
                 # lsit by one
                 self.history_location += 1
 
-        # Inform the user that the circuit was just saved
-        self.write_message("Saving...")
+                # Inform the user that the circuit was just saved
+                self.write_message("Saving...")
+        elif force_display_message:
+            self.write_message("Saving...")
+
     
     def load_netlist(self, lines):
         '''
@@ -971,7 +972,7 @@ class CircuitEditor(tk.Canvas):
         #############################
         self.bind('<Control-q>', lambda event: self.master.destroy())
         self.bind('<Control-o>', self.file_open)
-        self.bind('<Control-s>', self.save)
+        self.bind('<Control-s>', lambda event: self.save(force_display_message=True))
 
         #############################
         # EDIT menu functionalities
@@ -1785,14 +1786,21 @@ class CircuitEditor(tk.Canvas):
         
         '''
         if not self.unittesting:
+            
+            
+            # Prepend text to message
             self.message =  '\n'+text+self.message
-            self.itemconfig(self.text_widget,text=self.message)
+
+            # Update message
+            self.text_widget.config(text=self.message[1:])
+
+            # Setup removal of message after a time
             self.after(int(1000*self.messaging_time), self.end_message)
 
     def end_message(self):
         if not self.unittesting:
             self.message = ('\n').join((self.message.split('\n'))[:-1])
-            self.itemconfig(self.text_widget,text=self.message)
+            self.text_widget.config(text=self.message[1:])
 
 
 
