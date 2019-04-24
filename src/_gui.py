@@ -129,6 +129,14 @@ class TrackableScrollbar(ttk.Scrollbar):
         self.track_events_to = track_events_to
         super(TrackableScrollbar, self).__init__(*arg,**kwarg)
 
+    def set_state_2(self):
+        def void(*args,**kwargs):
+            return None
+        super(TrackableScrollbar, self).configure(command = void)
+    def exit_state_2(self):
+        super(TrackableScrollbar, self).configure(command = self.command)
+
+
     def configure(self, **options):
 
         # If track_events_to is not None, for example when we
@@ -149,6 +157,7 @@ class TrackableScrollbar(ttk.Scrollbar):
 
             options['command'] = tracked_command
 
+        self.command = options['command']
         super(TrackableScrollbar, self).configure(**options)
 
 
@@ -363,7 +372,6 @@ class CircuitEditor(tk.Canvas):
 
         # initialize the menubar object
         self.menubar = tk.Menu(self.frame)
-
         ####################################
         # Define the label formatting
         ####################################
@@ -677,12 +685,17 @@ class CircuitEditor(tk.Canvas):
     #############################
     #  CORE functions
     ##############################
+    def set_state(self,n):
+        exec("self.set_state_%d()"%n)
     
     def set_state_0(self):
         '''
         Puts the editor in state 0, as it is upon opening
         Unsets, resets bindings and draws the grid.
         '''
+        print('entering state 0')
+
+        self.state = 0
 
         self.in_creation = None
 
@@ -695,7 +708,7 @@ class CircuitEditor(tk.Canvas):
         # The cursor should be an arrow
         self.config(cursor='arrow')
 
-        # set bindings
+        # set all permenant bindings
         self.set_keyboard_shortcuts_element_creation()
         self.set_keyboard_shortcuts_other()
 
@@ -708,9 +721,15 @@ class CircuitEditor(tk.Canvas):
     def set_state_1(self):
         '''To set before we start dragging or creating somthing
         '''
-        
+        print('entering state 1')
+        self.state = 1
+
         # unset commong bindings that may have been created elsewhere
         self.unset_temporary_bindings()
+
+        # Set keyboard bindings other than element creation
+        # (these can be used to cancel an elemnt creation for example)
+        self.set_keyboard_shortcuts_other()
 
         # Disactivate box selection and right clicking on 
         # background when pasting elements by redrawing the 
@@ -723,11 +742,52 @@ class CircuitEditor(tk.Canvas):
     def exit_state_1(self):
         '''When dragging
         '''
+        print('exit state 1')
         self.track_changes = False
         self.add_nodes()
         self.track_changes = True
         self.save()
         self.set_state_0()
+
+    def set_state_2(self):
+        '''Freeze the Editor
+        '''
+        print('entering state 2')
+        self.previous_state = self.state 
+        self.state = 2
+        
+        # unset commong bindings that may have been created elsewhere
+        self.unset_temporary_bindings()
+
+        # unset commong bindings that may have been created elsewhere
+        self.unset_permenant_bindings()
+
+        # remove grid bindings
+        self.draw_grid(set_bindings = False)
+
+        # Freeze scrollbars
+        self.hbar.set_state_2()
+        self.vbar.set_state_2()
+
+        
+        # Make all elements unresponsive by
+        # ubinding hover/leave/right-clicking
+        for el in self.elements:
+            el.set_state_2()
+
+    def exit_state_2(self):
+        '''Freeze the Editor
+        '''
+        print('exit state 2')
+        
+        # Unfreeze scrollbars
+        self.hbar.exit_state_2()
+        self.vbar.exit_state_2()
+        
+        # Unfreeze menubar
+
+        self.set_state(self.previous_state)
+
         
 
     def elements_list_to_netlist_string(self):
@@ -952,12 +1012,16 @@ class CircuitEditor(tk.Canvas):
             Assign key R to the creation of a resistor, 
             C to a capacitor, etc...
         '''
-        self.bind('r', lambda event: R(self, event))
-        self.bind('l', lambda event: L(self, event))
-        self.bind('c', lambda event: C(self, event))
-        self.bind('j', lambda event: J(self, event))
-        self.bind('w', lambda event: W(self, event))
-        self.bind('g', lambda event: G(self, event))
+        self.keyboard_shortcuts_element_creation_bindings = [
+            ['r', lambda event: R(self, event)],
+            ['l', lambda event: L(self, event)],
+            ['c', lambda event: C(self, event)],
+            ['j', lambda event: J(self, event)],
+            ['w', lambda event: W(self, event)],
+            ['g', lambda event: G(self, event)]
+        ]
+        for binding in self.keyboard_shortcuts_element_creation_bindings:
+            self.bind(*binding)
     
     def set_keyboard_shortcuts_other(self):
         '''
@@ -967,52 +1031,51 @@ class CircuitEditor(tk.Canvas):
         user scrolls in combination with CTRL/SHIFT.
         '''
         
+        self.keyboard_shortcuts_other_bindings = [
         #############################
         # FILE menu functionalities
         #############################
-        self.bind('<Control-q>', lambda event: self.master.destroy())
-        self.bind('<Control-o>', self.file_open)
-        self.bind('<Control-s>', lambda event: self.save(force_display_message=True))
-
+        ['<Control-q>', lambda event: self.master.destroy()],
+        ['<Control-o>', self.file_open],
+        ['<Control-s>', lambda event: self.save(force_display_message=True)],
         #############################
         # EDIT menu functionalities
         #############################
-        self.bind('<Delete>', self.delete_selection)
-        self.bind('<Control-c>', self.copy_selection)
-        self.bind('<Control-x>', self.cut_selection)
-        self.bind('<Control-v>', self.paste)
-        self.bind('<Control-a>', self.select_all)
-        self.bind('<Control-y>', self.ctrl_y)
-        self.bind('<Control-z>', self.ctrl_z)
-
+        ['<Delete>', self.delete_selection],
+        ['<Control-c>', self.copy_selection],
+        ['<Control-x>', self.cut_selection],
+        ['<Control-v>', self.paste],
+        ['<Control-a>', self.select_all],
+        ['<Control-y>', self.ctrl_y],
+        ['<Control-z>', self.ctrl_z],
         #############################
         # VIEW menu functionalities
         #############################
-        self.bind('<Control-r>', self.center_window_on_circuit)
-        
-
+        ['<Control-r>', self.center_window_on_circuit],
         #############################
         # Mouse wheel functionalities
         #############################
-
         # zoom for Windows and MacOS, but not Linux
-        self.bind('<Control-MouseWheel>', self.scroll_zoom)
+        ['<Control-MouseWheel>', self.scroll_zoom],
         # zoom for Linux, wheel scroll down
-        self.bind('<Control-Button-5>',   self.scroll_zoom)
+        ['<Control-Button-5>',   self.scroll_zoom],
         # zoom for Linux, wheel scroll up
-        self.bind('<Control-Button-4>',   self.scroll_zoom)
+        ['<Control-Button-4>',   self.scroll_zoom],
         # zoom for Windows and MacOS, but not Linux
-        self.bind('<Shift-MouseWheel>', self.scroll_x_wheel)
+        ['<Shift-MouseWheel>', self.scroll_x_wheel],
         # zoom for Linux, wheel scroll down
-        self.bind('<Shift-Button-5>',   self.scroll_x_wheel)
+        ['<Shift-Button-5>',   self.scroll_x_wheel],
         # zoom for Linux, wheel scroll up
-        self.bind('<Shift-Button-4>',   self.scroll_x_wheel)
+        ['<Shift-Button-4>',   self.scroll_x_wheel],
         # zoom for Windows and MacOS, but not Linux
-        self.bind('<MouseWheel>', self.scroll_y_wheel)
+        ['<MouseWheel>', self.scroll_y_wheel],
         # zoom for Linux, wheel scroll down
-        self.bind('<Button-5>',   self.scroll_y_wheel)
+        ['<Button-5>',   self.scroll_y_wheel],
         # zoom for Linux, wheel scroll up
-        self.bind('<Button-4>',   self.scroll_y_wheel)
+        ['<Button-4>',   self.scroll_y_wheel]
+        ]
+        for binding in self.keyboard_shortcuts_other_bindings:
+            self.bind(*binding)
 
     def unset_temporary_bindings(self):
         '''
@@ -1025,6 +1088,13 @@ class CircuitEditor(tk.Canvas):
             '<Double-ButtonPress-1>', '<ButtonPress-3>','<ButtonRelease-3>', '<Return>',
         ]:
             self.unbind(sequence)
+            
+    def unset_permenant_bindings(self):
+        '''
+        Unsets all temporary bindings.
+        '''
+        for bindings in self.keyboard_shortcuts_element_creation_bindings+self.keyboard_shortcuts_other_bindings:
+            self.unbind(bindings[0])
 
     ###########################
     # FILE menu functionalities
@@ -1969,6 +2039,21 @@ class TwoNodeElement(object):
         self.canvas.tag_bind(self.binding_object, "<Leave>", lambda event:None)
         self.canvas.tag_bind(self.binding_object, "<Button-3>", lambda event:None)
 
+    def set_state_2(self):
+        '''When window freezes. Make element un-responsive
+        '''
+        self.canvas.tag_bind(self.binding_object, "<Enter>", lambda event:None)
+        self.canvas.tag_bind(self.binding_object, "<Leave>", lambda event:None)
+        self.canvas.tag_bind(self.binding_object, "<Button-3>", lambda event:None)
+        self.canvas.tag_bind(self.binding_object, "<ButtonPress-1>", lambda event:None)
+        self.canvas.tag_bind(self.binding_object, "<Shift-ButtonPress-1>",lambda event:None)
+        self.canvas.tag_bind(self.binding_object, "<Control-ButtonPress-1>",lambda event:None)
+        self.canvas.tag_bind(self.binding_object, "<B1-Motion>", lambda event:None)
+        self.canvas.tag_bind(self.binding_object, "<ButtonRelease-1>", lambda event:None)
+        self.canvas.tag_bind(self.binding_object, '<Double-ButtonPress-1>', lambda event:None)
+        self.canvas.tag_bind(self.binding_object, "<Shift-ButtonRelease-1>", lambda event: None)
+        self.canvas.tag_bind(self.binding_object, "<Control-ButtonRelease-1>", lambda event:None)
+
 
     ###########################################
     # STATE 0 BEHAVIOUR
@@ -2156,8 +2241,10 @@ class TwoNodeElement(object):
         else:
             self.select()
 
-        # Check if elements are intersecting a wire
+        # In case of movement,
+        # check if elements are intersecting a wire
         # save, go back to state 0
+        # if self.was_moved:
         self.canvas.exit_state_1()
  
     ###########################################
@@ -2994,7 +3081,9 @@ class Component(TwoNodeElement):
     def request_value_label(self):
         if (self.canvas.track_events_to is None) and (self.canvas.unittesting == False):
             window = RequestValueLabelWindow(self.canvas.master, self)
+            self.canvas.set_state_2()
             self.canvas.master.wait_window(window)
+            self.canvas.exit_state_2()
         else:
             self.prop = [1, 'X']
 
@@ -3081,6 +3170,9 @@ class G(Component):
 
 class RequestValueLabelWindow(tk.Toplevel):
     def __init__(self, master, component):
+
+        print('RequestValueLabelWindow opening')
+
         tk.Toplevel.__init__(self, master)
         self.component = component
 
@@ -3088,7 +3180,7 @@ class RequestValueLabelWindow(tk.Toplevel):
         # TODO inform that filling two fields is optional
         fields = 'Value', 'Label'
 
-        # Determine values of the fields
+        # Determine values v(value) and l(label) fields
         v, l = self.component.prop
         if v is None:
             v = ''
@@ -3097,9 +3189,9 @@ class RequestValueLabelWindow(tk.Toplevel):
 
         if l is None:
             l = ''
-
         field_values = [v, l]
 
+        # Setup the label and entry fields that the user will see
         self.entries = []
         for i, field in enumerate(fields):
             row = tk.Frame(self)
@@ -3110,8 +3202,11 @@ class RequestValueLabelWindow(tk.Toplevel):
             lab.pack(side=tk.LEFT)
             ent.pack(side=tk.RIGHT, expand=tk.YES, fill=tk.X)
             self.entries.append((field, ent))
+
+        # set focus on the value entry
         self.entries[0][1].focus()
 
+        # Bind Return, OK and cancel buttons
         self.bind('<Return>', lambda event: self.ok())
         ok_button = tk.Button(self, text='OK', command=self.ok)
         ok_button.pack(side=tk.LEFT, padx=5, pady=5)
