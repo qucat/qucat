@@ -990,7 +990,9 @@ class CircuitEditor(tk.Canvas):
         # Determine what happens when the user clicks on the background
         if set_bindings:
             print('setting grid bindings')
+            self.tag_bind( self.grid_id, '<Shift-ButtonPress-1>', lambda event:None)
             self.tag_bind( self.grid_id, '<ButtonPress-1>', self.on_click)
+            self.tag_bind( self.grid_id, "<Shift-B1-Motion>", lambda event:self.expand_selection_field(event,deselect = False))
             self.tag_bind( self.grid_id, "<B1-Motion>", self.expand_selection_field)
             self.tag_bind( self.grid_id, "<Button-3>", self.right_click)
         
@@ -1603,7 +1605,7 @@ class CircuitEditor(tk.Canvas):
         '''
         self.deselect_all()
 
-    def expand_selection_field(self, event):
+    def expand_selection_field(self, event, deselect = True):
         '''
         Called when user clicks+drags the mouse
         on the grid or the background of the canvas.
@@ -1636,7 +1638,8 @@ class CircuitEditor(tk.Canvas):
             # End the selection field when user releases his click
             self.tag_bind( self.grid_id, "<ButtonRelease-1>", self.end_selection_field)
 
-        self.deselect_all()
+        if deselect:
+            self.deselect_all()
         self.coords(self.selection_rectangle,
                     min(self.canvasx(event.x), self.selection_rectangle_x_start),
                     min(self.canvasy(event.y), self.selection_rectangle_y_start),

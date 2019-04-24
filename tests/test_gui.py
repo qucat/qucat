@@ -252,5 +252,11 @@ class TestScrolling(AutomaticTesting):
         self.launch_gui_testing()
 
 
+class TestSelection(AutomaticTesting):
+    def test_selection__multiple_shift_box_selects(self):
+        self.launch_gui_testing()
+
+
+
 if __name__ == "__main__":
     unittest.main()
