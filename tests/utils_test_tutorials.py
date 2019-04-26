@@ -14,7 +14,7 @@ def parse_cell(code):
     valid_lines = ""
     for line in lines:
         if len(line.replace(' ',''))>0:
-            if not line.replace(' ','')[0]=='%':
+            if not line.replace(' ','')[0]=='%' and not 'plt.show(' in line:
                 if 'GUI(' in line and line.rfind(')') != -1:
                     line = line[:line.rfind(')')]+',_unittesting=True'+line[line.rfind(')'):]
                 valid_lines += line+'\n'
@@ -45,4 +45,4 @@ def run_notebook(notebook_name):
                 return tb
     sys.stdout = sys.__stdout__
     sys.stderr = sys.__stderr__
-    return dict(locals())
+    return dict(globals())

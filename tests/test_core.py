@@ -10,19 +10,19 @@ def cutoff_digits(f,digits):
 
 class TestCaseAppended(unittest.TestCase):
 
-    def assertRelativelyClose(self,a,b,digits = 10):
+    def assertRelativelyClose(self,a,b,digits = 6):
         a = cutoff_digits(a,digits)
         b = cutoff_digits(b,digits)
         self.assertEquals(a,b)
 
-    def assertArrayRelativelyClose(self,a,b,digits = 10):
+    def assertArrayRelativelyClose(self,a,b,digits = 6):
         a = np.array(a)
         b = np.array(b)
         self.assertTrue(a.shape==b.shape,msg = f'Arrays do not have the same dimension {a.shape}!={b.shape}')
         for index,_ in np.ndenumerate(a):
             a_comp = cutoff_digits(a[index],digits)
             b_comp = cutoff_digits(b[index],digits)
-            self.assertEquals(a_comp,b_comp,
+            self.assertEqual(a_comp,b_comp,
                     msg = f'Components with index {index} do not match {a_comp}!={b_comp}')
 
 class SymbolicOperations(TestCaseAppended):
@@ -161,25 +161,25 @@ class StandardQuantumCircuits(TestCaseAppended):
         C = 1e-13
         L = 1e-8
         w,k,A,chi = self.shunted_josephson_ring_parameters(C,L)
-        self.assertRelativelyClose(w[0],1/np.sqrt(L*C)/2./np.pi,digits = 6)
+        self.assertRelativelyClose(w[0],1/np.sqrt(L*C)/2./np.pi)
 
     def test_shunted_josephson_ring_frequency_1(self):
         C = 1e-13
         L = 1e-8
         w,k,A,chi = self.shunted_josephson_ring_parameters(C,L)
-        self.assertRelativelyClose(w[1],1/np.sqrt(L*C)/2./np.pi,digits = 6)
+        self.assertRelativelyClose(w[1],1/np.sqrt(L*C)/2./np.pi)
 
     def test_shunted_josephson_ring_anharmonicity_0(self):
         C = 1e-13
         L = 1e-8
         w,k,A,chi = self.shunted_josephson_ring_parameters(C,L)
-        self.assertRelativelyClose(A[0],e**2/2./(8*C)/h,digits = 6)
+        self.assertRelativelyClose(A[0],e**2/2./(8*C)/h)
 
     def test_shunted_josephson_ring_anharmonicity_1(self):
         C = 1e-13
         L = 1e-8
         w,k,A,chi = self.shunted_josephson_ring_parameters(C,L)
-        self.assertRelativelyClose(A[1],e**2/2./(8*C)/h,digits = 6)
+        self.assertRelativelyClose(A[1],e**2/2./(8*C)/h)
 
 
 class TestTesting(TestCaseAppended):

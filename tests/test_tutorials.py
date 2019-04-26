@@ -13,6 +13,7 @@ class TestBasics(TestTutorials):
 
     def test_transmon_LC_GUI(self):
         var_dict = self.run_tutorial('transmon_LC_GUI.ipynb')
+        self.assertArrayRelativelyClose(var_dict['w_10'],[4.98333767e+09, 5.03291805e+09])
         
 if __name__ == "__main__":
     unittest.main()
