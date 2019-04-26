@@ -627,17 +627,24 @@ class Network(Qcircuit):
 
 class GUI(Qcircuit):
 
-    def __init__(self, filename, edit=True, plot=True, print_network=True):
+    def __init__(self, filename, edit=True, plot=True, print_network=True,_unittesting=False):
         
         if edit:
-            _gui.GuiWindow(filename)
+            editor = _gui.GuiWindow(filename,_unittesting = _unittesting)
+            if _unittesting:
+                editor.master.destroy()
 
         # if file does not exist, also open the gui
         try:
             with open(filename, 'r') as f:
                 pass
         except FileNotFoundError as e:
-            _gui.GuiWindow(filename)
+            editor = _gui.GuiWindow(filename)
+            if _unittesting:
+                editor.master.destroy()
+
+        
+            
 
         netlist = []
         with open(filename, 'r') as f:
@@ -690,6 +697,8 @@ class _Network(object):
 
         self.netlist = netlist
         self.parse_netlist()
+        if len(self.net_dict) == 0:
+            raise ValueError("There are no components in the circuit")
         if not self.is_connected():
             raise ValueError("There are two sub-circuits which are not connected")
         if self.has_opens():
@@ -1747,7 +1756,7 @@ def main():
     #         L(1,2,1),
     #         R(0,2,100)
     #     ])
-    circuit = GUI(filename = './src/test.txt',edit=True,plot=False)
+    circuit = GUI(filename = './src/test.txt',edit=True,plot=False,_unittesting=True)
     # print(circuit.Y)
     # print(sp.together(circuit.Y))
     # print(circuit.eigenfrequencies())
