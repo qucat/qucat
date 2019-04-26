@@ -1756,14 +1756,9 @@ def main():
     circuit = GUI(filename = './src/test.txt',edit=True,plot=False)
     # print(circuit.Y)
     # print(sp.together(circuit.Y))
-    # circuit.w_k_A_chi(C=1e-13,pretty_print=True,L=1e-8)
+    circuit.w_k_A_chi(pretty_print=True)
     # circuit.show_normal_mode(0)
     # circuit.show_normal_mode(1)
 
 if __name__ == '__main__':
-    # main()
-    def func1():
-        pass
-    def func2():
-        func1()
-    func2()
+    main()

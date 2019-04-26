@@ -2646,7 +2646,7 @@ class W(TwoNodeElement):
         if abs(xm-xp) > abs(ym-yp):
             # Horizontal line
             self.line = self.canvas.create_line(xm, ym, xp, ym, tags='temp',
-            width=self.canvas.self.lw*self.canvas.grid_unit,
+            width= self.lw*self.canvas.grid_unit,
             fill = light_black)
         else:
             # Vertical line
