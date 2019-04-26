@@ -1747,11 +1747,11 @@ def main():
     #         L(1,2,1),
     #         R(0,2,100)
     #     ])
-    circuit = GUI(filename = './src/test.txt',edit=False,plot=False)
+    circuit = GUI(filename = './src/test.txt',edit=True,plot=False)
     # print(circuit.Y)
     # print(sp.together(circuit.Y))
-    print(circuit.eigenfrequencies())
-    # circuit.w_k_A_chi(pretty_print=True)
+    # print(circuit.eigenfrequencies())
+    circuit.w_k_A_chi(pretty_print=True)
     # circuit.show_normal_mode(0)
     # circuit.show_normal_mode(1)
 

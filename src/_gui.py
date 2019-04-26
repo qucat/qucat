@@ -3215,7 +3215,8 @@ class Component(TwoNodeElement):
         x, y = self.canvas.coords(self.image)
         value, label = self.prop
         text = to_string(self.unit, label, value,
-                         use_math=False, use_unicode=True)
+                         use_math=False, use_unicode=True,
+                         maximum_info = True)
         font = Font(family='Helvetica', size=int(gu/8.), weight='normal')
         text_position = (0.2)*gu
         if angle % 180. == 90. and self.text is None:
