@@ -57,6 +57,41 @@ class SymbolicOperations(TestCaseAppended):
             circuit.dY(w))
 
 class StandardQuantumCircuits(TestCaseAppended):
+    '''
+    Series RLC circuit parameters
+    '''
+
+    def series_RLC_parameters(self,R,L,C):
+        circuit = core.Network([
+            core.C(0,1,C),
+            core.L(1,2,L),
+            core.R(0,2,R)
+        ])
+        return circuit.w_k_A_chi()
+
+    def test_series_RLC_frequency(self):
+        C = 100e-15
+        L = 10e-9
+        R = 100e-9
+        w,k,A,chi = self.series_RLC_parameters(R,L,C)
+        cpx_w = (1j*C*R + np.sqrt(4*C*L - C**2*R**2))/(2.*C*L)
+        self.assertRelativelyClose(np.real(cpx_w)/2/np.pi,w)
+
+    def test_series_RLC_frequency2(self):
+        C = 1
+        L = 3
+        R = 0.5
+        w,k,A,chi = self.series_RLC_parameters(R,L,C)
+        cpx_w = (1j*C*R + np.sqrt(4*C*L - C**2*R**2))/(2.*C*L)
+        self.assertRelativelyClose(np.real(cpx_w)/2/np.pi,w)
+
+    def test_series_RLC_dissipation(self):
+        C = 100e-15
+        L = 10e-9
+        R = 100e-9
+        w,k,A,chi = self.series_RLC_parameters(R,L,C)
+        cpx_w = (1j*C*R + np.sqrt(4*C*L - C**2*R**2))/(2.*C*L)
+        self.assertRelativelyClose(np.imag(cpx_w)/2/np.pi,k)
 
     '''
     Transmon circuit parameters
