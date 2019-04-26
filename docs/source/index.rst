@@ -10,4 +10,5 @@ TODO: write a general introduction to the documentation, add a picture.
     :maxdepth: 3
     :caption: Contents:
 
+    Tutorials <tutorials/tutorials>
     API of the Qcircuits package <API/API>

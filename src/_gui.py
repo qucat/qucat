@@ -37,7 +37,6 @@ def track_event(track_events_to, event,sequence):
     sequence:           string
                         For example '<ButtonRelease-1>' or 'c'
     '''
-    print(sequence)
     # sequences to not save
     to_exclude = [
         '<Enter>','<Leave>'] # Enter and leave will be triggered by mouse motion anyway
@@ -278,9 +277,12 @@ class CircuitEditor(tk.Canvas):
                         Set to True if the CircuitEditor will be controlled
                         programmatically through "event_generate" calls.
                         Default is False
+    verbose:            Boolean, optional
+                        If True will print information about the Editors actions
 
     """
-    def __init__(self, master, grid_unit, netlist_filename, track_events_to = None, unittesting = False):
+    def __init__(self, master, grid_unit, netlist_filename,
+            track_events_to = None, unittesting = False,verbose = False):
         
         # The root window (tk.Tk())
         self.master = master
@@ -299,6 +301,8 @@ class CircuitEditor(tk.Canvas):
         programmatically through "event_generate" calls.
         Default is False.
         '''
+
+        self.verbose = verbose
         
         self.netlist_filename = netlist_filename
         '''In the netlist file is stored at all times 
@@ -721,7 +725,8 @@ class CircuitEditor(tk.Canvas):
         '''
         Puts the editor in state 0, as it is upon opening
         '''
-        print('entering state 0')
+        if self.verbose:
+            print('entering state 0')
 
         self.state = 0
 
@@ -754,7 +759,8 @@ class CircuitEditor(tk.Canvas):
     def set_state_1(self):
         '''To set before we start dragging or creating somthing
         '''
-        print('entering state 1')
+        if self.verbose:
+            print('entering state 1')
         self.state = 1
 
         # unset commong bindings that may have been created elsewhere
@@ -780,7 +786,8 @@ class CircuitEditor(tk.Canvas):
     def exit_state_1(self):
         '''When finished dragging or creating something
         '''
-        print('exit state 1')
+        if self.verbose:
+            print('exit state 1')
 
         # We just dragged and dropped a component
         # so we check if nodes of that component 
@@ -798,7 +805,8 @@ class CircuitEditor(tk.Canvas):
     def set_state_2(self):
         '''Freeze the Editor
         '''
-        print('entering state 2')
+        if self.verbose:
+            print('entering state 2')
 
         # Save previous state, as we will go back 
         # to it when exiting this state
@@ -828,13 +836,15 @@ class CircuitEditor(tk.Canvas):
         '''Un-freeze the Editor, go back to the state it 
         was in upon freezing.
         '''
-        print('exit state 2')
+        if self.verbose:
+            print('exit state 2')
         self.set_state(self.previous_state)
 
     def set_state_3(self):
         '''When we are using the box selection tool
         '''
-        print('entering state 3')
+        if self.verbose:
+            print('entering state 3')
         
         # unset commong bindings that may have been created elsewhere
         self.unset_permenant_bindings()
@@ -856,7 +866,8 @@ class CircuitEditor(tk.Canvas):
         '''When we have stopped using the box selection 
         tool, go back to state 0.
         '''
-        print('exit state 3')
+        if self.verbose:
+            print('exit state 3')
         self.set_state_0()
 
     def elements_list_to_netlist_string(self):
@@ -986,7 +997,8 @@ class CircuitEditor(tk.Canvas):
         Called when the user resizes the window, see configure_scrollregion
         and draw_grid for more detail
         '''
-        print('resize event')
+        if self.verbose:
+            print('resize event')
         self.configure_scrollregion()
         self.draw_grid(event)
 
@@ -1004,7 +1016,8 @@ class CircuitEditor(tk.Canvas):
                         We want to set it to False in state1, when we
                         are drag/dropping or creating an element.
         '''
-        print('drawing grid with set_bindings = '+str(set_bindings))
+        if self.verbose:
+            print('drawing grid with set_bindings = '+str(set_bindings))
         
 
         try:
@@ -3342,8 +3355,6 @@ class G(Component):
 class RequestValueLabelWindow(tk.Toplevel):
     def __init__(self, master, component):
 
-        print('RequestValueLabelWindow opening')
-
         tk.Toplevel.__init__(self, master)
         self.component = component
 
@@ -3464,15 +3475,21 @@ class GuiWindow(ttk.Frame):
     netlist_filename:   string
                         path to the file used to save the network constructed
                         in the GUI
-    unittesting:        Boolean
+    _unittesting:       Boolean
                         If False (default), the application will update automatically, this
                         corresponds to normal usage of the application.
                         If True, the application will only update when we call self.update(),
                         which means that the window will be non-blocking, and we can
                         programmatically interact with the GUI for automatic (unit)testing.
+                        path to the file used to save the network constructed
+                        in the GUI
+    _verbose:           Boolean, optional
+                        If True, the editor will print information about the state of the 
+                        Editor
     """
 
     def __init__(self, netlist_filename, 
+        _verbose = False,
         _unittesting = False, 
         _track_events_to = None):
 
@@ -3490,7 +3507,8 @@ class GuiWindow(ttk.Frame):
             self.master.iconbitmap(r'C:\ProgramData\Anaconda3\Lib\site-packages\Qcircuits\artwork\logo.ico')
         except Exception as e:
             # Anticipating possible non-Windows related issues
-            print("There has been an error loading the applications icon:\n"+str(e))
+            if self.verbose:
+                ("There has been an error loading the applications icon:\n"+str(e))
 
         # Make the fram a 1x1 expandable grid
         self.master.rowconfigure(0, weight=1)
@@ -3507,7 +3525,8 @@ class GuiWindow(ttk.Frame):
             netlist_filename=netlist_filename, 
             grid_unit=60, 
             track_events_to=_track_events_to, 
-            unittesting = _unittesting)
+            unittesting = _unittesting,
+            verbose = _verbose)
 
         # Bring the window to the front
         self.master.lift()
