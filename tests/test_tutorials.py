@@ -1,11 +1,13 @@
 from utils_test_tutorials import run_notebook
 from test_core import TestCaseAppended
 import unittest
+from shutil import rmtree
 
 class TestTutorials(TestCaseAppended):
     def run_tutorial(self,notebook_name):
         var_dict = run_notebook(notebook_name)
         self.assertFalse(isinstance(var_dict,str),msg=var_dict)
+        rmtree('circuits')
         return var_dict
 
 
