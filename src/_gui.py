@@ -369,6 +369,7 @@ class CircuitEditor(tk.Canvas):
         self.build_menubar()
         self.build_scrollbars()
         self.build_canvas()
+        self.define_permenant_bindings()
         self.configure_scrollbars()
         self.set_canvas_center()
         self.load_or_create_netlist_file()
@@ -716,7 +717,7 @@ class CircuitEditor(tk.Canvas):
         '''
 
     #############################
-    #  CORE functions
+    #  STATE settings
     ##############################
     def set_state(self,n):
         '''Puts Editor into state n
@@ -764,8 +765,7 @@ class CircuitEditor(tk.Canvas):
         self.config(cursor='arrow')
 
         # set all permenant bindings
-        self.set_keyboard_shortcuts_element_creation()
-        self.set_permenant_bindings()
+        self.set_bindings(self.permenant_bindings)
 
         # Redraws grid and binds clicking the grid
         self.draw_grid()
@@ -774,17 +774,18 @@ class CircuitEditor(tk.Canvas):
         self.hbar.unfreeze()
         self.vbar.unfreeze()
         
-
     def set_state_1(self):
         '''To set before we start dragging
         '''
 
-        # unset commong bindings that may have been created elsewhere
+        # unset nearly all bindings
         self.unset_temporary_bindings(exceptions = ["<Motion>"])
-        self.unset_keyboard_shortcuts_element_creation()
+        self.unset_bindings(self.permenant_bindings)
 
-        # Set keyboard bindings other than element creation
-        self.set_permenant_bindings()
+        # Allow scrolling and zooming
+        self.set_bindings(
+            self.bindings_zoom+\
+            self.bindings_scroll)
 
         # Unfreeze scrollbars
         self.hbar.unfreeze()
@@ -820,8 +821,7 @@ class CircuitEditor(tk.Canvas):
         self.unset_temporary_bindings()
 
         # unset commong bindings that may have been created elsewhere
-        self.unset_keyboard_shortcuts_element_creation()
-        self.unset_permenant_bindings()
+        self.unset_bindings(self.permenant_bindings)
 
         # remove grid bindings
         self.draw_grid(set_bindings = False)
@@ -841,8 +841,7 @@ class CircuitEditor(tk.Canvas):
         '''
         
         # unset commong bindings that may have been created elsewhere
-        self.unset_keyboard_shortcuts_element_creation()
-        self.unset_permenant_bindings()
+        self.unset_bindings(self.permenant_bindings)
 
         # Disactivate right-clicking the background
         self.tag_bind( self.grid_id, "<Button-3>", lambda event:None)
@@ -861,12 +860,14 @@ class CircuitEditor(tk.Canvas):
         '''To set before we start creating somthing
         '''
 
-        # unset commong bindings that may have been created elsewhere
+        # unset bindings
         self.unset_temporary_bindings()
-
-        # Set keyboard bindings other than element creation
-        # (these can be used to cancel an elemnt creation)
-        self.set_permenant_bindings()
+        self.unset_bindings(self.permenant_bindings)
+        
+        # Allow scrolling and zooming
+        self.set_bindings(
+            self.bindings_zoom+\
+            self.bindings_scroll)
 
         # Unfreeze scrollbars
         self.hbar.unfreeze()
@@ -877,7 +878,6 @@ class CircuitEditor(tk.Canvas):
         # grid with no bindings
         self.draw_grid(set_bindings = False)
         
-
     def exit_state_4(self):
         '''When finished creating something
         '''
@@ -894,6 +894,10 @@ class CircuitEditor(tk.Canvas):
 
         # Go back to state 0
         self.set_state(0)
+
+    #############################
+    #  CORE functions
+    ##############################
 
     def elements_list_to_netlist_string(self):
         '''
@@ -1145,13 +1149,29 @@ class CircuitEditor(tk.Canvas):
     ###########################
     # BINDINGS
     ###########################
+    
+    def set_bindings(self,*args, exeptions = []):
+        for binding_list in args:
+            for binding in binding_list:
+                if binding[0] not in exeptions:
+                    self.bind(*binding)
 
-    def set_keyboard_shortcuts_element_creation(self):
+    def unset_bindings(self,*args, exceptions = []):
+        for binding_list in args:
+            for binding in binding_list:
+                self.unbind(binding[0])
+
+    def define_permenant_bindings(self):
         '''
-            Assign key R to the creation of a resistor, 
-            C to a capacitor, etc...
+        Assign keystrokes to functionalities
+        accessible in the FILE, EDIT, VIEW menus, 
+        as well as configure what happens when the 
+        user scrolls in combination with CTRL/SHIFT.
         '''
-        self.keyboard_shortcuts_element_creation_bindings = [
+        #############################
+        # ELEMENT creation
+        #############################
+        self.bindings_element_creation = [
             ['r', lambda event: R(self, event)],
             ['l', lambda event: L(self, event)],
             ['c', lambda event: C(self, event)],
@@ -1159,90 +1179,103 @@ class CircuitEditor(tk.Canvas):
             ['w', lambda event: W(self, event)],
             ['g', lambda event: G(self, event)]
         ]
-        for binding in self.keyboard_shortcuts_element_creation_bindings:
-            self.bind(*binding)
-    
-    def unset_keyboard_shortcuts_element_creation(self):
-        '''
-            Remove assignment of key R to the creation of a resistor, 
-            C to a capacitor, etc...
-        '''
-        for bindings in self.keyboard_shortcuts_element_creation_bindings:
-            self.unbind(bindings[0])
-    
-    def set_permenant_bindings(self):
-        '''
-        Assign keystrokes to functionalities
-        accessible in the FILE, EDIT, VIEW menus, 
-        as well as configure what happens when the 
-        user scrolls in combination with CTRL/SHIFT.
-        '''
         
-        self.permenant_bindings = [
         #############################
         # FILE menu functionalities
         #############################
-        ['<Control-q>', lambda event: self.master.destroy()],
-        ['<Control-o>', self.file_open],
-        ['<Control-s>', lambda event: self.save(force_display_message=True)],
+        self.bindings_quit = [
+        ['<Control-q>', lambda event: self.master.destroy()]]
+        self.bindings_open = [
+        ['<Control-o>', self.file_open]]
+        self.bindings_save = [
+        ['<Control-s>', lambda event: self.save(force_display_message=True)]]
+        self.bindings_file =\
+            self.bindings_quit+\
+            self.bindings_open+\
+            self.bindings_save
         #############################
         # EDIT menu functionalities
         #############################
-        ['<Delete>', self.delete_selection],
+        self.bindings_delete = [
+        ['<Delete>', self.delete_selection]]
+        self.bindings_cut_copy_paste = [
         ['<Control-c>', self.copy_selection],
         ['<Control-x>', self.cut_selection],
-        ['<Control-v>', self.paste],
-        ['<Control-a>', self.select_all],
+        ['<Control-v>', self.paste]]
+        self.bindings_select_all = [
+        ['<Control-a>', self.select_all]]
+        self.bindings_undo_redo = [
         ['<Control-y>', self.ctrl_y],
-        ['<Control-z>', self.ctrl_z],
+        ['<Control-z>', self.ctrl_z]]
+        self.bindings_edit =\
+            self.bindings_delete+\
+            self.bindings_cut_copy_paste+\
+            self.bindings_select_all+\
+            self.bindings_undo_redo
         #############################
         # VIEW menu functionalities
         #############################
-        ['<Control-r>', self.center_window_on_circuit],
+        self.bindings_view = [
+        ['<Control-r>', self.center_window_on_circuit]]
         #############################
         # Mouse wheel functionalities
         #############################
-        # zoom for Windows and MacOS, but not Linux
+        self.bindings_zoom = [
+        # wheel for Windows and MacOS, but not Linux
         ['<Control-MouseWheel>', self.scroll_zoom],
-        # zoom for Linux, wheel scroll down
+        # wheel for Linux, wheel scroll down
         ['<Control-Button-5>',   self.scroll_zoom],
-        # zoom for Linux, wheel scroll up
-        ['<Control-Button-4>',   self.scroll_zoom],
-        # zoom for Windows and MacOS, but not Linux
+        # wheel for Linux, wheel scroll up
+        ['<Control-Button-4>',   self.scroll_zoom]]
+        
+        self.bindings_scroll = [
+        # wheel for Windows and MacOS, but not Linux
         ['<Shift-MouseWheel>', self.scroll_x_wheel],
-        # zoom for Linux, wheel scroll down
+        # wheel for Linux, wheel scroll down
         ['<Shift-Button-5>',   self.scroll_x_wheel],
-        # zoom for Linux, wheel scroll up
+        # wheel for Linux, wheel scroll up
         ['<Shift-Button-4>',   self.scroll_x_wheel],
-        # zoom for Windows and MacOS, but not Linux
+        # wheel for Windows and MacOS, but not Linux
         ['<MouseWheel>', self.scroll_y_wheel],
-        # zoom for Linux, wheel scroll down
+        # wheel for Linux, wheel scroll down
         ['<Button-5>',   self.scroll_y_wheel],
-        # zoom for Linux, wheel scroll up
-        ['<Button-4>',   self.scroll_y_wheel]
-        ]
-        for binding in self.permenant_bindings:
-            self.bind(*binding)
+        # wheel for Linux, wheel scroll up
+        ['<Button-4>',   self.scroll_y_wheel]]
+
+        self.permenant_bindings =\
+            self.bindings_element_creation+\
+            self.bindings_file+\
+            self.bindings_edit+\
+            self.bindings_view+\
+            self.bindings_zoom+\
+            self.bindings_scroll
 
     def unset_temporary_bindings(self,exceptions=[]):
         '''
         Unsets all temporary bindings.
         '''
         for sequence in [
-            "<Escape>","<Motion>",'<Left>','<Right>','<Up>', '<Down>',
-            "<ButtonPress-1>","<ButtonRelease-1>","<Shift-B1-Motion>","<Control-B1-Motion>","<B1-Motion>",'<Shift-ButtonPress-1>',
-            '<Control-ButtonPress-1>','<Shift-ButtonRelease-1>','<Control-ButtonRelease-1>', 
-            '<Double-ButtonPress-1>', '<ButtonPress-3>','<ButtonRelease-3>', '<Return>',
-        ]:
+            "<Escape>",
+            "<Motion>",
+            '<Left>',
+            '<Right>',
+            '<Up>', 
+            '<Down>',
+            "<ButtonPress-1>",
+            "<ButtonRelease-1>",
+            "<Shift-B1-Motion>",
+            "<Control-B1-Motion>",
+            "<B1-Motion>",
+            '<Shift-ButtonPress-1>',
+            '<Control-ButtonPress-1>',
+            '<Shift-ButtonRelease-1>',
+            '<Control-ButtonRelease-1>', 
+            '<Double-ButtonPress-1>', 
+            '<ButtonPress-3>',
+            '<ButtonRelease-3>', 
+            '<Return>']:
             if sequence not in exceptions:
                 self.unbind(sequence)
-            
-    def unset_permenant_bindings(self):
-        '''
-        Unsets all temporary bindings.
-        '''
-        for bindings in self.permenant_bindings:
-            self.unbind(bindings[0])
 
     ###########################
     # FILE menu functionalities
@@ -1625,7 +1658,7 @@ class CircuitEditor(tk.Canvas):
             # Ensure that when the mouse moves, the selection 
             # moves such that the top left of the circuit lies
             # under the mouse, selection is released upon "<ButtonPress-1>"
-            self.bind("<Motion>", lambda event: el.on_motion(event, release_sequence = "<ButtonPress-1>"))
+            self.bind("<Motion>", lambda event: el.on_motion(event, release_sequence = "ButtonPress-1"))
         else:
             self.write_message("Nothing to paste")
 
@@ -2287,7 +2320,7 @@ class TwoNodeElement(object):
         self.canvas.tag_bind(self.binding_object, "<ButtonRelease-1>", self.select)
         self.canvas.tag_bind(self.binding_object, "<Shift-ButtonRelease-1>", self.ctrl_shift_select)
         self.canvas.tag_bind(self.binding_object, "<Control-ButtonRelease-1>",self.ctrl_shift_select)
-        self.canvas.tag_bind(self.binding_object, "<B1-Motion>", lambda event: self.on_motion(event,release_sequence="<ButtonRelease-1>"))
+        self.canvas.tag_bind(self.binding_object, "<B1-Motion>", lambda event: self.on_motion(event,release_sequence="ButtonRelease-1"))
         self.canvas.tag_bind(self.binding_object, '<Double-ButtonPress-1>', self.double_click)
 
     def hover_leave(self, event = None):
@@ -2329,8 +2362,14 @@ class TwoNodeElement(object):
                 self.canvas.bind('<Right>', lambda event: self.on_updownleftright(event, angle=EAST))
                 self.canvas.bind('<Up>', lambda event: self.on_updownleftright(event, angle=NORTH))
                 self.canvas.bind('<Down>', lambda event: self.on_updownleftright(event, angle=SOUTH))
-        
-            self.canvas.tag_bind(self.binding_object, release_sequence, self.release_motion)
+
+            # Bind the release sequence to the release motion
+            self.canvas.tag_bind(self.binding_object, "<%s>"%release_sequence, self.release_motion)
+            self.canvas.tag_bind(self.binding_object, "<Shift-%s>"%release_sequence, self.release_motion)
+            self.canvas.tag_bind(self.binding_object, "<Control-%s>"%release_sequence, self.release_motion)
+            self.canvas.tag_bind(self.binding_object, "<Alt-%s>"%release_sequence, self.release_motion)
+
+            # Even if typical modifiers are pressed
         
         x, y = self.get_center_pos()
         dx = self.canvas.canvasx(event.x) - x

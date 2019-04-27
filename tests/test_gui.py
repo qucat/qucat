@@ -191,7 +191,7 @@ class TestComponentCreation(AutomaticTesting):
 class TestCutCopyPaste(AutomaticTesting):
 
     def test_copy_paste__copying_nothing(self):
-        self.launch_gui_testing()
+        self.launch_gui_testing(run_slower=False)
     def test_cut_paste__cut_paste_inductor(self):
         self.launch_gui_testing()
     def test_copy_paste__copy_paste_capacitor(self):
