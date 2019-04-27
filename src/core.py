@@ -151,9 +151,9 @@ class Qcircuit(object):
             raise ValueError(
                 "There should be at least one capacitor in the circuit")
 
-        self.flux_transformation_dict = {}
+        self._flux_transformation_dict = {}
         for node in self.network.nodes:
-            self.flux_transformation_dict[node] = {}
+            self._flux_transformation_dict[node] = {}
 
         self._compute_Y()
         self._compute_dY_analytically()
@@ -239,7 +239,7 @@ class Qcircuit(object):
 
     def _anharmonicities_per_junction(self, pretty_print=False, **kwargs):
         self._set_w_cpx(**kwargs)
-        return [j.anharmonicity(self.w_cpx, **kwargs)/h for j in self.junctions]
+        return [j._anharmonicity(self.w_cpx, **kwargs)/h for j in self.junctions]
 
     def eigenfrequencies(self, **kwargs):
         self._set_w_cpx(**kwargs)
@@ -385,11 +385,11 @@ class Qcircuit(object):
             H += f*a.dag()*a
             phi_0 = hbar/2./e
             for j, junction in enumerate(self.junctions):
-                phi[j] += junction.flux(w=f*2.*pi, **kwargs)/phi_0*(a+a.dag())
+                phi[j] += junction._flux(w=f*2.*pi, **kwargs)/phi_0*(a+a.dag())
 
         for j, junction in enumerate(self.junctions):
             n = 2
-            EJ = (hbar/2./e)**2/(junction.get_value(**kwargs)*h)
+            EJ = (hbar/2./e)**2/(junction._get_value(**kwargs)*h)
             while 2*n <= junc_pot_taylor_exp:
                 H += (-1)**(n+1)*EJ/factorial(2*n)*phi[j]**(2*n)
                 n += 1
@@ -477,13 +477,13 @@ class Qcircuit(object):
         def string_to_function(comp, function, **kwargs):
             if function == 'flux':
                 phi_0 = hbar/2./e
-                return comp.flux(mode_w, **kwargs)/phi_0
+                return comp._flux(mode_w, **kwargs)/phi_0
             if function == 'charge':
-                return comp.charge(mode_w, **kwargs)/e
+                return comp._charge(mode_w, **kwargs)/e
             if function == 'voltage':
-                return comp.voltage(mode_w, **kwargs)
+                return comp._voltage(mode_w, **kwargs)
             if function == 'current':
-                return comp.current(mode_w, **kwargs)
+                return comp._current(mode_w, **kwargs)
 
         def pretty(v, function):
             if function == 'flux':
@@ -645,7 +645,7 @@ class GUI(Qcircuit):
 
         super(GUI, self).__init__(netlist)
         for el in self.netlist:
-            el.set_plot_coordinates()
+            el._set_plot_coordinates()
 
         if plot:
             self.show()
@@ -1229,7 +1229,7 @@ class Circuit(object):
     def __or__(self, other_circuit):
         return Parallel(self, other_circuit)
 
-    def set_plot_coordinates(self):
+    def _set_plot_coordinates(self):
 
         self.x_plot_node_minus = float(self.node_minus_plot.split(',')[0])
         self.x_plot_node_plus = float(self.node_plus_plot.split(',')[0])
@@ -1302,7 +1302,7 @@ class Component(Circuit):
         super(Component, self).__init__(node_minus, node_plus)
         self.label = None
         self.value = None
-        self._flux = None
+        self.__flux = None
 
         if arg1 is None and arg2 is None:
             raise ValueError("Specify either a value or a label")
@@ -1333,7 +1333,7 @@ class Component(Circuit):
             else:
                 return hash(str(self.value)+self.label+self.unit)
 
-    def get_value(self, **kwargs):
+    def _get_value(self, **kwargs):
         if self.value is not None:
             return self.value
         elif self.value is None and kwargs is not None:
@@ -1352,56 +1352,56 @@ class Component(Circuit):
                 self.head.no_value_components.append(self.label)
 
     @property
-    def flux(self):
-        if self._flux is None:
+    def _flux(self):
+        if self.__flux is None:
             try:
-                tr = self.head.flux_transformation_dict[self.node_minus,
+                tr = self.head._flux_transformation_dict[self.node_minus,
                                                         self.node_plus]
             except KeyError:
                 tr = self.head.network.transfer(
                     self.head.ref_elt.node_minus, self.head.ref_elt.node_plus, self.node_minus, self.node_plus)
-                self.head.flux_transformation_dict[self.node_minus,
+                self.head._flux_transformation_dict[self.node_minus,
                                                    self.node_plus] = tr
-                self.head.flux_transformation_dict[self.node_plus,
+                self.head._flux_transformation_dict[self.node_plus,
                                                    self.node_minus] = -tr
 
-            _flux_undecorated = lambdify(
+            __flux_undecorated = lambdify(
                 ['w']+self.head.no_value_components,
                 tr*sp.sqrt(hbar/sp.Symbol('w')/self.head.dY_analytical), 
                 "numpy")
 
             @safely_evaluate
-            def _flux_single(w,**kwargs):
-                return _flux_undecorated(w,**kwargs)
+            def __flux_single(w,**kwargs):
+                return __flux_undecorated(w,**kwargs)
             
-            def _flux(w,**kwargs):
+            def __flux(w,**kwargs):
                 # test if w is an iterable
                 try:
                     iter(w)
                 except TypeError:
                     # iterable = False
-                    return _flux_single(w,**kwargs)
+                    return __flux_single(w,**kwargs)
                 else:
                     # iterable = True
-                    return np.array([_flux_single(w_single,**kwargs) for w_single in w])
+                    return np.array([__flux_single(w_single,**kwargs) for w_single in w])
 
-            self._flux = _flux
-        return self._flux
+            self.__flux = __flux
+        return self.__flux
 
-    def voltage(self, w, **kwargs):
-        return complex(self.flux(w, **kwargs)*1j*w)
+    def _voltage(self, w, **kwargs):
+        return complex(self._flux(w, **kwargs)*1j*w)
 
-    def current(self, w, **kwargs):
+    def _current(self, w, **kwargs):
         kwargs['w'] = w
         Y = self._admittance()
         if isinstance(Y, Number):
             pass
         else:
             Y = Y.evalf(subs=kwargs)
-        return complex(self.voltage(**kwargs)*Y)
+        return complex(self._voltage(**kwargs)*Y)
 
-    def charge(self, w, **kwargs):
-        return self.current(w, **kwargs)/w
+    def _charge(self, w, **kwargs):
+        return self._current(w, **kwargs)/w
 
     def _to_string(self, use_math=True, use_unicode=False):
         return to_string(self.unit, self.label, self.value,
@@ -1486,7 +1486,7 @@ class L(Component):
         self.unit = 'H'
 
     def _admittance(self):
-        return -sp.I*Mul(1/sp.Symbol('w'), 1/self.get_value())
+        return -sp.I*Mul(1/sp.Symbol('w'), 1/self._get_value())
 
     def _set_component_lists(self):
         super(L, self)._set_component_lists()
@@ -1542,7 +1542,7 @@ class L(Component):
     def _get_RLC_matrix_components(self):
         return {
             'R':0,
-            'L':1/self.get_value(),
+            'L':1/self._get_value(),
             'C':0
         }
 
@@ -1559,8 +1559,8 @@ class J(L):
         else:
             self.unit = 'H'
 
-    def get_value(self, **kwargs):
-        value = super(J, self).get_value(**kwargs)
+    def _get_value(self, **kwargs):
+        value = super(J, self)._get_value(**kwargs)
         if (self.use_E == False) and (self.use_I == False):
             return value
         elif (self.use_E == True) and (self.use_I == False):
@@ -1576,8 +1576,8 @@ class J(L):
         super(J, self)._set_component_lists()
         self.head.junctions.append(self)
 
-    def anharmonicity(self, w, **kwargs):
-        return self.flux(w, **kwargs)**4/hbar**2*2.*e**2/self.get_value(**kwargs)
+    def _anharmonicity(self, w, **kwargs):
+        return self._flux(w, **kwargs)**4/hbar**2*2.*e**2/self._get_value(**kwargs)
 
     def _draw(self):
 
@@ -1612,14 +1612,14 @@ class R(Component):
         self.unit = r'$\Omega$'
 
     def _admittance(self):
-        return 1/self.get_value()
+        return 1/self._get_value()
 
     def _set_component_lists(self):
         super(R, self)._set_component_lists()
         self.head.resistors.append(self)
     def _get_RLC_matrix_components(self):
         return {
-            'R':1/self.get_value(),
+            'R':1/self._get_value(),
             'L':0,
             'C':0
         }
@@ -1678,7 +1678,7 @@ class C(Component):
         self.unit = 'F'
 
     def _admittance(self):
-        return sp.I*Mul(sp.Symbol('w'), self.get_value())
+        return sp.I*Mul(sp.Symbol('w'), self._get_value())
 
     def _set_component_lists(self):
         super(C, self)._set_component_lists()
@@ -1718,7 +1718,7 @@ class C(Component):
         return {
             'R':0,
             'L':0,
-            'C':self.get_value()
+            'C':self._get_value()
         }
 
 class Admittance(Component):
