@@ -1407,6 +1407,23 @@ class Component(Circuit):
         return to_string(self.unit, self.label, self.value,
                   use_math=use_math, use_unicode=use_unicode)
 
+    def flux(self, mode, **kwargs):
+        self.head._set_w_cpx()
+        return self._flux(self.head.w_cpx[mode],**kwargs)
+        
+    def voltage(self, mode, **kwargs):
+        self.head._set_w_cpx()
+        return self._voltage(self.head.w_cpx[mode],**kwargs)
+
+    def current(self, mode, **kwargs):
+        self.head._set_w_cpx()
+        return self._current(self.head.w_cpx[mode],**kwargs)
+        
+    def charge(self, mode, **kwargs):
+        self.head._set_w_cpx()
+        return self._charge(self.head.w_cpx[mode],**kwargs)
+        
+
 class W(Component):
     """docstring for Wire"""
 
@@ -1579,6 +1596,10 @@ class J(L):
     def _anharmonicity(self, w, **kwargs):
         return self._flux(w, **kwargs)**4/hbar**2*2.*e**2/self._get_value(**kwargs)
 
+    def anharmonicity(self, mode, **kwargs):
+        self.head._set_w_cpx()
+        return self._anharmonicity(self.head.w_cpx[mode],**kwargs)
+
     def _draw(self):
 
         line_type = []
@@ -1613,16 +1634,18 @@ class R(Component):
 
     def _admittance(self):
         return 1/self._get_value()
-
+    
     def _set_component_lists(self):
         super(R, self)._set_component_lists()
         self.head.resistors.append(self)
+    
     def _get_RLC_matrix_components(self):
         return {
             'R':1/self._get_value(),
             'L':0,
             'C':0
         }
+    
     def _draw(self):
 
         x = np.linspace(-0.25, 0.25 +float(pp['R']['N_ridges']), pp['R']['N_points'])
