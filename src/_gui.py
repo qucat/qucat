@@ -256,10 +256,10 @@ class CircuitEditor(tk.Canvas):
     implemented are:
     * 0:    The default state of the system, entered when starting up the 
             eidtor for example
-    * 1:    When we are moving components around or when we are creating
-            a component.
+    * 1:    Dragging a component
     * 2:    Frozen editor when another window is open
     * 3:    Box selection
+    * 4:    Component creation
 
     Parameters
     ----------
@@ -286,6 +286,8 @@ class CircuitEditor(tk.Canvas):
         
         # The root window (tk.Tk())
         self.master = master
+
+        self.state = -1
 
         self.track_events_to = track_events_to
         '''
@@ -384,7 +386,7 @@ class CircuitEditor(tk.Canvas):
 
         # Puts the Editor in state 0: 
         # sets all the right bindings, etc ...
-        self.set_state_0()
+        self.set_state(0)
 
         
     ###########################
@@ -719,16 +721,35 @@ class CircuitEditor(tk.Canvas):
     def set_state(self,n):
         '''Puts Editor into state n
         '''
-        exec("self.set_state_%d()"%n)
+
+        if self.state != n:
+            if self.verbose:
+                print('entering state %d'%n)
+            # Save previous state, as we may go back
+            # to it when exiting this state
+            self.previous_state = self.state 
+            self.state = n
+            exec("self.set_state_%d()"%n)
     
+        for el in self.elements:
+            el.set_state(n)
+
+    def exit_state(self,n):
+        '''Exits state n
+        '''
+
+        if self.state == n:
+            if self.verbose:
+                print('exiting state %d'%n)
+            exec("self.exit_state_%d()"%n)
+    
+        for el in self.elements:
+            el.exit_state(n)
+
     def set_state_0(self):
         '''
         Puts the editor in state 0, as it is upon opening
         '''
-        if self.verbose:
-            print('entering state 0')
-
-        self.state = 0
 
         # No components are currently in creation
         self.in_creation = None
@@ -753,21 +774,16 @@ class CircuitEditor(tk.Canvas):
         self.hbar.unfreeze()
         self.vbar.unfreeze()
         
-        for el in self.elements:
-            el.set_state_0()
 
     def set_state_1(self):
-        '''To set before we start dragging or creating somthing
+        '''To set before we start dragging
         '''
-        if self.verbose:
-            print('entering state 1')
-        self.state = 1
 
         # unset commong bindings that may have been created elsewhere
-        self.unset_temporary_bindings()
+        self.unset_temporary_bindings(exceptions = ["<Motion>"])
+        self.unset_keyboard_shortcuts_element_creation()
 
         # Set keyboard bindings other than element creation
-        # (these can be used to cancel an elemnt creation for example)
         self.set_permenant_bindings()
 
         # Unfreeze scrollbars
@@ -778,16 +794,10 @@ class CircuitEditor(tk.Canvas):
         # background when pasting elements by redrawing the 
         # grid with no bindings
         self.draw_grid(set_bindings = False)
-        
-        # Make it impossible to hover over componentes
-        for el in self.elements:
-            el.set_state_1()
 
     def exit_state_1(self):
-        '''When finished dragging or creating something
+        '''When finished dragging
         '''
-        if self.verbose:
-            print('exit state 1')
 
         # We just dragged and dropped a component
         # so we check if nodes of that component 
@@ -800,23 +810,17 @@ class CircuitEditor(tk.Canvas):
         self.save()
 
         # Go back to state 0
-        self.set_state_0()
+        self.set_state(0)
 
     def set_state_2(self):
         '''Freeze the Editor
         '''
-        if self.verbose:
-            print('entering state 2')
-
-        # Save previous state, as we will go back 
-        # to it when exiting this state
-        self.previous_state = self.state 
-        self.state = 2
         
         # unset commong bindings that may have been created elsewhere
         self.unset_temporary_bindings()
 
         # unset commong bindings that may have been created elsewhere
+        self.unset_keyboard_shortcuts_element_creation()
         self.unset_permenant_bindings()
 
         # remove grid bindings
@@ -826,27 +830,18 @@ class CircuitEditor(tk.Canvas):
         self.hbar.freeze()
         self.vbar.freeze()
 
-        
-        # Make all elements unresponsive by
-        # ubinding hover/leave/right-clicking
-        for el in self.elements:
-            el.set_state_2()
-
     def exit_state_2(self):
         '''Un-freeze the Editor, go back to the state it 
         was in upon freezing.
         '''
-        if self.verbose:
-            print('exit state 2')
         self.set_state(self.previous_state)
 
     def set_state_3(self):
         '''When we are using the box selection tool
         '''
-        if self.verbose:
-            print('entering state 3')
         
         # unset commong bindings that may have been created elsewhere
+        self.unset_keyboard_shortcuts_element_creation()
         self.unset_permenant_bindings()
 
         # Disactivate right-clicking the background
@@ -855,20 +850,50 @@ class CircuitEditor(tk.Canvas):
         # Freeze scrollbars
         self.hbar.freeze()
         self.vbar.freeze()
-
-        # Make all elements unresponsive by
-        # ubinding hover/leave/right-clicking
-        for el in self.elements:
-            el.set_state_3()
-
         
     def exit_state_3(self):
         '''When we have stopped using the box selection 
         tool, go back to state 0.
         '''
-        if self.verbose:
-            print('exit state 3')
-        self.set_state_0()
+        self.set_state(0)
+
+    def set_state_4(self):
+        '''To set before we start creating somthing
+        '''
+
+        # unset commong bindings that may have been created elsewhere
+        self.unset_temporary_bindings()
+
+        # Set keyboard bindings other than element creation
+        # (these can be used to cancel an elemnt creation)
+        self.set_permenant_bindings()
+
+        # Unfreeze scrollbars
+        self.hbar.unfreeze()
+        self.vbar.unfreeze()
+
+        # Disactivate box selection and right clicking on 
+        # background when pasting elements by redrawing the 
+        # grid with no bindings
+        self.draw_grid(set_bindings = False)
+        
+
+    def exit_state_4(self):
+        '''When finished creating something
+        '''
+
+        # We just dragged and dropped a component
+        # so we check if nodes of that component 
+        # intersect a wire
+        self.track_changes = False
+        self.add_nodes()
+        self.track_changes = True
+
+        # Save the changes that have occured
+        self.save()
+
+        # Go back to state 0
+        self.set_state(0)
 
     def elements_list_to_netlist_string(self):
         '''
@@ -1137,6 +1162,14 @@ class CircuitEditor(tk.Canvas):
         for binding in self.keyboard_shortcuts_element_creation_bindings:
             self.bind(*binding)
     
+    def unset_keyboard_shortcuts_element_creation(self):
+        '''
+            Remove assignment of key R to the creation of a resistor, 
+            C to a capacitor, etc...
+        '''
+        for bindings in self.keyboard_shortcuts_element_creation_bindings:
+            self.unbind(bindings[0])
+    
     def set_permenant_bindings(self):
         '''
         Assign keystrokes to functionalities
@@ -1191,7 +1224,7 @@ class CircuitEditor(tk.Canvas):
         for binding in self.permenant_bindings:
             self.bind(*binding)
 
-    def unset_temporary_bindings(self):
+    def unset_temporary_bindings(self,exceptions=[]):
         '''
         Unsets all temporary bindings.
         '''
@@ -1201,13 +1234,14 @@ class CircuitEditor(tk.Canvas):
             '<Control-ButtonPress-1>','<Shift-ButtonRelease-1>','<Control-ButtonRelease-1>', 
             '<Double-ButtonPress-1>', '<ButtonPress-3>','<ButtonRelease-3>', '<Return>',
         ]:
-            self.unbind(sequence)
+            if sequence not in exceptions:
+                self.unbind(sequence)
             
     def unset_permenant_bindings(self):
         '''
         Unsets all temporary bindings.
         '''
-        for bindings in self.keyboard_shortcuts_element_creation_bindings+self.permenant_bindings:
+        for bindings in self.permenant_bindings:
             self.unbind(bindings[0])
 
     ###########################
@@ -1258,7 +1292,7 @@ class CircuitEditor(tk.Canvas):
             # built at a different location on the canvas
             self.center_window_on_circuit()
 
-            self.set_state_0()
+            self.set_state(0)
 
     #############################
     # SCROLLING/ZOOMING
@@ -1588,31 +1622,12 @@ class CircuitEditor(tk.Canvas):
             # be selected above
             #########################
 
-            # Default settings for a 
-            # dragging situation
-            self.set_state_1()
-
             # Ensure that when the mouse moves, the selection 
             # moves such that the top left of the circuit lies
-            # under the mouse
-            self.bind("<Motion>", el.on_motion)
-            
-            if len(to_paste) == 1:
-                
-                # Snaps the element to the grid and removes the binding 
-                # of arrow keys and replaces binding of button-press to box selection
-                self.bind("<ButtonPress-1>", el.release_motion)
-
-                # If only a single element is pasted, allow the user to rotate that 
-                # element with arrows
-                self.bind('<Left>', lambda event: el.on_updownleftright(event, angle=WEST))
-                self.bind('<Right>', lambda event: el.on_updownleftright(event, angle=EAST))
-                self.bind('<Up>', lambda event: el.on_updownleftright(event, angle=NORTH))
-                self.bind('<Down>', lambda event: el.on_updownleftright(event, angle=SOUTH))
-            else:
-                # Snaps the elements (the selection) to the grid and
-                # replaces binding of button-press to box selection
-                self.bind("<ButtonPress-1>", el.release_motion)
+            # under the mouse, selection is released upon "<ButtonPress-1>"
+            self.bind("<Motion>", lambda event: el.on_motion(event, release_sequence = "<ButtonPress-1>"))
+        else:
+            self.write_message("Nothing to paste")
 
 
     #############################
@@ -1723,7 +1738,7 @@ class CircuitEditor(tk.Canvas):
             
             # Make all components and navigation
             # unresponsive
-            self.set_state_3()
+            self.set_state(3)
 
             # Construct a list of all components which 
             # where already selected
@@ -1783,7 +1798,7 @@ class CircuitEditor(tk.Canvas):
         self.selection_rectangle_y_start = None
 
         # Reinstate all features cancelled during the box selection
-        self.exit_state_3()
+        self.exit_state(3)
 
     def deselect_all(self, event=None):
         '''
@@ -2103,12 +2118,12 @@ class TwoNodeElement(object):
 
     def __init__(self, canvas, event=None, auto_place_info=None):
         self.canvas = canvas
-        self.was_moved = False
         self.was_rotated = False
         self.hover = False
         self.selected = False
         self.dot_minus = None
         self.dot_plus = None
+        self.state = -1
 
         # Radius of the node dot, in grid units
         self.node_dot_radius = 1./30.
@@ -2171,7 +2186,7 @@ class TwoNodeElement(object):
 
         # Remove all bindings related to element creation
         # and reinstate state 0
-        self.canvas.set_state_0()
+        self.canvas.set_state(0)
 
         # If the user cancelled by pressing a circuit generating 
         # key, then that circuit should appear
@@ -2189,6 +2204,20 @@ class TwoNodeElement(object):
     # STATE SETTING
     ###########################################
 
+    def set_state(self,n):
+        '''Puts Element into state n
+        '''
+
+        if self.state != n:
+            self.state = n
+            exec("self.set_state_%d()"%n)
+
+    def exit_state(self,n):
+        '''Exits state n
+        '''
+        pass
+            
+    
     
     def set_state_0(self):
         '''Default state 
@@ -2235,6 +2264,13 @@ class TwoNodeElement(object):
         self.canvas.tag_bind(self.binding_object, "<Shift-ButtonRelease-1>", lambda event: None)
         self.canvas.tag_bind(self.binding_object, "<Control-ButtonRelease-1>", lambda event:None)
 
+    def set_state_4(self):
+        '''When creating another component
+        '''
+        self.hover_leave()
+        self.canvas.tag_bind(self.binding_object, "<Enter>", lambda event:None)
+        self.canvas.tag_bind(self.binding_object, "<Leave>", lambda event:None)
+        self.canvas.tag_bind(self.binding_object, "<Button-3>", lambda event:None)
 
 
 
@@ -2243,17 +2279,16 @@ class TwoNodeElement(object):
     ###########################################    
 
     def hover_enter(self, event = None):
+        if self.canvas.verbose:
+            print('Hovering')
         self.hover = True
         self.update_graphic()
 
-        self.canvas.tag_bind(self.binding_object, "<ButtonPress-1>", self.on_click)
-        self.canvas.tag_bind(self.binding_object, "<Shift-ButtonPress-1>",lambda event: self.on_click(event, shift_control=True))
-        self.canvas.tag_bind(self.binding_object, "<Control-ButtonPress-1>",lambda event: self.on_click(event, shift_control=True))
-        self.canvas.tag_bind(self.binding_object, "<B1-Motion>", self.on_motion)
-        self.canvas.tag_bind(self.binding_object, "<ButtonRelease-1>", self.release_motion)
+        self.canvas.tag_bind(self.binding_object, "<ButtonRelease-1>", self.select)
+        self.canvas.tag_bind(self.binding_object, "<Shift-ButtonRelease-1>", self.ctrl_shift_select)
+        self.canvas.tag_bind(self.binding_object, "<Control-ButtonRelease-1>",self.ctrl_shift_select)
+        self.canvas.tag_bind(self.binding_object, "<B1-Motion>", lambda event: self.on_motion(event,release_sequence="<ButtonRelease-1>"))
         self.canvas.tag_bind(self.binding_object, '<Double-ButtonPress-1>', self.double_click)
-        self.canvas.tag_bind(self.binding_object, "<Shift-ButtonRelease-1>", lambda event: self.release_motion(event, shift_control=True))
-        self.canvas.tag_bind(self.binding_object, "<Control-ButtonRelease-1>", lambda event: self.release_motion(event, shift_control=True))
 
     def hover_leave(self, event = None):
         self.hover = False
@@ -2262,17 +2297,6 @@ class TwoNodeElement(object):
     ###########################################
     # HOVER BEHAVIOUR
     ###########################################  
-    
-    def on_click(self, event, shift_control=False):
-
-        if self.selected is False and shift_control is False:
-            self.canvas.deselect_all()
-
-        if not self.canvas.is_more_than_one_selected():
-            self.canvas.bind('<Left>', lambda event: self.on_updownleftright(event, angle=WEST))
-            self.canvas.bind('<Right>', lambda event: self.on_updownleftright(event, angle=EAST))
-            self.canvas.bind('<Up>', lambda event: self.on_updownleftright(event, angle=NORTH))
-            self.canvas.bind('<Down>', lambda event: self.on_updownleftright(event, angle=SOUTH))
 
     def right_click(self, event):
         if self.canvas.is_more_than_one_selected() and self.selected:
@@ -2286,14 +2310,34 @@ class TwoNodeElement(object):
     # DRAGGING BEHAVIOUR
     ###########################################  
     
-    def on_motion(self, event):
+    def on_motion(self, event, release_sequence):
+
+        if self.state !=1:
+
+            # First iteration of this method
+            self.canvas.set_state(1)
+
+            # Determine which elements need moving
+            self.elements_to_move = []
+            for el in self.canvas.elements:
+                if el.selected or el == self:
+                    self.elements_to_move.append(el)
+
+            # If only one element is being moved, allow rotation
+            if len(self.elements_to_move)==1:
+                self.canvas.bind('<Left>', lambda event: self.on_updownleftright(event, angle=WEST))
+                self.canvas.bind('<Right>', lambda event: self.on_updownleftright(event, angle=EAST))
+                self.canvas.bind('<Up>', lambda event: self.on_updownleftright(event, angle=NORTH))
+                self.canvas.bind('<Down>', lambda event: self.on_updownleftright(event, angle=SOUTH))
+        
+            self.canvas.tag_bind(self.binding_object, release_sequence, self.release_motion)
+        
         x, y = self.get_center_pos()
         dx = self.canvas.canvasx(event.x) - x
         dy = self.canvas.canvasy(event.y) - y
-        for el in self.canvas.elements:
-            if el.selected or el == self:
-                el.move(dx, dy)
-        self.was_moved = True
+
+        for el in self.elements_to_move:
+            el.move(dx, dy)
     
     ###########################################
     # DROPPING BEHAVIOUR
@@ -2389,7 +2433,7 @@ class TwoNodeElement(object):
                     return True
         return False
 
-    def release_motion(self, event, shift_control=False):
+    def release_motion(self, event):
         '''
         Called when:
         * dropping in a dragging/dropping action
@@ -2402,45 +2446,35 @@ class TwoNodeElement(object):
         self.canvas.track_changes = False
 
         # Snap all the released elements to the grid
-        for el in self.canvas.elements:
-            if el.selected or el == self:
-                el.snap_to_grid()
-                el.add_or_replace_label()
-               
-
+        for el in self.elements_to_move:
+            el.snap_to_grid()
+            el.add_or_replace_label()
+        
         # This was only occur if 
         # a single element was selected and moved
         if self.was_rotated:
             self.set_node_coordinates()
             self.was_rotated = False
 
-        # selection in case of movement
-        if self.was_moved:
-            self.force_select()
-            self.was_moved = False
-        # selection in case of only clicking
-        elif shift_control:
-            self.ctrl_shift_select()
-        else:
-            self.select()
+        self.force_select()
 
-        # In case of movement,
         # check if elements are intersecting a wire
         # save, go back to state 0
         # if self.was_moved:
-        self.canvas.exit_state_1()
+        self.canvas.exit_state(1)
+
  
     ###########################################
     # SELECTION
     ###########################################
     
-    def select(self):
+    def select(self, event = None):
         self.canvas.deselect_all()
         if self.selected is False:
             self.selected = True
             self.update_graphic()
 
-    def ctrl_shift_select(self):
+    def ctrl_shift_select(self, select = None):
         if self.selected is False:
             self.selected = True
             self.update_graphic()
@@ -2617,7 +2651,7 @@ class W(TwoNodeElement):
     ###### Arranged in order of calling for a manual placement:
 
     def manual_place(self, event):
-        self.canvas.set_state_1()
+        self.canvas.set_state(4)
         self.canvas.config(cursor='plus')
         self.canvas.bind("<ButtonPress-1>", self.start_line)
         self.canvas.bind("<Escape>", lambda event: self.abort_creation(event, rerun_command = False))
@@ -2684,7 +2718,7 @@ class W(TwoNodeElement):
         self.create()
         # Check if elements are intersecting a wire
         # save, go back to state 0
-        self.canvas.exit_state_1()
+        self.canvas.exit_state(4)
         
 
     def init_plus_snap_to_grid(self, event):
@@ -2961,19 +2995,19 @@ class Component(TwoNodeElement):
             *self.grid_to_canvas([x, y]), image=self.tk_image)
         self.add_or_replace_label()
         self.canvas.elements.append(self)
-        self.canvas.set_state_0()
+        self.canvas.set_state(0)
      
     def abort_creation(self, event=None, rerun_command = True):
         self.canvas.delete(self.image)
         self.canvas.delete(self.dot_minus)
         self.canvas.delete(self.dot_plus)
-        self.canvas.exit_state_1()
+        self.canvas.exit_state(4)
         super(Component,self).abort_creation(event, rerun_command)
 
     ###### Arranged in order of calling for a manual placement:    
     
     def manual_place(self, event):
-        self.canvas.set_state_1()
+        self.canvas.set_state(4)
         self.init_create_component(event)
         self.canvas.in_creation = self
 
@@ -3029,7 +3063,7 @@ class Component(TwoNodeElement):
 
         self.add_or_replace_label()
         self.canvas.elements.append(self)
-        self.canvas.exit_state_1()
+        self.canvas.exit_state(4)
         
 
 
@@ -3265,9 +3299,9 @@ class Component(TwoNodeElement):
     def request_value_label(self):
         if (self.canvas.track_events_to is None) and (self.canvas.unittesting == False):
             window = RequestValueLabelWindow(self.canvas.master, self)
-            self.canvas.set_state_2()
+            self.canvas.set_state(2)
             self.canvas.master.wait_window(window)
-            self.canvas.exit_state_2()
+            self.canvas.exit_state(2)
         else:
             self.prop = [1, 'X']
 
@@ -3540,4 +3574,4 @@ class GuiWindow(ttk.Frame):
 
 if __name__ == '__main__':
     # GuiWindow('./src/test.txt',_track_events_to='test.txt')
-    GuiWindow('./src/test.txt')
+    GuiWindow('./src/test.txt',_verbose=True)

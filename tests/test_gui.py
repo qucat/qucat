@@ -200,7 +200,7 @@ class TestCutCopyPaste(AutomaticTesting):
         self.launch_gui_testing()
 
     def test_cut_paste__box_select_cut_paste_random_complicated_circuit(self):
-        self.launch_gui_testing()
+        self.launch_gui_testing(run_slower=False)
     def test_cut_paste__select_all_cut_paste_random_complicated_circuit(self):
         self.launch_gui_testing()
     def test_copy_paste__select_all_copy_paste_random_complicated_circuit(self):
@@ -212,8 +212,6 @@ class TestUndoRedo(AutomaticTesting):
     def test_undo_movement_of_capacitor(self):
         self.launch_gui_testing(run_slower=False)
     def test_undo_deletion_redo(self):
-        self.launch_gui_testing(run_slower=False)
-    def test_complex_random(self):
         self.launch_gui_testing(run_slower=False)
 
 class TestMovingComponentsAround(AutomaticTesting):
