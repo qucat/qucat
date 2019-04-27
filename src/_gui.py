@@ -2250,7 +2250,7 @@ class TwoNodeElement(object):
         '''
         pass
             
-    
+
     
     def set_state_0(self):
         '''Default state 
@@ -2365,11 +2365,11 @@ class TwoNodeElement(object):
 
             # Bind the release sequence to the release motion
             self.canvas.tag_bind(self.binding_object, "<%s>"%release_sequence, self.release_motion)
+            # ...even if typical modifiers are pressed
             self.canvas.tag_bind(self.binding_object, "<Shift-%s>"%release_sequence, self.release_motion)
             self.canvas.tag_bind(self.binding_object, "<Control-%s>"%release_sequence, self.release_motion)
             self.canvas.tag_bind(self.binding_object, "<Alt-%s>"%release_sequence, self.release_motion)
 
-            # Even if typical modifiers are pressed
         
         x, y = self.get_center_pos()
         dx = self.canvas.canvasx(event.x) - x

@@ -56,7 +56,7 @@ def generate_icon(comp,hover = False, selected = False):
     comp.node_plus_plot = '1,0'
     comp.set_plot_coordinates()
 
-    xs, ys, line_type = comp.draw()
+    xs, ys, line_type = comp._draw()
 
 
     fig = plt.figure(figsize=(1,0.5))

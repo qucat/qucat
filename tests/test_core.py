@@ -40,22 +40,7 @@ class SymbolicOperations(TestCaseAppended):
         self.assertRelativelyClose(
             1j*(-1/Lj/w + 1/(-L*w + 1/(C*w))),
             circuit.Y_lambdified(w))
-
-    def test_calculating_dY(self):
-        # only works on resonance
-        C = 1.1e-14
-        L = 1.3e-8
-        Lj = 1.33e-9
-        w = np.sqrt(1/C/(L+Lj))
-        circuit = core.Network([
-            core.C(0,1,C),
-            core.L(1,2,L),
-            core.J(0,2,Lj)
-        ])
-        self.assertRelativelyClose(
-            1j*(1/(Lj*w**2) - (-L - 1/(C*w**2))/(1/(C*w) - L*w)**2),
-            circuit.dY(w))
-
+            
 class StandardQuantumCircuits(TestCaseAppended):
     '''
     Series RLC circuit parameters

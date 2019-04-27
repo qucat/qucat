@@ -137,7 +137,7 @@ class Qcircuit(object):
         self.no_value_components = []
         for elt in netlist:
             elt.head = self
-            elt.set_component_lists()
+            elt._set_component_lists()
 
         if len(self.junctions) > 0:
             self.ref_elt = self.junctions[0]
@@ -155,15 +155,15 @@ class Qcircuit(object):
         for node in self.network.nodes:
             self.flux_transformation_dict[node] = {}
 
-        self.compute_Y()
-        self.compute_dY_analytically()
+        self._compute_Y()
+        self._compute_dY_analytically()
         self.char_poly_coeffs_analytical = \
             self.network.compute_char_poly_coeffs(is_lossy = (len(self.resistors)>0))
         self.char_poly_coeffs = [lambdify(
             self.no_value_components, c, 'numpy') for c in self.char_poly_coeffs_analytical]
 
     @timeit
-    def compute_Y(self):
+    def _compute_Y(self):
         self.Y = self.network.admittance(self.ref_elt.node_minus, self.ref_elt.node_plus)
         self.Y_lambdified = lambdify(['w']+self.no_value_components, self.Y, 'numpy')
         Y_together = sp.together(self.Y)    # Puts everything on a single fraction with the numerator and denomenator as polynomials
@@ -192,7 +192,7 @@ class Qcircuit(object):
             self.no_value_components, c, 'numpy') for c in self.Y_denom_poly_coeffs_analytical]
 
     @timeit
-    def compute_dY_analytically(self):
+    def _compute_dY_analytically(self):
         # derivative of u/v is (du*v-dv*u)/v^2 = du/v since u=0 everywhere we 
         # want this evaluated
         w = sp.Symbol('w')
@@ -201,26 +201,76 @@ class Qcircuit(object):
         du = sum([(self.Y_numer_poly_order-n)*a*w**(self.Y_numer_poly_order-n-1)
                       for n, a in enumerate(self.Y_numer_poly_coeffs_analytical)])
         self.dY_analytical = du/v
-
-    def dY(self, w, **kwargs):
-
-        @safely_evaluate
-        def dY_single(w,**kwargs):
-            # derivative of u/v is (du*v-dv*u)/v^2 = du/v since u=0
-            v = np.polyval([complex(coeff(**kwargs)) for coeff in self.Y_denom_poly_coeffs],w)
-            du = np.polyval(np.polyder([complex(coeff(**kwargs)) for coeff in self.Y_numer_poly_coeffs]),w)
-            return du/v
-        
-        # test if w is an iterable
-        try:
-            iter(w)
-        except TypeError:
-            # iterable = False
-            return dY_single(w,**kwargs)
-        else:
-            # iterable = True
-            return np.array([dY_single(w_single,**kwargs) for w_single in w])
   
+    def _check_kwargs(self, **kwargs):
+        for key in kwargs:
+            if key in self.no_value_components:
+                pass
+            # # component dict is not defined
+            # elif key in [c.label for _, c in self.component_dict.iteritems()]:
+            #     raise ValueError(
+            #         'The value of %s was already specified when constructing the circuit' % key)
+            else:
+                raise ValueError(
+                    '%s is not the label of a circuit element' % key)
+
+        for label in self.no_value_components:
+            try:
+                kwargs[label]
+            except Exception as e:
+                raise ValueError(
+                    'The value of %s should be specified with the keyword argument %s=... ' % (label, label))
+
+    @timeit
+    def _set_w_cpx(self, **kwargs):
+        self._check_kwargs(**kwargs)
+
+        char_poly_coeffs = [complex(coeff(**kwargs)) for coeff in self.char_poly_coeffs]
+        if len(self.resistors) == 0:
+            # The variable of the characteristic polynomial is w^2
+            self.w_cpx = np.sqrt(np.real(np.roots(char_poly_coeffs)))
+        else:
+            self.w_cpx = np.roots(char_poly_coeffs)
+            self.w_cpx = self.w_cpx[np.nonzero(np.real(self.w_cpx) > 0.)]
+                    
+        # Sort solutions with increasing frequency
+        order = np.argsort(np.real(self.w_cpx))
+        self.w_cpx = self.w_cpx[order]
+
+    def _anharmonicities_per_junction(self, pretty_print=False, **kwargs):
+        self._set_w_cpx(**kwargs)
+        return [j.anharmonicity(self.w_cpx, **kwargs)/h for j in self.junctions]
+
+    def eigenfrequencies(self, **kwargs):
+        self._set_w_cpx(**kwargs)
+        return np.real(self.w_cpx)/2./pi
+
+    def loss_rates(self, **kwargs):
+        self._set_w_cpx(**kwargs)
+        return np.imag(self.w_cpx)/2./pi
+
+    def anharmonicities(self, **kwargs):
+        Ks = self.kerr(**kwargs)
+        return [Ks[i, i] for i in range(Ks.shape[0])]
+
+    def kerr(self, **kwargs):
+        As = self._anharmonicities_per_junction(**kwargs)
+        N_modes = len(self.w_cpx)
+        N_junctions = len(self.junctions)
+
+        Ks = np.zeros((N_modes, N_modes))
+        for i in range(N_modes):
+            line = []
+            for j in range(N_modes):
+                for k in range(N_junctions):
+                    if i == j:
+                        Ks[i, j] += np.absolute(As[k][i])
+                    else:
+                        Ks[i, j] += 2. * \
+                            np.sqrt(np.absolute(As[k][i])
+                                    * np.absolute(As[k][j]))
+        return Ks
+
     def w_k_A_chi(self, pretty_print=False, **kwargs):
 
         list_element = None
@@ -305,75 +355,6 @@ class Qcircuit(object):
             kerr = np.moveaxis(np.array(kerr), 0, -1)
             return w, k, A, kerr
 
-    def check_kwargs(self, **kwargs):
-        for key in kwargs:
-            if key in self.no_value_components:
-                pass
-            # # component dict is not defined
-            # elif key in [c.label for _, c in self.component_dict.iteritems()]:
-            #     raise ValueError(
-            #         'The value of %s was already specified when constructing the circuit' % key)
-            else:
-                raise ValueError(
-                    '%s is not the label of a circuit element' % key)
-
-        for label in self.no_value_components:
-            try:
-                kwargs[label]
-            except Exception as e:
-                raise ValueError(
-                    'The value of %s should be specified with the keyword argument %s=... ' % (label, label))
-
-    @timeit
-    def set_w_cpx(self, **kwargs):
-        self.check_kwargs(**kwargs)
-
-        char_poly_coeffs = [complex(coeff(**kwargs)) for coeff in self.char_poly_coeffs]
-        if len(self.resistors) == 0:
-            # The variable of the characteristic polynomial is w^2
-            self.w_cpx = np.sqrt(np.real(np.roots(char_poly_coeffs)))
-        else:
-            self.w_cpx = np.roots(char_poly_coeffs)
-            self.w_cpx = self.w_cpx[np.nonzero(np.real(self.w_cpx) > 0.)]
-                    
-        # Sort solutions with increasing frequency
-        order = np.argsort(np.real(self.w_cpx))
-        self.w_cpx = self.w_cpx[order]
-
-    def eigenfrequencies(self, **kwargs):
-        self.set_w_cpx(**kwargs)
-        return np.real(self.w_cpx)/2./pi
-
-    def loss_rates(self, **kwargs):
-        self.set_w_cpx(**kwargs)
-        return np.imag(self.w_cpx)/2./pi
-
-    def anharmonicities_per_junction(self, pretty_print=False, **kwargs):
-        self.set_w_cpx(**kwargs)
-        return [j.anharmonicity(self.w_cpx, **kwargs)/h for j in self.junctions]
-
-    def kerr(self, **kwargs):
-        As = self.anharmonicities_per_junction(**kwargs)
-        N_modes = len(self.w_cpx)
-        N_junctions = len(self.junctions)
-
-        Ks = np.zeros((N_modes, N_modes))
-        for i in range(N_modes):
-            line = []
-            for j in range(N_modes):
-                for k in range(N_junctions):
-                    if i == j:
-                        Ks[i, j] += np.absolute(As[k][i])
-                    else:
-                        Ks[i, j] += 2. * \
-                            np.sqrt(np.absolute(As[k][i])
-                                    * np.absolute(As[k][j]))
-        return Ks
-
-    def anharmonicities(self, **kwargs):
-        Ks = self.kerr(**kwargs)
-        return [Ks[i, i] for i in range(Ks.shape[0])]
-
     def hamiltonian(self, 
         modes='all', 
         junc_pot_taylor_exp=4, 
@@ -436,7 +417,7 @@ class Qcircuit(object):
         ys = []
         line_type = []
         for elt in self.netlist:
-            x, y, lt = elt.draw()
+            x, y, lt = elt._draw()
             xs += x
             ys += y
             line_type += lt
@@ -462,7 +443,7 @@ class Qcircuit(object):
                 ax.plot(xs[i], ys[i], color=pp["color"], lw=pp[line_type[i]]['lw'])
 
         for elt in self.netlist:
-            elt.draw_label(ax)
+            elt._draw_label(ax)
 
         ax.set_axis_off()
         ax.set_xlim(x_min-x_margin, x_max+x_margin)
@@ -490,7 +471,7 @@ class Qcircuit(object):
             ''')
 
         check_there_are_no_iterables_in_kwarg(**kwargs)
-        self.set_w_cpx(**kwargs)
+        self._set_w_cpx(**kwargs)
         mode_w = np.real(self.w_cpx[mode])
 
         def string_to_function(comp, function, **kwargs):
@@ -675,7 +656,7 @@ class GUI(Qcircuit):
                     el.__class__.__name__,
                     min(el.node_minus,el.node_plus),
                     max(el.node_minus,el.node_plus),
-                    el.to_string(use_math = False)))
+                    el._to_string(use_math = False)))
             print('\n')
 
 class _Network(object):
@@ -933,7 +914,7 @@ class _Network(object):
         for i in range(N_nodes):
             for j, el in self.net_dict[i].items():
                 if j>i:
-                    RLC_matrix_components = el.get_RLC_matrix_components()
+                    RLC_matrix_components = el._get_RLC_matrix_components()
                     for k in self.RLC_matrices:
                         self.RLC_matrices[k][i,j] = -RLC_matrix_components[k]
                         self.RLC_matrices[k][j,i] = -RLC_matrix_components[k]
@@ -998,7 +979,7 @@ class _Network(object):
         connections = [x for x in self.net_dict[node_to_remove].items()]
 
         # Sum of admittances of connecting_components
-        sum_Y = sum([elt.admittance() for _, elt in connections])
+        sum_Y = sum([elt._admittance() for _, elt in connections])
 
         # Go through all pairs of connecting nodes
         # and calculate the admittance Y_XY that will connect them 
@@ -1006,7 +987,7 @@ class _Network(object):
         mesh_to_add = []
         for i, (node_A, elt_A) in enumerate(connections):
             for node_B, elt_B in connections[i+1:]:
-                Y = elt_A.admittance()*elt_B.admittance()/sum_Y
+                Y = elt_A._admittance()*elt_B._admittance()/sum_Y
                 mesh_to_add.append([Admittance(node_A, node_B, Y), node_A, node_B])
 
         # Remove the node_to_remove from the net_dict, along with all
@@ -1051,7 +1032,7 @@ class _Network(object):
 
         # Compute the admittance between the two remaining nodes: 
         # node_minus and node_plus
-        Y = ntr.net_dict[node_minus][node_plus].admittance()
+        Y = ntr.net_dict[node_minus][node_plus]._admittance()
         return Y
 
     def branch_admittance(self, node_1, node_2):
@@ -1071,7 +1052,7 @@ class _Network(object):
             raise ValueError('node_1 == node_2')
 
         try:
-            return self.net_dict[node_1][node_2].admittance()
+            return self.net_dict[node_1][node_2]._admittance()
         except KeyError:
             return 0.
 
@@ -1270,7 +1251,7 @@ class Circuit(object):
             else:
                 self.angle = EAST
 
-    def draw_label(self, ax):
+    def _draw_label(self, ax):
         if self.angle%180. == 0.:
             x = self.x_plot_center+pp['label']['text_position_horizontal'][0]
             y = self.y_plot_center+pp['label']['text_position_horizontal'][1]
@@ -1297,19 +1278,19 @@ class Parallel(Circuit):
         self.left = left
         self.right = right
 
-    def admittance(self):
+    def _admittance(self):
         return Add(
-            self.left.admittance(),
-            self.right.admittance())
+            self.left._admittance(),
+            self.right._admittance())
     
-    def get_RLC_matrix_components(self):
+    def _get_RLC_matrix_components(self):
         RLC_matrix_components = {
             'R':0,
             'L':0,
             'C':0
         }
         for el in [self.left,self.right]:
-            values_to_add = el.get_RLC_matrix_components()
+            values_to_add = el._get_RLC_matrix_components()
             for k in RLC_matrix_components:
                 RLC_matrix_components[k] += values_to_add[k]
         return RLC_matrix_components
@@ -1361,7 +1342,7 @@ class Component(Circuit):
 
         return sp.Symbol(self.label)
 
-    def set_component_lists(self):
+    def _set_component_lists(self):
         if self.value is None and self.label not in ['', ' ', 'None', None]:
             if self.label in self.head.no_value_components:
                 # raise ValueError(
@@ -1412,7 +1393,7 @@ class Component(Circuit):
 
     def current(self, w, **kwargs):
         kwargs['w'] = w
-        Y = self.admittance()
+        Y = self._admittance()
         if isinstance(Y, Number):
             pass
         else:
@@ -1422,7 +1403,7 @@ class Component(Circuit):
     def charge(self, w, **kwargs):
         return self.current(w, **kwargs)/w
 
-    def to_string(self, use_math=True, use_unicode=False):
+    def _to_string(self, use_math=True, use_unicode=False):
         return to_string(self.unit, self.label, self.value,
                   use_math=use_math, use_unicode=use_unicode)
 
@@ -1435,14 +1416,14 @@ class W(Component):
         self.label = None
         self.value = None
 
-    def to_string(*args, **kwargs):
+    def _to_string(*args, **kwargs):
         return ' '
 
-    def set_component_lists(self):
-        super(W, self).set_component_lists()
+    def _set_component_lists(self):
+        super(W, self)._set_component_lists()
         self.head.wires.append(self)
 
-    def draw(self):
+    def _draw(self):
 
         x = [np.array([self.x_plot_node_minus, self.x_plot_node_plus]),
         np.array([self.x_plot_node_minus]),
@@ -1466,11 +1447,11 @@ class G(W):
     def __init__(self, node_minus, node_plus, arg1=None, arg2=None):
         super(G, self).__init__(node_minus, node_plus, arg1, arg2)
 
-    def set_component_lists(self):
-        super(G, self).set_component_lists()
+    def _set_component_lists(self):
+        super(G, self)._set_component_lists()
         self.head.grounds.append(self)
 
-    def draw(self):
+    def _draw(self):
         # Defined for EAST
         line_type = []
         x = [
@@ -1504,14 +1485,14 @@ class L(Component):
         super(L, self).__init__(node_minus, node_plus, arg1, arg2)
         self.unit = 'H'
 
-    def admittance(self):
+    def _admittance(self):
         return -sp.I*Mul(1/sp.Symbol('w'), 1/self.get_value())
 
-    def set_component_lists(self):
-        super(L, self).set_component_lists()
+    def _set_component_lists(self):
+        super(L, self)._set_component_lists()
         self.head.inductors.append(self)
 
-    def draw(self):
+    def _draw(self):
 
         x = np.linspace(0.5, float(
             pp['L']['N_turns']) + 1., pp['L']['N_points'])
@@ -1558,7 +1539,7 @@ class L(Component):
         if self.angle%180. == 90.:
             return shift(y_list, self.x_plot_center), shift(x_list, self.y_plot_center), line_type
 
-    def get_RLC_matrix_components(self):
+    def _get_RLC_matrix_components(self):
         return {
             'R':0,
             'L':1/self.get_value(),
@@ -1591,14 +1572,14 @@ class J(L):
         else:
             raise ValueError("Cannot set both use_E and use_I to True")
 
-    def set_component_lists(self):
-        super(J, self).set_component_lists()
+    def _set_component_lists(self):
+        super(J, self)._set_component_lists()
         self.head.junctions.append(self)
 
     def anharmonicity(self, w, **kwargs):
         return self.flux(w, **kwargs)**4/hbar**2*2.*e**2/self.get_value(**kwargs)
 
-    def draw(self):
+    def _draw(self):
 
         line_type = []
         x = [
@@ -1630,19 +1611,19 @@ class R(Component):
         super(R, self).__init__(node_minus, node_plus, arg1, arg2)
         self.unit = r'$\Omega$'
 
-    def admittance(self):
+    def _admittance(self):
         return 1/self.get_value()
 
-    def set_component_lists(self):
-        super(R, self).set_component_lists()
+    def _set_component_lists(self):
+        super(R, self)._set_component_lists()
         self.head.resistors.append(self)
-    def get_RLC_matrix_components(self):
+    def _get_RLC_matrix_components(self):
         return {
             'R':1/self.get_value(),
             'L':0,
             'C':0
         }
-    def draw(self):
+    def _draw(self):
 
         x = np.linspace(-0.25, 0.25 +float(pp['R']['N_ridges']), pp['R']['N_points'])
         height = 1.
@@ -1696,14 +1677,14 @@ class C(Component):
         super(C, self).__init__(node_minus, node_plus, arg1, arg2)
         self.unit = 'F'
 
-    def admittance(self):
+    def _admittance(self):
         return sp.I*Mul(sp.Symbol('w'), self.get_value())
 
-    def set_component_lists(self):
-        super(C, self).set_component_lists()
+    def _set_component_lists(self):
+        super(C, self)._set_component_lists()
         self.head.capacitors.append(self)
 
-    def draw(self):
+    def _draw(self):
         line_type = []
         x = [
             np.array([0., (1.-pp['C']['gap'])/2.]),
@@ -1733,7 +1714,7 @@ class C(Component):
         if self.angle%180. == 90.:
             return shift(y, self.x_plot_center), shift(x, self.y_plot_center), line_type
 
-    def get_RLC_matrix_components(self):
+    def _get_RLC_matrix_components(self):
         return {
             'R':0,
             'L':0,
@@ -1746,7 +1727,7 @@ class Admittance(Component):
         self.node_plus = node_plus
         self.Y = Y
 
-    def admittance(self):
+    def _admittance(self):
         return self.Y
 
 # @timeit
