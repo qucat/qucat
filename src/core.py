@@ -355,13 +355,48 @@ class Qcircuit(object):
             kerr = np.moveaxis(np.array(kerr), 0, -1)
             return w, k, A, kerr
 
-    def hamiltonian(self, 
-        modes='all', 
-        junc_pot_taylor_exp=4, 
-        excitations=6, 
-        **kwargs):
+    def hamiltonian(self, modes='all', taylor=4, excitations=6, return_ops = False, **kwargs):
+        '''Return the cuircuits Hamiltonian for further analysis with QuTiP
 
+        Parameters
+        ----------
+        modes:      array of integers, optional
+                    List of modes to consider, where the modes are 
+                    ordered with increasing frequency, such that
+                    ``modes = [0,1]`` would lead to considering only
+                    the two lowest frequency modes of the circuit.
+                    By default all modes are considered.
+        taylor:     integer, optional
+                    Order to which the potential of all josephson
+                    junctions should be taylor-expanded. Default
+                    is `4`.
+        excitations:integer or array of integers, optional  
+                    Number of energy levels considered for each
+                    junction. If one number is given, all modes 
+                    have the same number of levels, if an array
+                    is given, its length should match the number
+                    of modes considered, and if ``modes = [0,1]`` and
+                    ``excitations = [5,10]``, then we will consider
+                    5 excitation levels for mode 0 and 10 for mode 1.
+        return_ops: Boolean, optional
+                    If set to True, a list of the annihilation operators
+                    will be returned along with the hamiltonian. 
+                    The form of the return is then ``H,[a_0,a_1,..]``
+                    where ``a_i`` is the annihilation operator of the
+                    i-th considered mode, a QuTiP Qobj
+
+        Returns
+        -------
+        qutip.qobj
+            Hamiltonian of the circuit
+        '''
         from qutip import destroy, qeye, tensor
+
+        self.hamiltonian_modes = modes
+        self.hamiltonian_taylor = taylor
+        self.hamiltonian_excitations = excitations
+
+
 
         fs = self.eigenfrequencies(**kwargs)
         N_modes = len(fs)
@@ -398,9 +433,9 @@ class Qcircuit(object):
 
     def show(self,
              plot=True,
-             full_output=False,
-             pp=plot_parameters,
              save_to=None,
+             _full_output=False,
+             _pp=plot_parameters,
              **savefig_kwargs):
 
         if isinstance(self,Network):
@@ -411,7 +446,7 @@ class Qcircuit(object):
             using the GUI.
             ''')
         
-        pp = pp
+        pp = _pp
 
         xs = []
         ys = []
@@ -450,7 +485,7 @@ class Qcircuit(object):
         ax.set_ylim(y_min-y_margin, y_max+y_margin)
         plt.margins(x=0., y=0.)
 
-        if full_output:
+        if _full_output:
             return fig, ax
 
         if save_to is not None:
