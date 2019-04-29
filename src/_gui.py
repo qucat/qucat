@@ -16,6 +16,7 @@ import numpy as np
 import os
 from Qcircuits.src._utility import to_string
 from Qcircuits.src._constants import *
+from Qcircuits.src.plotting_settings import *
 from copy import deepcopy
 import time
  

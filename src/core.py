@@ -18,6 +18,7 @@ from Qcircuits.src._utility import pretty_value,\
 from scipy import optimize
 import time
 import cmath
+from Qcircuits.src.plotting_settings import plotting_parameters_show,plotting_parameters_normal_modes
 PROFILING = False
 
 def timeit(method):
@@ -45,88 +46,11 @@ def string_to_component(s, *arg, **kwarg):
     elif s == 'G':
         return G(*arg, **kwarg)
 
-plot_parameters = {
-    "figsize_scaling": 1,
-    "color": light_black,
-    "x_fig_margin": 1,
-    "y_fig_margin": 0.5,
-    "C": {
-        "gap": 0.2,
-        "height": 0.25,
-        "lw": 6
-    },
-    "J": {
-        "width": 0.22,
-        "lw": 6
-    },
-    "L": {
-        "width": 0.7,
-        "height": 0.25,
-        "N_points": 150,
-        "N_turns": 5,
-        "lw": 2
-    },
-    "R": {
-        "width": 0.6,
-        "height": 0.25,
-        "N_points": 150,
-        "N_ridges": 4,
-        "lw": 2
-    },
-    "P": {
-        "side_wire_width": 0.25
-    },
-    "node": {
-        "diameter": 12
-    },
-    "W": {
-        "lw": 1
-    },
-    "label": {
-        "fontsize": 10,
-        "text_position_horizontal": [0.,-0.22],
-        "text_position_vertical": [0.22,0.]
-    }
-}
-
-pp = deepcopy(plot_parameters)
-scale = 1.25
-pp["figsize_scaling"] = scale
-pp["C"]["gap"] /= scale
-pp["C"]["height"] /= scale
-pp["J"]["width"] /= scale
-pp["L"]["width"] /= scale
-pp["L"]["height"] /= scale
-pp["R"]["width"] /= scale
-pp["R"]["height"] /= scale
-pp["label"]= {
-        "fontsize": 10,
-        "text_position_horizontal": [0.,-pp["C"]["height"]/2-0.07],
-        "text_position_vertical": [pp["C"]["height"]/2+0.05,0.05]
-    }
-pp["normal_mode_label"]= {
-        "fontsize": 10,
-        "color": blue,
-        "y_arrow": pp["C"]["height"]/2+0.08,
-        "text_position_horizontal": [0.,pp["C"]["height"]/2+0.25],
-        "text_position_vertical": [-pp["C"]["height"]/2-0.15,-0.07]
-    }
-pp["normal_mode_arrow"]= {
-        "min_width": 0.1,
-        "max_width": 0.4,
-        "min_lw": 1,
-        "max_lw": 3,
-        "min_head": 0.07,
-        "max_head": 0.071,
-        "color_positive": blue,
-        "color_negative": blue
-    }
-plot_parameters_normal_modes = pp
-
 class Qcircuit(object):
     """docstring for BBQcircuit"""
 
     def __init__(self, netlist):
+        self.plotting_normal_mode = False
         self.netlist = netlist
         self.network = _Network(netlist)
         self.inductors = []
@@ -162,6 +86,13 @@ class Qcircuit(object):
             self.network.compute_char_poly_coeffs(is_lossy = (len(self.resistors)>0))
         self.char_poly_coeffs = [lambdify(
             self.no_value_components, c, 'numpy') for c in self.char_poly_coeffs_analytical]
+
+    @property
+    def _pp(self):
+        if self.plotting_normal_mode:
+            return plotting_parameters_normal_modes
+        else:
+            return plotting_parameters_show
 
     @timeit
     def _compute_Y(self):
@@ -648,9 +579,12 @@ class Qcircuit(object):
     def show(self,
              plot=True,
              save_to=None,
-             _full_output=False,
-             _pp=plot_parameters,
+             return_fig_ax=False,
              **savefig_kwargs):
+        '''
+        To write
+        '''
+        pp = self._pp
 
         if isinstance(self,Network):
             #TODO recognize if the network is of series/parallel type
@@ -660,7 +594,6 @@ class Qcircuit(object):
             using the GUI.
             ''')
         
-        pp = _pp
 
         xs = []
         ys = []
@@ -699,7 +632,7 @@ class Qcircuit(object):
         ax.set_ylim(y_min-y_margin, y_max+y_margin)
         plt.margins(x=0., y=0.)
 
-        if _full_output:
+        if return_fig_ax:
             return fig, ax
 
         if save_to is not None:
@@ -711,8 +644,15 @@ class Qcircuit(object):
         plt.close()
 
     def show_normal_mode(self, mode, unit='current',
-                         plot=True, save_to=None, **kwargs):
+                         plot=True, save_to=None,
+              **kwargs):
         
+        '''
+        To write
+        '''
+        self.plotting_normal_mode = True
+        pp = self._pp
+
         if isinstance(self,Network):
             raise TypeError('''
             Plotting functions not available if the circuit was not constructed
@@ -746,8 +686,7 @@ class Qcircuit(object):
 
         fig, ax = self.show(
             plot=False,
-            full_output=True,
-            pp=plot_parameters_normal_modes)
+            return_fig_ax=True)
 
         # Determine arrow size
         all_values = []
@@ -849,6 +788,7 @@ class Qcircuit(object):
         if save_to is not None:
             fig.savefig(save_to, transparent=True)
         plt.close()
+        self.plotting_normal_mode = False
 
 class Network(Qcircuit):
 
@@ -1501,6 +1441,7 @@ class Circuit(object):
                 self.angle = EAST
 
     def _draw_label(self, ax):
+        pp = self.head._pp
         if self.angle%180. == 0.:
             x = self.x_plot_center+pp['label']['text_position_horizontal'][0]
             y = self.y_plot_center+pp['label']['text_position_horizontal'][1]
@@ -1657,18 +1598,26 @@ class Component(Circuit):
                   use_math=use_math, use_unicode=use_unicode)
 
     def flux(self, mode, **kwargs):
+        '''To write
+        '''
         self.head._set_w_cpx()
         return self._flux(self.head.w_cpx[mode],**kwargs)
         
     def voltage(self, mode, **kwargs):
+        '''To write
+        '''
         self.head._set_w_cpx()
         return self._voltage(self.head.w_cpx[mode],**kwargs)
 
     def current(self, mode, **kwargs):
+        '''To write
+        '''
         self.head._set_w_cpx()
         return self._current(self.head.w_cpx[mode],**kwargs)
         
     def charge(self, mode, **kwargs):
+        '''To write
+        '''
         self.head._set_w_cpx()
         return self._charge(self.head.w_cpx[mode],**kwargs)
         
@@ -1690,6 +1639,7 @@ class W(Component):
         self.head.wires.append(self)
 
     def _draw(self):
+        pp = self.head._pp
 
         x = [np.array([self.x_plot_node_minus, self.x_plot_node_plus]),
         np.array([self.x_plot_node_minus]),
@@ -1718,6 +1668,7 @@ class G(W):
         self.head.grounds.append(self)
 
     def _draw(self):
+        pp = self.head._pp
         # Defined for EAST
         line_type = []
         x = [
@@ -1759,6 +1710,7 @@ class L(Component):
         self.head.inductors.append(self)
 
     def _draw(self):
+        pp = self.head._pp
 
         x = np.linspace(0.5, float(
             pp['L']['N_turns']) + 1., pp['L']['N_points'])
@@ -1846,10 +1798,13 @@ class J(L):
         return self._flux(w, **kwargs)**4/hbar**2*2.*e**2/self._get_value(**kwargs)
 
     def anharmonicity(self, mode, **kwargs):
+        '''To write
+        '''
         self.head._set_w_cpx()
         return self._anharmonicity(self.head.w_cpx[mode],**kwargs)
 
     def _draw(self):
+        pp = self.head._pp
 
         line_type = []
         x = [
@@ -1896,6 +1851,7 @@ class R(Component):
         }
     
     def _draw(self):
+        pp = self.head._pp
 
         x = np.linspace(-0.25, 0.25 +float(pp['R']['N_ridges']), pp['R']['N_points'])
         height = 1.
@@ -1957,6 +1913,7 @@ class C(Component):
         self.head.capacitors.append(self)
 
     def _draw(self):
+        pp = self.head._pp
         line_type = []
         x = [
             np.array([0., (1.-pp['C']['gap'])/2.]),
@@ -2009,12 +1966,12 @@ def main():
     #         L(1,2,1),
     #         R(0,2,100)
     #     ])
-    circuit = GUI(filename = './src/test.txt',edit=True,plot=False)
+    circuit = GUI(filename = './src/test.txt',edit=False,plot=False)
     # print(circuit.Y)
     # print(sp.together(circuit.Y))
     # print(circuit.eigenfrequencies())
     circuit.f_k_A_chi(pretty_print=True)
-    # circuit.show_normal_mode(1)
+    circuit.show_normal_mode(0)
     # circuit.show_normal_mode(2)
 
 if __name__ == '__main__':

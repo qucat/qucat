@@ -1,7 +1,9 @@
 import os
-import Qcircuits.src.core as core
+from copy import deepcopy
 from Qcircuits.src.core import string_to_component
 from Qcircuits.src._constants import *
+from Qcircuits.src.plotting_settings import *
+from Qcircuits.src.plotting_settings import plotting_parameters_GUI
 import matplotlib.pyplot as plt
 from matplotlib.patches import Rectangle
 png_directory = os.path.join(os.path.dirname(__file__),".graphics")
@@ -10,54 +12,18 @@ try:
 except FileExistsError:
     pass
 dpi = 300
+class DummyCircuit(object):
+    def __init__(self):
+        self._pp = plotting_parameters_GUI
 
 def generate_icon(comp,hover = False, selected = False):
-    pp = {
-        "element_width": 1.,
-        "element_height": 1.,
-        "margin": 0.,
-        "figsize_scaling": 1,
-        "color": [0.15, 0.15, 0.15],
-        "x_fig_margin": 0.,
-        "y_fig_margin": 0.25,
-        "C": {
-            "gap": 0.2,
-            "height": 0.25,
-            "lw": 6
-        },
-        "J": {
-            "width": 0.25,
-            "lw": 6
-        },
-        "L": {
-            "width": 0.7,
-            "height": 0.25,
-            "N_points": 150,
-            "N_turns": 5,
-            "lw": 2
-        },
-        "R": {
-            "width": 0.6,
-            "height": 0.25,
-            "N_points": 150,
-            "N_ridges": 4,
-            "lw": 2
-        },
-        "P": {
-            "side_wire_width": 0.25
-        },
-        "W": {
-            "lw": 2
-        }
-    }
-    core.pp = pp
-
+    pp = deepcopy(plotting_parameters_GUI)
     comp.node_minus_plot = '0,0'
     comp.node_plus_plot = '1,0'
     comp._set_plot_coordinates()
 
+    comp.head = DummyCircuit()
     xs, ys, line_type = comp._draw()
-
 
     fig = plt.figure(figsize=(1,0.5))
     ax = fig.add_subplot(111)
@@ -67,25 +33,23 @@ def generate_icon(comp,hover = False, selected = False):
     ax.set_xlim(0., 1.)
     plt.subplots_adjust(left=0., right=1., top=1., bottom=0.)
 
-    rect_args = [(0.1,-0.22),0.8,0.44]
-    rect_kwargs = {'linewidth':2,'facecolor':'none'}
+    rect_args = pp['rect_args']
+    rect_kwargs = pp['rect_kwargs']
 
     if hover and selected:
-        increment = 1.5
-        core.pp['W']['lw']+=increment
-        core.pp['C']['lw']+=increment
-        core.pp['L']['lw']+=increment
-        core.pp['R']['lw']+=increment
-        core.pp['J']['lw']+=increment
+        pp['W']['lw']+=pp['hover_increment']
+        pp['C']['lw']+=pp['hover_increment']
+        pp['L']['lw']+=pp['hover_increment']
+        pp['R']['lw']+=pp['hover_increment']
+        pp['J']['lw']+=pp['hover_increment']
         state_string = '_hover_selected'
         ax.add_patch(Rectangle(*rect_args,edgecolor=blue,**rect_kwargs))
     elif hover:
-        increment = 1.5
-        core.pp['W']['lw']+=increment
-        core.pp['C']['lw']+=increment
-        core.pp['L']['lw']+=increment
-        core.pp['R']['lw']+=increment
-        core.pp['J']['lw']+=increment
+        pp['W']['lw']+=pp['hover_increment']
+        pp['C']['lw']+=pp['hover_increment']
+        pp['L']['lw']+=pp['hover_increment']
+        pp['R']['lw']+=pp['hover_increment']
+        pp['J']['lw']+=pp['hover_increment']
         state_string = '_hover'
         # ax.add_patch(Rectangle(*rect_args,edgecolor=lighter_blue,**rect_kwargs))
     elif selected:
