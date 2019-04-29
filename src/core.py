@@ -17,6 +17,7 @@ from Qcircuits.src._utility import pretty_value,\
         safely_evaluate
 from scipy import optimize
 import time
+import cmath
 PROFILING = False
 
 def timeit(method):
@@ -242,18 +243,190 @@ class Qcircuit(object):
         return [j._anharmonicity(self.w_cpx, **kwargs)/h for j in self.junctions]
 
     def eigenfrequencies(self, **kwargs):
+        '''Returns the normal mode frequencies of the circuit.
+
+        These eigen-frequencies :math:`f_m` correspond to the real parts
+        of the complex frequencies which make the conductance matrix
+        singular, or equivalently the real parts of the poles of the impedance
+        calculated between the nodes of an inductor or josephon junction.
+        Frequencies are provided in units of Hertz, 
+        not in angular frequency.
+
+        The Hamiltonian of the circuit is
+
+        :math:`\hat{H} = \sum_m hf_m\hat{a}_m^\dagger\hat{a}_m + \hat{U}`,
+
+        where :math:`h` is Plancks constant, 
+        :math:`\hat{a}_m` is the annihilation operator of the m-th
+        normal mode of the circuit and :math:`f_m` is the frequency of 
+        the m-th normal mode. The frequencies :math:`f_m` would
+        be the resonance frequencies of the circuit if all junctions
+        were replaced with linear inductors. In that case the 
+        non-linear part of the Hamiltonian :math:`\hat{U}`, 
+        originating in the junction non-linearity, would be 0.
+
+        Parameters
+        ----------
+        kwargs:     
+                    Values for un-specified circuit compoenents, 
+                    ex: ``L=1e-9``.
+                    One value may be given as a numpy array.
+
+        Returns
+        -------
+        numpy.array
+            Normal mode frequencies of the circuit, ordered from lowest
+            to highest frequency, given in Hertz.
+        '''
         self._set_w_cpx(**kwargs)
         return np.real(self.w_cpx)/2./pi
 
     def loss_rates(self, **kwargs):
+        '''Returns the loss rates of the circuit normal modes.
+
+        The array is ordered ordered with increasing normal mode frequencies.
+        Such that the first element of the array corresponds to the loss
+        rate of the lowest frequency mode. Losses are provided in units of Hertz, 
+        not in angular frequency.
+
+        These loss rates :math:`\kappa_m` correspond to the imaginary parts
+        of the complex frequencies which make the conductance matrix
+        singular, or equivalently the imaginary parts of the poles of the impedance
+        calculated between the nodes of an inductor or josephon junction.
+        
+        If the Hamiltonian is written in units of Hertz (with Plancks constant
+        :math:`h=1`)
+
+        :math:`\hat{H} = \sum_m f_m\hat{a}_m^\dagger\hat{a}_m + \hat{U}`,
+
+        where :math:`\hat{a}_m` is the annihilation operator of the m-th
+        normal mode of the circuit and :math:`f_m` is the frequency of 
+        the m-th normal mode and 
+         :math:`\hat{U}` is the non-linear part of the Hamiltonian
+        originating in the junction non-linearity.
+
+        Then the dynamics of the circuit can be studied in QuTiP
+        by considering collapse operators for the m-th mode 
+        :math:`\sqrt{\kappa_m(n_{th,m}+1)}\hat{a}_m` and 
+        :math:`\sqrt{\kappa_m(n_{th,m})}\hat{a}_m^\dagger`
+        where :math:`n_{th,m}` is the average thermal occupation
+        of mode :math:`m`.
+
+        Parameters
+        ----------
+        kwargs:     
+                    Values for un-specified circuit compoenents, 
+                    ex: ``L=1e-9``.
+                    One value may be given as a numpy array.
+
+        Returns
+        -------
+        numpy.array
+            Normal mode losses of the circuit
+        '''
         self._set_w_cpx(**kwargs)
         return np.imag(self.w_cpx)/2./pi
 
     def anharmonicities(self, **kwargs):
+        r'''Returns the anharmonicity of the circuit normal modes.
+
+        The array is ordered ordered with increasing normal mode frequencies.
+        Such that the first element of the array corresponds to the loss
+        rate of the lowest frequency mode. Losses are provided in units of Hertz, 
+        not in angular frequency.
+
+        
+        The Hamiltonian of the circuit is
+
+        :math:`\hat{H} = \sum_m hf_m\hat{a}_m^\dagger\hat{a}_m + \sum_j E_j[1-\cos{\hat{\varphi_j}}-\frac{\hat{\varphi_j}^2}{2}]`,
+
+        where :math:`\hat{a}_m` is the annihilation operator of the m-th
+        normal mode of the circuit and :math:`f_m` is the frequency of 
+        the m-th normal mode, :math:`E_j` is the Josephson energy of
+        the j-th junction and 
+        
+        :math:`\varphi_j = \sum_m\left(2 hA_{m,j}/E_j\right)^{1/4}(\hat{a}_m^\dagger+\hat{a}_m)`.
+
+        For information about the computation of :math:`A_{m,j}`, see :meth:`Qcircuits.core.J.anharmonicity`
+
+        By keeping only terms which play a role up to first order perturbation
+
+        :math:`\hat{H} = \sum_m\sum_{n\ne m} h(f_m-A_m-\frac{\chi_{mn}}{2})\hat{a}_m^\dagger\hat{a}_m -h\frac{A_m}{2}\hat{a}_m^\dagger\hat{a}_m^\dagger\hat{a}_m\hat{a}_m -h\chi_{mn}\hat{a}_m^\dagger\hat{a}_m\hat{a}_n^\dagger\hat{a}_n`
+
+        This function returns the anharmonicities
+
+        :math:`A_m = |\sum_j A_{m,j}|`
+
+        Since the imaginary part of :math:`A_{m,j}` is negligeable for typical high quality factor 
+        modes, and the real part is positive, we return the absolute value of their sum.
+
+        Parameters
+        ----------
+        kwargs:     
+                    Values for un-specified circuit compoenents, 
+                    ex: ``L=1e-9``.
+                    One value may be given as a numpy array.
+
+        Returns
+        -------
+        numpy.array
+            Normal mode anharmonicities
+        '''
         Ks = self.kerr(**kwargs)
         return [Ks[i, i] for i in range(Ks.shape[0])]
 
     def kerr(self, **kwargs):
+        r'''Returns the Kerr parameters for the circuit normal modes.
+
+        The diagonal component ``K[m,m]`` of the returned matrix correspond to the
+        anharmonicity (or self-Kerr) of mode ``m``.
+        An off-diagonal component ``K[m,n]`` corresponds to the cross-Kerr coupling
+        between modes ``m`` and ``n``.
+        The modes are indexed with increasing normal mode frequencies, 
+        for example ``K[0,1]`` corresponds to the cross-Kerr interaction
+        between the lowest frequency mode and next highest frequency mode.
+        Kerr parameters are provided in units of Hertz, 
+        not in angular frequency.
+
+        
+        The Hamiltonian of the circuit is
+
+        :math:`\hat{H} = \sum_m hf_m\hat{a}_m^\dagger\hat{a}_m + \sum_j E_j[1-\cos{\hat{\varphi_j}}-\frac{\hat{\varphi_j}^2}{2}]`,
+
+        where :math:`\hat{a}_m` is the annihilation operator of the m-th
+        normal mode of the circuit and :math:`f_m` is the frequency of 
+        the m-th normal mode, :math:`E_j` is the Josephson energy of
+        the j-th junction and 
+        
+        :math:`\varphi_j = \sum_m\left(2 hA_{m,j}/E_j\right)^{1/4}(\hat{a}_m^\dagger+\hat{a}_m)`.
+
+        For information about the computation of :math:`A_{m,j}`, see :meth:`Qcircuits.J.anharmonicity`
+
+        By keeping only terms which play a role up to first order perturbation
+
+        :math:`\hat{H} = \sum_m\sum_{n\ne m} h(f_m-A_m-\frac{\chi_{mn}}{2})\hat{a}_m^\dagger\hat{a}_m -h\frac{A_m}{2}\hat{a}_m^\dagger\hat{a}_m^\dagger\hat{a}_m\hat{a}_m -h\chi_{mn}\hat{a}_m^\dagger\hat{a}_m\hat{a}_n^\dagger\hat{a}_n`
+
+        This function returns a matrix  :math:`K`, with components defined as
+
+        :math:`K_{mm} = |\sum_j A_{m,j}|`
+            
+        :math:`K_{mn} = |\sum_j \sqrt{A_{m,j}}\sqrt{A_{n,j}}|`
+
+        Since the imaginary part of :math:`A_{m,j}` is negligeable for typical high quality factor 
+        modes, and the real part is positive, we return the absolute value of these sums.
+
+        Parameters
+        ----------
+        kwargs:     
+                    Values for un-specified circuit compoenents, 
+                    ex: ``L=1e-9``.
+                    One value may be given as a numpy array.
+
+        Returns
+        -------
+        numpy.array of dimension 2
+            Kerr parameters
+        '''
         As = self._anharmonicities_per_junction(**kwargs)
         N_modes = len(self.w_cpx)
         N_junctions = len(self.junctions)
@@ -264,14 +437,51 @@ class Qcircuit(object):
             for j in range(N_modes):
                 for k in range(N_junctions):
                     if i == j:
-                        Ks[i, j] += np.absolute(As[k][i])
+                        Ks[i, i] += As[k][i]
                     else:
-                        Ks[i, j] += 2. * \
-                            np.sqrt(np.absolute(As[k][i])
-                                    * np.absolute(As[k][j]))
-        return Ks
+                        Ks[i, j] += 2. * cmath.sqrt(As[k][i])*cmath.sqrt(As[k][j])
+        return np.absolute(Ks)
 
-    def w_k_A_chi(self, pretty_print=False, **kwargs):
+    def f_k_A_chi(self, pretty_print=False, **kwargs):
+        r'''Returns the eigenfrequency, loss-rates, anharmonicity, and Kerr parameters of the circuit. 
+
+        Returns these quantities in the form ``[[f_0,f_1,..],[k_0,k_1,..],[A_0,A_1,..],[[A_0,chi_01,..],[chi_10,A_1,..]..]]``
+
+        Each quantity is returned as a numpy arrays, 
+        where each index corresponds to a normal mode, ordered with 
+        increasing normal mode frequency.
+        All quantities are provided in units of Hertz, 
+        not in angular frequency.
+
+        This method is equivalent to calling
+
+        ``[_.eigenfrequencies(**kwargs),_.loss_rates(**kwargs), _.anharmonicities(**kwargs),_.kerr(**kwargs)]``
+
+        For more details, refer to the functions
+
+        :meth:`Qcircuits.Qcircuit.eigenfrequencies`
+
+        :meth:`Qcircuits.Qcircuit.loss_rates`
+
+        :meth:`Qcircuits.Qcircuit.anharmonicities`
+
+        :meth:`Qcircuits.Qcircuit.kerr`
+
+        Parameters
+        ----------
+        pretty_print:   Boolean, optional
+                        If set to True, this method will print a summary
+                        of the system parameters as a table.
+        kwargs:     
+                    Values for un-specified circuit compoenents, 
+                    ex: ``L=1e-9``.
+                    One value may be given as a numpy array.
+
+        Returns
+        -------
+        List of numpy arrays
+            ``[[f_0,f_1,..],[k_0,k_1,..],[A_0,A_1,..],[[A_0,chi_01,..],[chi_10,A_1,..]..]]``
+        '''
 
         list_element = None
         list_values = None
@@ -356,7 +566,7 @@ class Qcircuit(object):
             return w, k, A, kerr
 
     def hamiltonian(self, modes='all', taylor=4, excitations=6, return_ops = False, **kwargs):
-        '''Return the cuircuits Hamiltonian for further analysis with QuTiP
+        '''Returns the cuircuits Hamiltonian for further analysis with QuTiP
 
         Parameters
         ----------
@@ -384,6 +594,10 @@ class Qcircuit(object):
                     The form of the return is then ``H,[a_0,a_1,..]``
                     where ``a_i`` is the annihilation operator of the
                     i-th considered mode, a QuTiP Qobj
+        kwargs:     
+                    Values for un-specified circuit compoenents, 
+                    ex: ``L=1e-9``.
+                    One value may be given as a numpy array.
 
         Returns
         -------
@@ -617,7 +831,7 @@ class Qcircuit(object):
                         ha=ha, va=va, weight='normal',color =pp["normal_mode_label"]["color"] )
 
         
-        w,k,A,chi = self.w_k_A_chi(**kwargs)
+        w,k,A,chi = self.f_k_A_chi(**kwargs)
         ax.annotate(r'Mode %d, f=%sHz, k=%sHz, A=%sHz'%
             (mode,
             pretty_value(w[mode], use_math=True),
@@ -1799,7 +2013,7 @@ def main():
     # print(circuit.Y)
     # print(sp.together(circuit.Y))
     # print(circuit.eigenfrequencies())
-    circuit.w_k_A_chi(pretty_print=True)
+    circuit.f_k_A_chi(pretty_print=True)
     # circuit.show_normal_mode(1)
     # circuit.show_normal_mode(2)
 

@@ -52,7 +52,7 @@ class StandardQuantumCircuits(TestCaseAppended):
             core.L(1,2,L),
             core.R(0,2,R)
         ])
-        return circuit.w_k_A_chi()
+        return circuit.f_k_A_chi()
 
     def test_series_RLC_frequency(self):
         C = 100e-15
@@ -87,7 +87,7 @@ class StandardQuantumCircuits(TestCaseAppended):
             core.C(0,1,C),
             core.J(0,1,Lj)
         ])
-        return circuit.w_k_A_chi()
+        return circuit.f_k_A_chi()
 
     def test_transmon_frequency(self):
         C = 100e-15
@@ -101,7 +101,7 @@ class StandardQuantumCircuits(TestCaseAppended):
             core.J(0,1,'L')])
         L_list = np.linspace(1e-8,2e-8,10)
         C = 1e-13
-        w,k,A,chi = circuit.w_k_A_chi(C = C,L = L_list)
+        w,k,A,chi = circuit.f_k_A_chi(C = C,L = L_list)
         self.assertArrayRelativelyClose([1/(np.sqrt(C*L_list)*2.*pi)],w)
 
     def test_transmon_anharmonicity(self):
@@ -123,7 +123,7 @@ class StandardQuantumCircuits(TestCaseAppended):
             core.J(2,3,L),
             core.J(3,0,L)
         ])
-        return circuit.w_k_A_chi()
+        return circuit.f_k_A_chi()
 
     def test_shunted_josephson_ring_number_of_modes_nHz(self):
         C = 2.e9
