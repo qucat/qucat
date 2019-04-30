@@ -205,7 +205,8 @@ class Qcircuit(object):
         kwargs:     
                     Values for un-specified circuit compoenents, 
                     ex: ``L=1e-9``.
-                    One value may be given as a numpy array.
+                    One value may be given as a numpy array in which case this function 
+                    will return a numpy.array with an additional dimension
 
         Returns
         -------
@@ -252,7 +253,8 @@ class Qcircuit(object):
         kwargs:     
                     Values for un-specified circuit compoenents, 
                     ex: ``L=1e-9``.
-                    One value may be given as a numpy array.
+                    One value may be given as a numpy array in which case this function 
+                    will return a numpy.array with an additional dimension
 
         Returns
         -------
@@ -297,7 +299,8 @@ class Qcircuit(object):
         kwargs:     
                     Values for un-specified circuit compoenents, 
                     ex: ``L=1e-9``.
-                    One value may be given as a numpy array.
+                    One value may be given as a numpy array in which case this function 
+                    will return a numpy.array with an additional dimension
 
         Returns
         -------
@@ -349,7 +352,8 @@ class Qcircuit(object):
         kwargs:     
                     Values for un-specified circuit compoenents, 
                     ex: ``L=1e-9``.
-                    One value may be given as a numpy array.
+                    One value may be given as a numpy array in which case this function
+                    will return a numpy.array with an additional dimension
 
         Returns
         -------
@@ -368,7 +372,10 @@ class Qcircuit(object):
                     if i == j:
                         Ks[i, i] += np.real(As[k][i])
                     else:
-                        Ks[i, j] += 2. * np.sqrt(np.real(As[k][i]*As[k][j]))
+                        # Note that taking the square root here is fine
+                        # since Ks[i, j]~phi_ki^2*phi_kj^2 is necessarily a positive real
+                        # since phi_ki,phi_kj are real numbers
+                        Ks[i, j] += 2. * np.sqrt(As[k][i]*As[k][j])
         return Ks
 
     def f_k_A_chi(self, pretty_print=False, **kwargs):
@@ -404,7 +411,8 @@ class Qcircuit(object):
         kwargs:     
                     Values for un-specified circuit compoenents, 
                     ex: ``L=1e-9``.
-                    One value may be given as a numpy array.
+                    One value may be given as a numpy array in which case this function 
+                    will return a numpy.array with an additional dimension
 
         Returns
         -------
@@ -533,7 +541,8 @@ class Qcircuit(object):
         kwargs:     
                     Values for un-specified circuit compoenents, 
                     ex: ``L=1e-9``.
-                    One value may be given as a numpy array.
+                    One value may be given as a numpy array in which case this function 
+                    will return a numpy.array with an additional dimension.
 
         Returns
         -------
@@ -657,7 +666,7 @@ class Qcircuit(object):
 
     def show_normal_mode(self, 
         mode, 
-        unit='current',
+        quantity='current',
         plot=True,
         return_fig_ax=False,
         **kwargs):
@@ -700,7 +709,7 @@ class Qcircuit(object):
 
         :math:`\phi_{zpf,m} = \sqrt{\frac{\hbar}{\omega_mImY'(\omega_m)}}`
 
-        Which can be transformed to other units:
+        Which can be transformed to other quantities:
         
         :math:`\hat{v} = j\omega\hat\phi`
 
@@ -709,13 +718,15 @@ class Qcircuit(object):
         :math:`\hat{q} = \hat i/j\omega`  
 
         The relative direction of the arrows is given by the sign 
-        of the expectation value of 
-        :math:`\langle\alpha_m|\hat{X}^2|\alpha_m\rangle`,
+        of the expectation value of the current
+        :math:`\langle\alpha_m|\hat{i}|\alpha_m\rangle`,
         where :math:`|\alpha_m\rangle` is a coherent
         state populating mode :math:`|\alpha_m\rangle`.
         This quantity is calculated from the phase of the
         transfer function between a reference component
         and all the others.
+
+        TODO: why current?
 
         
         Parameters
@@ -724,7 +735,7 @@ class Qcircuit(object):
                         Determine what mode to plot, where 0 designates
                         the lowest frequency mode, and the others
                         are arranged in order of increasing frequency
-        unit:           string
+        quantity:           string
                         One of 'current' (default), 'flux','charge','voltage'
                         Determines what quantity the arrows should represent.
         plot:           Boolean, optional
@@ -777,7 +788,7 @@ class Qcircuit(object):
         all_values = []
         for el in self.netlist:
             if not isinstance(el,W):
-                all_values.append(string_to_function(el, unit, **kwargs))
+                all_values.append(string_to_function(el, quantity, **kwargs))
         all_values = np.absolute(all_values)
         max_value = np.amax(all_values)
         min_value = np.amin(all_values)
@@ -806,7 +817,7 @@ class Qcircuit(object):
 
         for el in self.netlist:
             if not isinstance(el,W):
-                value = string_to_function(el, unit, **kwargs)
+                value = string_to_function(el, quantity, **kwargs)
                 value_current = string_to_function(el, 'current', **kwargs)
 
                 x = el.x_plot_center
@@ -850,7 +861,7 @@ class Qcircuit(object):
                              **arrow_kwargs(value))
 
                 ax.text(x_text, y_text,
-                        pretty(np.absolute(value), unit),
+                        pretty(np.absolute(value), quantity),
                         fontsize=pp["normal_mode_label"]["fontsize"],
                         ha=ha, va=va, weight='normal',color =pp["normal_mode_label"]["color"] )
 
@@ -1699,7 +1710,6 @@ class Parallel(Circuit):
         return RLC_matrix_components
 
 class Component(Circuit):
-    """docstring for Component"""
 
     def __init__(self, node_minus, node_plus, *args):
         super(Component, self).__init__(node_minus, node_plus)
@@ -1789,11 +1799,58 @@ class Component(Circuit):
         return to_string(self.unit, self.label, self.value,
                   use_math=use_math, use_unicode=use_unicode)
 
+    def zpf(self, mode, quantity, **kwargs):
+        r'''Returns contribution of a certain mode to the zero-point fluctuations of a quantity for this component.
 
-    def flux(self, mode, **kwargs):
-        '''To write
+        The quantity can be current current (in units of Ampere), 
+        voltage (in Volts), 
+        charge (in electron charge), 
+        or flux (in units of the reduced flux quantum, :math:`\hbar/2e`)
+
+        This quantity is calculated from the magnitude of the
+        transfer function between a reference component with :math:`\phi_{zpf,m}` and all the others.
+        The reference component
+        is an inductor or a junction 
+        for which we have calculated
+
+        :math:`\phi_{zpf,m} = \sqrt{\frac{\hbar}{\omega_mImY'(\omega_m)}}`
+
+        Which can be transformed to other quantities
+        
+        :math:`v_{zpf,m} = \omega\phi_{zpf,m}`
+
+        :math:`i_{zpf,m} = v_{zpf,m} Y`
+
+        :math:`q_{zpf,m} = i_{zpf,m}/\omega`  
+
+        Parameters
+        ----------
+        mode:           integer
+                        Determine what mode to consider, where 0 designates
+                        the lowest frequency mode, and the others
+                        are arranged in order of increasing frequency
+        quantity:       string
+                        One of 'current', 'flux', 'charge', 'voltage'
+        kwargs:     
+                    Values for un-specified circuit compoenents, 
+                    ex: ``L=1e-9``.
+                    One value may be given as a numpy array in which case this function 
+                    will return a numpy.array with an additional dimension
+
+        Returns
+        -------
+        float
+            contribution of the ``mode`` to the zero-point fluctuations of the ``quantity``
         '''
-        return self._flux(self.head.eigenfrequencies[mode],**kwargs)
+        if quantity == 'flux':
+            phi_0 = hbar/2./e
+            return self._flux(mode_w, **kwargs)/phi_0
+        if quantity == 'charge':
+            return self._charge(mode_w, **kwargs)/e
+        if quantity == 'voltage':
+            return self._voltage(mode_w, **kwargs)
+        if quantity == 'current':
+            return self._current(mode_w, **kwargs)
         
 
 class W(Component):
@@ -1872,6 +1929,28 @@ class G(W):
             return shift(y, self.x_plot_center), shift(x, self.y_plot_center), line_type
 
 class L(Component):
+    """A class representing an inductor
+    
+    Parameters
+    ----------
+    node_minus:     integer
+                    Index corresponding to one node of inductor
+    node_minus:     integer
+                    Index corresponding to the other node of the inductor
+    args:           <float> or <str> or <float>,<str>
+                    Other arguments should be a float corresponding to the
+                    inductance, a string corresponding to the 
+                    name of that value (ex: `"L"`), or both.
+                    If only a label is provided, 
+                    a value for should be passed
+                    as a keyword argument in subsequent function calls
+                    (ex: `L = 1e-9`)   
+                    This is the best way to proceed if one wants to sweep the value of this
+                    inductor. Indeed, the most computationally expensive part of the 
+                    analysis is performed upon initializing the circuit, subsequently
+                    changing the value of a component and re-calculating a quantity 
+                    such as the frequency or anharmonicity can be performed much faster.
+    """
     def __init__(self, node_minus, node_plus, *args):
         super(L, self).__init__(node_minus, node_plus, *args)
         self.unit = 'H'
@@ -1939,6 +2018,37 @@ class L(Component):
         }
 
 class J(L):
+    """A class representing an junction
+    
+    Parameters
+    ----------
+    node_minus:     integer
+                    Index corresponding to one node of junction
+    node_minus:     integer
+                    Index corresponding to the other node of the junction
+    args:           <float> or <str> or <float>,<str>
+                    Other arguments should be a float which by default
+                    corresponds to the Losephson inductance of the
+                    junction, a string corresponding to the 
+                    name of that value (ex: `"L_J"`), or both.
+                    If only a label is provided, 
+                    a value for should be passed
+                    as a keyword argument in subsequent function calls
+                    (ex: `L_J = 10e-9`)   
+                    This is the best way to proceed if one wants to sweep the value of this
+                    junction. Indeed, the most computationally expensive part of the 
+                    analysis is performed upon initializing the circuit, subsequently
+                    changing the value of a component and re-calculating a quantity 
+                    such as the frequency or anharmonicity can be performed much faster.
+    use_E:          Boolean
+                    If set to True, the junction will be parametrized by
+                    its Josephson energy, given in units of Hertz, rather
+                    than its Josephson inductance
+    use_I:          Boolean
+                    If set to True, the junction will be parametrized by
+                    its critical current, given in units of Ampere, rather
+                    than its Josephson inductance
+    """
     def __init__(self, node_minus, node_plus, *args, use_E=False, use_I=False):
         super(J, self).__init__(node_minus, node_plus, *args)
 
@@ -1972,7 +2082,50 @@ class J(L):
         return self._flux(w, **kwargs)**4/hbar**2*2.*e**2/self._get_value(**kwargs)
 
     def anharmonicity(self, mode, **kwargs):
-        '''To write
+        r'''Returns the contribution of this junction to the anharmonicity of a given normal mode.
+
+        Returned in units of Hertz, not angular frequency.
+
+        This quantity is defined as 
+
+        :math:`A_j,m = 2e^2\phi_{zpf}^4/\hbar^2/L_J`
+
+        where :math:`e` is the electron charge, :math:`\hbar` is plancks reduced constant, 
+        :math:`L_J` is this junctions inductance and 
+
+        :math:`\phi_{zpf,m} = \sqrt{\frac{\hbar}{\omega_mImY'(\omega_m)}}`
+
+        is the zero-point fluctuations in flux if a mode through the junction, 
+        with frequency :math:`\omega_m` and admittance to the rest of the circuit :math:`Y`
+
+        The Hamiltonian of the circuit is then
+
+        :math:`\hat{H} = \sum_m hf_m\hat{a}_m^\dagger\hat{a}_m + \sum_j E_j[1-\cos{\hat{\varphi_j}}-\frac{\hat{\varphi_j}^2}{2}]`,
+
+        where :math:`\hat{a}_m` is the annihilation operator of the m-th
+        normal mode of the circuit and :math:`f_m` is the frequency of 
+        the m-th normal mode, :math:`E_j` is the Josephson energy of
+        the j-th junction and 
+        
+        :math:`\varphi_j = \sum_m\left(2 hA_{m,j}/E_j\right)^{1/4}(\hat{a}_m^\dagger+\hat{a}_m)`.
+
+
+        Parameters
+        ----------
+        kwargs:     
+                    Values for un-specified circuit compoenents, 
+                    ex: ``L=1e-9``.
+                    One value may be given as a numpy array in which case this function 
+                    will return a numpy.array with an additional dimension
+        
+        mode:           integer
+                        Determine what mode to plot, where 0 designates
+                        the lowest frequency mode, and the others
+                        are arranged in order of increasing frequency
+        Returns
+        -------
+        float
+            contribution of this junction to the anharmonicity of a given normal mode
         '''
         self.head._set_w_cpx()
         return self._anharmonicity(self.head.w_cpx[mode],**kwargs)
@@ -2006,6 +2159,28 @@ class J(L):
             return shift(y, self.x_plot_center), shift(x, self.y_plot_center), line_type
 
 class R(Component):
+    """A class representing an resistor
+    
+    Parameters
+    ----------
+    node_minus:     integer
+                    Index corresponding to one node of resistor
+    node_minus:     integer
+                    Index corresponding to the other node of the resistor
+    args:           <float> or <str> or <float>,<str>
+                    Other arguments should be a float corresponding to the
+                    resistance, a string corresponding to the 
+                    name of that value (ex: `"R"`), or both.
+                    If only a label is provided, 
+                    a value for should be passed
+                    as a keyword argument in subsequent function calls
+                    (ex: `R = 1e-9`)   
+                    This is the best way to proceed if one wants to sweep the value of this
+                    resistor. Indeed, the most computationally expensive part of the 
+                    analysis is performed upon initializing the circuit, subsequently
+                    changing the value of a component and re-calculating a quantity 
+                    such as the dissipation rate can be performed much faster.
+    """
     def __init__(self, node_minus, node_plus, *args):
         super(R, self).__init__(node_minus, node_plus, *args)
         self.unit = r'$\Omega$'
@@ -2075,6 +2250,28 @@ class R(Component):
             return shift(y_list, self.x_plot_center), shift(x_list, self.y_plot_center), line_type
 
 class C(Component):
+    """A class representing a capacitor
+    
+    Parameters
+    ----------
+    node_minus:     integer
+                    Index corresponding to one node of capacitor
+    node_minus:     integer
+                    Index corresponding to the other node of the capacitor
+    args:           <float> or <str> or <float>,<str>
+                    Other arguments should be a float corresponding to the
+                    capacitance, a string corresponding to the 
+                    name of that value (ex: `"C"`), or both.
+                    If only a label is provided, 
+                    a value for should be passed
+                    as a keyword argument in subsequent function calls
+                    (ex: `C = 1e-9`)   
+                    This is the best way to proceed if one wants to sweep the value of this
+                    capacitor. Indeed, the most computationally expensive part of the 
+                    analysis is performed upon initializing the circuit, subsequently
+                    changing the value of a component and re-calculating a quantity 
+                    such as the anharmonicity can be performed much faster.
+    """
     def __init__(self, node_minus, node_plus, *args):
         super(C, self).__init__(node_minus, node_plus, *args)
         self.unit = 'F'
@@ -2144,8 +2341,8 @@ def main():
     # print(circuit.Y)
     # print(sp.together(circuit.Y))
     # print(circuit.eigenfrequencies())
-    circuit.f_k_A_chi(pretty_print=True)
-    # circuit.show_normal_mode(1,unit='charge')
+    # circuit.f_k_A_chi(pretty_print=True)
+    circuit.show_normal_mode(1,quantity='charge')
     # circuit.show_normal_mode(2)
 
 if __name__ == '__main__':
