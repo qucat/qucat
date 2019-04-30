@@ -47,7 +47,11 @@ def string_to_component(s, *arg, **kwarg):
         return G(*arg, **kwarg)
 
 class Qcircuit(object):
-    """docstring for BBQcircuit"""
+    """A class representing a quantum circuit.
+
+    A Qcircuit should be created using either the :class:`Qcircuits.Network` 
+    or :class:`Qcircuits.GUI` classes.
+    """
 
     def __init__(self, netlist):
         self.plotting_normal_mode = False
@@ -497,7 +501,14 @@ class Qcircuit(object):
             return w, k, A, kerr
 
     def hamiltonian(self, modes='all', taylor=4, excitations=6, return_ops = False, **kwargs):
-        '''Returns the cuircuits Hamiltonian for further analysis with QuTiP
+        r'''Returns the cuircuits Hamiltonian for further analysis with QuTiP
+
+        The Hamiltonian of the circuit, with the non-linearity of the Josephson junctions
+        Taylor-expanded, is given by
+
+        :math:`\hat{H} = \sum_{m\in\text{modes}} hf_m\hat{a}_m^\dagger\hat{a}_m + \sum_j\sum_{2n\le\text{taylor}}E_j\frac{(-1)^{n+1}}{(2n)!}\left[\left(\frac{2 hA_{m,j}}{E_j}\right)^{1/4}(\hat{a}_m^\dagger+\hat{a}_m)\right]^{2n}`,
+
+
 
         Parameters
         ----------
@@ -516,7 +527,7 @@ class Qcircuit(object):
                     junction. If one number is given, all modes 
                     have the same number of levels, if an array
                     is given, its length should match the number
-                    of modes considered, and if ``modes = [0,1]`` and
+                    of modes considered. For example if ``modes = [0,1]`` and
                     ``excitations = [5,10]``, then we will consider
                     5 excitation levels for mode 0 and 10 for mode 1.
         return_ops: Boolean, optional
@@ -578,11 +589,21 @@ class Qcircuit(object):
 
     def show(self,
              plot=True,
-             save_to=None,
-             return_fig_ax=False,
-             **savefig_kwargs):
-        '''
-        To write
+             return_fig_ax=False):
+        '''Plots the circuit.
+
+        Only works if the circuit was created using the GUI.
+
+        
+        Parameters
+        ----------
+        plot:           Boolean, optional
+                        If set to True (default), the function will call
+                        plt.show() to display the circuit
+        return_fig_ax:  Boolean, optional
+                        If set to True (default is False), the function will 
+                        return figure and axis for further processing using
+                        matplotlib.
         '''
         pp = self._pp
 
@@ -635,20 +656,90 @@ class Qcircuit(object):
         if return_fig_ax:
             return fig, ax
 
-        if save_to is not None:
-            fig.savefig(save_to, transparent=True, **savefig_kwargs)
-
         if plot:
             plt.show()
 
         plt.close()
 
-    def show_normal_mode(self, mode, unit='current',
-                         plot=True, save_to=None,
-              **kwargs):
+    def show_normal_mode(self, 
+        mode, 
+        unit='current',
+        plot=True,
+        return_fig_ax=False,
+        **kwargs):
+        r'''Plots a visual representation of a normal mode.
+
+        Only works if the circuit was created using the GUI.
+        Plots a schematic of the circuit overlayed with 
+        arrows representing the quantum flucuations of a certain quantity 
+        :math:`\hat{X}` which can be flux, current, charge or voltage.
+        This quantity has contributions from all the modes 
+
+        :math:`\hat{X} = \sum_m X_{zpf,m}(\hat{a}_m\pm\hat{a}_m^\dagger)`
+
+        Where :math:`X_{zpf,m}` corresponds to the contribution of mode
+        m to the zero-point fluctuations of the component.
+        This is because if we calculate the expectation value 
+        :math:`\langle\psi_0|\hat{X}^2|\psi_0\rangle` 
+        where :math:`|\psi_0\rangle` is the ground-state, 
+        we obtain
+
+        :math:`\langle\hat{X}^2\rangle = \sum_m X_{zpf,m}^2`
+
+
+        By specifying a mode :math:`m`, 
+        size of the arrows and their annotation indicate the
+        magnitude of the zero-point fluctuations through that component
+        :math:`X_{zpf,m}`.
+        Current is shown in units of Ampere, voltage in Volts, 
+        charge in electron charge, and flux in units of the
+        reduced flux quantum 
+        (defined as :math:`\hbar/2e`)
+
+        This quantity is calculated from the magnitude of the
+        transfer function between a reference component with
+        known :math:`X_{zpf,m}`
+        and all the others.
+        The reference component
+        is an inductor or a junction 
+        for which we have calculated
+
+        :math:`\phi_{zpf,m} = \sqrt{\frac{\hbar}{\omega_mImY'(\omega_m)}}`
+
+        Which can be transformed to other units:
         
-        '''
-        To write
+        :math:`\hat{v} = j\omega\hat\phi`
+
+        :math:`\hat{i} = \hat v Y`
+
+        :math:`\hat{q} = \hat i/j\omega`  
+
+        The relative direction of the arrows is given by the sign 
+        of the expectation value of 
+        :math:`\langle\alpha_m|\hat{X}^2|\alpha_m\rangle`,
+        where :math:`|\alpha_m\rangle` is a coherent
+        state populating mode :math:`|\alpha_m\rangle`.
+        This quantity is calculated from the phase of the
+        transfer function between a reference component
+        and all the others.
+
+        
+        Parameters
+        ----------
+        mode:           integer
+                        Determine what mode to plot, where 0 designates
+                        the lowest frequency mode, and the others
+                        are arranged in order of increasing frequency
+        unit:           string
+                        One of 'current' (default), 'flux','charge','voltage'
+                        Determines what quantity the arrows should represent.
+        plot:           Boolean, optional
+                        If set to True (default), the function will call
+                        plt.show() to display the circuit
+        return_fig_ax:  Boolean, optional
+                        If set to True (default is False), the function will 
+                        return figure and axis for further processing using
+                        matplotlib.
         '''
         self.plotting_normal_mode = True
         pp = self._pp
@@ -785,10 +876,11 @@ class Qcircuit(object):
 
         if plot == True:
             plt.show()
-        if save_to is not None:
-            fig.savefig(save_to, transparent=True)
         plt.close()
         self.plotting_normal_mode = False
+
+        if return_fig_ax:
+            return fig, ax
 
 class Network(Qcircuit):
 
