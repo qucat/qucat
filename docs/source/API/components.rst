@@ -2,6 +2,9 @@
 Circuit components
 *************************
 
+.. toctree::
+   :maxdepth: 3
+   
 .. autoclass:: Qcircuits.R
     :members:
     :undoc-members:

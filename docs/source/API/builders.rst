@@ -1,7 +1,17 @@
-************************
-Circuit builders
-************************
+******************
+Creating a circuit
+******************
 
-.. autoclass:: Qcircuits.Network
+A quantum circuit can be built or created in two different ways, 
+either programmatically using the Qcircuits.Network class
+or using a graphical user interface, using the Qcircuits.GUI class.
 
-.. autoclass:: Qcircuits.GUI
+After creation, a number of functions are available to compute
+relevant physical parameters, extract a Hamiltonian or visualize
+the innerworkings of the circuit, see :ref:`circuit-functions`
+
+.. toctree::
+   :maxdepth: 3
+  
+   Graphically <gui>
+   Programmatically <network>
