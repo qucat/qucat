@@ -48,9 +48,7 @@ def string_to_component(s, *arg, **kwarg):
 
 class Qcircuit(object):
     """A class representing a quantum circuit.
-
-    A Qcircuit should be created using either the :class:`Qcircuits.Network` 
-    or :class:`Qcircuits.GUI` classes.
+    '''
     """
 
     def __init__(self, netlist):
@@ -272,7 +270,6 @@ class Qcircuit(object):
         rate of the lowest frequency mode. Losses are provided in units of Hertz, 
         not in angular frequency.
 
-        
         The Hamiltonian of the circuit is
 
         :math:`\hat{H} = \sum_m hf_m\hat{a}_m^\dagger\hat{a}_m + \sum_j E_j[1-\cos{\hat{\varphi_j}}-\frac{\hat{\varphi_j}^2}{2}]`,
@@ -282,9 +279,14 @@ class Qcircuit(object):
         the m-th normal mode, :math:`E_j` is the Josephson energy of
         the j-th junction and 
         
-        :math:`\varphi_j = \sum_m\left(2 hA_{m,j}/E_j\right)^{1/4}(\hat{a}_m^\dagger+\hat{a}_m)`.
+        :math:`\varphi_j = \sum_m\left(\frac{\phi_{zpf,m,j}}{\phi_0}(\hat{a}_m^\dagger+\hat{a}_m)`.
 
-        For information about the computation of :math:`A_{m,j}`, see :meth:`Qcircuits.core.J.anharmonicity`
+        where :math:`phi_0 = \hbar/2e` and 
+
+        :math:`\phi_{zpf,m} = \sqrt{\frac{\hbar}{\omega_mImY'(\omega_m)}}`
+
+        is the zero-point fluctuations in flux if a mode through the junction, 
+        with frequency :math:`\omega_m` and admittance to the rest of the circuit :math:`Y`
 
         By keeping only terms which play a role up to first order perturbation
 
@@ -293,6 +295,12 @@ class Qcircuit(object):
         This function returns the anharmonicities
 
         :math:`A_m = \sum_j A_{m,j}`
+        
+        where
+
+        :math:`A_{m,j} = E_j/2/h\left(\frac{\phi_{zpf,m,j}}{\phi_0}\right)^4`
+
+        is the contribution of junction j to the total anharmonicity of a mode m
 
         Parameters
         ----------
@@ -333,9 +341,10 @@ class Qcircuit(object):
         the m-th normal mode, :math:`E_j` is the Josephson energy of
         the j-th junction and 
         
-        :math:`\varphi_j = \sum_m\left(2 hA_{m,j}/E_j\right)^{1/4}(\hat{a}_m^\dagger+\hat{a}_m)`.
+        :math:`\phi_{zpf,m} = \sqrt{\frac{\hbar}{\omega_mImY'(\omega_m)}}`
 
-        For information about the computation of :math:`A_{m,j}`, see :meth:`Qcircuits.J.anharmonicity`
+        is the zero-point fluctuations in flux if a mode through the junction, 
+        with frequency :math:`\omega_m` and admittance to the rest of the circuit :math:`Y`
 
         By keeping only terms which play a role up to first order perturbation
 
@@ -346,6 +355,12 @@ class Qcircuit(object):
         :math:`K_{mm} = \sum_j A_{m,j}`
             
         :math:`K_{mn} = \sum_j \sqrt{A_{m,j}}\sqrt{A_{n,j}}`
+        
+        where
+
+        :math:`A_{m,j} = E_j/2/h\left(\frac{\phi_{zpf,m,j}}{\phi_0}\right)^4`
+
+        is the contribution of junction j to the total anharmonicity of a mode m
 
         Parameters
         ----------
@@ -508,8 +523,17 @@ class Qcircuit(object):
         The Hamiltonian of the circuit, with the non-linearity of the Josephson junctions
         Taylor-expanded, is given by
 
-        :math:`\hat{H} = \sum_{m\in\text{modes}} hf_m\hat{a}_m^\dagger\hat{a}_m + \sum_j\sum_{2n\le\text{taylor}}E_j\frac{(-1)^{n+1}}{(2n)!}\left[\left(\frac{2 hA_{m,j}}{E_j}\right)^{1/4}(\hat{a}_m^\dagger+\hat{a}_m)\right]^{2n}`,
+        :math:`\hat{H} = \sum_{m\in\text{modes}} hf_m\hat{a}_m^\dagger\hat{a}_m + \sum_j\sum_{2n\le\text{taylor}}E_j\frac{(-1)^{n+1}}{(2n)!}\left[\left(\frac{\phi_{zpf,m,j}}{\phi_0}(\hat{a}_m^\dagger+\hat{a}_m)\right]^{2n}`,
+        
+        where :math:`\hat{a}_m` is the annihilation operator of the m-th
+        normal mode of the circuit and :math:`f_m` is the frequency of 
+        the m-th normal mode, :math:`E_j` is the Josephson energy of
+        the j-th junction, :math:`phi_0 = \hbar/2e` and
 
+        :math:`\phi_{zpf,m} = \sqrt{\frac{\hbar}{\omega_mImY'(\omega_m)}}`
+
+        is the zero-point fluctuations in flux if a mode through the junction, 
+        with frequency :math:`\omega_m` and admittance to the rest of the circuit :math:`Y`
 
 
         Parameters
@@ -1313,7 +1337,7 @@ class _Network(object):
         return self.char_poly_coeffs_analytical
 
     def simplify(self):
-        # TODO
+        # TODO write method to speed up determinant calculation
         pass
 
     def compute_RLC_matrices(self):
@@ -1815,7 +1839,11 @@ class Component(Circuit):
 
         :math:`\phi_{zpf,m} = \sqrt{\frac{\hbar}{\omega_mImY'(\omega_m)}}`
 
-        Which can be transformed to other quantities
+        the zero-point fluctuations in flux of the mode 
+        with frequency :math:`\omega_m` through the reference component with
+        admittance to the rest of the circuit :math:`Y`
+
+        :math:`\phi_{zpf,m}` can be transformed to other quantities
         
         :math:`v_{zpf,m} = \omega\phi_{zpf,m}`
 
@@ -2086,29 +2114,21 @@ class J(L):
 
         Returned in units of Hertz, not angular frequency.
 
-        This quantity is defined as 
+        This quantity (in units of Hertz) is defined as 
 
-        :math:`A_j,m = 2e^2\phi_{zpf}^4/\hbar^2/L_J`
+        :math:`A_{m,j} = E_j/2/h\left(\frac{\phi_{zpf,m,j}}{\phi_0}\right)^4`
 
-        where :math:`e` is the electron charge, :math:`\hbar` is plancks reduced constant, 
-        :math:`L_J` is this junctions inductance and 
+        where :math:`phi_0 = \hbar/2e`, 
+        :math:`E_j` is this junctions Josephson energy,
+        and 
 
         :math:`\phi_{zpf,m} = \sqrt{\frac{\hbar}{\omega_mImY'(\omega_m)}}`
 
         is the zero-point fluctuations in flux if a mode through the junction, 
         with frequency :math:`\omega_m` and admittance to the rest of the circuit :math:`Y`
 
-        The Hamiltonian of the circuit is then
-
-        :math:`\hat{H} = \sum_m hf_m\hat{a}_m^\dagger\hat{a}_m + \sum_j E_j[1-\cos{\hat{\varphi_j}}-\frac{\hat{\varphi_j}^2}{2}]`,
-
-        where :math:`\hat{a}_m` is the annihilation operator of the m-th
-        normal mode of the circuit and :math:`f_m` is the frequency of 
-        the m-th normal mode, :math:`E_j` is the Josephson energy of
-        the j-th junction and 
-        
-        :math:`\varphi_j = \sum_m\left(2 hA_{m,j}/E_j\right)^{1/4}(\hat{a}_m^\dagger+\hat{a}_m)`.
-
+        Following first order perturbation, the total anharmonicity of a mode is obtained
+        by summing these contribution over all modes.
 
         Parameters
         ----------

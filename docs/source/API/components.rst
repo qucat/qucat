@@ -3,16 +3,9 @@ Circuit components
 *************************
 
 .. toctree::
-   :maxdepth: 3
+    :maxdepth: 3
    
-.. autoclass:: Qcircuits.Component
-    :members:
-
-.. autoclass:: Qcircuits.J
-    :members:
-
-.. autoclass:: Qcircuits.R
-
-.. autoclass:: Qcircuits.L
-
-.. autoclass:: Qcircuits.C
+    components/J.rst  
+    components/L.rst  
+    components/C.rst  
+    components/R.rst
