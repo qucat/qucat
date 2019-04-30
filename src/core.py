@@ -1708,15 +1708,15 @@ class Parallel(Circuit):
 class Component(Circuit):
     """docstring for Component"""
 
-    def __init__(self, node_minus, node_plus, arg1=None, arg2=None):
+    def __init__(self, node_minus, node_plus, *args):
         super(Component, self).__init__(node_minus, node_plus)
         self.label = None
         self.value = None
         self.__flux = None
 
-        if arg1 is None and arg2 is None:
+        if len(args)==0:
             raise ValueError("Specify either a value or a label")
-        for a in [arg1, arg2]:
+        for a in args:
             if a is None:
                 pass
             elif type(a) is str:
@@ -1845,8 +1845,8 @@ class Component(Circuit):
 class W(Component):
     """docstring for Wire"""
 
-    def __init__(self, node_minus, node_plus, arg1='', arg2=None):
-        super(W, self).__init__(node_minus, node_plus, arg1='', arg2=None)
+    def __init__(self, node_minus, node_plus, *args):
+        super(W, self).__init__(node_minus, node_plus, '')
         self.unit = None
         self.label = None
         self.value = None
@@ -1880,8 +1880,8 @@ class G(W):
     From a network perspective, a ground element is a wire that connects
     node_plus to a node called '__ground'
     '''
-    def __init__(self, node_minus, node_plus, arg1=None, arg2=None):
-        super(G, self).__init__(node_minus, node_plus, arg1, arg2)
+    def __init__(self, node_minus, node_plus, *args):
+        super(G, self).__init__(node_minus, node_plus)
 
     def _set_component_lists(self):
         super(G, self)._set_component_lists()
@@ -1918,8 +1918,8 @@ class G(W):
             return shift(y, self.x_plot_center), shift(x, self.y_plot_center), line_type
 
 class L(Component):
-    def __init__(self, node_minus, node_plus, arg1=None, arg2=None):
-        super(L, self).__init__(node_minus, node_plus, arg1, arg2)
+    def __init__(self, node_minus, node_plus, *args):
+        super(L, self).__init__(node_minus, node_plus, *args)
         self.unit = 'H'
 
     def _admittance(self):
@@ -1985,8 +1985,8 @@ class L(Component):
         }
 
 class J(L):
-    def __init__(self, node_minus, node_plus, arg1=None, arg2=None, use_E=False, use_I=False):
-        super(J, self).__init__(node_minus, node_plus, arg1, arg2)
+    def __init__(self, node_minus, node_plus, *args, use_E=False, use_I=False):
+        super(J, self).__init__(node_minus, node_plus, *args)
 
         self.use_E = use_E
         self.use_I = use_I
@@ -2052,8 +2052,8 @@ class J(L):
             return shift(y, self.x_plot_center), shift(x, self.y_plot_center), line_type
 
 class R(Component):
-    def __init__(self, node_minus, node_plus, arg1=None, arg2=None):
-        super(R, self).__init__(node_minus, node_plus, arg1, arg2)
+    def __init__(self, node_minus, node_plus, *args):
+        super(R, self).__init__(node_minus, node_plus, *args)
         self.unit = r'$\Omega$'
 
     def _admittance(self):
@@ -2121,8 +2121,8 @@ class R(Component):
             return shift(y_list, self.x_plot_center), shift(x_list, self.y_plot_center), line_type
 
 class C(Component):
-    def __init__(self, node_minus, node_plus, arg1=None, arg2=None):
-        super(C, self).__init__(node_minus, node_plus, arg1, arg2)
+    def __init__(self, node_minus, node_plus, *args):
+        super(C, self).__init__(node_minus, node_plus, *args)
         self.unit = 'F'
 
     def _admittance(self):
@@ -2181,17 +2181,17 @@ class Admittance(Component):
 
 # @timeit
 def main():
-    # circuit = Network([
-    #         C(0,1,1),
-    #         L(1,2,1),
-    #         R(0,2,100)
-    #     ])
-    circuit = GUI(filename = './src/test.txt',edit=True,plot=True)
+    circuit = Network([
+            C(0,1,1),
+            L(1,2,1),
+            R(0,2,100)
+        ])
+    # circuit = GUI(filename = './src/test.txt',edit=True,plot=True)
     # print(circuit.Y)
     # print(sp.together(circuit.Y))
     # print(circuit.eigenfrequencies())
     circuit.f_k_A_chi(pretty_print=True)
-    circuit.show_normal_mode(0)
+    # circuit.show_normal_mode(0)
     # circuit.show_normal_mode(2)
 
 if __name__ == '__main__':
