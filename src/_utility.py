@@ -48,21 +48,36 @@ exponent_to_letter_unicode = {
 
 def safely_evaluate(func_to_evaluate):
     @functools.wraps(func_to_evaluate)
-    def wrapper_safely_evaluate(w, **kwargs):
+    def wrapper_safely_evaluate(self,w, **kwargs):
         try:
-            return func_to_evaluate(w, **kwargs)
+            return func_to_evaluate(self,w, **kwargs)
         except FloatingPointError as e:
             warn(str(e)+f"\n\tPerturbing f = {w/2./np.pi} to find finite value")
             perturbation = 1e-14
             while perturbation<0.01:
                 try:
-                    to_return = func_to_evaluate(w*(1.+perturbation), **kwargs)
+                    to_return = func_to_evaluate(self,w*(1.+perturbation), **kwargs)
                     warn(f"Perturbed f = {w/2./np.pi}*(1+{perturbation:.1e}) to find finite value")
                     return to_return
                 except FloatingPointError as e:
                     perturbation *= 10
             raise FloatingPointError("Even perturbing the frequency by a percent failed to produce finite value.")
     return wrapper_safely_evaluate
+
+
+def allow_w_array(func_to_evaluate):
+    @functools.wraps(func_to_evaluate)
+    def wrapper_safely_evaluate(self,w, **kwargs):
+        try:
+            iter(w)
+        except TypeError:
+            # iterable = False
+            return func_to_evaluate(self,w,**kwargs)
+        else:
+            # iterable = True
+            return np.array([func_to_evaluate(self,w_single,**kwargs) for w_single in w])
+    return wrapper_safely_evaluate
+
 
 def pretty_value(v, use_power_10=False, use_math=True, use_unicode=False, maximum_info = False):
     if v == 0:

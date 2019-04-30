@@ -14,10 +14,10 @@ from Qcircuits.src._utility import pretty_value,\
         check_there_are_no_iterables_in_kwarg,\
         shift,\
         to_string,\
-        safely_evaluate
+        safely_evaluate,\
+        allow_w_array
 from scipy import optimize
 import time
-import cmath
 from Qcircuits.src.plotting_settings import plotting_parameters_show,plotting_parameters_normal_modes
 PROFILING = False
 
@@ -84,8 +84,7 @@ class Qcircuit(object):
         for node in self.network.nodes:
             self._flux_transformation_dict[node] = {}
 
-        self._compute_Y()
-        self._compute_dY_analytically()
+        self._compute_inverse_of_dY()
         self.char_poly_coeffs_analytical = \
             self.network.compute_char_poly_coeffs(is_lossy = (len(self.resistors)>0))
         self.char_poly_coeffs = [lambdify(
@@ -99,7 +98,7 @@ class Qcircuit(object):
             return plotting_parameters_show
 
     @timeit
-    def _compute_Y(self):
+    def _compute_inverse_of_dY(self):
         self.Y = self.network.admittance(self.ref_elt.node_minus, self.ref_elt.node_plus)
         self.Y_lambdified = lambdify(['w']+self.no_value_components, self.Y, 'numpy')
         Y_together = sp.together(self.Y)    # Puts everything on a single fraction with the numerator and denomenator as polynomials
@@ -112,31 +111,32 @@ class Qcircuit(object):
         # Write numerator as polynomial in omega
         Y_denom = sp.denom(Y_together)
         Y_denom_poly = sp.collect(sp.expand(Y_denom), w)
-        self.Y_numer_poly_order = sp.polys.polytools.degree(
+        Y_numer_poly_order = sp.polys.polytools.degree(
             Y_numer_poly, gen=w)  # Order of the polynomial
-        self.Y_denom_poly_order = sp.polys.polytools.degree(
+        Y_denom_poly_order = sp.polys.polytools.degree(
             Y_denom_poly, gen=w)  # Order of the polynomial
 
-        self.Y_numer_poly_coeffs_analytical = [Y_numer_poly.coeff(w, n) for n in range(
-            self.Y_numer_poly_order+1)[::-1]]  # Get polynomial coefficients
-        self.Y_numer_poly_coeffs = [lambdify(
-            self.no_value_components, c, 'numpy') for c in self.Y_numer_poly_coeffs_analytical]
+        Y_numer_poly_coeffs_analytical = [Y_numer_poly.coeff(w, n) for n in range(
+            Y_numer_poly_order+1)[::-1]]  # Get polynomial coefficients
 
-        self.Y_denom_poly_coeffs_analytical = [Y_denom_poly.coeff(w, n) for n in range(
-            self.Y_denom_poly_order+1)[::-1]]  # Get polynomial coefficients
-        self.Y_denom_poly_coeffs = [lambdify(
-            self.no_value_components, c, 'numpy') for c in self.Y_denom_poly_coeffs_analytical]
+        Y_denom_poly_coeffs_analytical = [Y_denom_poly.coeff(w, n) for n in range(
+            Y_denom_poly_order+1)[::-1]]  # Get polynomial coefficients
 
-    @timeit
-    def _compute_dY_analytically(self):
-        # derivative of u/v is (du*v-dv*u)/v^2 = du/v since u=0 everywhere we 
-        # want this evaluated
         w = sp.Symbol('w')
-        v = sum([a*w**(self.Y_denom_poly_order-n)
-                     for n, a in enumerate(self.Y_denom_poly_coeffs_analytical)])
-        du = sum([(self.Y_numer_poly_order-n)*a*w**(self.Y_numer_poly_order-n-1)
-                      for n, a in enumerate(self.Y_numer_poly_coeffs_analytical)])
-        self.dY_analytical = du/v
+        v = sum([a*w**(Y_denom_poly_order-n)
+                     for n, a in enumerate(Y_denom_poly_coeffs_analytical)])
+        du = sum([(Y_numer_poly_order-n)*a*w**(Y_numer_poly_order-n-1)
+                      for n, a in enumerate(Y_numer_poly_coeffs_analytical)])
+        
+        self._inverse_of_dY_lambdified =  lambdify(
+                ['w']+self.no_value_components,
+                v/du, 
+                "numpy")
+
+    @safely_evaluate
+    @allow_w_array
+    def _inverse_of_dY(self, w,**kwargs):
+        return self._inverse_of_dY_lambdified(w,**kwargs)
   
     def _check_kwargs(self, **kwargs):
         for key in kwargs:
@@ -290,10 +290,7 @@ class Qcircuit(object):
 
         This function returns the anharmonicities
 
-        :math:`A_m = |\sum_j A_{m,j}|`
-
-        Since the imaginary part of :math:`A_{m,j}` is negligeable for typical high quality factor 
-        modes, and the real part is positive, we return the absolute value of their sum.
+        :math:`A_m = \sum_j A_{m,j}`
 
         Parameters
         ----------
@@ -343,12 +340,9 @@ class Qcircuit(object):
 
         This function returns a matrix  :math:`K`, with components defined as
 
-        :math:`K_{mm} = |\sum_j A_{m,j}|`
+        :math:`K_{mm} = \sum_j A_{m,j}`
             
-        :math:`K_{mn} = |\sum_j \sqrt{A_{m,j}}\sqrt{A_{n,j}}|`
-
-        Since the imaginary part of :math:`A_{m,j}` is negligeable for typical high quality factor 
-        modes, and the real part is positive, we return the absolute value of these sums.
+        :math:`K_{mn} = \sum_j \sqrt{A_{m,j}}\sqrt{A_{n,j}}`
 
         Parameters
         ----------
@@ -372,10 +366,10 @@ class Qcircuit(object):
             for j in range(N_modes):
                 for k in range(N_junctions):
                     if i == j:
-                        Ks[i, i] += As[k][i]
+                        Ks[i, i] += np.real(As[k][i])
                     else:
-                        Ks[i, j] += 2. * cmath.sqrt(As[k][i])*cmath.sqrt(As[k][j])
-        return np.absolute(Ks)
+                        Ks[i, j] += 2. * np.sqrt(np.real(As[k][i]*As[k][j]))
+        return Ks
 
     def f_k_A_chi(self, pretty_print=False, **kwargs):
         r'''Returns the eigenfrequency, loss-rates, anharmonicity, and Kerr parameters of the circuit. 
@@ -1092,8 +1086,7 @@ class _Network(object):
         if not self.is_connected():
             raise ValueError("There are two sub-circuits which are not connected")
         if self.has_opens():
-            raise ValueError("Analyzing an open/series circuit is impossible |"+\
-             " in the language of graphs, there is a dangling vertex in the electrical network")
+            raise ValueError("Analyzing an open circuit is impossible")
 
     @timeit
     def is_connected(self, 
@@ -1761,42 +1754,21 @@ class Component(Circuit):
             else:
                 self.head.no_value_components.append(self.label)
 
-    @property
-    def _flux(self):
-        if self.__flux is None:
-            try:
-                tr = self.head._flux_transformation_dict[self.node_minus,
-                                                        self.node_plus]
-            except KeyError:
-                tr = self.head.network.transfer(
-                    self.head.ref_elt.node_minus, self.head.ref_elt.node_plus, self.node_minus, self.node_plus)
-                self.head._flux_transformation_dict[self.node_minus,
-                                                   self.node_plus] = tr
-                self.head._flux_transformation_dict[self.node_plus,
-                                                   self.node_minus] = -tr
+    @allow_w_array
+    @safely_evaluate
+    def _flux(self, w, **kwargs):
+        try:
+            tr = self.head._flux_transformation_dict[self.node_minus,
+                                                    self.node_plus]
+        except KeyError:
+            tr_analytical = self.head.network.transfer(
+                self.head.ref_elt.node_minus, self.head.ref_elt.node_plus, self.node_minus, self.node_plus)
+            tr = lambdify(['w']+self.head.no_value_components,tr_analytical, "numpy")
+            self.head._flux_transformation_dict[self.node_minus,self.node_plus] = tr
+            self.head._flux_transformation_dict[self.node_plus,self.node_minus] =\
+                lambdify(['w']+self.head.no_value_components,-tr_analytical, "numpy")
 
-            __flux_undecorated = lambdify(
-                ['w']+self.head.no_value_components,
-                tr*sp.sqrt(hbar/sp.Symbol('w')/self.head.dY_analytical), 
-                "numpy")
-
-            @safely_evaluate
-            def __flux_single(w,**kwargs):
-                return __flux_undecorated(w,**kwargs)
-            
-            def __flux(w,**kwargs):
-                # test if w is an iterable
-                try:
-                    iter(w)
-                except TypeError:
-                    # iterable = False
-                    return __flux_single(w,**kwargs)
-                else:
-                    # iterable = True
-                    return np.array([__flux_single(w_single,**kwargs) for w_single in w])
-
-            self.__flux = __flux
-        return self.__flux
+        return tr(np.real(w),**kwargs)*np.sqrt(hbar/np.real(w)*np.absolute(np.imag(self.head._inverse_of_dY(np.real(w),**kwargs))))
 
     def _voltage(self, w, **kwargs):
         return complex(self._flux(w, **kwargs)*1j*w)
@@ -1811,35 +1783,17 @@ class Component(Circuit):
         return complex(self._voltage(**kwargs)*Y)
 
     def _charge(self, w, **kwargs):
-        return self._current(w, **kwargs)/w
+        return self._current(w, **kwargs)/1j/w
 
     def _to_string(self, use_math=True, use_unicode=False):
         return to_string(self.unit, self.label, self.value,
                   use_math=use_math, use_unicode=use_unicode)
 
+
     def flux(self, mode, **kwargs):
         '''To write
         '''
-        self.head._set_w_cpx()
-        return self._flux(self.head.w_cpx[mode],**kwargs)
-        
-    def voltage(self, mode, **kwargs):
-        '''To write
-        '''
-        self.head._set_w_cpx()
-        return self._voltage(self.head.w_cpx[mode],**kwargs)
-
-    def current(self, mode, **kwargs):
-        '''To write
-        '''
-        self.head._set_w_cpx()
-        return self._current(self.head.w_cpx[mode],**kwargs)
-        
-    def charge(self, mode, **kwargs):
-        '''To write
-        '''
-        self.head._set_w_cpx()
-        return self._charge(self.head.w_cpx[mode],**kwargs)
+        return self._flux(self.head.eigenfrequencies[mode],**kwargs)
         
 
 class W(Component):
@@ -2181,17 +2135,17 @@ class Admittance(Component):
 
 # @timeit
 def main():
-    circuit = Network([
-            C(0,1,1),
-            L(1,2,1),
-            R(0,2,100)
-        ])
-    # circuit = GUI(filename = './src/test.txt',edit=True,plot=True)
+    # circuit = Network([
+    #         C(0,1,1),
+    #         L(1,2,1),
+    #         R(0,2,100)
+    #     ])
+    circuit = GUI(filename = './src/test.txt',edit=False,plot=False)
     # print(circuit.Y)
     # print(sp.together(circuit.Y))
     # print(circuit.eigenfrequencies())
     circuit.f_k_A_chi(pretty_print=True)
-    # circuit.show_normal_mode(0)
+    # circuit.show_normal_mode(1,unit='charge')
     # circuit.show_normal_mode(2)
 
 if __name__ == '__main__':
