@@ -15,4 +15,3 @@ TODO: write a general introduction to the documentation, add a picture.
     installation
     Tutorials <tutorials/tutorials>
     Documentation <API/API>
-    changes
