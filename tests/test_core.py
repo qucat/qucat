@@ -98,6 +98,46 @@ class StandardQuantumCircuits(TestCaseAppended):
         w,k,A,chi = self.transmon_parameters(C,Lj)
         self.assertRelativelyClose(e**2/2./C/h,A[0])
 
+    def test_transmon_phi_zpf(self):
+        Cj = 100e-15
+        Lj = 10e-9
+        junction = core.J(0,1,Lj)
+        circuit = core.Network([
+            core.C(0,1,Cj),
+            junction,
+            core.R(0,1,1e6)
+        ])
+        phi_0 = hbar/2/e
+        Z = np.sqrt(Lj/Cj)
+        phi_zpf = np.sqrt(hbar*Z/2)
+        self.assertRelativelyClose(phi_zpf/phi_0,junction.zpf(mode=0,quantity = 'flux'))
+
+        
+    def test_transmon_q_zpf(self):
+        Cj = 100e-15
+        Lj = 10e-9
+        junction = core.J(0,1,Lj)
+        circuit = core.Network([
+            core.C(0,1,Cj),
+            junction,
+            core.R(0,1,1e6)
+        ])
+        Z = np.sqrt(Lj/Cj)
+        q_zpf = np.sqrt(hbar/Z/2)
+        self.assertRelativelyClose(q_zpf/e,np.absolute(junction.zpf(mode=0,quantity = 'charge')))
+
+    def test_transmon_anharmonicity_using_hamiltonian(self):
+        Cj = 100e-15
+        circuit = core.Network([
+            core.C(0,1,Cj),
+            core.J(0,1,10e-9),
+            core.R(0,1,1e6)
+        ])
+        H = circuit.hamiltonian(modes = [0],taylor = 4,excitations = [50])
+        ee = H.eigenenergies()
+        A = np.absolute((ee[1]-ee[0])-(ee[2]-ee[1]))
+        self.assertRelativelyClose(e**2/2./Cj/h,A)
+
     def test_transmon_double_series_capacitor(self):
         C = 100e-15
         Lj = 10e-9

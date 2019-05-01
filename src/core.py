@@ -551,7 +551,7 @@ class Qcircuit(object):
                 phi[j] += junction.zpf(quantity='flux',mode=i, **kwargs)*(a+a.dag()) 
 
         for j, junction in enumerate(self.junctions):
-            n = 2
+            n = 4
             EJ = (hbar/2./e)**2/(junction._get_value(**kwargs)*h)
             while 2*n <= taylor:
                 H += (-1)**(n+1)*EJ/factorial(2*n)*phi[j]**(2*n)
@@ -1749,7 +1749,13 @@ class Component(Circuit):
             self.head._flux_transformation_dict[self.node_minus,self.node_plus] = tr
             self.head._flux_transformation_dict[self.node_plus,self.node_minus] = tr_minus
 
-        return tr(self, np.real(w),**kwargs)*np.sqrt(hbar/np.real(w)*np.absolute(np.imag(self.head._inverse_of_dY(np.real(w),**kwargs))))
+        f =tr(self, np.real(w),**kwargs)*np.sqrt(hbar/np.real(w)*np.absolute(np.imag(self.head._inverse_of_dY(np.real(w),**kwargs))))
+
+        # This is only valid in the high-Q limit
+        if isinstance(self,R):
+            return 1j*np.imag(f)
+        else:
+            return np.real(f)
 
     def _voltage(self, w, **kwargs):
         return complex(self._flux(w, **kwargs)*1j*w)
@@ -2298,15 +2304,17 @@ class Admittance(Component):
 
 # @timeit
 def main():
-    # circuit = Network([
-    #         C(0,1,1),
-    #         L(1,2,1),
-    #         R(0,2,100)
-    #     ])
-    circuit = GUI(filename = './src/test.txt',edit=False,plot=False)
+    Cj = 100e-15
+    circuit = Network([
+        C(0,1,Cj),
+        J(0,1,10e-9),
+        R(0,1,1e6)
+    ])
+    H = circuit.hamiltonian(modes = [0],taylor = 4,excitations = [50])
+    # circuit = GUI(filename = './src/test.txt',edit=False,plot=False)
     # circuit.hamiltonian(L_J = 1e-9,modes=[0],excitations=[5],return_ops=True,taylor=4)
-    circuit.eigenfrequencies(L_J = np.linspace(1e-9,2e-9,4))
-    circuit.f_k_A_chi(L_J = np.linspace(1e-9,2e-9,4))
+    # circuit.eigenfrequencies(L_J = np.linspace(1e-9,2e-9,4))
+    # circuit.f_k_A_chi(L_J = np.linspace(1e-9,2e-9,4))
     # print(circuit.Y)
     # print(sp.together(circuit.Y))
     # print(circuit.eigenfrequencies())
