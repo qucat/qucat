@@ -551,7 +551,7 @@ class Qcircuit(object):
                 phi[j] += junction.zpf(quantity='flux',mode=i, **kwargs)*(a+a.dag()) 
 
         for j, junction in enumerate(self.junctions):
-            n = 4
+            n = 2
             EJ = (hbar/2./e)**2/(junction._get_value(**kwargs)*h)
             while 2*n <= taylor:
                 H += (-1)**(n+1)*EJ/factorial(2*n)*phi[j]**(2*n)
@@ -2311,6 +2311,7 @@ def main():
         R(0,1,1e6)
     ])
     H = circuit.hamiltonian(modes = [0],taylor = 4,excitations = [50])
+    print(H)
     # circuit = GUI(filename = './src/test.txt',edit=False,plot=False)
     # circuit.hamiltonian(L_J = 1e-9,modes=[0],excitations=[5],return_ops=True,taylor=4)
     # circuit.eigenfrequencies(L_J = np.linspace(1e-9,2e-9,4))
