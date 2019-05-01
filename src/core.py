@@ -11,11 +11,10 @@ from Qcircuits.src import _gui
 import os
 from Qcircuits.src._constants import *
 from Qcircuits.src._utility import pretty_value,\
-        check_there_are_no_iterables_in_kwarg,\
         shift,\
         to_string,\
         safely_evaluate,\
-        allow_w_array
+        vectorize
 from scipy import optimize
 import time
 from Qcircuits.src.plotting_settings import plotting_parameters_show,plotting_parameters_normal_modes
@@ -131,8 +130,8 @@ class Qcircuit(object):
                 v/du, 
                 "numpy")
 
+    @vectorize
     @safely_evaluate
-    @allow_w_array
     def _inverse_of_dY(self, w,**kwargs):
         return self._inverse_of_dY_lambdified(w,**kwargs)
   
@@ -140,10 +139,6 @@ class Qcircuit(object):
         for key in kwargs:
             if key in self.no_value_components:
                 pass
-            # # component dict is not defined
-            # elif key in [c.label for _, c in self.component_dict.iteritems()]:
-            #     raise ValueError(
-            #         'The value of %s was already specified when constructing the circuit' % key)
             else:
                 raise ValueError(
                     '%s is not the label of a circuit element' % key)
@@ -155,21 +150,21 @@ class Qcircuit(object):
                 raise ValueError(
                     'The value of %s should be specified with the keyword argument %s=... ' % (label, label))
 
+
     @timeit
     def _set_w_cpx(self, **kwargs):
         self._check_kwargs(**kwargs)
-
         char_poly_coeffs = [complex(coeff(**kwargs)) for coeff in self.char_poly_coeffs]
         if len(self.resistors) == 0:
             # The variable of the characteristic polynomial is w^2
-            self.w_cpx = np.sqrt(np.real(np.roots(char_poly_coeffs)))
+            w_cpx = np.sqrt(np.real(np.roots(char_poly_coeffs)))
         else:
-            self.w_cpx = np.roots(char_poly_coeffs)
-            self.w_cpx = self.w_cpx[np.nonzero(np.real(self.w_cpx) > 0.)]
+            w_cpx = np.roots(char_poly_coeffs)
+            w_cpx = w_cpx[np.nonzero(np.real(w_cpx) > 0.)]
                     
         # Sort solutions with increasing frequency
-        order = np.argsort(np.real(self.w_cpx))
-        self.w_cpx = self.w_cpx[order]
+        order = np.argsort(np.real(w_cpx))
+        self.w_cpx = w_cpx[order]
 
     def _anharmonicities_per_junction(self, pretty_print=False, **kwargs):
         self._set_w_cpx(**kwargs)
@@ -203,8 +198,6 @@ class Qcircuit(object):
         kwargs:     
                     Values for un-specified circuit compoenents, 
                     ex: ``L=1e-9``.
-                    One value may be given as a numpy array in which case this function 
-                    will return a numpy.array with an additional dimension
 
         Returns
         -------
@@ -247,8 +240,6 @@ class Qcircuit(object):
         kwargs:     
                     Values for un-specified circuit compoenents, 
                     ex: ``L=1e-9``.
-                    One value may be given as a numpy array in which case this function 
-                    will return a numpy.array with an additional dimension
 
         Returns
         -------
@@ -303,8 +294,6 @@ class Qcircuit(object):
         kwargs:     
                     Values for un-specified circuit compoenents, 
                     ex: ``L=1e-9``.
-                    One value may be given as a numpy array in which case this function 
-                    will return a numpy.array with an additional dimension
 
         Returns
         -------
@@ -363,8 +352,6 @@ class Qcircuit(object):
         kwargs:     
                     Values for un-specified circuit compoenents, 
                     ex: ``L=1e-9``.
-                    One value may be given as a numpy array in which case this function
-                    will return a numpy.array with an additional dimension
 
         Returns
         -------
@@ -376,6 +363,7 @@ class Qcircuit(object):
         N_junctions = len(self.junctions)
 
         Ks = np.zeros((N_modes, N_modes))
+
         for i in range(N_modes):
             line = []
             for j in range(N_modes):
@@ -422,96 +410,56 @@ class Qcircuit(object):
         kwargs:     
                     Values for un-specified circuit compoenents, 
                     ex: ``L=1e-9``.
-                    One value may be given as a numpy array in which case this function 
-                    will return a numpy.array with an additional dimension
 
         Returns
         -------
         List of numpy arrays
             ``[[f_0,f_1,..],[k_0,k_1,..],[A_0,A_1,..],[[A_0,chi_01,..],[chi_10,A_1,..]..]]``
         '''
+        
+        to_return = self.eigenfrequencies(**kwargs),\
+            self.loss_rates(**kwargs),\
+            self.anharmonicities(**kwargs),\
+            self.kerr(**kwargs)
 
-        list_element = None
-        list_values = None
-        for el, value in kwargs.items():
-            try:
-                iter(value)
-            except TypeError:
-                iterable = False
-            else:
-                iterable = True
 
-            if iterable and list_element is None:
-                list_element = el
-                list_values = value
-            elif iterable and list_element is not None:
-                raise ValueError(
-                    "You can only iterate over the value of one element.")
+        if pretty_print:
 
-        if pretty_print == True and list_element is not None:
-            raise ValueError(
-                "Cannot pretty print since $%s$ does not have a unique value" % list_element)
+            N_modes = len(to_return[0])
+            table_line = ""
+            for i in range(4):
+                table_line += " %7s |"
+            table_line += "\n"
 
-        if list_element is None:
+            to_print = table_line % (
+                "mode", " freq. ", " diss. ", " anha. ")
+            for i, w in enumerate(to_return[0]):
+                to_print += table_line % tuple([str(i)]+[pretty_value(
+                    to_return[j][i], use_math=False)+'Hz' for j in range(3)])
 
-            to_return = self.eigenfrequencies(**kwargs),\
-                self.loss_rates(**kwargs),\
-                self.anharmonicities(**kwargs),\
-                self.kerr(**kwargs)
+            to_print += "\nKerr coefficients\n(diagonal = Kerr, off-diagonal = cross-Kerr)\n"
 
-            if pretty_print:
-                N_modes = len(to_return[0])
-                table_line = ""
-                for i in range(4):
-                    table_line += " %7s |"
-                table_line += "\n"
+            table_line = ""
+            for i in range(N_modes+1):
+                table_line += " %7s |"
+            table_line += "\n"
 
-                to_print = table_line % (
-                    "mode", " freq. ", " diss. ", " anha. ")
-                for i, w in enumerate(to_return[0]):
-                    to_print += table_line % tuple([str(i)]+[pretty_value(
-                        to_return[j][i], use_math=False)+'Hz' for j in range(3)])
+            to_print += table_line % tuple(['mode'] +
+                                            [str(i)+'   ' for i in range(N_modes)])
 
-                to_print += "\nKerr coefficients\n(diagonal = Kerr, off-diagonal = cross-Kerr)\n"
+            for i in range(N_modes):
+                line_elements = [str(i)]
+                for j in range(N_modes):
+                    if i >= j:
+                        line_elements.append(pretty_value(
+                            to_return[3][i][j], use_math=False)+'Hz')
+                    else:
+                        line_elements.append("")
+                to_print += table_line % tuple(line_elements)
+            print(to_print)
 
-                table_line = ""
-                for i in range(N_modes+1):
-                    table_line += " %7s |"
-                table_line += "\n"
+        return to_return
 
-                to_print += table_line % tuple(['mode'] +
-                                               [str(i)+'   ' for i in range(N_modes)])
-
-                for i in range(N_modes):
-                    line_elements = [str(i)]
-                    for j in range(N_modes):
-                        if i >= j:
-                            line_elements.append(pretty_value(
-                                to_return[3][i][j], use_math=False)+'Hz')
-                        else:
-                            line_elements.append("")
-                    to_print += table_line % tuple(line_elements)
-                print(to_print)
-
-            return to_return
-
-        else:
-            w = []
-            k = []
-            A = []
-            kerr = []
-            for value in list_values:
-                kwargs_single = deepcopy(kwargs)
-                kwargs_single[list_element] = value
-                w.append(self.eigenfrequencies(**kwargs_single))
-                k.append(self.loss_rates(**kwargs_single))
-                A.append(self.anharmonicities(**kwargs_single))
-                kerr.append(self.kerr(**kwargs_single))
-            w = np.moveaxis(np.array(w), 0, -1)
-            k = np.moveaxis(np.array(k), 0, -1)
-            A = np.moveaxis(np.array(A), 0, -1)
-            kerr = np.moveaxis(np.array(kerr), 0, -1)
-            return w, k, A, kerr
 
     def hamiltonian(self, modes='all', taylor=4, excitations=6, return_ops = False, **kwargs):
         r'''Returns the cuircuits Hamiltonian for further analysis with QuTiP
@@ -554,15 +502,14 @@ class Qcircuit(object):
                     5 excitation levels for mode 0 and 10 for mode 1.
         return_ops: Boolean, optional
                     If set to True, a list of the annihilation operators
-                    will be returned along with the hamiltonian. 
+                    will be returned along with the hamiltonian in the form
+                    ``<Hamiltonian>, <list of operators>``. 
                     The form of the return is then ``H,[a_0,a_1,..]``
                     where ``a_i`` is the annihilation operator of the
                     i-th considered mode, a QuTiP Qobj
         kwargs:     
                     Values for un-specified circuit compoenents, 
                     ex: ``L=1e-9``.
-                    One value may be given as a numpy array in which case this function 
-                    will return a numpy.array with an additional dimension.
 
         Returns
         -------
@@ -611,7 +558,7 @@ class Qcircuit(object):
                 n += 1
 
         if return_ops:
-            return operators , H
+            return H, operators
         return H
 
     def show(self,
@@ -779,7 +726,6 @@ class Qcircuit(object):
             using the GUI.
             ''')
 
-        check_there_are_no_iterables_in_kwarg(**kwargs)
         self._set_w_cpx(**kwargs)
         mode_w = np.real(self.w_cpx[mode])
 
@@ -971,11 +917,6 @@ class Network(Qcircuit):
     for a specific junction inductance.
 
     >>> circuit.f_k_A_chi(L_J = 1e-9) 
-
-    One can also pass an array-like value to up to one component
-
-    >>> import numpy as np
-    >>> circuit.f_k_A_chi(L_J = np.linspace(1e-9,2e-9,101)) 
 
     '''
 
@@ -1786,8 +1727,6 @@ class Component(Circuit):
             else:
                 self.head.no_value_components.append(self.label)
 
-    @allow_w_array
-    @safely_evaluate
     def _flux(self, w, **kwargs):
         try:
             tr = self.head._flux_transformation_dict[self.node_minus,
@@ -1795,12 +1734,22 @@ class Component(Circuit):
         except KeyError:
             tr_analytical = self.head.network.transfer(
                 self.head.ref_elt.node_minus, self.head.ref_elt.node_plus, self.node_minus, self.node_plus)
-            tr = lambdify(['w']+self.head.no_value_components,tr_analytical, "numpy")
-            self.head._flux_transformation_dict[self.node_minus,self.node_plus] = tr
-            self.head._flux_transformation_dict[self.node_plus,self.node_minus] =\
-                lambdify(['w']+self.head.no_value_components,-tr_analytical, "numpy")
+            tr_undecorated = lambdify(['w']+self.head.no_value_components,tr_analytical, "numpy")
+            
+            @vectorize
+            @safely_evaluate
+            def tr(self, w,**kwargs):
+                return tr_undecorated(w,**kwargs)
 
-        return tr(np.real(w),**kwargs)*np.sqrt(hbar/np.real(w)*np.absolute(np.imag(self.head._inverse_of_dY(np.real(w),**kwargs))))
+            @vectorize
+            @safely_evaluate
+            def tr_minus(self, w,**kwargs):
+                return -tr_undecorated(w,**kwargs)
+
+            self.head._flux_transformation_dict[self.node_minus,self.node_plus] = tr
+            self.head._flux_transformation_dict[self.node_plus,self.node_minus] = tr_minus
+
+        return tr(self, np.real(w),**kwargs)*np.sqrt(hbar/np.real(w)*np.absolute(np.imag(self.head._inverse_of_dY(np.real(w),**kwargs))))
 
     def _voltage(self, w, **kwargs):
         return complex(self._flux(w, **kwargs)*1j*w)
@@ -1860,8 +1809,6 @@ class Component(Circuit):
         kwargs:     
                     Values for un-specified circuit compoenents, 
                     ex: ``L=1e-9``.
-                    One value may be given as a numpy array in which case this function 
-                    will return a numpy.array with an additional dimension
 
         Returns
         -------
@@ -2136,8 +2083,6 @@ class J(L):
         kwargs:     
                     Values for un-specified circuit compoenents, 
                     ex: ``L=1e-9``.
-                    One value may be given as a numpy array in which case this function 
-                    will return a numpy.array with an additional dimension
         
         mode:           integer
                         Determine what mode to plot, where 0 designates
@@ -2359,7 +2304,9 @@ def main():
     #         R(0,2,100)
     #     ])
     circuit = GUI(filename = './src/test.txt',edit=False,plot=False)
-    circuit.hamiltonian(L_J = 1e-9,modes=[0],excitations=[5],return_ops=True,taylor=4)
+    # circuit.hamiltonian(L_J = 1e-9,modes=[0],excitations=[5],return_ops=True,taylor=4)
+    circuit.eigenfrequencies(L_J = np.linspace(1e-9,2e-9,4))
+    circuit.f_k_A_chi(L_J = np.linspace(1e-9,2e-9,4))
     # print(circuit.Y)
     # print(sp.together(circuit.Y))
     # print(circuit.eigenfrequencies())

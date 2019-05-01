@@ -65,18 +65,18 @@ def safely_evaluate(func_to_evaluate):
     return wrapper_safely_evaluate
 
 
-def allow_w_array(func_to_evaluate):
+def vectorize(func_to_evaluate):
     @functools.wraps(func_to_evaluate)
-    def wrapper_safely_evaluate(self,w, **kwargs):
+    def wrapper_vectorize(self,w, **kwargs):
         try:
             iter(w)
         except TypeError:
-            # iterable = False
+            # single
             return func_to_evaluate(self,w,**kwargs)
         else:
             # iterable = True
-            return np.array([func_to_evaluate(self,w_single,**kwargs) for w_single in w])
-    return wrapper_safely_evaluate
+            return np.vectorize(lambda w_single: func_to_evaluate(self,w_single,**kwargs))(w)
+    return wrapper_vectorize
 
 
 def pretty_value(v, use_power_10=False, use_math=True, use_unicode=False, maximum_info = False):
@@ -123,16 +123,6 @@ def pretty_value(v, use_power_10=False, use_math=True, use_unicode=False, maximu
                 float_part = float_part[:-1]
 
         return sign + float_part + exponent_part
-
-def check_there_are_no_iterables_in_kwarg(**kwargs):
-    for el, value in kwargs.items():
-        try:
-            iter(value)
-        except TypeError:
-            pass
-        else:
-            raise ValueError(
-                "This function accepts no lists or iterables as input.")
 
 def shift(to_shift,shift):
     for i,_ in enumerate(to_shift):

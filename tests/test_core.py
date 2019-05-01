@@ -92,15 +92,6 @@ class StandardQuantumCircuits(TestCaseAppended):
         w,k,A,chi = self.transmon_parameters(C,Lj)
         self.assertRelativelyClose(1/(np.sqrt(C*Lj)*2.*pi),w)
 
-    def test_transmon_frequency_L_sweep(self):
-        circuit = core.Network([
-            core.C(0,1,'C'),
-            core.J(0,1,'L')])
-        L_list = np.linspace(1e-8,2e-8,10)
-        C = 1e-13
-        w,k,A,chi = circuit.f_k_A_chi(C = C,L = L_list)
-        self.assertArrayRelativelyClose([1/(np.sqrt(C*L_list)*2.*pi)],w)
-
     def test_transmon_anharmonicity(self):
         C = 100e-15
         Lj = 10e-9
