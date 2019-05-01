@@ -54,6 +54,19 @@ class StandardQuantumCircuits(TestCaseAppended):
         cpx_w = (1j*C*R + np.sqrt(4*C*L - C**2*R**2))/(2.*C*L)
         self.assertRelativelyClose(np.real(cpx_w)/2/np.pi,w)
 
+    def test_LC_double_series_L_double_series_C(self):
+        C = 1e-8
+        L = 3
+        circuit = core.Network([
+            core.C(0,1,C*2),
+            core.C(1,2,C*2),
+            core.L(2,3,L/2),
+            core.L(3,0,L/2)
+        ])
+        f,k,A,chi = circuit.f_k_A_chi()
+        f_expected = 1/np.sqrt(L*C)/2/np.pi
+        self.assertRelativelyClose(f_expected,f)
+
     def test_series_RLC_dissipation(self):
         C = 100e-15
         L = 10e-9
@@ -93,6 +106,17 @@ class StandardQuantumCircuits(TestCaseAppended):
         Lj = 10e-9
         w,k,A,chi = self.transmon_parameters(C,Lj)
         self.assertRelativelyClose(e**2/2./C/h,A[0])
+
+    def test_transmon_double_series_capacitor(self):
+        C = 100e-15
+        Lj = 10e-9
+        circuit = core.Network([
+            core.C(0,1,C*2),
+            core.C(1,2,C*2),
+            core.J(0,2,Lj)
+        ])
+        f,k,A,chi = circuit.f_k_A_chi()
+        self.assertArrayRelativelyClose([e**2/2./C/h,1/(np.sqrt(C*Lj)*2.*pi)],[A[0],f[0]])
 
     '''
     Shunted Josephson ring
@@ -149,11 +173,6 @@ class StandardQuantumCircuits(TestCaseAppended):
         L = 1e-8
         w,k,A,chi = self.shunted_josephson_ring_parameters(C,L)
         self.assertRelativelyClose(A[1],e**2/2./(8*C)/h)
-
-
-class TestTesting(TestCaseAppended):
-    def test_test(self):
-        self.assertEqual(0,0)
 
 class TestGraphics(TestCaseAppended):   
 

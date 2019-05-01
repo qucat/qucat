@@ -221,30 +221,26 @@ class Qcircuit(object):
         The array is ordered ordered with increasing normal mode frequencies.
         Such that the first element of the array corresponds to the loss
         rate of the lowest frequency mode. Losses are provided in units of Hertz, 
-        not in angular frequency.
+        **not in angular frequency**.
 
         These loss rates :math:`\kappa_m` correspond to the imaginary parts
         of the complex frequencies which make the conductance matrix
         singular, or equivalently the imaginary parts of the poles of the impedance
         calculated between the nodes of an inductor or josephon junction.
         
-        If the Hamiltonian is written in units of Hertz (with Plancks constant
-        :math:`h=1`)
-
-        :math:`\hat{H} = \sum_m f_m\hat{a}_m^\dagger\hat{a}_m + \hat{U}`,
-
-        where :math:`\hat{a}_m` is the annihilation operator of the m-th
-        normal mode of the circuit and :math:`f_m` is the frequency of 
-        the m-th normal mode and 
-         :math:`\hat{U}` is the non-linear part of the Hamiltonian
-        originating in the junction non-linearity.
-
-        Then the dynamics of the circuit can be studied in QuTiP
+        The dynamics of the circuit can be studied in QuTiP
         by considering collapse operators for the m-th mode 
-        :math:`\sqrt{\kappa_m(n_{th,m}+1)}\hat{a}_m` and 
-        :math:`\sqrt{\kappa_m(n_{th,m})}\hat{a}_m^\dagger`
+        :math:`\sqrt{2\pi\kappa_m(n_{th,m}+1)}\hat{a}_m` and 
+        :math:`\sqrt{2\pi\kappa_m(n_{th,m})}\hat{a}_m^\dagger`
         where :math:`n_{th,m}` is the average thermal occupation
-        of mode :math:`m`.
+        of mode :math:`m` and :math:`\hat{a}_m` is the annihilation operator of the m-th
+        normal mode of the circuit.
+        Note that dissipation rates that are obtained from this function
+        have to be converted to angular frequencies through the factor :math:`2\pi`.
+        If you are also using a hamiltonian generated from Qcircuits, 
+        then it too should be converted to angular frequencies by multiplying 
+        the entire hamiltonian by :math:`2\pi` when performing time-dependant 
+        simulations.
 
         Parameters
         ----------
@@ -279,7 +275,7 @@ class Qcircuit(object):
         the m-th normal mode, :math:`E_j` is the Josephson energy of
         the j-th junction and 
         
-        :math:`\varphi_j = \sum_m\left(\frac{\phi_{zpf,m,j}}{\phi_0}(\hat{a}_m^\dagger+\hat{a}_m)`.
+        :math:`\varphi_j = \sum_m\frac{\phi_{zpf,m,j}}{\phi_0}(\hat{a}_m^\dagger+\hat{a}_m)`.
 
         where :math:`phi_0 = \hbar/2e` and 
 
@@ -316,7 +312,7 @@ class Qcircuit(object):
             Normal mode anharmonicities
         '''
         Ks = self.kerr(**kwargs)
-        return [Ks[i, i] for i in range(Ks.shape[0])]
+        return np.array([Ks[i, i] for i in range(Ks.shape[0])])
 
     def kerr(self, **kwargs):
         r'''Returns the Kerr parameters for the circuit normal modes.
@@ -523,7 +519,7 @@ class Qcircuit(object):
         The Hamiltonian of the circuit, with the non-linearity of the Josephson junctions
         Taylor-expanded, is given by
 
-        :math:`\hat{H} = \sum_{m\in\text{modes}} hf_m\hat{a}_m^\dagger\hat{a}_m + \sum_j\sum_{2n\le\text{taylor}}E_j\frac{(-1)^{n+1}}{(2n)!}\left[\left(\frac{\phi_{zpf,m,j}}{\phi_0}(\hat{a}_m^\dagger+\hat{a}_m)\right]^{2n}`,
+        :math:`\hat{H} = \sum_{m\in\text{modes}} hf_m\hat{a}_m^\dagger\hat{a}_m + \sum_j\sum_{2n\le\text{taylor}}E_j\frac{(-1)^{n+1}}{(2n)!}\left[\frac{\phi_{zpf,m,j}}{\phi_0}(\hat{a}_m^\dagger+\hat{a}_m)\right]^{2n}`,
         
         where :math:`\hat{a}_m` is the annihilation operator of the m-th
         normal mode of the circuit and :math:`f_m` is the frequency of 
@@ -579,39 +575,43 @@ class Qcircuit(object):
         self.hamiltonian_taylor = taylor
         self.hamiltonian_excitations = excitations
 
-
-
         fs = self.eigenfrequencies(**kwargs)
-        N_modes = len(fs)
-        N_junctions = len(self.junctions)
 
         if modes == 'all':
-            modes = range(N_modes)
-        if excitations is not list:
+            modes = range(len(fs))
+
+        if not isinstance(excitations,list):
             excitations = [int(excitations) for i in modes]
+        else:
+            if len(excitations)!=len(modes):
+                raise ValueError("excitations and modes should have the same length")
+
 
         H = 0
         operators = []
         phi = [0 for junction in self.junctions]
         qeye_list = [qeye(n) for n in excitations]
 
-        for i, f in enumerate(fs):
-            a_list = deepcopy(qeye_list)
-            a_list[i] = destroy(excitations[i])
-            a = tensor(a_list)
+        for i in modes:
+            a_to_tensor = deepcopy(qeye_list)
+            a_to_tensor[i] = destroy(excitations[i])
+            a = tensor(a_to_tensor)
             operators.append(a)
-            H += f*a.dag()*a
-            phi_0 = hbar/2./e
+            H += fs[i]*a.dag()*a
+
             for j, junction in enumerate(self.junctions):
-                phi[j] += junction._flux(w=f*2.*pi, **kwargs)/phi_0*(a+a.dag())
+                # Note that zpf returns the flux in units of phi_0 = hbar/2./e
+                phi[j] += junction.zpf(quantity='flux',mode=i, **kwargs)*(a+a.dag()) 
 
         for j, junction in enumerate(self.junctions):
             n = 2
             EJ = (hbar/2./e)**2/(junction._get_value(**kwargs)*h)
-            while 2*n <= junc_pot_taylor_exp:
+            while 2*n <= taylor:
                 H += (-1)**(n+1)*EJ/factorial(2*n)*phi[j]**(2*n)
                 n += 1
 
+        if return_ops:
+            return operators , H
         return H
 
     def show(self,
@@ -960,9 +960,7 @@ class Network(Qcircuit):
     ... ])
 
 
-    If only a label is provided as for the junction here, 
-    a value for that component should be passed
-    as a keyword argument in subsequent function calls. 
+    
     This is the best way to proceed if one wants to sweep the value of a 
     component. Indeed, the most computationally expensive part of the 
     analysis is performed upon initializing the Network, subsequently
@@ -1870,6 +1868,9 @@ class Component(Circuit):
         float
             contribution of the ``mode`` to the zero-point fluctuations of the ``quantity``
         '''
+        self.head._set_w_cpx(**kwargs)
+        mode_w = np.real(self.head.w_cpx[mode])
+
         if quantity == 'flux':
             phi_0 = hbar/2./e
             return self._flux(mode_w, **kwargs)/phi_0
@@ -2358,11 +2359,12 @@ def main():
     #         R(0,2,100)
     #     ])
     circuit = GUI(filename = './src/test.txt',edit=False,plot=False)
+    circuit.hamiltonian(L_J = 1e-9,modes=[0],excitations=[5],return_ops=True,taylor=4)
     # print(circuit.Y)
     # print(sp.together(circuit.Y))
     # print(circuit.eigenfrequencies())
     # circuit.f_k_A_chi(pretty_print=True)
-    circuit.show_normal_mode(1,quantity='charge')
+    # circuit.show_normal_mode(1,quantity='charge')
     # circuit.show_normal_mode(2)
 
 if __name__ == '__main__':
