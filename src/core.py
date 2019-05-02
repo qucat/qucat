@@ -161,7 +161,10 @@ class Qcircuit(object):
         else:
             w_cpx = np.roots(char_poly_coeffs)
             w_cpx = w_cpx[np.nonzero(np.real(w_cpx) > 0.)]
-                    
+
+        # Only consider modes with Q>1
+        w_cpx = w_cpx[np.nonzero(np.real(w_cpx) > np.imag(w_cpx))]
+
         # Sort solutions with increasing frequency
         order = np.argsort(np.real(w_cpx))
         self.w_cpx = w_cpx[order]
@@ -2304,15 +2307,15 @@ class Admittance(Component):
 
 # @timeit
 def main():
-    Cj = 100e-15
-    circuit = Network([
-        C(0,1,Cj),
-        J(0,1,10e-9),
-        R(0,1,1e6)
-    ])
-    H = circuit.hamiltonian(modes = [0],taylor = 4,excitations = [50])
-    print(H)
-    # circuit = GUI(filename = './src/test.txt',edit=False,plot=False)
+    # Cj = 100e-15
+    # circuit = Network([
+    #     C(0,1,Cj),
+    #     J(0,1,10e-9),
+    #     R(0,1,1e6)
+    # ])
+    # H = circuit.hamiltonian(modes = [0],taylor = 4,excitations = [50])
+    # print(H)
+    circuit = GUI(filename = './src/test.txt',edit=False,plot=False)
     # circuit.hamiltonian(L_J = 1e-9,modes=[0],excitations=[5],return_ops=True,taylor=4)
     # circuit.eigenfrequencies(L_J = np.linspace(1e-9,2e-9,4))
     # circuit.f_k_A_chi(L_J = np.linspace(1e-9,2e-9,4))
@@ -2320,7 +2323,8 @@ def main():
     # print(sp.together(circuit.Y))
     # print(circuit.eigenfrequencies())
     # circuit.f_k_A_chi(pretty_print=True)
-    # circuit.show_normal_mode(1,quantity='charge')
+    circuit.show()
+    circuit.show_normal_mode(1)
     # circuit.show_normal_mode(2)
 
 if __name__ == '__main__':
