@@ -167,6 +167,9 @@ class TestOpening(AutomaticTesting):
     def test_opening_complicated_circuit(self):
         self.launch_gui_testing()
 
+    def test_opening_longfloat(self):
+        self.launch_gui_testing()
+
 class TestComponentCreation(AutomaticTesting):
     def test_building_wire(self):
         self.launch_gui_testing()

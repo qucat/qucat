@@ -95,7 +95,8 @@ def pretty_value(v, use_power_10=False, use_unicode=True, maximum_info = False):
             pretty = "%.1f%s" % (float_part, exponent_part)
         return sign+pretty
     else:
-        if ("%.7f"%float_part)[-1] != '0':
+        if float_part-float("%.6f"%float_part) != 0:
+            # if there is a digit beyond digit 6
             float_part ="%.6f.."%float_part
         else:
             float_part ="%.6f"%float_part

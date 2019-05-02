@@ -922,7 +922,12 @@ class CircuitEditor(tk.Canvas):
             if v is None:
                 v = ''
             else:
-                v = "%e" % v
+                decimals = 1
+                v_string = '0'
+                while float(v_string)-v != 0 and decimals<15:
+                    v_string = f"%.{decimals}e" % v
+                    decimals += 1
+                v = v_string
 
             if l is None:
                 l = ''
@@ -3441,7 +3446,12 @@ class RequestValueLabelWindow(tk.Toplevel):
         if v is None:
             v = ''
         else:
-            v = "%e" % v
+            decimals = 1
+            v_string = '0'
+            while float(v_string)-v != 0 and decimals<15:
+                v_string = f"%.{decimals}e" % v
+                decimals += 1
+            v = v_string
 
         if l is None:
             l = ''
@@ -3451,8 +3461,8 @@ class RequestValueLabelWindow(tk.Toplevel):
         self.entries = []
         for i, field in enumerate(fields):
             row = tk.Frame(self)
-            lab = tk.Label(row, width=7, text=field, anchor='w')
-            ent = tk.Entry(row, width=7)
+            lab = tk.Label(row, width=13, text=field, anchor='w')
+            ent = tk.Entry(row, width=13)
             ent.insert(tk.END, field_values[i])
             row.pack(side=tk.TOP, fill=tk.X, padx=5, pady=5)
             lab.pack(side=tk.LEFT)
