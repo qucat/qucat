@@ -19,19 +19,6 @@ exponent_to_letter = {
     9: 'G',
     12: 'T'
 }
-exponent_to_letter_math = {
-    -18: 'a',
-    -15: 'f',
-    -12: 'p',
-    -9: 'n',
-    -6: r'$\mu$',
-    -3: 'm',
-    0: '',
-    3: 'k',
-    6: 'M',
-    9: 'G',
-    12: 'T'
-}
 exponent_to_letter_unicode = {
     -18: 'a',
     -15: 'f',
@@ -79,7 +66,7 @@ def vectorize(func_to_evaluate):
     return wrapper_vectorize
 
 
-def pretty_value(v, use_power_10=False, use_math=True, use_unicode=False, maximum_info = False):
+def pretty_value(v, use_power_10=False, use_unicode=True, maximum_info = False):
     if v == 0:
         return '0'
     elif v < 0:
@@ -94,15 +81,10 @@ def pretty_value(v, use_power_10=False, use_math=True, use_unicode=False, maximu
         if exponent_3 == 0:
             exponent_part = ''
         else:
-            if use_math:
-                exponent_part = r'$\times 10^{%d}$' % exponent_3
-            else:
-                exponent_part = r'e%d' % exponent_3
+            exponent_part = r'e%d' % exponent_3
     else:
         if use_unicode:
             exponent_part = ' '+exponent_to_letter_unicode[exponent_3]
-        elif use_math:
-            exponent_part = ' '+exponent_to_letter_math[exponent_3]
         else:
             exponent_part = ' '+exponent_to_letter[exponent_3]
 
@@ -129,29 +111,43 @@ def shift(to_shift,shift):
         to_shift[i]+= shift
     return to_shift
 
-def to_string(unit,label,value, use_math=True, use_unicode=False, maximum_info = False):
+def to_string(unit,label,value, use_unicode=True, maximum_info = False):
 
     if unit is not None:
-        if use_unicode:
-            unit = unit.replace(r'$\Omega$', u"\u03A9")
-        if use_math == False:
-            unit = unit.replace(r'$\Omega$', 'Ohm')
+        if not use_unicode:
+            unit = unit.replace(u"\u03A9", 'Ohm')
 
     if label is None:
         s = ''
     else:
-        if use_math:
-            s = "$%s$" % (label)
-        else:
-            s = label
+        s = label
 
         if value is not None:
             s+='='
 
     if value is not None:
         s+= pretty_value(
-            value, use_math=use_math, use_unicode=use_unicode,maximum_info=maximum_info)
+            value, use_unicode=use_unicode,maximum_info=maximum_info)
 
         if unit is not None:
             s+=unit
     return s
+
+def axis_data_coords_sys_transform(axis_obj_in,xin,yin,inverse=False):
+    """ inverse = False : Axis => Data
+                = True  : Data => Axis
+    """
+    xlim = axis_obj_in.get_xlim()
+    ylim = axis_obj_in.get_ylim()
+
+    xdelta = xlim[1] - xlim[0]
+    ydelta = ylim[1] - ylim[0]
+    if not inverse:
+        xout =  xlim[0] + xin * xdelta
+        yout =  ylim[0] + yin * ydelta
+    else:
+        xdelta2 = xin - xlim[0]
+        ydelta2 = yin - ylim[0]
+        xout = xdelta2 / xdelta
+        yout = ydelta2 / ydelta
+    return xout,yout

@@ -3302,7 +3302,7 @@ class Component(TwoNodeElement):
         x, y = self.canvas.coords(self.image)
         value, label = self.prop
         text = to_string(self.unit, label, value,
-                         use_math=False, use_unicode=True,
+                         use_unicode=True,
                          maximum_info = True)
         font = Font(family='Helvetica', size=int(gu/8.), weight='normal')
         text_position = (0.2)*gu
@@ -3349,7 +3349,7 @@ class R(Component):
     """docstring for R"""
 
     def __init__(self, canvas, event=None, auto_place_info=None):
-        self.unit = r'$\Omega$'
+        self.unit = u'\u03A9'
         super(R, self).__init__(canvas, event, auto_place_info)
 
 class L(Component):

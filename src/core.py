@@ -14,7 +14,8 @@ from Qcircuits.src._utility import pretty_value,\
         shift,\
         to_string,\
         safely_evaluate,\
-        vectorize
+        vectorize,\
+        axis_data_coords_sys_transform
 from scipy import optimize
 import time
 from Qcircuits.src.plotting_settings import plotting_parameters_show,plotting_parameters_normal_modes
@@ -438,7 +439,7 @@ class Qcircuit(object):
                 "mode", " freq. ", " diss. ", " anha. ")
             for i, w in enumerate(to_return[0]):
                 to_print += table_line % tuple([str(i)]+[pretty_value(
-                    to_return[j][i], use_math=False)+'Hz' for j in range(3)])
+                    to_return[j][i], use_unicode=False)+'Hz' for j in range(3)])
 
             to_print += "\nKerr coefficients\n(diagonal = Kerr, off-diagonal = cross-Kerr)\n"
 
@@ -455,7 +456,7 @@ class Qcircuit(object):
                 for j in range(N_modes):
                     if i >= j:
                         line_elements.append(pretty_value(
-                            to_return[3][i][j], use_math=False)+'Hz')
+                            to_return[3][i][j], use_unicode=False)+'Hz')
                     else:
                         line_elements.append("")
                 to_print += table_line % tuple(line_elements)
@@ -643,6 +644,8 @@ class Qcircuit(object):
         quantity='current',
         plot=True,
         return_fig_ax=False,
+        add_title = True, 
+        add_legend = True,
         **kwargs):
         r'''Plots a visual representation of a normal mode.
 
@@ -719,6 +722,14 @@ class Qcircuit(object):
                         If set to True (default is False), the function will 
                         return figure and axis for further processing using
                         matplotlib.
+        add_title:      Boolean, optional
+                        If set to True (default), the function will 
+                        add a title detailing the modes frequency, anharmonicity
+                        and dissipation rate
+        add_legend:     Boolean, optional
+                        If set to True (default), the function will 
+                        add a legend detailing the definition of 
+                        arrow size and arrow direction
         '''
 
         # This changes the default plotting settings 
@@ -746,9 +757,9 @@ class Qcircuit(object):
             # Utility function to print a pretty 
             # value for the zero-point fluctuations
             if quantity == 'flux':
-                return pretty_value(v)+r'$\phi_0$'
+                return pretty_value(v)+u"\u03A6"
             elif quantity == 'charge':
-                return pretty_value(v, use_power_10=True)+r'$e$'
+                return pretty_value(v, use_power_10=True)+'e'
             elif quantity == 'voltage':
                 return pretty_value(v)+'V'
             elif quantity == 'current':
@@ -784,13 +795,14 @@ class Qcircuit(object):
             else:
                 return (np.absolute(value)-min_value)/(max_value-min_value)
 
-        def arrow_width(value):
+        def arrow_width(value=None,value_01 = None):
             # Converts value between 0 and 1
             # to an arrow width where 0 will
             # get the ``min_width`` and
             # 1 will get the ``max_width```
 
-            value_01 = value_to_01_range(value)
+            if value_01 is None:
+                value_01 = value_to_01_range(value)
 
             # part of the plotting parameters
             # which concern the arrow
@@ -798,12 +810,13 @@ class Qcircuit(object):
 
             return np.absolute(ppnm['min_width']+value_01*(ppnm['max_width']-ppnm['min_width']))
 
-        def arrow_kwargs(value):
+        def arrow_kwargs(value=None,value_01 = None):
             # Constructs the keyword arguments to be passed 
             # in the construction of an arrow based on the 
             # zpf value
 
-            value_01 = value_to_01_range(value)
+            if value_01 is None:
+                value_01 = value_to_01_range(value)
 
             # part of the plotting parameters
             # which concern the arrow
@@ -893,16 +906,15 @@ class Qcircuit(object):
 
                 # Add the arrow
                 if np.real(value_current) > 0:
-                    ax.arrow(x_arrow, y_arrow, dx_arrow, dy_arrow,
-                             fc=pp['normal_mode_arrow']['color_positive'],
-                             ec=pp['normal_mode_arrow']['color_positive'],
-                             **arrow_kwargs(value))
+                    arrow_coords = [x_arrow, y_arrow, dx_arrow, dy_arrow]
                 else:
                     # Flip the arrow for negative values
-                    ax.arrow(x_arrow+dx_arrow, y_arrow+dy_arrow, -dx_arrow, -dy_arrow,
-                             fc=pp['normal_mode_arrow']['color_negative'],
-                             ec=pp['normal_mode_arrow']['color_negative'],
-                             **arrow_kwargs(value))
+                    arrow_coords = [x_arrow+dx_arrow, y_arrow+dy_arrow, -dx_arrow, -dy_arrow]
+                
+                ax.arrow(*arrow_coords,
+                        fc=pp['normal_mode_arrow']['color'],
+                        ec=pp['normal_mode_arrow']['color'],
+                        **arrow_kwargs(value))
 
                 # Add the annotation
                 ax.text(x_text, y_text,
@@ -911,18 +923,81 @@ class Qcircuit(object):
                         ha=ha, va=va, weight='normal',color =pp["normal_mode_label"]["color"] )
 
         # Add the title
-        w,k,A,chi = self.f_k_A_chi(**kwargs)
-        ax.annotate(r'Mode %d, f=%sHz, k=%sHz, A=%sHz'%
-            (mode,
-            pretty_value(w[mode], use_math=True),
-            pretty_value(k[mode], use_math=True),
-            pretty_value(A[mode], use_math=True)),
-            xy=(0.05, 0.97),
-            horizontalalignment='left',
-            verticalalignment='center',
-            xycoords='axes fraction',
-            fontsize=12, 
-            weight='bold')
+        if add_title:
+            w,k,A,chi = self.f_k_A_chi(**kwargs)
+            ax.annotate(r'Mode %d, f=%sHz, k=%sHz, A=%sHz'%
+                (mode,
+                pretty_value(w[mode]),
+                pretty_value(k[mode]),
+                pretty_value(A[mode])),
+                xy=(0.05, 0.97),
+                horizontalalignment='left',
+                verticalalignment='center',
+                xycoords='axes fraction',
+                fontsize=12, 
+                weight='bold')
+
+        if add_legend:
+            if quantity == 'current':
+                value_text= "i_zpf"
+            elif quantity == 'voltage':
+                value_text= "v_zpf"
+            if quantity == 'flux':
+                value_text= u"\u03A6"+"_zpf"
+            elif quantity == 'charge':
+                value_text= "q_zpf"
+            sign_text = u"sign of \u27E8\u03B1_%d|i|\u03B1_%d\u27E9"%(mode, mode)
+        
+        x_legend = 0.3
+        y1_legend = 0.2
+        y2_legend = 0.14
+
+        legend_text_kwargs = {
+            'horizontalalignment':'left',
+            'verticalalignment':'center',
+            'xycoords':'axes fraction',
+            'fontsize':12, 
+            'weight':'normal'
+        }
+            
+        ax.annotate(value_text,
+            xy=(x_legend, y1_legend),**legend_text_kwargs)
+        ax.annotate(sign_text,
+            xy=(x_legend, y2_legend),**legend_text_kwargs)
+
+        x_arrows = x_legend-0.06
+        dy_arrows = 0.008
+
+        v1 = 0.5
+        ax.arrow(axis_data_coords_sys_transform(ax,x_arrows, 0)[0]-arrow_width(value_01 = v1)/2, 
+                axis_data_coords_sys_transform(ax,0, y1_legend+dy_arrows)[1],
+                arrow_width(value_01 = v1), 0,
+                fc=pp['normal_mode_arrow']['color'],
+                ec=pp['normal_mode_arrow']['color'], 
+                **arrow_kwargs(value_01 =v1))
+        
+        v0 = 0
+        ax.arrow(axis_data_coords_sys_transform(ax,x_arrows, 0)[0]-arrow_width(value_01 = v0)/2, 
+                axis_data_coords_sys_transform(ax,0, y1_legend-dy_arrows)[1],
+                arrow_width(value_01 = v0), 0,
+                fc=pp['normal_mode_arrow']['color'],
+                ec=pp['normal_mode_arrow']['color'], 
+                **arrow_kwargs(value_01 =v0))
+        
+        v01 = 0.1
+        ax.arrow(axis_data_coords_sys_transform(ax,x_arrows, 0)[0]-arrow_width(value_01 = v01)/2, 
+                axis_data_coords_sys_transform(ax,0, y2_legend+dy_arrows)[1],
+                arrow_width(value_01 = v01), 0,
+                fc=pp['normal_mode_arrow']['color'],
+                ec=pp['normal_mode_arrow']['color'], 
+                **arrow_kwargs(value_01 =v01))
+        
+        ax.arrow(axis_data_coords_sys_transform(ax,x_arrows, 0)[0]+arrow_width(value_01 = v01)/2, 
+                axis_data_coords_sys_transform(ax,0, y2_legend-dy_arrows)[1],
+                -arrow_width(value_01 = v01), 0,
+                fc=pp['normal_mode_arrow']['color'],
+                ec=pp['normal_mode_arrow']['color'], 
+                **arrow_kwargs(value_01 =v01))
 
         if plot == True:
             plt.show()
@@ -1108,7 +1183,7 @@ class GUI(Qcircuit):
                     el.__class__.__name__,
                     min(el.node_minus,el.node_plus),
                     max(el.node_minus,el.node_plus),
-                    el._to_string(use_math = False)))
+                    el._to_string(use_unicode = False)))
             print('\n')
 
 class _Network(object):
@@ -1414,10 +1489,10 @@ class _Network(object):
     def remove_node(self, node_to_remove):
         '''
         Makes use of the star-mesh transform to remove the ``node_to_remove`` from the network.
-        A node $N$=``node_to_remove`` connected to nodes $A,B,C,..$ through impedances 
-        $Z_A,Z_B,...$ (the star) can be eliminated 
-        if we interconnect nodes $A,B,C,..$ with impedances $Z_{AB},Z_{AC},Z_{BC},...$
-        given by $Z_{XY} = Z_XZ_Y\sum_M1/Z_M$. 
+        A node N=``node_to_remove`` connected to nodes A,B,C,.. through impedances 
+        Z_A,Z_B,... (the star) can be eliminated 
+        if we interconnect nodes A,B,C,.. with impedances Z_{AB},Z_{AC},Z_{BC},...
+        given by Z_{XY} = Z_XZ_Y\sum_M1/Z_M. 
         The resulting network is called the mesh.
 
         Parameters
@@ -1847,9 +1922,8 @@ class Component(Circuit):
     def _charge(self, w, **kwargs):
         return self._current(w, **kwargs)/1j/w
 
-    def _to_string(self, use_math=True, use_unicode=False):
-        return to_string(self.unit, self.label, self.value,
-                  use_math=use_math, use_unicode=use_unicode)
+    def _to_string(self, use_unicode=True):
+        return to_string(self.unit, self.label, self.value, use_unicode=use_unicode)
 
     def zpf(self, mode, quantity, **kwargs):
         r'''Returns contribution of a certain mode to the zero-point fluctuations of a quantity for this component.
@@ -2232,7 +2306,7 @@ class R(Component):
     """
     def __init__(self, node_minus, node_plus, *args):
         super(R, self).__init__(node_minus, node_plus, *args)
-        self.unit = r'$\Omega$'
+        self.unit = u"\u03A9"
 
     def _admittance(self):
         return 1/self._get_value()
@@ -2389,14 +2463,13 @@ def main():
     # ])
     # H = circuit.hamiltonian(modes = [0],taylor = 4,excitations = [50])
     # print(H)
-    circuit = GUI(filename = './src/test.txt',edit=True,plot=False)
+    circuit = GUI(filename = './src/test.txt',edit=False,plot=False)
     # circuit.hamiltonian(L_J = 1e-9,modes=[0],excitations=[5],return_ops=True,taylor=4)
     # circuit.eigenfrequencies(L_J = np.linspace(1e-9,2e-9,4))
     # circuit.f_k_A_chi(L_J = np.linspace(1e-9,2e-9,4))
     # print(circuit.Y)
     # print(sp.together(circuit.Y))
     # print(circuit.eigenfrequencies())
-    # circuit.f_k_A_chi(pretty_print=True)
     circuit.show_normal_mode(0)
     # circuit.show_normal_mode(2)
 

@@ -60,6 +60,10 @@ plotting_parameters_show = {
 #################################
 
 pp = deepcopy(plotting_parameters_show)
+
+# Allows space for the title and legend
+pp["y_fig_margin"] = 1.5
+
 scale = 1.25
 pp["figsize_scaling"] = scale
 pp["C"]["gap"] /= scale
@@ -86,10 +90,9 @@ pp["normal_mode_arrow"]= {
         "max_width": 0.4,
         "min_lw": 1,
         "max_lw": 3,
-        "min_head": 0.07,
+        "min_head": 0.05,
         "max_head": 0.071,
-        "color_positive": blue,
-        "color_negative": blue
+        "color": blue
     }
 plotting_parameters_normal_modes = pp
 
