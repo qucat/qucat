@@ -720,125 +720,197 @@ class Qcircuit(object):
                         return figure and axis for further processing using
                         matplotlib.
         '''
+
+        # This changes the default plotting settings 
+        # to those defined in plotting_settings.py
+        # under plotting_parameters_normal_modes
         self.plotting_normal_mode = True
+
+        # This will set pp to plotting_parameters_normal_modes
+        # (see the definition of the Qcircuit._pp propoerty function)
         pp = self._pp
 
+        # Make sure this has been called on a 
+        # Qcircuit defined with the GUI
         if isinstance(self,Network):
             raise TypeError('''
             Plotting functions not available if the circuit was not constructed
             using the GUI.
             ''')
 
+        # Compute the normal mode frequencies
         self._set_w_cpx(**kwargs)
-        mode_w = np.real(self.w_cpx[mode])
 
-        def string_to_function(comp, function, **kwargs):
-            if function == 'flux':
-                phi_0 = hbar/2./e
-                return comp._flux(mode_w, **kwargs)/phi_0
-            if function == 'charge':
-                return comp._charge(mode_w, **kwargs)/e
-            if function == 'voltage':
-                return comp._voltage(mode_w, **kwargs)
-            if function == 'current':
-                return comp._current(mode_w, **kwargs)
 
-        def pretty(v, function):
-            if function == 'flux':
+        def pretty(v, quantity):
+            # Utility function to print a pretty 
+            # value for the zero-point fluctuations
+            if quantity == 'flux':
                 return pretty_value(v)+r'$\phi_0$'
-            elif function == 'charge':
+            elif quantity == 'charge':
                 return pretty_value(v, use_power_10=True)+r'$e$'
-            elif function == 'voltage':
+            elif quantity == 'voltage':
                 return pretty_value(v)+'V'
-            elif function == 'current':
+            elif quantity == 'current':
                 return pretty_value(v)+'A'
 
+        # Plot the circuit and return the 
+        # figure and axis for further 
+        # editing below
         fig, ax = self.show(
             plot=False,
             return_fig_ax=True)
 
-        # Determine arrow size
+        # Determine smallest and largest arrow size
+        # Based on the absolute value of zero-point 
+        # fluctuations through all components
         all_values = []
         for el in self.netlist:
             if not isinstance(el,W):
-                all_values.append(string_to_function(el, quantity, **kwargs))
+                all_values.append(el.zpf(mode = mode, quantity = quantity, **kwargs))
         all_values = np.absolute(all_values)
         max_value = np.amax(all_values)
         min_value = np.amin(all_values)
 
         def value_to_01_range(value):
+            # Returns a number between 0 and 1
+            # where 0 corresponds to the smallest
+            # zpf and 1 to the largest
+
             if max_value == min_value:
+                # Case where all the components have
+                # the same zpf
                 return 1.
             else:
                 return (np.absolute(value)-min_value)/(max_value-min_value)
 
         def arrow_width(value):
+            # Converts value between 0 and 1
+            # to an arrow width where 0 will
+            # get the ``min_width`` and
+            # 1 will get the ``max_width```
+
             value_01 = value_to_01_range(value)
+
+            # part of the plotting parameters
+            # which concern the arrow
             ppnm = pp['normal_mode_arrow']
+
             return np.absolute(ppnm['min_width']+value_01*(ppnm['max_width']-ppnm['min_width']))
 
         def arrow_kwargs(value):
+            # Constructs the keyword arguments to be passed 
+            # in the construction of an arrow based on the 
+            # zpf value
+
             value_01 = value_to_01_range(value)
+
+            # part of the plotting parameters
+            # which concern the arrow
             ppnm = pp['normal_mode_arrow']
+
+            # linewidth
             lw = ppnm['min_lw']+value_01*(ppnm['max_lw']-ppnm['min_lw'])
+
+            # head size
             head = ppnm['min_head']+value_01 * \
                 (ppnm['max_head']-ppnm['min_head'])
+
             return {'lw': lw,
                     'head_width': head,
                     'head_length': head,
                     'clip_on': False}
 
+        # For each element in the circuit, if it 
+        # isn't a ground, add an arrow and a label
         for el in self.netlist:
             if not isinstance(el,W):
-                value = string_to_function(el, quantity, **kwargs)
-                value_current = string_to_function(el, 'current', **kwargs)
 
+                # zpf for the quantity and for the current
+                value = el.zpf(mode = mode, quantity = quantity, **kwargs)
+                value_current = el.zpf(mode = mode, quantity = 'current', **kwargs)
+
+                # location of the element center
                 x = el.x_plot_center
                 y = el.y_plot_center
 
-                if el.angle%180 == 0.:
-                    # Defined for positive arrows
-                    x_arrow = x-arrow_width(value)/2.
-                    y_arrow = y+pp["normal_mode_label"]["y_arrow"]
-                    dx_arrow = arrow_width(value)
-                    dy_arrow = 0.
+                if el.angle==EAST or el.angle==WEST:
+                    # Case of horizontal element
 
+                    # Text position
                     x_text = x+pp["normal_mode_label"]["text_position_horizontal"][0]
                     y_text = y+pp["normal_mode_label"]["text_position_horizontal"][1]
 
+                    # text alignment
                     ha = 'center'
                     va = 'top'
 
-                else:
-                    # Defined for positive arrows
-                    x_arrow = x-pp["normal_mode_label"]["y_arrow"]
-                    y_arrow = y-arrow_width(value)/2.
-                    dx_arrow = 0.
-                    dy_arrow = arrow_width(value)
+                    # Arrow position in y
+                    y_arrow = y+pp["normal_mode_label"]["y_arrow"]
+                    dy_arrow = 0.
 
+                    # Arrow position in x
+                    if el.angle == EAST:
+                        # Define the direction for positive values
+                        # and the positive node on the east
+                        x_arrow = x-arrow_width(value)/2.
+                        dx_arrow = arrow_width(value)
+                    elif el.angle == WEST:
+                        # Define the direction for positive values
+                        # and the positive node on the west
+                        x_arrow = x+arrow_width(value)/2.
+                        dx_arrow = -arrow_width(value)
+
+
+
+                if el.angle==NORTH or el.angle==SOUTH:
+                    # Case of vertical element
+
+                    # Text position
                     x_text = x+pp["normal_mode_label"]["text_position_vertical"][0]
                     y_text = y+pp["normal_mode_label"]["text_position_vertical"][1]
 
+                    # Text alignment
                     ha = 'right'
                     va = 'center'
 
+                    # Arrow x position
+                    x_arrow = x-pp["normal_mode_label"]["y_arrow"]
+                    dx_arrow = 0.
+                    
+                    # Arrow position in x
+                    if el.angle==NORTH:
+                        # Define the direction for positive values
+                        # and the positive node on the north
+                        y_arrow = y-arrow_width(value)/2.
+                        dy_arrow = arrow_width(value)
+                    elif el.angle==SOUTH:
+                        # Define the direction for positive values
+                        # and the positive node on the south
+                        y_arrow = y+arrow_width(value)/2.
+                        dy_arrow = -arrow_width(value)
+
+
+                # Add the arrow
                 if np.real(value_current) > 0:
                     ax.arrow(x_arrow, y_arrow, dx_arrow, dy_arrow,
                              fc=pp['normal_mode_arrow']['color_positive'],
                              ec=pp['normal_mode_arrow']['color_positive'],
                              **arrow_kwargs(value))
                 else:
+                    # Flip the arrow for negative values
                     ax.arrow(x_arrow+dx_arrow, y_arrow+dy_arrow, -dx_arrow, -dy_arrow,
                              fc=pp['normal_mode_arrow']['color_negative'],
                              ec=pp['normal_mode_arrow']['color_negative'],
                              **arrow_kwargs(value))
 
+                # Add the annotation
                 ax.text(x_text, y_text,
                         pretty(np.absolute(value), quantity),
                         fontsize=pp["normal_mode_label"]["fontsize"],
                         ha=ha, va=va, weight='normal',color =pp["normal_mode_label"]["color"] )
 
-        
+        # Add the title
         w,k,A,chi = self.f_k_A_chi(**kwargs)
         ax.annotate(r'Mode %d, f=%sHz, k=%sHz, A=%sHz'%
             (mode,
@@ -1803,9 +1875,11 @@ class Component(Circuit):
         
         :math:`v_{zpf,m} = \omega\phi_{zpf,m}`
 
-        :math:`i_{zpf,m} = v_{zpf,m} Y`
+        :math:`i_{zpf,m} = v_{zpf,m} / Z(\omega)`
 
         :math:`q_{zpf,m} = i_{zpf,m}/\omega`  
+
+        Where :math:`Z(\omega)` is this components impedance.
 
         Parameters
         ----------
@@ -2315,7 +2389,7 @@ def main():
     # ])
     # H = circuit.hamiltonian(modes = [0],taylor = 4,excitations = [50])
     # print(H)
-    circuit = GUI(filename = './src/test.txt',edit=False,plot=False)
+    circuit = GUI(filename = './src/test.txt',edit=True,plot=False)
     # circuit.hamiltonian(L_J = 1e-9,modes=[0],excitations=[5],return_ops=True,taylor=4)
     # circuit.eigenfrequencies(L_J = np.linspace(1e-9,2e-9,4))
     # circuit.f_k_A_chi(L_J = np.linspace(1e-9,2e-9,4))
@@ -2323,8 +2397,7 @@ def main():
     # print(sp.together(circuit.Y))
     # print(circuit.eigenfrequencies())
     # circuit.f_k_A_chi(pretty_print=True)
-    circuit.show()
-    circuit.show_normal_mode(1)
+    circuit.show_normal_mode(0)
     # circuit.show_normal_mode(2)
 
 if __name__ == '__main__':

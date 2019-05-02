@@ -72,14 +72,14 @@ pp["R"]["height"] /= scale
 pp["label"]= {
         "fontsize": 10,
         "text_position_horizontal": [0.,-pp["C"]["height"]/2-0.07],
-        "text_position_vertical": [pp["C"]["height"]/2+0.05,0.05]
+        "text_position_vertical": [pp["C"]["height"]/2+0.05,-0.05]
     }
 pp["normal_mode_label"]= {
         "fontsize": 10,
         "color": blue,
         "y_arrow": pp["C"]["height"]/2+0.08,
         "text_position_horizontal": [0.,pp["C"]["height"]/2+0.25],
-        "text_position_vertical": [-pp["C"]["height"]/2-0.15,-0.07]
+        "text_position_vertical": [-pp["C"]["height"]/2-0.15,+0.07]
     }
 pp["normal_mode_arrow"]= {
         "min_width": 0.1,
