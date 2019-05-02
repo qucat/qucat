@@ -61,9 +61,6 @@ plotting_parameters_show = {
 
 pp = deepcopy(plotting_parameters_show)
 
-# Allows space for the title and legend
-pp["y_fig_margin"] = 1.5
-
 scale = 1.25
 pp["figsize_scaling"] = scale
 pp["C"]["gap"] /= scale

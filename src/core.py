@@ -14,8 +14,7 @@ from Qcircuits.src._utility import pretty_value,\
         shift,\
         to_string,\
         safely_evaluate,\
-        vectorize,\
-        axis_data_coords_sys_transform
+        vectorize
 from scipy import optimize
 import time
 from Qcircuits.src.plotting_settings import plotting_parameters_show,plotting_parameters_normal_modes
@@ -932,7 +931,7 @@ class Qcircuit(object):
                 pretty_value(A[mode])),
                 xy=(0.05, 0.97),
                 horizontalalignment='left',
-                verticalalignment='center',
+                verticalalignment='top',
                 xycoords='axes fraction',
                 fontsize=12, 
                 weight='bold')
@@ -948,52 +947,53 @@ class Qcircuit(object):
                 value_text= "q_zpf"
             sign_text = u"sign of \u27E8\u03B1_%d|i|\u03B1_%d\u27E9"%(mode, mode)
         
-        x_legend = 0.3
-        y1_legend = 0.2
-        y2_legend = 0.14
+        x_legend = ax.get_xlim()[0]+0.35
+        y2_legend = ax.get_ylim()[0]+0.07
+        y1_legend = y2_legend+0.15
 
         legend_text_kwargs = {
-            'horizontalalignment':'left',
-            'verticalalignment':'center',
-            'xycoords':'axes fraction',
+            'ha':'left',
+            'va':'center',
             'fontsize':12, 
             'weight':'normal'
         }
             
-        ax.annotate(value_text,
-            xy=(x_legend, y1_legend),**legend_text_kwargs)
-        ax.annotate(sign_text,
-            xy=(x_legend, y2_legend),**legend_text_kwargs)
+        ax.text(x_legend, y1_legend,
+            value_text,
+            **legend_text_kwargs)
+        ax.text(x_legend, y2_legend,
+            sign_text,
+            **legend_text_kwargs)
 
-        x_arrows = x_legend-0.06
-        dy_arrows = 0.008
+        x_arrows = x_legend-0.22
+        dy_arrows = 0.02
 
         v1 = 0.5
-        ax.arrow(axis_data_coords_sys_transform(ax,x_arrows, 0)[0]-arrow_width(value_01 = v1)/2, 
-                axis_data_coords_sys_transform(ax,0, y1_legend+dy_arrows)[1],
+        ax.arrow(x_arrows-arrow_width(value_01 = v1)/2, 
+                y1_legend+dy_arrows,
                 arrow_width(value_01 = v1), 0,
                 fc=pp['normal_mode_arrow']['color'],
                 ec=pp['normal_mode_arrow']['color'], 
                 **arrow_kwargs(value_01 =v1))
         
         v0 = 0
-        ax.arrow(axis_data_coords_sys_transform(ax,x_arrows, 0)[0]-arrow_width(value_01 = v0)/2, 
-                axis_data_coords_sys_transform(ax,0, y1_legend-dy_arrows)[1],
+        ax.arrow(x_arrows-arrow_width(value_01 = v0)/2, 
+                y1_legend-dy_arrows,
                 arrow_width(value_01 = v0), 0,
                 fc=pp['normal_mode_arrow']['color'],
                 ec=pp['normal_mode_arrow']['color'], 
                 **arrow_kwargs(value_01 =v0))
         
         v01 = 0.1
-        ax.arrow(axis_data_coords_sys_transform(ax,x_arrows, 0)[0]-arrow_width(value_01 = v01)/2, 
-                axis_data_coords_sys_transform(ax,0, y2_legend+dy_arrows)[1],
+        ax.arrow(x_arrows-arrow_width(value_01 = v01)/2, 
+                y2_legend+dy_arrows,
                 arrow_width(value_01 = v01), 0,
                 fc=pp['normal_mode_arrow']['color'],
                 ec=pp['normal_mode_arrow']['color'], 
                 **arrow_kwargs(value_01 =v01))
         
-        ax.arrow(axis_data_coords_sys_transform(ax,x_arrows, 0)[0]+arrow_width(value_01 = v01)/2, 
-                axis_data_coords_sys_transform(ax,0, y2_legend-dy_arrows)[1],
+        ax.arrow(x_arrows+arrow_width(value_01 = v01)/2, 
+                y2_legend-dy_arrows,
                 -arrow_width(value_01 = v01), 0,
                 fc=pp['normal_mode_arrow']['color'],
                 ec=pp['normal_mode_arrow']['color'], 
@@ -1903,9 +1903,9 @@ class Component(Circuit):
 
         # This is only valid in the high-Q limit
         if isinstance(self,R):
-            return 1j*np.imag(f)
+            return 1j*np.absolute(f)
         else:
-            return np.real(f)
+            return np.absolute(f)
 
     def _voltage(self, w, **kwargs):
         return complex(self._flux(w, **kwargs)*1j*w)
@@ -2464,13 +2464,15 @@ def main():
     # H = circuit.hamiltonian(modes = [0],taylor = 4,excitations = [50])
     # print(H)
     circuit = GUI(filename = './src/test.txt',edit=False,plot=False)
+    print(circuit.inductors[0].zpf(0,'voltage'))
+    print(circuit.capacitors[0].zpf(0,'voltage'))
     # circuit.hamiltonian(L_J = 1e-9,modes=[0],excitations=[5],return_ops=True,taylor=4)
     # circuit.eigenfrequencies(L_J = np.linspace(1e-9,2e-9,4))
     # circuit.f_k_A_chi(L_J = np.linspace(1e-9,2e-9,4))
     # print(circuit.Y)
     # print(sp.together(circuit.Y))
     # print(circuit.eigenfrequencies())
-    circuit.show_normal_mode(0)
+    circuit.show_normal_mode(0,quantity='voltage')
     # circuit.show_normal_mode(2)
 
 if __name__ == '__main__':
