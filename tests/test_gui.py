@@ -43,8 +43,6 @@ class ManualTesting(GuiTestingHandler):
         return contents
 
 
-
-
 class AutomaticTesting(GuiTestingHandler):
 
     def launch_gui_testing(self,exclude = None, force_build = False, run_slower = False):
@@ -257,7 +255,7 @@ class TestSelection(AutomaticTesting):
     def test_selection__multiple_shift_box_selects(self):
         self.launch_gui_testing()
     def test_selection__shift_box_select_over_components_and_back(self):
-        self.launch_gui_testing()
+        self.launch_gui_testing(run_slower=False)
 
 
 

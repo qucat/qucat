@@ -2323,9 +2323,9 @@ class TwoNodeElement(object):
         self.hover = True
         self.update_graphic()
 
-        self.canvas.tag_bind(self.binding_object, "<ButtonRelease-1>", self.select)
-        self.canvas.tag_bind(self.binding_object, "<Shift-ButtonRelease-1>", self.ctrl_shift_select)
-        self.canvas.tag_bind(self.binding_object, "<Control-ButtonRelease-1>",self.ctrl_shift_select)
+        self.canvas.tag_bind(self.binding_object, "<ButtonPress-1>", self.select)
+        self.canvas.tag_bind(self.binding_object, "<Shift-ButtonPress-1>", self.ctrl_shift_select)
+        self.canvas.tag_bind(self.binding_object, "<Control-ButtonPress-1>",self.ctrl_shift_select)
         self.canvas.tag_bind(self.binding_object, "<B1-Motion>", lambda event: self.on_motion(event,release_sequence="ButtonRelease-1"))
         self.canvas.tag_bind(self.binding_object, '<Double-ButtonPress-1>', self.double_click)
 
