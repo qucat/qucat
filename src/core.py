@@ -749,7 +749,7 @@ class Qcircuit(object):
             # Utility function to print a pretty 
             # value for the phasor
             if quantity == 'flux':
-                return pretty_value(v, is_complex = True)+u"\u03A6"
+                return pretty_value(v, is_complex = True)+u"\u03A6_0"
             elif quantity == 'charge':
                 return pretty_value(v, is_complex = True, use_power_10=True)+'e'
             elif quantity == 'voltage':
@@ -881,10 +881,13 @@ class Qcircuit(object):
 
 
                 # Add the arrow
-                arrow_coords = [x_arrow, y_arrow, dx_arrow, dy_arrow]
-                # else:
-                #     # Flip the arrow for negative values
-                #     arrow_coords = [x_arrow+dx_arrow, y_arrow+dy_arrow, -dx_arrow, -dy_arrow]
+                if np.real(value)+np.imag(value)<0:
+                    # If the dominating part of the complex number is negative
+                    # Flip the arrow and the value
+                    arrow_coords = [x_arrow+dx_arrow, y_arrow+dy_arrow, -dx_arrow, -dy_arrow]
+                    value = -value
+                else:
+                    arrow_coords = [x_arrow, y_arrow, dx_arrow, dy_arrow]
                 
                 ax.arrow(*arrow_coords,
                         fc=pp['normal_mode_arrow']['color'],
@@ -2474,9 +2477,9 @@ def main():
     # print(H)
     circuit = GUI(filename = './src/test.txt',edit=True,plot=False)
     # circuit.f_k_A_chi()
-    print(circuit.inductors[0].phasor(0,'current'))
-    print(circuit.capacitors[0].phasor(0,'current'))
-    circuit.show_normal_mode(0,quantity='current')
+    # print(circuit.inductors[0].phasor(0,''))
+    # print(circuit.capacitors[0].phasor(0,'current'))
+    circuit.show_normal_mode(0,quantity='voltage')
     # circuit.hamiltonian(L_J = 1e-9,modes=[0],excitations=[5],return_ops=True,taylor=4)
     # circuit.eigenfrequencies(L_J = np.linspace(1e-9,2e-9,4))
     # circuit.f_k_A_chi(L_J = np.linspace(1e-9,2e-9,4))
