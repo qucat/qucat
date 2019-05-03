@@ -237,6 +237,10 @@ class TestMovingComponentsAround(AutomaticTesting):
         
     def test_moving_two_elements_and_trying_to_rotate(self):
         self.launch_gui_testing(run_slower=False)
+    
+    def test_moving_an_unselected_object_whilst_another_one_is_selected(self):
+        self.launch_gui_testing(run_slower=False)
+
 
 
 class TestZooming(AutomaticTesting):
