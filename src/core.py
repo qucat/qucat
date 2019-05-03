@@ -787,7 +787,7 @@ class Qcircuit(object):
             # where 0 corresponds to the smallest
             # zpf and 1 to the largest
 
-            if max_value == min_value:
+            if pretty(np.absolute(max_value), quantity) == pretty(np.absolute(min_value), quantity):
                 # Case where all the components have
                 # the same zpf
                 return 1.
