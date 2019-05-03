@@ -46,10 +46,10 @@ class ManualTesting(GuiTestingHandler):
 class AutomaticTesting(GuiTestingHandler):
 
     def launch_gui_testing(self,exclude = None, force_build = False, run_slower = False):
+        self.force_build = force_build
         self.set_folder_name()
         self.set_file_names()
         self.exclude = exclude
-        self.force_build = force_build
         self.run_slower = run_slower
 
         if not self.already_built():
@@ -69,6 +69,13 @@ class AutomaticTesting(GuiTestingHandler):
         self.events = os.path.join(self.folder,'events.txt')
         self.final_expected = os.path.join(self.folder,'final_netlist.txt')
         self.final_after_events = os.path.join(self.folder,'final_after_events_netlist.txt')
+        
+        if self.force_build:
+            for filename in [self.init,self.final_expected,self.events,self.final_after_events]:
+                try:
+                    os.remove(filename)
+                except FileNotFoundError:
+                    pass 
 
     def set_folder_name(self):
         curframe = inspect.currentframe()
@@ -144,13 +151,6 @@ class AutomaticTesting(GuiTestingHandler):
             except FileNotFoundError:
                 return False 
 
-        if self.force_build:
-            for filename in [self.init,self.final_expected,self.events,self.final_after_events]:
-                try:
-                    os.remove(filename)
-                except FileNotFoundError:
-                    pass 
-            return False
             
         return True
 
@@ -230,7 +230,7 @@ class TestMovingComponentsAround(AutomaticTesting):
         self.launch_gui_testing()
 
     def test_moving_parallel_RLCJG(self):
-        self.launch_gui_testing()
+        self.launch_gui_testing(run_slower=False)
 
     def test_move_ground_with_rotation(self):
         self.launch_gui_testing(run_slower=False)
@@ -256,6 +256,10 @@ class TestSelection(AutomaticTesting):
         self.launch_gui_testing()
     def test_selection__shift_box_select_over_components_and_back(self):
         self.launch_gui_testing(run_slower=False)
+
+    def test_selection__ctrl_shift_click_select(self):
+        self.launch_gui_testing(run_slower=False,force_build=True)
+
 
 
 
