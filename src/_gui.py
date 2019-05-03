@@ -2356,6 +2356,13 @@ class TwoNodeElement(object):
             # First iteration of this method
             self.canvas.set_state(1)
 
+            # If this element is not selected, 
+            # we should deselect all others
+            # and only move this one
+            if not self.selected:
+                self.canvas.deselect_all()
+                self.select()
+
             # Determine which elements need moving
             self.elements_to_move = []
             for el in self.canvas.elements:
