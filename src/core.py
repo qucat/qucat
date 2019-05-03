@@ -701,8 +701,6 @@ class Qcircuit(object):
         transfer function between a reference component
         and all the others.
 
-        TODO: why current?
-
         
         Parameters
         ----------
@@ -747,21 +745,17 @@ class Qcircuit(object):
             using the GUI.
             ''')
 
-        # Compute the normal mode frequencies
-        self._set_w_cpx(**kwargs)
-
-
         def pretty(v, quantity):
             # Utility function to print a pretty 
-            # value for the zero-point fluctuations
+            # value for the phasor
             if quantity == 'flux':
-                return pretty_value(v)+u"\u03A6"
+                return pretty_value(v, is_complex = True)+u"\u03A6"
             elif quantity == 'charge':
-                return pretty_value(v, use_power_10=True)+'e'
+                return pretty_value(v, is_complex = True, use_power_10=True)+'e'
             elif quantity == 'voltage':
-                return pretty_value(v)+'V'
+                return pretty_value(v, is_complex = True)+'V'
             elif quantity == 'current':
-                return pretty_value(v)+'A'
+                return pretty_value(v, is_complex = True)+'A'
 
         # Plot the circuit and return the 
         # figure and axis for further 
@@ -771,12 +765,12 @@ class Qcircuit(object):
             return_fig_ax=True)
 
         # Determine smallest and largest arrow size
-        # Based on the absolute value of zero-point 
-        # fluctuations through all components
+        # Based on the absolute value of the
+        # phasor through all components
         all_values = []
         for el in self.netlist:
             if not isinstance(el,W):
-                all_values.append(el.zpf(mode = mode, quantity = quantity, **kwargs))
+                all_values.append(el.phasor(mode = mode, quantity = quantity, **kwargs))
         all_values = np.absolute(all_values)
         max_value = np.amax(all_values)
         min_value = np.amin(all_values)
@@ -784,11 +778,11 @@ class Qcircuit(object):
         def value_to_01_range(value):
             # Returns a number between 0 and 1
             # where 0 corresponds to the smallest
-            # zpf and 1 to the largest
+            # phasor and 1 to the largest
 
             if pretty(np.absolute(max_value), quantity) == pretty(np.absolute(min_value), quantity):
                 # Case where all the components have
-                # the same zpf
+                # the same phasor magnitude
                 return 1.
             else:
                 return (np.absolute(value)-min_value)/(max_value-min_value)
@@ -837,9 +831,8 @@ class Qcircuit(object):
         for el in self.netlist:
             if not isinstance(el,W):
 
-                # zpf for the quantity and for the current
-                value = el.zpf(mode = mode, quantity = quantity, **kwargs)
-                value_current = el.zpf(mode = mode, quantity = 'current', **kwargs)
+                # phasor for the quantity and for the current
+                value = el.phasor(mode = mode, quantity = quantity, **kwargs)
 
                 # location of the element center
                 x = el.x_plot_center
@@ -888,11 +881,10 @@ class Qcircuit(object):
 
 
                 # Add the arrow
-                if np.real(value_current) > 0:
-                    arrow_coords = [x_arrow, y_arrow, dx_arrow, dy_arrow]
-                else:
-                    # Flip the arrow for negative values
-                    arrow_coords = [x_arrow+dx_arrow, y_arrow+dy_arrow, -dx_arrow, -dy_arrow]
+                arrow_coords = [x_arrow, y_arrow, dx_arrow, dy_arrow]
+                # else:
+                #     # Flip the arrow for negative values
+                #     arrow_coords = [x_arrow+dx_arrow, y_arrow+dy_arrow, -dx_arrow, -dy_arrow]
                 
                 ax.arrow(*arrow_coords,
                         fc=pp['normal_mode_arrow']['color'],
@@ -901,7 +893,7 @@ class Qcircuit(object):
 
                 # Add the annotation
                 ax.text(x_text, y_text,
-                        pretty(np.absolute(value), quantity),
+                        pretty(value, quantity),
                         fontsize=pp["normal_mode_label"]["fontsize"],
                         ha=ha, va=va, weight='normal',color =pp["normal_mode_label"]["color"] )
 
@@ -1997,7 +1989,7 @@ class Component(Circuit):
 
         self.head._set_w_cpx(**kwargs)
         mode_w = np.real(self.head.w_cpx[mode])
-        self._convert_flux(self._flux(mode_w,**kwargs),mode_w,quantity,**kwargs)
+        return self._convert_flux(self._flux(mode_w,**kwargs),mode_w,quantity,**kwargs)
 
 class W(Component):
     """docstring for Wire"""
@@ -2484,10 +2476,10 @@ def main():
     # H = circuit.hamiltonian(modes = [0],taylor = 4,excitations = [50])
     # print(H)
     circuit = GUI(filename = './src/test.txt',edit=True,plot=False)
-    circuit.f_k_A_chi()
-    # print(circuit.inductors[0].zpf(0,'voltage'))
-    # print(circuit.capacitors[0].zpf(0,'voltage'))
-    # circuit.show_normal_mode(0,quantity='current')
+    # circuit.f_k_A_chi()
+    print(circuit.inductors[0].phasor(0,'current'))
+    print(circuit.capacitors[0].phasor(0,'current'))
+    circuit.show_normal_mode(0,quantity='current')
     # circuit.hamiltonian(L_J = 1e-9,modes=[0],excitations=[5],return_ops=True,taylor=4)
     # circuit.eigenfrequencies(L_J = np.linspace(1e-9,2e-9,4))
     # circuit.f_k_A_chi(L_J = np.linspace(1e-9,2e-9,4))
