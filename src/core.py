@@ -170,7 +170,7 @@ class Qcircuit(object):
 
     def _anharmonicities_per_junction(self, pretty_print=False, **kwargs):
         self._set_w_cpx(**kwargs)
-        return [j._anharmonicity(self.w_cpx, **kwargs)/h for j in self.junctions]
+        return [j._anharmonicity(self.w_cpx, **kwargs) for j in self.junctions]
 
     def eigenfrequencies(self, **kwargs):
         '''Returns the normal mode frequencies of the circuit.
@@ -1891,33 +1891,56 @@ class Component(Circuit):
         # Calculation of phi_zpf of the reference junction/inductor
         #  = sqrt(hbar/w/ImdY[w])
         # The minus is there since 1/Im(Y)  = -Im(1/Y)
-        phi_zpf = np.sqrt(hbar/w*np.imag(-self.head._inverse_of_dY(w,**kwargs)))
+        phi_zpf_r = np.sqrt(hbar/w*np.imag(-self.head._inverse_of_dY(w,**kwargs)))
 
-        f = tr(self, w,**kwargs)*phi_zpf
+        # Note that the flux defined here 
+        phi = tr(self, w,**kwargs)*phi_zpf_r
+        # is complex.
+        # This causes a problem for the quantization:
+        # the prefactor of a+a.dag will be complex
+        # making the flux operator non-hermitian
+        # This problem is adressed in the zpf method
 
-        # This is only valid in the high-Q limit
-        if isinstance(self,R):
-            return 1j*np.absolute(f)
-        else:
-            return np.absolute(f)
+        return phi
 
-    def _voltage(self, w, **kwargs):
-        return complex(self._flux(w, **kwargs)*1j*w)
+    def _convert_flux(self,flux, w,quantity, **kwargs):
+        if quantity == 'flux':
+            phi_0 = hbar/2./e
+            return flux/phi_0
+        if quantity == 'voltage':
+            return flux*1j*w
+        if quantity == 'current':
+            kwargs['w'] = w
+            Y = self._admittance()
+            if isinstance(Y, Number):
+                pass
+            else:
+                Y = Y.evalf(subs=kwargs)
+            return complex(self._convert_flux(flux, w,'voltage')*Y)
+        if quantity == 'charge':
+            return self._convert_flux(flux, w,'current', **kwargs)/1j/w/e
 
-    def _current(self, w, **kwargs):
-        kwargs['w'] = w
-        Y = self._admittance()
-        if isinstance(Y, Number):
-            pass
-        else:
-            Y = Y.evalf(subs=kwargs)
-        return complex(self._voltage(**kwargs)*Y)
-
-    def _charge(self, w, **kwargs):
-        return self._current(w, **kwargs)/1j/w
 
     def _to_string(self, use_unicode=True):
         return to_string(self.unit, self.label, self.value, use_unicode=use_unicode)
+
+    def _zpf(self, w, quantity, **kwargs):
+        
+        # Note that the flux defined in _flux
+        phi_zpf = self._flux(w,**kwargs)
+        # is complex.
+        # This causes a problem for the quantization:
+        # the prefactor of a+a.dag will be complex
+        # making the flux operator non-hermitian
+        # In the high-Q limit we are assuming for quantization 
+        # phi_zpf = a+ib, where b<<a for inductors/junctions/capacitors
+        # phi_zpf = a+ib, where b>>a for resistors
+
+        if isinstance(self,R):
+            return self._convert_flux(1j*np.imag(phi_zpf), w,quantity,**kwargs)
+        else:
+            return self._convert_flux(np.real(phi_zpf), w,quantity,**kwargs)
+
 
     def zpf(self, mode, quantity, **kwargs):
         r'''Returns contribution of a certain mode to the zero-point fluctuations of a quantity for this component.
@@ -1968,17 +1991,13 @@ class Component(Circuit):
         '''
         self.head._set_w_cpx(**kwargs)
         mode_w = np.real(self.head.w_cpx[mode])
+        return self._zpf(mode_w, quantity, **kwargs)
 
-        if quantity == 'flux':
-            phi_0 = hbar/2./e
-            return self._flux(mode_w, **kwargs)/phi_0
-        if quantity == 'charge':
-            return self._charge(mode_w, **kwargs)/e
-        if quantity == 'voltage':
-            return self._voltage(mode_w, **kwargs)
-        if quantity == 'current':
-            return self._current(mode_w, **kwargs)
-        
+    def phasor(self, mode, quantity, **kwargs):
+
+        self.head._set_w_cpx(**kwargs)
+        mode_w = np.real(self.head.w_cpx[mode])
+        self._convert_flux(self._flux(mode_w,**kwargs),mode_w,quantity,**kwargs)
 
 class W(Component):
     """docstring for Wire"""
@@ -2189,6 +2208,7 @@ class J(L):
             self.unit = 'H'
 
     def _get_value(self, **kwargs):
+        # Returns the Josephson inductance
         value = super(J, self)._get_value(**kwargs)
         if (self.use_E == False) and (self.use_I == False):
             return value
@@ -2201,12 +2221,15 @@ class J(L):
         else:
             raise ValueError("Cannot set both use_E and use_I to True")
 
+    def _get_Ej(self, **kwargs):
+        return (hbar/2./e)**2/(self._get_value(**kwargs)*h)
+
     def _set_component_lists(self):
         super(J, self)._set_component_lists()
         self.head.junctions.append(self)
 
-    def _anharmonicity(self, w, **kwargs):
-        return self._flux(w, **kwargs)**4/hbar**2*2.*e**2/self._get_value(**kwargs)
+    def _anharmonicity(self,w,**kwargs):
+        return self._get_Ej()/2*self._zpf(w,'flux')**4
 
     def anharmonicity(self, mode, **kwargs):
         r'''Returns the contribution of this junction to the anharmonicity of a given normal mode.
@@ -2244,8 +2267,9 @@ class J(L):
         float
             contribution of this junction to the anharmonicity of a given normal mode
         '''
-        self.head._set_w_cpx()
-        return self._anharmonicity(self.head.w_cpx[mode],**kwargs)
+        self.head._set_w_cpx(**kwargs)
+        mode_w = np.real(self.head.w_cpx[mode])
+        return _anharmonicity(self, mode_w, **kwargs)
 
     def _draw(self):
         pp = self.head._pp
@@ -2449,17 +2473,18 @@ class Admittance(Component):
 
 # @timeit
 def main():
-    Cj = 100e-15
-    Lj = 10e-9
-    junction = J(0,1,Lj)
-    circuit = Network([
-        C(0,1,Cj),
-        junction
-        ])
-    junction.zpf(mode=0,quantity = 'flux')
+    # Cj = 100e-15
+    # Lj = 10e-9
+    # junction = J(0,1,Lj)
+    # circuit = Network([
+    #     C(0,1,Cj),
+    #     junction
+    #     ])
+    # junction.zpf(mode=0,quantity = 'flux')
     # H = circuit.hamiltonian(modes = [0],taylor = 4,excitations = [50])
     # print(H)
-    # circuit = GUI(filename = './src/test.txt',edit=True,plot=False)
+    circuit = GUI(filename = './src/test.txt',edit=True,plot=False)
+    circuit.f_k_A_chi()
     # print(circuit.inductors[0].zpf(0,'voltage'))
     # print(circuit.capacitors[0].zpf(0,'voltage'))
     # circuit.show_normal_mode(0,quantity='current')
