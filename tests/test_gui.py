@@ -258,7 +258,7 @@ class TestSelection(AutomaticTesting):
         self.launch_gui_testing(run_slower=False)
 
     def test_selection__ctrl_shift_click_select(self):
-        self.launch_gui_testing(run_slower=False,force_build=True)
+        self.launch_gui_testing(run_slower=False,force_build=False)
 
 
 
