@@ -119,7 +119,6 @@ class Qcircuit(object):
         Y_denom_poly_coeffs_analytical = [Y_denom_poly.coeff(w, n) for n in range(
             Y_denom_poly_order+1)[::-1]]  # Get polynomial coefficients
 
-        w = sp.Symbol('w')
         v = sum([a*w**(Y_denom_poly_order-n)
                      for n, a in enumerate(Y_denom_poly_coeffs_analytical)])
         du = sum([(Y_numer_poly_order-n)*a*w**(Y_numer_poly_order-n-1)
@@ -1899,7 +1898,17 @@ class Component(Circuit):
             self.head._flux_transformation_dict[self.node_minus,self.node_plus] = tr
             self.head._flux_transformation_dict[self.node_plus,self.node_minus] = tr_minus
 
-        f =tr(self, np.real(w),**kwargs)*np.sqrt(hbar/np.real(w)*np.absolute(np.imag(self.head._inverse_of_dY(np.real(w),**kwargs))))
+        # Following Black-box quantization, 
+        # we assume the losses to be neglegible by 
+        # removing the imaginary part of the eigenfrequency
+        w = np.real(w)
+        
+        # Calculation of phi_zpf of the reference junction/inductor
+        #  = sqrt(hbar/w/ImdY[w])
+        # The minus is there since 1/Im(Y)  = -Im(1/Y)
+        phi_zpf = np.sqrt(hbar/w*np.imag(-self.head._inverse_of_dY(w,**kwargs)))
+
+        f = tr(self, w,**kwargs)*phi_zpf
 
         # This is only valid in the high-Q limit
         if isinstance(self,R):
@@ -2455,24 +2464,26 @@ class Admittance(Component):
 
 # @timeit
 def main():
-    # Cj = 100e-15
-    # circuit = Network([
-    #     C(0,1,Cj),
-    #     J(0,1,10e-9),
-    #     R(0,1,1e6)
-    # ])
+    Cj = 100e-15
+    Lj = 10e-9
+    junction = J(0,1,Lj)
+    circuit = Network([
+        C(0,1,Cj),
+        junction
+        ])
+    junction.zpf(mode=0,quantity = 'flux')
     # H = circuit.hamiltonian(modes = [0],taylor = 4,excitations = [50])
     # print(H)
-    circuit = GUI(filename = './src/test.txt',edit=False,plot=False)
-    print(circuit.inductors[0].zpf(0,'voltage'))
-    print(circuit.capacitors[0].zpf(0,'voltage'))
+    # circuit = GUI(filename = './src/test.txt',edit=True,plot=False)
+    # print(circuit.inductors[0].zpf(0,'voltage'))
+    # print(circuit.capacitors[0].zpf(0,'voltage'))
+    # circuit.show_normal_mode(0,quantity='current')
     # circuit.hamiltonian(L_J = 1e-9,modes=[0],excitations=[5],return_ops=True,taylor=4)
     # circuit.eigenfrequencies(L_J = np.linspace(1e-9,2e-9,4))
     # circuit.f_k_A_chi(L_J = np.linspace(1e-9,2e-9,4))
     # print(circuit.Y)
     # print(sp.together(circuit.Y))
     # print(circuit.eigenfrequencies())
-    circuit.show_normal_mode(0,quantity='voltage')
     # circuit.show_normal_mode(2)
 
 if __name__ == '__main__':
