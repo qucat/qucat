@@ -162,6 +162,9 @@ class Qcircuit(object):
             w_cpx = w_cpx[np.nonzero(np.real(w_cpx) > 0.)]
 
         # Only consider modes with Q>1
+        # 0-frequency solutions (with real parts close to 0 can)
+        # tend to have frequencies which oscillate between positive and
+        # negative values which can make sweeps difficult
         w_cpx = w_cpx[np.nonzero(np.real(w_cpx) > np.imag(w_cpx))]
 
         # Sort solutions with increasing frequency
@@ -2477,8 +2480,7 @@ def main():
     # print(H)
     circuit = GUI(filename = './src/test.txt',edit=True,plot=False)
     # circuit.f_k_A_chi()
-    # print(circuit.inductors[0].phasor(0,''))
-    # print(circuit.capacitors[0].phasor(0,'current'))
+    print(circuit.resistors[0].phasor(0,'voltage'))
     circuit.show_normal_mode(0,quantity='voltage')
     # circuit.hamiltonian(L_J = 1e-9,modes=[0],excitations=[5],return_ops=True,taylor=4)
     # circuit.eigenfrequencies(L_J = np.linspace(1e-9,2e-9,4))
