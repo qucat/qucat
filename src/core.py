@@ -861,17 +861,9 @@ class Qcircuit(object):
                     dy_arrow = 0.
 
                     # Arrow position in x
-                    if el.angle == EAST:
-                        # Define the direction for positive values
-                        # and the positive node on the east
-                        x_arrow = x-arrow_width(value)/2.
-                        dx_arrow = arrow_width(value)
-                    elif el.angle == WEST:
-                        # Define the direction for positive values
-                        # and the positive node on the west
-                        x_arrow = x+arrow_width(value)/2.
-                        dx_arrow = -arrow_width(value)
-
+                    # Define the direction for positive values
+                    x_arrow = x-arrow_width(value)/2.
+                    dx_arrow = arrow_width(value)
 
 
                 if el.angle==NORTH or el.angle==SOUTH:
@@ -890,16 +882,9 @@ class Qcircuit(object):
                     dx_arrow = 0.
                     
                     # Arrow position in x
-                    if el.angle==NORTH:
-                        # Define the direction for positive values
-                        # and the positive node on the north
-                        y_arrow = y-arrow_width(value)/2.
-                        dy_arrow = arrow_width(value)
-                    elif el.angle==SOUTH:
-                        # Define the direction for positive values
-                        # and the positive node on the south
-                        y_arrow = y+arrow_width(value)/2.
-                        dy_arrow = -arrow_width(value)
+                    # Define the direction for positive values
+                    y_arrow = y-arrow_width(value)/2.
+                    dy_arrow = arrow_width(value)
 
 
                 # Add the arrow
