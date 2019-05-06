@@ -6,7 +6,6 @@ from sympy.core.mul import Mul, Pow, Add
 from copy import deepcopy
 from numbers import Number
 from math import floor, factorial
-from qucat.src import _gui
 import os
 from qucat.src._constants import *
 from qucat.src._utility import pretty_value,\
@@ -26,6 +25,8 @@ if os.name == "posix":
     import matplotlib
     matplotlib.use("TkAgg") # necessary to open the GUI on mac
     # see https://stackoverflow.com/questions/32019556/matplotlib-crashing-tkinter-application
+    from importlib import reload
+    reload(matplotlib.pyplot)
     import matplotlib.pyplot as plt
 else:
     import matplotlib.pyplot as plt
@@ -1125,6 +1126,7 @@ class GUI(Qcircuit):
     def __init__(self, filename, edit=True, plot=True, print_network=True,_unittesting=False):
         
         if edit:
+            from qucat.src import _gui
             editor = _gui.GuiWindow(filename,_unittesting = _unittesting)
             if _unittesting:
                 editor.master.destroy()
