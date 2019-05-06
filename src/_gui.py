@@ -3628,6 +3628,3 @@ class GuiWindow(ttk.Frame):
 
 if __name__ == '__main__':
     GuiWindow(sys.argv[1])
-    
-    # GuiWindow('./src/test.txt',_track_events_to='test.txt')
-    # GuiWindow('./src/test.txt',_verbose=True)
