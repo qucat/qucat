@@ -51,6 +51,7 @@ class Qcircuit(object):
     """
 
     def __init__(self, netlist):
+        self.Q_min = 1
         self.plotting_normal_mode = False
         self.netlist = netlist
         self.network = _Network(netlist)
@@ -161,11 +162,11 @@ class Qcircuit(object):
             w_cpx = np.roots(char_poly_coeffs)
             w_cpx = w_cpx[np.nonzero(np.real(w_cpx) > 0.)]
 
-        # Only consider modes with Q>1
-        # 0-frequency solutions (with real parts close to 0 can)
+        # Only consider modes with Q>self.Q_min (=1 by default)
+        # 0-frequency solutions (with real parts close to 0)
         # tend to have frequencies which oscillate between positive and
         # negative values which can make sweeps difficult
-        w_cpx = w_cpx[np.nonzero(np.real(w_cpx) > np.imag(w_cpx))]
+        w_cpx = w_cpx[np.nonzero(np.real(w_cpx) > self.Q_min*np.imag(w_cpx))]
 
         # Sort solutions with increasing frequency
         order = np.argsort(np.real(w_cpx))
