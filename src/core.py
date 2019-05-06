@@ -52,18 +52,18 @@ class Qcircuit(object):
 
     def __init__(self, netlist):
         self.Q_min = 1
-        self.plotting_normal_mode = False
+        self._plotting_normal_mode = False
         self.netlist = netlist
-        self.network = _Network(netlist)
+        self._network = _Network(netlist)
         self.inductors = []
         self.capacitors = []
         self.junctions = []
         self.resistors = []
-        self.wires = []
-        self.grounds = []
-        self.no_value_components = []
+        self._wire = []
+        self._grounds = []
+        self._no_value_components = []
         for elt in netlist:
-            elt.circuit = self
+            elt._circuit = self
             elt._set_component_lists()
 
         if len(self.junctions) > 0:
@@ -79,27 +79,25 @@ class Qcircuit(object):
                 "There should be at least one capacitor in the circuit")
 
         self._flux_transformation_dict = {}
-        for node in self.network.nodes:
+        for node in self._network.nodes:
             self._flux_transformation_dict[node] = {}
 
         self._compute_inverse_of_dY()
-        self.char_poly_coeffs_analytical = \
-            self.network.compute_char_poly_coeffs(is_lossy = (len(self.resistors)>0))
-        self.char_poly_coeffs = [lambdify(
-            self.no_value_components, c, 'numpy') for c in self.char_poly_coeffs_analytical]
+        self._char_poly_coeffs = [lambdify(
+            self._no_value_components, c, 'numpy') for c in 
+            self._network.compute_char_poly_coeffs(is_lossy = (len(self.resistors)>0))]
 
     @property
     def _pp(self):
-        if self.plotting_normal_mode:
+        if self._plotting_normal_mode:
             return plotting_parameters_normal_modes
         else:
             return plotting_parameters_show
 
     @timeit
     def _compute_inverse_of_dY(self):
-        self.Y = self.network.admittance(self.ref_elt.node_minus, self.ref_elt.node_plus)
-        self.Y_lambdified = lambdify(['w']+self.no_value_components, self.Y, 'numpy')
-        Y_together = sp.together(self.Y)    # Puts everything on a single fraction with the numerator and denomenator as polynomials
+        Y = self._network.admittance(self.ref_elt.node_minus, self.ref_elt.node_plus)
+        Y_together = sp.together(Y)    # Puts everything on a single fraction with the numerator and denomenator as polynomials
                                             # So it combines but also "de-nests"
 
         w = sp.Symbol('w')
@@ -126,7 +124,7 @@ class Qcircuit(object):
                       for n, a in enumerate(Y_numer_poly_coeffs_analytical)])
         
         self._inverse_of_dY_lambdified =  lambdify(
-                ['w']+self.no_value_components,
+                ['w']+self._no_value_components,
                 v/du, 
                 "numpy")
 
@@ -137,13 +135,13 @@ class Qcircuit(object):
   
     def _check_kwargs(self, **kwargs):
         for key in kwargs:
-            if key in self.no_value_components:
+            if key in self._no_value_components:
                 pass
             else:
                 raise ValueError(
                     '%s is not the label of a circuit element' % key)
 
-        for label in self.no_value_components:
+        for label in self._no_value_components:
             try:
                 kwargs[label]
             except Exception as e:
@@ -154,7 +152,7 @@ class Qcircuit(object):
     @timeit
     def _set_w_cpx(self, **kwargs):
         self._check_kwargs(**kwargs)
-        char_poly_coeffs = [complex(coeff(**kwargs)) for coeff in self.char_poly_coeffs]
+        char_poly_coeffs = [complex(coeff(**kwargs)) for coeff in self._char_poly_coeffs]
         if len(self.resistors) == 0:
             # The variable of the characteristic polynomial is w^2
             w_cpx = np.sqrt(np.real(np.roots(char_poly_coeffs)))
@@ -735,7 +733,7 @@ class Qcircuit(object):
         # This changes the default plotting settings 
         # to those defined in plotting_settings.py
         # under plotting_parameters_normal_modes
-        self.plotting_normal_mode = True
+        self._plotting_normal_mode = True
 
         # This will set pp to plotting_parameters_normal_modes
         # (see the definition of the Qcircuit._pp propoerty function)
@@ -973,7 +971,7 @@ class Qcircuit(object):
         if plot == True:
             plt.show()
         plt.close()
-        self.plotting_normal_mode = False
+        self._plotting_normal_mode = False
 
         if return_fig_ax:
             return fig, ax
@@ -1331,8 +1329,8 @@ class _Network(object):
         # and make a list of all nodes
         self.nodes = []
         for el in self.netlist:
-            el.node_minus_plot = el.node_minus
-            el.node_plus_plot = el.node_plus
+            el._node_minus_plot = el.node_minus
+            el._node_plus_plot = el.node_plus
             if not isinstance(el,W):
                 el.node_minus = plot_node_to_new_node(el.node_minus)
                 el.node_plus = plot_node_to_new_node(el.node_plus)
@@ -1721,17 +1719,17 @@ class Circuit(object):
     def __init__(self, node_minus, node_plus):
         self.node_minus = node_minus
         self.node_plus = node_plus
-        self.circuit = None
+        self._circuit = None
 
     def __or__(self, other_circuit):
         return Parallel(self, other_circuit)
 
     def _set_plot_coordinates(self):
 
-        self.x_plot_node_minus = float(self.node_minus_plot.split(',')[0])
-        self.x_plot_node_plus = float(self.node_plus_plot.split(',')[0])
-        self.y_plot_node_minus = -float(self.node_minus_plot.split(',')[1])
-        self.y_plot_node_plus = -float(self.node_plus_plot.split(',')[1])
+        self.x_plot_node_minus = float(self._node_minus_plot.split(',')[0])
+        self.x_plot_node_plus = float(self._node_plus_plot.split(',')[0])
+        self.y_plot_node_minus = -float(self._node_minus_plot.split(',')[1])
+        self.y_plot_node_plus = -float(self._node_plus_plot.split(',')[1])
         self.x_plot_center = (self.x_plot_node_minus +
                               self.x_plot_node_plus)/2.
         self.y_plot_center = (self.y_plot_node_minus +
@@ -1749,7 +1747,7 @@ class Circuit(object):
                 self.angle = EAST
 
     def _draw_label(self, ax):
-        pp = self.circuit._pp
+        pp = self._circuit._pp
         if self.angle%180. == 0.:
             x = self.x_plot_center+pp['label']['text_position_horizontal'][0]
             y = self.y_plot_center+pp['label']['text_position_horizontal'][1]
@@ -1841,21 +1839,21 @@ class Component(Circuit):
 
     def _set_component_lists(self):
         if self.value is None and self.label not in ['', ' ', 'None', None]:
-            if self.label in self.circuit.no_value_components:
+            if self.label in self._circuit._no_value_components:
                 # raise ValueError(
                 #     "Two components may not have the same name %s" % self.label)
                 pass
             else:
-                self.circuit.no_value_components.append(self.label)
+                self._circuit._no_value_components.append(self.label)
 
     def _flux(self, w, **kwargs):
         try:
-            tr = self.circuit._flux_transformation_dict[self.node_minus,
+            tr = self._circuit._flux_transformation_dict[self.node_minus,
                                                     self.node_plus]
         except KeyError:
-            tr_analytical = self.circuit.network.transfer(
-                self.circuit.ref_elt.node_minus, self.circuit.ref_elt.node_plus, self.node_minus, self.node_plus)
-            tr_undecorated = lambdify(['w']+self.circuit.no_value_components,tr_analytical, "numpy")
+            tr_analytical = self._circuit._network.transfer(
+                self._circuit.ref_elt.node_minus, self._circuit.ref_elt.node_plus, self.node_minus, self.node_plus)
+            tr_undecorated = lambdify(['w']+self._circuit._no_value_components,tr_analytical, "numpy")
             
             @vectorize
             @safely_evaluate
@@ -1867,8 +1865,8 @@ class Component(Circuit):
             def tr_minus(self, w,**kwargs):
                 return -tr_undecorated(w,**kwargs)
 
-            self.circuit._flux_transformation_dict[self.node_minus,self.node_plus] = tr
-            self.circuit._flux_transformation_dict[self.node_plus,self.node_minus] = tr_minus
+            self._circuit._flux_transformation_dict[self.node_minus,self.node_plus] = tr
+            self._circuit._flux_transformation_dict[self.node_plus,self.node_minus] = tr_minus
 
         # Following Black-box quantization, 
         # we assume the losses to be neglegible by 
@@ -1878,7 +1876,7 @@ class Component(Circuit):
         # Calculation of phi_zpf of the reference junction/inductor
         #  = sqrt(hbar/w/ImdY[w])
         # The minus is there since 1/Im(Y)  = -Im(1/Y)
-        phi_zpf_r = np.sqrt(hbar/w*np.imag(-self.circuit._inverse_of_dY(w,**kwargs)))
+        phi_zpf_r = np.sqrt(hbar/w*np.imag(-self._circuit._inverse_of_dY(w,**kwargs)))
 
         # Note that the flux defined here 
         phi = tr(self, w,**kwargs)*phi_zpf_r
@@ -1976,12 +1974,12 @@ class Component(Circuit):
         float
             contribution of the ``mode`` to the zero-point fluctuations of the ``quantity``
         '''
-        mode_w = self.circuit.eigenfrequencies()[mode]*2.*np.pi
+        mode_w = self._circuit.eigenfrequencies()[mode]*2.*np.pi
         return self._zpf(mode_w, quantity, **kwargs)
 
     def phasor(self, mode, quantity, **kwargs):
 
-        mode_w = self.circuit.eigenfrequencies()[mode]*2.*np.pi
+        mode_w = self._circuit.eigenfrequencies()[mode]*2.*np.pi
         return self._convert_flux(self._flux(mode_w,**kwargs),mode_w,quantity,**kwargs)
 
 class W(Component):
@@ -1998,10 +1996,10 @@ class W(Component):
 
     def _set_component_lists(self):
         super(W, self)._set_component_lists()
-        self.circuit.wires.append(self)
+        self._circuit._wire.append(self)
 
     def _draw(self):
-        pp = self.circuit._pp
+        pp = self._circuit._pp
 
         x = [np.array([self.x_plot_node_minus, self.x_plot_node_plus]),
         np.array([self.x_plot_node_minus]),
@@ -2027,10 +2025,10 @@ class G(W):
 
     def _set_component_lists(self):
         super(G, self)._set_component_lists()
-        self.circuit.grounds.append(self)
+        self._circuit._grounds.append(self)
 
     def _draw(self):
-        pp = self.circuit._pp
+        pp = self._circuit._pp
         # Defined for EAST
         line_type = []
         x = [
@@ -2091,10 +2089,10 @@ class L(Component):
 
     def _set_component_lists(self):
         super(L, self)._set_component_lists()
-        self.circuit.inductors.append(self)
+        self._circuit.inductors.append(self)
 
     def _draw(self):
-        pp = self.circuit._pp
+        pp = self._circuit._pp
 
         x = np.linspace(0.5, float(
             pp['L']['N_turns']) + 1., pp['L']['N_points'])
@@ -2211,7 +2209,7 @@ class J(L):
 
     def _set_component_lists(self):
         super(J, self)._set_component_lists()
-        self.circuit.junctions.append(self)
+        self._circuit.junctions.append(self)
 
     def _anharmonicity(self,w,**kwargs):
         return self._get_Ej()/2*self._zpf(w,'flux')**4
@@ -2252,11 +2250,11 @@ class J(L):
         float
             contribution of this junction to the anharmonicity of a given normal mode
         '''
-        mode_w = self.circuit.eigenfrequencies()[mode]*2.*np.pi
+        mode_w = self._circuit.eigenfrequencies()[mode]*2.*np.pi
         return _anharmonicity(self, mode_w, **kwargs)
 
     def _draw(self):
-        pp = self.circuit._pp
+        pp = self._circuit._pp
 
         line_type = []
         x = [
@@ -2315,7 +2313,7 @@ class R(Component):
     
     def _set_component_lists(self):
         super(R, self)._set_component_lists()
-        self.circuit.resistors.append(self)
+        self._circuit.resistors.append(self)
     
     def _get_RLC_matrix_components(self):
         return {
@@ -2325,7 +2323,7 @@ class R(Component):
         }
     
     def _draw(self):
-        pp = self.circuit._pp
+        pp = self._circuit._pp
 
         x = np.linspace(-0.25, 0.25 +float(pp['R']['N_ridges']), pp['R']['N_points'])
         height = 1.
@@ -2406,10 +2404,10 @@ class C(Component):
 
     def _set_component_lists(self):
         super(C, self)._set_component_lists()
-        self.circuit.capacitors.append(self)
+        self._circuit.capacitors.append(self)
 
     def _draw(self):
-        pp = self.circuit._pp
+        pp = self._circuit._pp
         line_type = []
         x = [
             np.array([0., (1.-pp['C']['gap'])/2.]),

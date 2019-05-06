@@ -22,7 +22,7 @@ def generate_icon(comp,hover = False, selected = False):
     comp.node_plus_plot = '1,0'
     comp._set_plot_coordinates()
 
-    comp.circuit = DummyCircuit()
+    comp._circuit = DummyCircuit()
     xs, ys, line_type = comp._draw()
 
     fig = plt.figure(figsize=(1,0.5))
