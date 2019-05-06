@@ -6,6 +6,11 @@ from PIL import Image, ImageTk
 from tkinter import ttk
 import numpy as np
 import os
+# We have to do this to avoid calling the package __init__.py
+# which calls matplotlib.pyplot, causing issues on MAC OSX
+# see https://stackoverflow.com/questions/32019556/matplotlib-crashing-tkinter-application
+# Note that this module is always called in a subprocess from qucat.GUI
+sys.path.append(os.path.dirname(__file__))
 from _utility import to_string
 from _constants import *
 from plotting_settings import *

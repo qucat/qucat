@@ -2,7 +2,11 @@ import unittest
 import os
 import sys
 import shutil
-from qucat.src._gui import GuiWindow
+# We have to do this to avoid calling the package __init__.py
+# which calls matplotlib.pyplot, causing issues on MAC OSX
+# see https://stackoverflow.com/questions/32019556/matplotlib-crashing-tkinter-application
+sys.path.append(os.path.join(os.path.join(os.path.dirname(os.path.dirname(__file__)),'src')))
+from _gui import GuiWindow
 import inspect
 import tkinter as tk
 
