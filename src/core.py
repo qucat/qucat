@@ -4,6 +4,9 @@ import numpy as np
 from scipy.constants import e, pi, h, hbar
 from sympy.core.mul import Mul, Pow, Add
 from copy import deepcopy
+import matplotlib
+matplotlib.use("TkAgg") # necessary to open the GUI on mac
+# see https://stackoverflow.com/questions/32019556/matplotlib-crashing-tkinter-application
 import matplotlib.pyplot as plt
 from numbers import Number
 from math import floor, factorial
