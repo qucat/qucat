@@ -2,7 +2,7 @@ import unittest
 import os
 import sys
 import shutil
-from Qcircuits.src._gui import GuiWindow
+from qucat.src._gui import GuiWindow
 import inspect
 import tkinter as tk
 

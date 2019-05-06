@@ -3,6 +3,6 @@
 Josephson junction
 ==================
 
-.. autoclass:: Qcircuits.J
+.. autoclass:: qucat.J
     :members:
     :inherited-members:

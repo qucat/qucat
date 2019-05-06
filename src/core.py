@@ -7,17 +7,17 @@ from copy import deepcopy
 import matplotlib.pyplot as plt
 from numbers import Number
 from math import floor, factorial
-from Qcircuits.src import _gui
+from qucat.src import _gui
 import os
-from Qcircuits.src._constants import *
-from Qcircuits.src._utility import pretty_value,\
+from qucat.src._constants import *
+from qucat.src._utility import pretty_value,\
         shift,\
         to_string,\
         safely_evaluate,\
         vectorize
 from scipy import optimize
 import time
-from Qcircuits.src.plotting_settings import plotting_parameters_show,plotting_parameters_normal_modes
+from qucat.src.plotting_settings import plotting_parameters_show,plotting_parameters_normal_modes
 PROFILING = False
 
 def timeit(method):
@@ -52,6 +52,9 @@ class Qcircuit(object):
 
     def __init__(self, netlist):
         self.Q_min = 1
+        '''Doc for Q_min
+        '''
+
         self._plotting_normal_mode = False
         self.netlist = netlist
         self._network = _Network(netlist)
@@ -234,7 +237,7 @@ class Qcircuit(object):
         normal mode of the circuit.
         Note that dissipation rates that are obtained from this function
         have to be converted to angular frequencies through the factor :math:`2\pi`.
-        If you are also using a hamiltonian generated from Qcircuits, 
+        If you are also using a hamiltonian generated from qucat, 
         then it too should be converted to angular frequencies by multiplying 
         the entire hamiltonian by :math:`2\pi` when performing time-dependant 
         simulations.
@@ -398,13 +401,13 @@ class Qcircuit(object):
 
         For more details, refer to the functions
 
-        :meth:`Qcircuits.Qcircuit.eigenfrequencies`
+        :meth:`qucat.Qcircuit.eigenfrequencies`
 
-        :meth:`Qcircuits.Qcircuit.loss_rates`
+        :meth:`qucat.Qcircuit.loss_rates`
 
-        :meth:`Qcircuits.Qcircuit.anharmonicities`
+        :meth:`qucat.Qcircuit.anharmonicities`
 
-        :meth:`Qcircuits.Qcircuit.kerr`
+        :meth:`qucat.Qcircuit.kerr`
 
         Parameters
         ----------
@@ -979,8 +982,8 @@ class Qcircuit(object):
 class Network(Qcircuit):
     r'''Constructs a Qcircuit object from a list of components without resorting to a graphical user interface.
 
-    The list can be composed of instances of the :class:`Qcircuits.L`, :class:`Qcircuits.C`, 
-    :class:`Qcircuits.R` or :class:`Qcircuits.J` classes
+    The list can be composed of instances of the :class:`qucat.L`, :class:`qucat.C`, 
+    :class:`qucat.R` or :class:`qucat.J` classes
     for inductors, capacitors, resistors or junctions respectively.
 
     This Qcircuit construction method offers the advantage of programmatically constructing
@@ -992,13 +995,13 @@ class Network(Qcircuit):
 
     Parameters
     ----------
-    netlist:    list of :class:`Qcircuits.Component`
+    netlist:    list of :class:`qucat.Component`
                 See examples
                 
     Returns
     -------
-    Qcircuits.Qcircuit
-        A Qcircuit object, see Qcircuits.Qcircuit
+    qucat.Qcircuit
+        A Qcircuit object, see qucat.Qcircuit
 
     Examples
     --------
@@ -1009,7 +1012,7 @@ class Network(Qcircuit):
 
     Import the Network class, and the components we will need
 
-    >>> from Qcircuits import Network, R,L,C,J
+    >>> from qucat import Network, R,L,C,J
 
     Note that the components (R,L,C,J) accept node indexes as their two first arguments, 
     here we will use the node ``0`` to designate ground. The last arguments should be 
@@ -1062,8 +1065,8 @@ class GUI(Qcircuit):
             
     Returns
     -------
-    Qcircuits.Qcircuit
-        A Qcircuit object, see Qcircuits.Qcircuit
+    qucat.Qcircuit
+        A Qcircuit object, see qucat.Qcircuit
 
     Notes
     -----

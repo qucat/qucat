@@ -1,5 +1,5 @@
 import unittest
-import Qcircuits.src.core as core
+import qucat.src.core as core
 from math import isclose
 import numpy as np
 from scipy.constants import e, pi, h, hbar
@@ -227,7 +227,7 @@ class TestGraphics(TestCaseAppended):
         
 
     def test_generate_graphics(self):
-        import Qcircuits.src._generate_graphics
+        import qucat.src._generate_graphics
 
 class TestNetworkAnalysis(TestCaseAppended):
 

@@ -2,6 +2,6 @@
 Circuit builders
 ************************
 
-.. autoclass:: Qcircuits.Network
+.. autoclass:: qucat.Network
 
-.. autoclass:: Qcircuits.GUI
+.. autoclass:: qucat.GUI

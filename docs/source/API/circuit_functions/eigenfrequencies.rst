@@ -1,4 +1,4 @@
 Calculating eigen-frequencies
 -----------------------------
 
-.. automethod:: Qcircuits.Qcircuit.eigenfrequencies
+.. automethod:: qucat.Qcircuit.eigenfrequencies

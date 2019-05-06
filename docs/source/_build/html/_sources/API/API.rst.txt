@@ -3,7 +3,7 @@ API documentation
 *****************
 
 This chapter contains automatically generated API documentation, including a
-complete list of Qcircuits public classes and functions.
+complete list of qucat public classes and functions.
 
 .. toctree::
    :maxdepth: 3

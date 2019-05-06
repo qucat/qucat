@@ -1,9 +1,9 @@
 import os
 from copy import deepcopy
-from Qcircuits.src.core import string_to_component
-from Qcircuits.src._constants import *
-from Qcircuits.src.plotting_settings import *
-from Qcircuits.src.plotting_settings import plotting_parameters_GUI
+from qucat.src.core import string_to_component
+from qucat.src._constants import *
+from qucat.src.plotting_settings import *
+from qucat.src.plotting_settings import plotting_parameters_GUI
 import matplotlib.pyplot as plt
 from matplotlib.patches import Rectangle
 png_directory = os.path.join(os.path.dirname(__file__),".graphics")

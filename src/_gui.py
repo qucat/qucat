@@ -14,9 +14,9 @@ from PIL import Image, ImageTk
 from tkinter import ttk
 import numpy as np
 import os
-from Qcircuits.src._utility import to_string
-from Qcircuits.src._constants import *
-from Qcircuits.src.plotting_settings import *
+from qucat.src._utility import to_string
+from qucat.src._constants import *
+from qucat.src.plotting_settings import *
 from copy import deepcopy
 import time
  
@@ -905,7 +905,7 @@ class CircuitEditor(tk.Canvas):
         Maps the list of elements (self.elements)
         to a string which can be saved in 
         a file and read either by the gui code
-        or by the Qcircuits code.
+        or by the qucat code.
 
         Returns
         --------
@@ -3595,7 +3595,7 @@ class GuiWindow(ttk.Frame):
 
         # Load the logo to the title bar
         try:
-            self.master.iconbitmap(r'C:\ProgramData\Anaconda3\Lib\site-packages\Qcircuits\artwork\logo.ico')
+            self.master.iconbitmap(r'C:\ProgramData\Anaconda3\Lib\site-packages\qucat\artwork\logo.ico')
         except Exception as e:
             # Anticipating possible non-Windows related issues
             if self.verbose:

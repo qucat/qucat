@@ -1,7 +1,7 @@
-.. Qcircuits documentation
+.. qucat documentation
 
 
-Qcircuits
+qucat
 =====================================
 
 TODO: write a general introduction to the documentation, add a picture.
@@ -10,4 +10,4 @@ TODO: write a general introduction to the documentation, add a picture.
     :maxdepth: 3
     :caption: Contents:
 
-    API of the Qcircuits package <API/API>
+    API of the qucat package <API/API>

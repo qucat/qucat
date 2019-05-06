@@ -3,6 +3,6 @@
 Inductor
 =========
 
-.. autoclass:: Qcircuits.L
+.. autoclass:: qucat.L
     :members:
     :inherited-members:

@@ -3,8 +3,8 @@ Creating a circuit
 ******************
 
 A quantum circuit can be built or created in two different ways, 
-either programmatically using the Qcircuits.Network class
-or using a graphical user interface, using the Qcircuits.GUI class.
+either programmatically using the qucat.Network class
+or using a graphical user interface, using the qucat.GUI class.
 
 After creation, a number of functions are available to compute
 relevant physical parameters, extract a Hamiltonian or visualize

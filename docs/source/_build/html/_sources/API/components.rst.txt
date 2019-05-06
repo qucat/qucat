@@ -2,25 +2,25 @@
 Circuit components
 *************************
 
-.. autoclass:: Qcircuits.R
+.. autoclass:: qucat.R
     :members:
     :undoc-members:
     :inherited-members:
 
-.. autoclass:: Qcircuits.L
+.. autoclass:: qucat.L
     :members:
     :undoc-members:
     :inherited-members:
 
-.. autoclass:: Qcircuits.C
+.. autoclass:: qucat.C
     :members:
     :undoc-members:
     :inherited-members:
 
-.. autoclass:: Qcircuits.W
+.. autoclass:: qucat.W
     :members:
     :undoc-members:
 
-.. autoclass:: Qcircuits.G
+.. autoclass:: qucat.G
     :members:
     :undoc-members:

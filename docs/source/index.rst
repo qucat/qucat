@@ -1,7 +1,7 @@
-.. Qcircuits documentation
+.. qucat documentation
 
 
-Qcircuits
+qucat
 =====================================
 
 TODO: write a general introduction to the documentation, add a picture.

@@ -1,1 +1,1 @@
-from Qcircuits.src.core import *
+from qucat.src.core import *

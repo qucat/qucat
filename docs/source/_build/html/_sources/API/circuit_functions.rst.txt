@@ -2,6 +2,6 @@
 Circuit functions
 *************************
 
-.. autoclass:: Qcircuits.Qcircuit
+.. autoclass:: qucat.Qcircuit
     :members:
     :undoc-members:
