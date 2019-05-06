@@ -5,9 +5,6 @@ from os import devnull
 import sys
 
 # Run plt.ion() to avoid hanging on plt.show() calls
-import matplotlib
-matplotlib.use("TkAgg") # necessary to open the GUI on mac
-# see https://stackoverflow.com/questions/32019556/matplotlib-crashing-tkinter-application
 import matplotlib.pyplot as plt
 plt.ion()
 

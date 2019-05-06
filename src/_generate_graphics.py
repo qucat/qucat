@@ -4,9 +4,6 @@ from qucat.src.core import string_to_component
 from qucat.src._constants import *
 from qucat.src.plotting_settings import *
 from qucat.src.plotting_settings import plotting_parameters_GUI
-import matplotlib
-matplotlib.use("TkAgg") # necessary to open the GUI on mac
-# see https://stackoverflow.com/questions/32019556/matplotlib-crashing-tkinter-application
 import matplotlib.pyplot as plt
 from matplotlib.patches import Rectangle
 png_directory = os.path.join(os.path.dirname(__file__),".graphics")
