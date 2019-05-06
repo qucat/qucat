@@ -13,7 +13,23 @@ from qucat.src._utility import pretty_value,\
         to_string,\
         safely_evaluate,\
         vectorize
-import matplotlib.pyplot as plt
+
+if os.name == "posix":
+    # Patch necessary to open GUI from notebook on OSX
+    try:
+        # will only run if in interactive python environment
+        cfg = get_ipython().magic("matplotlib inline")
+        print("qucat called '%matplotlib inline'")
+    except:
+        pass
+    import matplotlib
+    matplotlib.use("TkAgg") # necessary to open the GUI on mac
+    # see https://stackoverflow.com/questions/32019556/matplotlib-crashing-tkinter-application
+    from importlib import reload
+    reload(matplotlib.pyplot)
+    import matplotlib.pyplot as plt
+else:
+    import matplotlib.pyplot as plt
 
 from scipy import optimize
 import time
@@ -1110,25 +1126,6 @@ class GUI(Qcircuit):
     def __init__(self, filename, edit=True, plot=True, print_network=True,_unittesting=False):
         
         if edit:
-            if os.name == "posix":
-                # Patch necessary to open GUI from notebook on OSX
-                try:
-                    # will only run if in interactive python environment
-                    cfg = get_ipython().magic("matplotlib inline")
-                except:
-                    pass
-                import matplotlib
-                matplotlib.use("TkAgg") # necessary to open the GUI on mac
-                # see https://stackoverflow.com/questions/32019556/matplotlib-crashing-tkinter-application
-                from importlib import reload
-                reload(matplotlib.pyplot)
-                import matplotlib.pyplot as plt
-                try:
-                    # will only run if in interactive python environment
-                    cfg = get_ipython().magic("matplotlib inline")
-                    print("qucat called '%matplotlib inline'")
-                except:
-                    pass
             from qucat.src import _gui
             editor = _gui.GuiWindow(filename,_unittesting = _unittesting)
             if _unittesting:
