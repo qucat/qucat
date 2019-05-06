@@ -2,7 +2,6 @@ from math import floor
 import numpy as np
 import functools
 from warnings import warn
-import traceback
 np.seterr(divide='raise', invalid='raise')
 
 

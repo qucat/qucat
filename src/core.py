@@ -4,10 +4,6 @@ import numpy as np
 from scipy.constants import e, pi, h, hbar
 from sympy.core.mul import Mul, Pow, Add
 from copy import deepcopy
-import matplotlib
-matplotlib.use("TkAgg") # necessary to open the GUI on mac
-# see https://stackoverflow.com/questions/32019556/matplotlib-crashing-tkinter-application
-import matplotlib.pyplot as plt
 from numbers import Number
 from math import floor, factorial
 from qucat.src import _gui
@@ -18,6 +14,22 @@ from qucat.src._utility import pretty_value,\
         to_string,\
         safely_evaluate,\
         vectorize
+
+if os.name == "posix":
+    # Patch necessary to open GUI from notebook on OSX
+    try:
+        # will only run if in interactive python environment
+        cfg = get_ipython().magic("matplotlib inline")
+        print("qucat called '%matplotlib inline'")
+    except:
+        pass
+    import matplotlib
+    matplotlib.use("TkAgg") # necessary to open the GUI on mac
+    # see https://stackoverflow.com/questions/32019556/matplotlib-crashing-tkinter-application
+    import matplotlib.pyplot as plt
+else:
+    import matplotlib.pyplot as plt
+
 from scipy import optimize
 import time
 from qucat.src.plotting_settings import plotting_parameters_show,plotting_parameters_normal_modes
