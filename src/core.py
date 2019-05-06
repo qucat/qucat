@@ -906,7 +906,7 @@ class Qcircuit(object):
         # Add the title
         if add_title:
             w,k,A,chi = self.f_k_A_chi(**kwargs)
-            ax.annotate(r'Mode %d, f=%sHz, k=%sHz, A=%sHz'%
+            ax.annotate(r'Mode %d, f=%sHz, k=%sHz, A=%sHz,'%
                 (mode,
                 pretty_value(w[mode]),
                 pretty_value(k[mode]),
@@ -917,69 +917,57 @@ class Qcircuit(object):
                 xycoords='axes fraction',
                 fontsize=12, 
                 weight='bold')
+                
+            ax.annotate('populated by single-photon amplitude coherent state',
+                xy=(0.05, 0.97-0.045),
+                horizontalalignment='left',
+                verticalalignment='top',
+                xycoords='axes fraction',
+                fontsize=12)
 
         if add_legend:
             if quantity == 'current':
-                value_text= "i_zpf"
+                value_text= "|I|e"
             elif quantity == 'voltage':
-                value_text= "v_zpf"
+                value_text= u"|V|"
             if quantity == 'flux':
-                value_text= u"\u03A6"+"_zpf"
+                value_text= u"|\u03A6|e"
             elif quantity == 'charge':
-                value_text= "q_zpf"
-            sign_text = u"sign of \u27E8\u03B1_%d|i|\u03B1_%d\u27E9"%(mode, mode)
+                value_text= "|Q|e"
+            value_text += u"exp(i\u03B8)"
         
-        x_legend = ax.get_xlim()[0]+0.35
-        y2_legend = ax.get_ylim()[0]+0.07
-        y1_legend = y2_legend+0.15
+        x_legend = ax.get_xlim()[0]+0.4
+        y_legend = ax.get_ylim()[0]+0.25
 
         legend_text_kwargs = {
-            'ha':'left',
+            'ha':'center',
             'va':'center',
             'fontsize':12, 
             'weight':'normal'
         }
-            
-        ax.text(x_legend, y1_legend,
+        
+        ax.text(x_legend, y_legend,
             value_text,
             **legend_text_kwargs)
-        ax.text(x_legend, y2_legend,
-            sign_text,
-            **legend_text_kwargs)
 
-        x_arrows = x_legend-0.22
-        dy_arrows = 0.02
+        superscript_text = u"i\u03B8"
+        superscript_dx = 0.25
+        superscript_dy = 0.06
 
-        v1 = 0.5
-        ax.arrow(x_arrows-arrow_width(value_01 = v1)/2, 
-                y1_legend+dy_arrows,
-                arrow_width(value_01 = v1), 0,
-                fc=pp['normal_mode_arrow']['color'],
-                ec=pp['normal_mode_arrow']['color'], 
-                **arrow_kwargs(value_01 =v1))
-        
-        v0 = 0
-        ax.arrow(x_arrows-arrow_width(value_01 = v0)/2, 
-                y1_legend-dy_arrows,
-                arrow_width(value_01 = v0), 0,
-                fc=pp['normal_mode_arrow']['color'],
-                ec=pp['normal_mode_arrow']['color'], 
-                **arrow_kwargs(value_01 =v0))
-        
-        v01 = 0.1
-        ax.arrow(x_arrows-arrow_width(value_01 = v01)/2, 
-                y2_legend+dy_arrows,
+        # legend_text_kwargs['fontsize']=8
+
+        # ax.text(x_legend+superscript_dx, y_legend+superscript_dy,
+        #     superscript_text,
+        #     **legend_text_kwargs)
+
+        v01 = 0.7
+        ax.arrow(x_legend-arrow_width(value_01 = v01)/2, 
+                y_legend-0.15,
                 arrow_width(value_01 = v01), 0,
                 fc=pp['normal_mode_arrow']['color'],
                 ec=pp['normal_mode_arrow']['color'], 
                 **arrow_kwargs(value_01 =v01))
-        
-        ax.arrow(x_arrows+arrow_width(value_01 = v01)/2, 
-                y2_legend-dy_arrows,
-                -arrow_width(value_01 = v01), 0,
-                fc=pp['normal_mode_arrow']['color'],
-                ec=pp['normal_mode_arrow']['color'], 
-                **arrow_kwargs(value_01 =v01))
+       
 
         if plot == True:
             plt.show()
@@ -2478,7 +2466,7 @@ def main():
     # junction.zpf(mode=0,quantity = 'flux')
     # H = circuit.hamiltonian(modes = [0],taylor = 4,excitations = [50])
     # print(H)
-    circuit = GUI(filename = './src/test.txt',edit=True,plot=False)
+    circuit = GUI(filename = './src/test.txt',edit=False,plot=False)
     # circuit.f_k_A_chi()
     print(circuit.resistors[0].phasor(0,'voltage'))
     circuit.show_normal_mode(0,quantity='voltage')
