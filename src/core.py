@@ -7,15 +7,15 @@ from copy import deepcopy
 from numbers import Number
 from math import floor, factorial
 import os
+from subprocess import run
 from qucat.src._constants import *
+import inspect
 from qucat.src._utility import pretty_value,\
         shift,\
         to_string,\
         safely_evaluate,\
         vectorize
 import matplotlib.pyplot as plt
-
-from scipy import optimize
 import time
 from qucat.src.plotting_settings import plotting_parameters_show,plotting_parameters_normal_modes
 PROFILING = False
@@ -1108,31 +1108,19 @@ class GUI(Qcircuit):
     '''
 
     def __init__(self, filename, edit=True, plot=True, print_network=True,_unittesting=False):
-        
+        try:
+            with open(filename, 'r') as f:
+                filepath = os.path.realpath(f.name)
+        except FileNotFoundError:
+            with open(filename, 'w') as f:
+                filepath = os.path.realpath(f.name)
+
         if edit:
-            if os.name == "posix":
-                # Patch necessary to open GUI from notebook on OSX
-                try:
-                    # will only run if in interactive python environment
-                    cfg = get_ipython().magic("matplotlib inline")
-                except:
-                    pass
-                import matplotlib
-                matplotlib.use("TkAgg") # necessary to open the GUI on mac
-                # see https://stackoverflow.com/questions/32019556/matplotlib-crashing-tkinter-application
-                from importlib import reload
-                reload(matplotlib.pyplot)
-                import matplotlib.pyplot as plt
-                try:
-                    # will only run if in interactive python environment
-                    cfg = get_ipython().magic("matplotlib inline")
-                    print("qucat called '%matplotlib inline'")
-                except:
-                    pass
-            from qucat.src import _gui
-            editor = _gui.GuiWindow(filename,_unittesting = _unittesting)
-            if _unittesting:
-                editor.master.destroy()
+            frm = inspect.stack()[1]
+            mod = inspect.getmodule(frm[0])
+            run([sys.executable,
+                os.path.join(os.path.dirname(__file__),"_gui.py"),
+                filepath])
 
         # if file does not exist, also open the gui
         try:
@@ -1142,9 +1130,6 @@ class GUI(Qcircuit):
             editor = _gui.GuiWindow(filename)
             if _unittesting:
                 editor.master.destroy()
-
-        
-            
 
         netlist = []
         with open(filename, 'r') as f:

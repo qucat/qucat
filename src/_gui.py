@@ -1,13 +1,14 @@
 import tkinter as tk
 from tkinter.font import Font
 from tkinter import messagebox,filedialog
+import sys
 from PIL import Image, ImageTk
 from tkinter import ttk
 import numpy as np
 import os
-from qucat.src._utility import to_string
-from qucat.src._constants import *
-from qucat.src.plotting_settings import *
+from _utility import to_string
+from _constants import *
+from plotting_settings import *
 from copy import deepcopy
 import time
  
@@ -3621,5 +3622,7 @@ class GuiWindow(ttk.Frame):
             self.mainloop()
 
 if __name__ == '__main__':
+    GuiWindow(sys.argv[1])
+    
     # GuiWindow('./src/test.txt',_track_events_to='test.txt')
-    GuiWindow('./src/test.txt',_verbose=True)
+    # GuiWindow('./src/test.txt',_verbose=True)
