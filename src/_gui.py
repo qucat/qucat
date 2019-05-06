@@ -1,15 +1,6 @@
-try:
-    # Tkinter for Python 2.xx
-    import Tkinter as tk
-    from tkFont import Font
-    from Tkinter import tkMessageBox as messagebox
-    from Tkinter import tkFileDialog as filedialog
-except ImportError:
-    # Tkinter for Python 3.xx
-    import tkinter as tk
-    from tkinter.font import Font
-    from tkinter import messagebox,filedialog
-
+import tkinter as tk
+from tkinter.font import Font
+from tkinter import messagebox,filedialog
 from PIL import Image, ImageTk
 from tkinter import ttk
 import numpy as np
