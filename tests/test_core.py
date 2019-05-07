@@ -3,6 +3,11 @@ import qucat.src.core as core
 from math import isclose
 import numpy as np
 from scipy.constants import e, pi, h, hbar
+import os
+
+# Run plt.ion() to avoid hanging on plt.show() calls
+import matplotlib.pyplot as plt
+plt.ion()
 
 def cutoff_digits(f,digits):
     float_format = '%%.%de'%digits
@@ -24,13 +29,20 @@ class TestCaseAppended(unittest.TestCase):
             b_comp = cutoff_digits(b[index],digits)
             self.assertEqual(a_comp,b_comp,
                     msg = f'Components with index {index} do not match {a_comp}!={b_comp}')
+    
+    def open_gui_file(self,filename, edit = False, print_network=False,plot=False):
+        return core.GUI(os.path.join(
+            os.path.dirname(__file__),
+            'gui_testing_files',
+            filename),
+            edit = edit, print_network=print_network,plot=plot)
 
-class StandardQuantumCircuits(TestCaseAppended):
+class SeriesRLC(TestCaseAppended):
     '''
     Series RLC circuit parameters
     '''
 
-    def series_RLC_parameters(self,R,L,C):
+    def parameters(self,R,L,C):
         circuit = core.Network([
             core.C(0,1,C),
             core.L(1,2,L),
@@ -38,22 +50,32 @@ class StandardQuantumCircuits(TestCaseAppended):
         ])
         return circuit.f_k_A_chi()
 
-    def test_series_RLC_frequency(self):
+    def test_frequency(self):
         C = 100e-15
         L = 10e-9
         R = 100e-9
-        w,k,A,chi = self.series_RLC_parameters(R,L,C)
+        w,k,A,chi = self.parameters(R,L,C)
         cpx_w = (1j*C*R + np.sqrt(4*C*L - C**2*R**2))/(2.*C*L)
         self.assertRelativelyClose(np.real(cpx_w)/2/np.pi,w)
 
-    def test_series_RLC_frequency2(self):
+    def test_frequency2(self):
         C = 1
         L = 3
         R = 0.5
-        w,k,A,chi = self.series_RLC_parameters(R,L,C)
+        w,k,A,chi = self.parameters(R,L,C)
         cpx_w = (1j*C*R + np.sqrt(4*C*L - C**2*R**2))/(2.*C*L)
         self.assertRelativelyClose(np.real(cpx_w)/2/np.pi,w)
 
+
+    def test_dissipation(self):
+        C = 100e-15
+        L = 10e-9
+        R = 100e-9
+        w,k,A,chi = self.parameters(R,L,C)
+        cpx_w = (1j*C*R + np.sqrt(4*C*L - C**2*R**2))/(2.*C*L)
+        self.assertRelativelyClose(np.imag(cpx_w)/2/np.pi,k)
+
+class Other(TestCaseAppended):
     def test_LC_double_series_L_double_series_C(self):
         C = 1e-8
         L = 3
@@ -66,39 +88,32 @@ class StandardQuantumCircuits(TestCaseAppended):
         f,k,A,chi = circuit.f_k_A_chi()
         f_expected = 1/np.sqrt(L*C)/2/np.pi
         self.assertRelativelyClose(f_expected,f)
-
-    def test_series_RLC_dissipation(self):
-        C = 100e-15
-        L = 10e-9
-        R = 100e-9
-        w,k,A,chi = self.series_RLC_parameters(R,L,C)
-        cpx_w = (1j*C*R + np.sqrt(4*C*L - C**2*R**2))/(2.*C*L)
-        self.assertRelativelyClose(np.imag(cpx_w)/2/np.pi,k)
-
+        
+class Transmon(TestCaseAppended):
     '''
     Transmon circuit parameters
     '''
 
-    def transmon_parameters(self,C,Lj):
+    def parameters(self,C,Lj):
         circuit = core.Network([
             core.C(0,1,C),
             core.J(0,1,Lj)
         ])
         return circuit.f_k_A_chi()
 
-    def test_transmon_frequency(self):
+    def test_frequency(self):
         C = 100e-15
         Lj = 10e-9
-        w,k,A,chi = self.transmon_parameters(C,Lj)
+        w,k,A,chi = self.parameters(C,Lj)
         self.assertRelativelyClose(1/(np.sqrt(C*Lj)*2.*pi),w)
 
-    def test_transmon_anharmonicity(self):
+    def test_anharmonicity(self):
         C = 100e-15
         Lj = 10e-9
-        w,k,A,chi = self.transmon_parameters(C,Lj)
+        w,k,A,chi = self.parameters(C,Lj)
         self.assertRelativelyClose(e**2/2./C/h,A[0])
 
-    def test_transmon_phi_zpf(self):
+    def test_phi_zpf(self):
         Cj = 100e-15
         Lj = 10e-9
         junction = core.J(0,1,Lj)
@@ -113,7 +128,7 @@ class StandardQuantumCircuits(TestCaseAppended):
         self.assertRelativelyClose(phi_zpf/phi_0,junction.zpf(mode=0,quantity = 'flux'))
 
         
-    def test_transmon_q_zpf(self):
+    def test_q_zpf(self):
         Cj = 100e-15
         Lj = 10e-9
         junction = core.J(0,1,Lj)
@@ -126,7 +141,7 @@ class StandardQuantumCircuits(TestCaseAppended):
         q_zpf = np.sqrt(hbar/Z/2)
         self.assertRelativelyClose(q_zpf/e,np.absolute(junction.zpf(mode=0,quantity = 'charge')))
 
-    def test_transmon_anharmonicity_using_hamiltonian(self):
+    def test_anharmonicity_using_hamiltonian(self):
         Cj = 1e-10
         circuit = core.Network([
             core.C(0,1,Cj),
@@ -140,7 +155,7 @@ class StandardQuantumCircuits(TestCaseAppended):
         A_expected = 194712.7
         self.assertRelativelyClose(A_expected,A)
 
-    def test_transmon_double_series_capacitor(self):
+    def test_double_series_capacitor(self):
         C = 100e-15
         Lj = 10e-9
         circuit = core.Network([
@@ -151,11 +166,12 @@ class StandardQuantumCircuits(TestCaseAppended):
         f,k,A,chi = circuit.f_k_A_chi()
         self.assertArrayRelativelyClose([e**2/2./C/h,1/(np.sqrt(C*Lj)*2.*pi)],[A[0],f[0]])
 
+class ShuntedJosephsonRing(TestCaseAppended):
     '''
     Shunted Josephson ring
     '''
     
-    def shunted_josephson_ring_parameters(self,C,L):
+    def parameters(self,C,L):
         circuit = core.Network([
             core.C(0,2,C),
             core.C(1,3,C),
@@ -166,47 +182,48 @@ class StandardQuantumCircuits(TestCaseAppended):
         ])
         return circuit.f_k_A_chi()
 
-    def test_shunted_josephson_ring_number_of_modes_nHz(self):
+    def test_number_of_modes_nHz(self):
         C = 2.e9
         L = 3.e11
-        w,k,A,chi = self.shunted_josephson_ring_parameters(C,L)
+        w,k,A,chi = self.parameters(C,L)
         self.assertEqual(len(w),2,msg = f"f_res = {w}")
-    def test_shunted_josephson_ring_number_of_modes_Hz(self):
+    def test_number_of_modes_Hz(self):
         C = 2.
         L = 3. 
-        w,k,A,chi = self.shunted_josephson_ring_parameters(C,L)
+        w,k,A,chi = self.parameters(C,L)
         self.assertEqual(len(w),2,msg = f"f_res = {w}")
 
-    def test_shunted_josephson_ring_number_of_modes_GHz(self):
+    def test_number_of_modes_GHz(self):
         C = 1e-13
         L = 1e-8
-        w,k,A,chi = self.shunted_josephson_ring_parameters(C,L)
+        w,k,A,chi = self.parameters(C,L)
         self.assertEqual(len(w),2,msg = f"f_res = {w}")
 
-    def test_shunted_josephson_ring_frequency_0(self):
+    def test_frequency_0(self):
         C = 1e-13
         L = 1e-8
-        w,k,A,chi = self.shunted_josephson_ring_parameters(C,L)
+        w,k,A,chi = self.parameters(C,L)
         self.assertRelativelyClose(w[0],1/np.sqrt(L*C)/2./np.pi)
 
-    def test_shunted_josephson_ring_frequency_1(self):
+    def test_frequency_1(self):
         C = 1e-13
         L = 1e-8
-        w,k,A,chi = self.shunted_josephson_ring_parameters(C,L)
+        w,k,A,chi = self.parameters(C,L)
         self.assertRelativelyClose(w[1],1/np.sqrt(L*C)/2./np.pi)
 
-    def test_shunted_josephson_ring_anharmonicity_0(self):
+    def test_anharmonicity_0(self):
         C = 1e-13
         L = 1e-8
-        w,k,A,chi = self.shunted_josephson_ring_parameters(C,L)
+        w,k,A,chi = self.parameters(C,L)
         self.assertRelativelyClose(A[0],e**2/2./(8*C)/h)
 
-    def test_shunted_josephson_ring_anharmonicity_1(self):
+    def test_anharmonicity_1(self):
         C = 1e-13
         L = 1e-8
-        w,k,A,chi = self.shunted_josephson_ring_parameters(C,L)
+        w,k,A,chi = self.parameters(C,L)
         self.assertRelativelyClose(A[1],e**2/2./(8*C)/h)
 
+class CoupledTransmonRLC(TestCaseAppended):
     '''
     Coupled transmon/RLC
     '''
@@ -239,9 +256,17 @@ class TestGraphics(TestCaseAppended):
         with self.assertRaises(TypeError):
             circuit.show_normal_mode()
         
-
     def test_generate_graphics(self):
         import qucat.src._generate_graphics
+    
+    def test_show_transmon_RLC(self):
+        cir=self.open_gui_file('show_normal_mode_transmon_RLC_Lj_as_parameter.txt')
+        cir.show()
+
+    def test_show_normal_mode_transmon_RLC_Lj_as_parameter(self):
+        cir=self.open_gui_file('show_normal_mode_transmon_RLC_Lj_as_parameter.txt')
+        for quantity in ['flux','voltage','charge','current']:
+            cir.show_normal_mode(0,quantity,Lj=1e-9)
 
 class TestNetworkAnalysis(TestCaseAppended):
 
@@ -416,3 +441,6 @@ class TestNetworkAnalysis(TestCaseAppended):
                 core.J(3,4,'Z'),
                 core.J(4,5,'Z'),
                 ])
+
+if __name__ == "__main__":
+    unittest.main()
