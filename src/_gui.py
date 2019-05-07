@@ -725,7 +725,7 @@ class CircuitEditor(tk.Canvas):
 
         if self.state != n:
             if self.verbose:
-                print('entering state %d'%n)
+                self.write_message('entering state %d'%n)
             # Save previous state, as we may go back
             # to it when exiting this state
             self.previous_state = self.state 
@@ -741,7 +741,7 @@ class CircuitEditor(tk.Canvas):
 
         if self.state == n:
             if self.verbose:
-                print('exiting state %d'%n)
+                self.write_message('exiting state %d'%n)
             exec("self.exit_state_%d()"%n)
     
         for el in self.elements:
@@ -1033,7 +1033,7 @@ class CircuitEditor(tk.Canvas):
         and draw_grid for more detail
         '''
         if self.verbose:
-            print('resize event')
+            self.write_message('resize event')
         self.configure_scrollregion()
         self.draw_grid(event)
 
@@ -1052,7 +1052,7 @@ class CircuitEditor(tk.Canvas):
                         are drag/dropping or creating an element.
         '''
         if self.verbose:
-            print('drawing grid with set_bindings = '+str(set_bindings))
+            self.write_message('drawing grid with set_bindings = '+str(set_bindings))
         
 
         try:
@@ -2319,7 +2319,7 @@ class TwoNodeElement(object):
 
     def hover_enter(self, event = None):
         if self.canvas.verbose:
-            print('Hovering')
+            self.canvas.write_message('Hovering')
         self.hover = True
         self.update_graphic()
 
@@ -3599,7 +3599,7 @@ class GuiWindow(ttk.Frame):
         except Exception as e:
             # Anticipating possible non-Windows related issues
             if self.verbose:
-                ("There has been an error loading the applications icon:\n"+str(e))
+                print("There has been an error loading the applications icon:\n"+str(e))
 
         # Make the fram a 1x1 expandable grid
         self.master.rowconfigure(0, weight=1)
