@@ -256,7 +256,7 @@ class TestScrolling(AutomaticTesting):
         self.launch_gui_testing()
 
     def test_scrolling_with_mouse_left_and_right_then_moving_junction(self):
-        self.launch_gui_testing()
+        self.launch_gui_testing(force_build=False, run_slower=False)
 
 
 class TestSelection(AutomaticTesting):
