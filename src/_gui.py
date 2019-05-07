@@ -1118,6 +1118,21 @@ class CircuitEditor(tk.Canvas):
             # right-clicking opens a menu
             self.tag_bind( self.grid_id, "<Button-3>", self.right_click)
         
+    ###########################
+    # BINDINGS
+    ###########################
+    
+    def set_bindings(self,*args, exeptions = []):
+        for binding_list in args:
+            for binding in binding_list:
+                if binding[0] not in exeptions:
+                    self.bind(*binding)
+
+    def unset_bindings(self,*args, exceptions = []):
+        for binding_list in args:
+            for binding in binding_list:
+                self.unbind(binding[0])
+
     def bind(self, sequence=None, func=None, add=None):
         '''
         Modifies the "bind" method of tk.Canvas such that
@@ -1126,7 +1141,17 @@ class CircuitEditor(tk.Canvas):
 
         This is useful when we want to track all events
         to construct a (unit)test.
+
+        Also, when, <Control- ... > gets bound, 
+        we also bind <Command- ... > for OSX users
         '''
+
+        if 'Control' in sequence:
+            self.bind(
+                sequence = sequence.replace('Control','Command'),
+                func = func, 
+                add = add)
+
         if self.track_events_to is not None:
             def tracked_func(event):
                 track_event(self.track_events_to,event, sequence=sequence)
@@ -1143,7 +1168,17 @@ class CircuitEditor(tk.Canvas):
 
         This is useful when we want to track all events
         to construct a (unit)test.
+
+        Also, when, <Control- ... > gets bound, 
+        we also bind <Command- ... > for OSX users
         '''
+
+        if 'Control' in sequence:
+            self.tag_bind(tagOrId,
+                sequence = sequence.replace('Control','Command'),
+                func = func, 
+                add = add)
+
         if self.track_events_to is not None:
             def tracked_func(event):
                 track_event(self.track_events_to,event, sequence=sequence)
@@ -1152,20 +1187,15 @@ class CircuitEditor(tk.Canvas):
         else:
             super(CircuitEditor, self).tag_bind(tagOrId,sequence,func,add)
 
-    ###########################
-    # BINDINGS
-    ###########################
-    
-    def set_bindings(self,*args, exeptions = []):
-        for binding_list in args:
-            for binding in binding_list:
-                if binding[0] not in exeptions:
-                    self.bind(*binding)
+    def unbind(self,sequence):
+        '''
+        When <Control- ... > gets unbound, 
+        we also unbind <Command- ... > for OSX users
+        '''
+        if 'Control' in sequence:
+            self.unbind(sequence.replace('Control','Command'))
+        super(CircuitEditor, self).unbind(sequence)
 
-    def unset_bindings(self,*args, exceptions = []):
-        for binding_list in args:
-            for binding in binding_list:
-                self.unbind(binding[0])
 
     def define_permenant_bindings(self):
         '''
