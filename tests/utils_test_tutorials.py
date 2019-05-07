@@ -28,8 +28,8 @@ def parse_cell(code):
 def run_notebook(notebook_name):
     tutorials_folder = join(dirname(dirname(__file__)),'docs','source','tutorials')
     nb = nbformat.read(join(tutorials_folder,notebook_name), 4)
-    # sys.stdout = open(devnull, "w")
-    # sys.stderr = open(devnull, "w")
+    sys.stdout = open(devnull, "w")
+    sys.stderr = open(devnull, "w")
     for c in nb['cells']:
         if c['cell_type'] == 'code':
             to_run = parse_cell(c['source'])

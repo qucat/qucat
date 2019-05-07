@@ -280,15 +280,20 @@ class CircuitEditor(tk.Canvas):
 
     """
     def __init__(self, master, grid_unit, netlist_filename,
-            track_events_to = None, unittesting = False,verbose = False):
+            track_events_to = None, unittesting = False,verbose = False,os_type = 'windows'):
         
-        self.paired_sequences = {
-            'Control':'Command', # for OSX users
-            'Delete':'BackSpace', # No delete button on OSX
-            '-3':'-2', # button 2 (right-click on for OSX) same as MS/Unix right-click
+        self.paired_sequences = {}
+        if os_type == 'mac':
+            self.paired_sequences.update({
+                'Control':'Mod1', # for OSX users
+                'Delete':'BackSpace', # No delete button on OSX
+                '-3':'-2', # button 2 (right-click on for OSX) same as MS/Unix right-click
+            })
+        if os_type == 'linux':
+            self.paired_sequences.update({
             'MouseWheel':'Button-5', # wheel in linux
             'MouseWheel':'Button-4', # wheel in linux
-        }
+            })
         '''
         Pair certain key-strokes or sequences which should have
         the same effect, for cross-platform compatibility
@@ -3611,8 +3616,17 @@ class GuiWindow(ttk.Frame):
     def __init__(self, netlist_filename, 
         _verbose = False,
         _unittesting = False, 
-        _track_events_to = None):
+        _track_events_to = None, 
+        _os_type = None):
 
+        # Find out what kind of system the gui is running on
+        if _os_type is None:
+            if os.name == 'posix':
+                _os_type = 'mac'
+            elif sys.platform.startswith('linux'):
+                _os_type = 'linux'
+            else:
+                _os_type = 'windows'
         # Initialize the frame, inside the root window (tk.Tk())
         ttk.Frame.__init__(self, master=tk.Tk())
 
@@ -3646,7 +3660,8 @@ class GuiWindow(ttk.Frame):
             grid_unit=60, 
             track_events_to=_track_events_to, 
             unittesting = _unittesting,
-            verbose = _verbose)
+            verbose = _verbose,
+            os_type = _os_type)
 
         # Bring the window to the front
         self.master.lift()
@@ -3660,4 +3675,4 @@ class GuiWindow(ttk.Frame):
 
 if __name__ == '__main__':
     # GuiWindow(sys.argv[1])
-    GuiWindow('test.txt',_verbose=True)
+    GuiWindow('test.txt',_verbose=True,_track_events_to='test_events.txt')

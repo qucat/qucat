@@ -49,7 +49,8 @@ class ManualTesting(GuiTestingHandler):
 
 class AutomaticTesting(GuiTestingHandler):
 
-    def launch_gui_testing(self,exclude = None, force_build = False, run_slower = False):
+    def launch_gui_testing(self,exclude = None, force_build = False, run_slower = False, os_type = 'windows'):
+        self.os_type = os_type
         self.force_build = force_build
         self.set_folder_name()
         self.set_file_names()
@@ -94,7 +95,7 @@ class AutomaticTesting(GuiTestingHandler):
     def run_events(self):
 
         shutil.copyfile(self.init,self.final_after_events)
-        self.gui = GuiWindow(self.final_after_events, _unittesting = True)
+        self.gui = GuiWindow(self.final_after_events, _unittesting = True, _os_type =self.os_type)
 
         with open(self.events,'r') as f:
             lines = f.readlines()
@@ -161,7 +162,7 @@ class AutomaticTesting(GuiTestingHandler):
 class TestDeleting(AutomaticTesting):
     
     def test_deleting_an_RLC_on_mac(self):
-        self.launch_gui_testing()
+        self.launch_gui_testing(os_type = 'mac')
 
 
 class TestOpening(AutomaticTesting):
