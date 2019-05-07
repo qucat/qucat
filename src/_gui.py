@@ -3645,12 +3645,14 @@ class GuiWindow(ttk.Frame):
         self.master.geometry('800x600')
 
         # Load the logo to the title bar
-        try:
-            self.master.iconbitmap(os.path.join(os.path.dirname(os.path.dirname(__file__)),'artwork','logo.ico'))
-        except Exception as e:
-            # Anticipating possible non-Windows related issues
-            if _verbose:
-                print("There has been an error loading the applications icon:\n"+str(e))
+        # TODO: enable for all os
+        if _os_type == 'windows':
+            try:
+                self.master.iconbitmap(os.path.join(os.path.dirname(os.path.dirname(__file__)),'artwork','logo.ico'))
+            except Exception as e:
+                # Anticipating possible non-Windows related issues
+                if _verbose:
+                    print("There has been an error loading the applications icon:\n"+str(e))
 
         # Make the fram a 1x1 expandable grid
         self.master.rowconfigure(0, weight=1)
