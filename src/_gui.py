@@ -282,6 +282,11 @@ class CircuitEditor(tk.Canvas):
     def __init__(self, master, grid_unit, netlist_filename,
             track_events_to = None, unittesting = False,verbose = False,os_type = 'windows'):
         
+        if os_type == 'mac':
+            self.font_size = 14
+        else:
+            self.font_size = 8
+
         self.paired_sequences = {}
         if os_type == 'mac':
             self.paired_sequences.update({
@@ -439,7 +444,7 @@ class CircuitEditor(tk.Canvas):
         # have a constant character width, the only one satisfying this 
         # condition is Courier new.
         #TODO use images as cascade menu items with an aligned and pretty font
-        menu_font = Font(family="Courier New", size=9, weight='normal')
+        menu_font = Font(family="Courier New", size=self.font_size, weight='normal')
 
         ####################################
         # FILE cascade menu build
@@ -645,7 +650,7 @@ class CircuitEditor(tk.Canvas):
             self.text_widget = tk.Label(self.frame, 
                                 text = '',
                                 font=Font(family='Helvetica', 
-                                size=8, 
+                                size=self.font_size, 
                                 weight='normal'))
             self.text_widget.grid(row=0, column=0, sticky='nw')
         '''Parameters of the message to be displayed on the top left of the
@@ -3350,7 +3355,7 @@ class Component(TwoNodeElement):
         text = to_string(self.unit, label, value,
                          use_unicode=True,
                          maximum_info = True)
-        font = Font(family='Helvetica', size=int(gu/8.), weight='normal')
+        font = Font(family='Helvetica', size=int(self.canvas.font_size*gu/60), weight='normal')
         text_position = (0.2)*gu
         if angle % 180. == 90. and self.text is None:
             self.text = self.canvas.create_text(
@@ -3675,4 +3680,4 @@ class GuiWindow(ttk.Frame):
 
 if __name__ == '__main__':
     # GuiWindow(sys.argv[1])
-    GuiWindow('test.txt',_verbose=True,_track_events_to='test_events.txt')
+    GuiWindow('test.txt',_verbose=True)
