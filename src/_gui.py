@@ -1654,21 +1654,6 @@ class CircuitEditor(tk.Canvas):
             to_paste = [deepcopy(el) for el in self.copied_elements]
             self.track_changes = True
 
-            # Calculate top left position of the circuit to paste
-            # in grid units then convert it to canvas units
-            x_min = min([el.x_minus for el in to_paste] +
-                        [el.x_plus for el in to_paste])
-            y_min = min([el.y_minus for el in to_paste] +
-                        [el.y_plus for el in to_paste])
-            x_min, y_min = self.grid_to_canvas([x_min, y_min])
-
-            # shift in position to apply to all elements
-            # such that the top left of the circuit lies
-            # under the mouse
-            # in canvas units
-            dx = self.canvasx(event.x)-x_min
-            dy = self.canvasy(event.y)-y_min
-
             for el in to_paste:
 
                 # create the component
@@ -1677,13 +1662,10 @@ class CircuitEditor(tk.Canvas):
                 el.adapt_to_grid_unit()
                 # select it
                 el.force_select()
-                # move it such that the top left of the circuit lies
-                # under the mouse
-                el.move(dx, dy)
 
                 # used to update the position of components label
                 el.add_or_replace_label()
-
+            
             #########################
             # Note: all the bindings below need only
             # be applied to a single element since
@@ -1697,6 +1679,12 @@ class CircuitEditor(tk.Canvas):
             # moves such that the top left of the circuit lies
             # under the mouse, selection is released upon "<ButtonPress-1>"
             self.bind("<Motion>", lambda event: el.on_motion(event, release_sequence = "ButtonPress-1"))
+
+            # shift all elements in position 
+            # such that ''el'' lies under the mouse
+            self.event_generate('<Motion>', warp=False,
+                x=self.get_mouse_location(units='window')[0],
+                y=self.get_mouse_location(units='window')[1])
         else:
             self.write_message("Nothing to paste")
 
@@ -2035,18 +2023,28 @@ class CircuitEditor(tk.Canvas):
         return [(pos[0]-self.canvas_center[0])/self.grid_unit,
                 (pos[1]-self.canvas_center[1])/self.grid_unit]
     
-    def get_mouse_location(self):
+    def get_mouse_location(self, units = 'canvas'):
         '''
         Returns the location of the mouse pointer in canvas units.
+
+        Arguments
+        ---------
+        units   string, optional
+                units in which to return the location, 
+                defaults to 'canvas', other option
+                is 'window'
 
         Returns
         -------
         [x,y]:  List of floats
                 corresponding to the location of the mouse pointer in canvas units.
         '''
-
-        return [self.canvasx(self.winfo_pointerx())-self.winfo_rootx(), 
-            self.canvasy(self.winfo_pointery())-self.winfo_rooty()]
+        if units == 'window':
+            return [self.winfo_pointerx() - self.winfo_rootx(),
+                    self.winfo_pointery() - self.winfo_rooty()]
+        elif units == 'canvas':
+            return [self.canvasx(self.winfo_pointerx())-self.winfo_rootx(), 
+                self.canvasy(self.winfo_pointery())-self.winfo_rooty()]
     
     def center_window_on_circuit(self, event = None):
         '''
@@ -3108,8 +3106,7 @@ class Component(TwoNodeElement):
 
         # Impor the image and plot it on the canvas
         self.import_image()
-        self.image = self.canvas.create_image(
-            self.canvas.canvasx(event.x), self.canvas.canvasy(event.y), image=self.tk_image)
+        self.image = self.canvas.create_image(*self.canvas.get_mouse_location(), image=self.tk_image)
 
         self.canvas.bind("<ButtonRelease-1>", self.init_release)
         self.canvas.bind('<Motion>', self.init_on_motion)
