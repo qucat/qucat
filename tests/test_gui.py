@@ -49,7 +49,7 @@ class ManualTesting(GuiTestingHandler):
 
 class AutomaticTesting(GuiTestingHandler):
 
-    def launch_gui_testing(self,exclude = None, force_build = False, run_slower = False, os_type = None):
+    def launch_gui_testing(self,exclude = None, force_build = False, run_slower = False, os_type = 'windows'):
         self.os_type = os_type
         self.force_build = force_build
         self.set_folder_name()
