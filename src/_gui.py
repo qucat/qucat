@@ -290,18 +290,18 @@ class CircuitEditor(tk.Canvas):
         else:
             self.font_size = 8
 
-        self.paired_sequences = {}
+        self.paired_sequences = []
         if os_type == 'mac':
-            self.paired_sequences.update({
-                'Control':'Mod1', # for OSX users
-                'Delete':'BackSpace', # No delete button on OSX
-                '-3':'-2', # button 2 (right-click on for OSX) same as MS/Unix right-click
-            })
+            self.paired_sequences += [
+                ['Control','Mod1'], # for OSX users
+                ['Delete','BackSpace'], # No delete button on OSX
+                ['-3','-2'], # button 2 (right-click on for OSX) same as MS/Unix right-click
+            ]
         if os_type == 'linux':
-            self.paired_sequences.update({
-            'MouseWheel':'Button-5', # wheel in linux
-            'MouseWheel':'Button-4', # wheel in linux
-            })
+            self.paired_sequences += [
+            ['MouseWheel','Button-5'], # wheel in linux
+            ['MouseWheel','Button-4'], # wheel in linux
+            ]
         '''
         Pair certain key-strokes or sequences which should have
         the same effect, for cross-platform compatibility
@@ -1172,7 +1172,7 @@ class CircuitEditor(tk.Canvas):
         we also bind <Command- ... > for OSX users
         '''
 
-        for key,paired_key in self.paired_sequences.items():
+        for key,paired_key in self.paired_sequences:
             if key in sequence:
                 self.bind(
                     sequence = sequence.replace(key,paired_key),
@@ -1201,7 +1201,7 @@ class CircuitEditor(tk.Canvas):
         we also bind <Command- ... > for OSX users
         '''
 
-        for key,paired_key in self.paired_sequences.items():
+        for key,paired_key in self.paired_sequences:
             if key in sequence:
                 self.tag_bind(tagOrId,
                     sequence = sequence.replace(key,paired_key),
@@ -1223,7 +1223,7 @@ class CircuitEditor(tk.Canvas):
         we also unbind <Command- ... > for OSX users
         '''
 
-        for key,paired_key in self.paired_sequences.items():
+        for key,paired_key in self.paired_sequences:
             if key in sequence:
                 self.unbind(sequence.replace(key,paired_key))
         super(CircuitEditor, self).unbind(sequence)
