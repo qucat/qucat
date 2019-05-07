@@ -1108,28 +1108,22 @@ class GUI(Qcircuit):
     '''
 
     def __init__(self, filename, edit=True, plot=True, print_network=True,_unittesting=False):
-        try:
-            with open(filename, 'r') as f:
-                filepath = os.path.realpath(f.name)
-        except FileNotFoundError:
-            with open(filename, 'w') as f:
-                filepath = os.path.realpath(f.name)
 
-        if edit:
-            frm = inspect.stack()[1]
-            mod = inspect.getmodule(frm[0])
-            run([sys.executable,
-                os.path.join(os.path.dirname(__file__),"_gui.py"),
-                filepath])
+        # Note: this will also give a valid path if filename was specified using 
+        # an absolute path
+        filename = os.path.join(os.getcwd(),filename)
 
-        # if file does not exist, also open the gui
         try:
             with open(filename, 'r') as f:
                 pass
-        except FileNotFoundError as e:
-            editor = _gui.GuiWindow(filename)
-            if _unittesting:
-                editor.master.destroy()
+        except FileNotFoundError:
+            # if file does not exist, also open the gui
+            edit = True
+
+        if edit:
+            run([sys.executable,
+                os.path.join(os.path.dirname(__file__),"_gui.py"),
+                filename])
 
         netlist = []
         with open(filename, 'r') as f:
