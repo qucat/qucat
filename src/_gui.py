@@ -1203,7 +1203,8 @@ class CircuitEditor(tk.Canvas):
         # EDIT menu functionalities
         #############################
         self.bindings_delete = [
-        ['<Delete>', self.delete_selection]]
+        ['<Delete>', self.delete_selection],
+        ['<BackSpace>', self.delete_selection]]
         self.bindings_cut_copy_paste = [
         ['<Control-c>', self.copy_selection],
         ['<Control-x>', self.cut_selection],
@@ -3630,4 +3631,5 @@ class GuiWindow(ttk.Frame):
             self.mainloop()
 
 if __name__ == '__main__':
-    GuiWindow(sys.argv[1])
+    # GuiWindow(sys.argv[1])
+    GuiWindow('test.txt',_verbose=True)

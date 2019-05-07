@@ -158,6 +158,12 @@ class AutomaticTesting(GuiTestingHandler):
             
         return True
 
+class TestDeleting(AutomaticTesting):
+    
+    def test_deleting_an_RLC_on_mac(self):
+        self.launch_gui_testing()
+
+
 class TestOpening(AutomaticTesting):
     
     def test_if_opening_blank_test_throws_error(self):
