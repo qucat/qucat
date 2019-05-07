@@ -301,6 +301,7 @@ class CircuitEditor(tk.Canvas):
             self.paired_sequences += [
             ['MouseWheel','Button-5'], # wheel in linux
             ['MouseWheel','Button-4'], # wheel in linux
+            ['Return','<KP_Enter>'], # Keypad enter in linux
             ]
         '''
         Pair certain key-strokes or sequences which should have
@@ -3523,6 +3524,7 @@ class RequestValueLabelWindow(tk.Toplevel):
 
         # Bind Return, OK and cancel buttons
         self.bind('<Return>', lambda event: self.ok())
+        self.bind('<KP_Enter>', lambda event: self.ok()) # Keypad enter on linux
         ok_button = tk.Button(self, text='OK', command=self.ok)
         ok_button.pack(side=tk.LEFT, padx=5, pady=5)
         cancel_button = tk.Button(self, text='Cancel', command=self.cancel)
