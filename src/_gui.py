@@ -70,7 +70,7 @@ def track_event(track_events_to, event,sequence):
                     event_string+=(', '+key+' = '+repr(value))
 
         # Append the event tracking file
-        with open(track_events_to,'a') as event_tracking_file:
+        with open(track_events_to,'a+') as event_tracking_file:
             event_tracking_file.write(event_string+'\n')
 
 def track_scrollbar(track_events_to,direction,*args):
@@ -109,7 +109,7 @@ def track_scrollbar(track_events_to,direction,*args):
         event_string +=', '+ repr(a)
 
     # Append the event tracking file
-    with open(track_events_to,'a') as event_tracking_file:
+    with open(track_events_to,'a+') as event_tracking_file:
         event_tracking_file.write(event_string+'\n')
 
 class TrackableScrollbar(ttk.Scrollbar):
@@ -693,10 +693,12 @@ class CircuitEditor(tk.Canvas):
 
         try:
             with open(self.netlist_filename, 'r') as f:
+                # Tries to open file for reading
                 netlist_file_string = [line for line in f]
         except FileNotFoundError:
             netlist_file_string = []
-            with open(self.netlist_filename, 'w') as f:
+            with open(self.netlist_filename, 'w+') as f:
+                # will open file and erase contents, creating the file if needed
                 pass
         self.load_netlist(netlist_file_string)
 
@@ -966,7 +968,8 @@ class CircuitEditor(tk.Canvas):
         if netlist_string != previously_saved_netlist_string:
 
             # Write that netlist string to the file
-            with open(self.netlist_filename, 'w') as f:
+            with open(self.netlist_filename, 'w+') as f:
+                # open file, erase contents and write new netlist
                 f.write(netlist_string)
 
             # If we are tracking the changes made to the circuit
@@ -3603,7 +3606,7 @@ class GuiWindow(ttk.Frame):
         self.master.columnconfigure(0, weight=1)
 
         if _track_events_to is not None:
-            with open(_track_events_to,'w'):
+            with open(_track_events_to,'w+'):
                 # Creates the file or, if the file was already used, clears it of content
                 pass
 
