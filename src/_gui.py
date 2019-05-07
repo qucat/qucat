@@ -1190,7 +1190,7 @@ class CircuitEditor(tk.Canvas):
         # FILE menu functionalities
         #############################
         self.bindings_quit = [
-        ['<Control-q>', lambda event: self.master.destroy()]]
+        ['<Control-q>', lambda event: sys.exit()]]
         self.bindings_open = [
         ['<Control-o>', self.file_open]]
         self.bindings_save = [
