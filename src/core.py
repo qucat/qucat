@@ -1976,12 +1976,12 @@ class Component(Circuit):
         float
             contribution of the ``mode`` to the zero-point fluctuations of the ``quantity``
         '''
-        mode_w = self._circuit.eigenfrequencies()[mode]*2.*np.pi
+        mode_w = self._circuit.eigenfrequencies(**kwargs)[mode]*2.*np.pi
         return self._zpf(mode_w, quantity, **kwargs)
 
     def phasor(self, mode, quantity, **kwargs):
 
-        mode_w = self._circuit.eigenfrequencies()[mode]*2.*np.pi
+        mode_w = self._circuit.eigenfrequencies(**kwargs)[mode]*2.*np.pi
         return self._convert_flux(self._flux(mode_w,**kwargs),mode_w,quantity,**kwargs)
 
 class W(Component):
@@ -2252,7 +2252,7 @@ class J(L):
         float
             contribution of this junction to the anharmonicity of a given normal mode
         '''
-        mode_w = self._circuit.eigenfrequencies()[mode]*2.*np.pi
+        mode_w = self._circuit.eigenfrequencies(**kwargs)[mode]*2.*np.pi
         return _anharmonicity(self, mode_w, **kwargs)
 
     def _draw(self):
