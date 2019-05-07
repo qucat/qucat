@@ -16,6 +16,7 @@ from _constants import *
 from plotting_settings import *
 from copy import deepcopy
 import time
+import platform
  
 
 def track_event(track_events_to, event,sequence):
@@ -284,6 +285,8 @@ class CircuitEditor(tk.Canvas):
         
         if os_type == 'mac':
             self.font_size = 14
+        if os_type == 'linux':
+            self.font_size = 10
         else:
             self.font_size = 8
 
@@ -3626,9 +3629,9 @@ class GuiWindow(ttk.Frame):
 
         # Find out what kind of system the gui is running on
         if _os_type is None:
-            if os.name == 'posix':
+            if platform.system() == 'Darwin':
                 _os_type = 'mac'
-            elif sys.platform.startswith('linux'):
+            elif platform.system() == 'Linux':
                 _os_type = 'linux'
             else:
                 _os_type = 'windows'
