@@ -282,6 +282,18 @@ class CircuitEditor(tk.Canvas):
     def __init__(self, master, grid_unit, netlist_filename,
             track_events_to = None, unittesting = False,verbose = False):
         
+        self.paired_sequences = {
+            'Control':'Command', # for OSX users
+            'Delete':'BackSpace', # No delete button on OSX
+            '-3':'-2', # button 2 (right-click on for OSX) same as MS/Unix right-click
+            'MouseWheel':'Button-5', # wheel in linux
+            'MouseWheel':'Button-4', # wheel in linux
+        }
+        '''
+        Pair certain key-strokes or sequences which should have
+        the same effect, for cross-platform compatibility
+        '''
+
         # The root window (tk.Tk())
         self.master = master
 
@@ -1142,15 +1154,17 @@ class CircuitEditor(tk.Canvas):
         This is useful when we want to track all events
         to construct a (unit)test.
 
-        Also, when, <Control- ... > gets bound, 
+        We also pair certain key-strokes together, for example
+        when, <Control- ... > gets bound, 
         we also bind <Command- ... > for OSX users
         '''
 
-        if 'Control' in sequence:
-            self.bind(
-                sequence = sequence.replace('Control','Command'),
-                func = func, 
-                add = add)
+        for key,paired_key in self.paired_sequences.items():
+            if key in sequence:
+                self.bind(
+                    sequence = sequence.replace(key,paired_key),
+                    func = func, 
+                    add = add)
 
         if self.track_events_to is not None:
             def tracked_func(event):
@@ -1169,15 +1183,17 @@ class CircuitEditor(tk.Canvas):
         This is useful when we want to track all events
         to construct a (unit)test.
 
-        Also, when, <Control- ... > gets bound, 
+        We also pair certain key-strokes together, for example
+        when, <Control- ... > gets bound, 
         we also bind <Command- ... > for OSX users
         '''
 
-        if 'Control' in sequence:
-            self.tag_bind(tagOrId,
-                sequence = sequence.replace('Control','Command'),
-                func = func, 
-                add = add)
+        for key,paired_key in self.paired_sequences.items():
+            if key in sequence:
+                self.tag_bind(tagOrId,
+                    sequence = sequence.replace(key,paired_key),
+                    func = func, 
+                    add = add)
 
         if self.track_events_to is not None:
             def tracked_func(event):
@@ -1189,13 +1205,15 @@ class CircuitEditor(tk.Canvas):
 
     def unbind(self,sequence):
         '''
+        We pair certain key-strokes together, for example
         When <Control- ... > gets unbound, 
         we also unbind <Command- ... > for OSX users
         '''
-        if 'Control' in sequence:
-            self.unbind(sequence.replace('Control','Command'))
-        super(CircuitEditor, self).unbind(sequence)
 
+        for key,paired_key in self.paired_sequences.items():
+            if key in sequence:
+                self.unbind(sequence.replace(key,paired_key))
+        super(CircuitEditor, self).unbind(sequence)
 
     def define_permenant_bindings(self):
         '''
@@ -1233,8 +1251,7 @@ class CircuitEditor(tk.Canvas):
         # EDIT menu functionalities
         #############################
         self.bindings_delete = [
-        ['<Delete>', self.delete_selection],
-        ['<BackSpace>', self.delete_selection]]
+        ['<Delete>', self.delete_selection]]
         self.bindings_cut_copy_paste = [
         ['<Control-c>', self.copy_selection],
         ['<Control-x>', self.cut_selection],
@@ -1258,26 +1275,10 @@ class CircuitEditor(tk.Canvas):
         # Mouse wheel functionalities
         #############################
         self.bindings_zoom = [
-        # wheel for Windows and MacOS, but not Linux
-        ['<Control-MouseWheel>', self.scroll_zoom],
-        # wheel for Linux, wheel scroll down
-        ['<Control-Button-5>',   self.scroll_zoom],
-        # wheel for Linux, wheel scroll up
-        ['<Control-Button-4>',   self.scroll_zoom]]
-        
+        ['<Control-MouseWheel>', self.scroll_zoom]]
         self.bindings_scroll = [
-        # wheel for Windows and MacOS, but not Linux
         ['<Shift-MouseWheel>', self.scroll_x_wheel],
-        # wheel for Linux, wheel scroll down
-        ['<Shift-Button-5>',   self.scroll_x_wheel],
-        # wheel for Linux, wheel scroll up
-        ['<Shift-Button-4>',   self.scroll_x_wheel],
-        # wheel for Windows and MacOS, but not Linux
-        ['<MouseWheel>', self.scroll_y_wheel],
-        # wheel for Linux, wheel scroll down
-        ['<Button-5>',   self.scroll_y_wheel],
-        # wheel for Linux, wheel scroll up
-        ['<Button-4>',   self.scroll_y_wheel]]
+        ['<MouseWheel>', self.scroll_y_wheel]]
 
         self.permenant_bindings =\
             self.bindings_element_creation+\
