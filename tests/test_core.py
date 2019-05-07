@@ -207,6 +207,20 @@ class StandardQuantumCircuits(TestCaseAppended):
         w,k,A,chi = self.shunted_josephson_ring_parameters(C,L)
         self.assertRelativelyClose(A[1],e**2/2./(8*C)/h)
 
+    '''
+    Coupled transmon/RLC
+    '''
+    def test_sweeping_LJ_in_fkAchi(self):
+        cir = core.Network([
+            core.C(0,1,100e-15),
+            core.J(0,1,'L_J'),
+            core.C(1,2,1e-15),
+            core.C(2,0,100e-15),
+            core.L(2,0,10e-9),
+            core.R(2,0,1e6)
+            ])
+        [cir.f_k_A_chi(L_J=x) for x in [1e-9,2e-9]]
+
 class TestGraphics(TestCaseAppended):   
 
     def test_error_when_trying_to_plot_from_Network_show(self):

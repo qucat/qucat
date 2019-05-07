@@ -2220,7 +2220,7 @@ class J(L):
         self._circuit.junctions.append(self)
 
     def _anharmonicity(self,w,**kwargs):
-        return self._get_Ej()/2*self._zpf(w,'flux')**4
+        return self._get_Ej(**kwargs)/2*self._zpf(w,'flux',**kwargs)**4
 
     def anharmonicity(self, mode, **kwargs):
         r'''Returns the contribution of this junction to the anharmonicity of a given normal mode.
@@ -2463,20 +2463,21 @@ class Admittance(Component):
 
 # @timeit
 def main():
-    # Cj = 100e-15
+    Cj = 100e-15
     # Lj = 10e-9
-    # junction = J(0,1,Lj)
-    # circuit = Network([
-    #     C(0,1,Cj),
-    #     junction
-    #     ])
+    junction = J(0,1,'Lj')
+    circuit = Network([
+        C(0,1,Cj),
+        junction
+        ])
+    circuit.f_k_A_chi(Lj=1)
     # junction.zpf(mode=0,quantity = 'flux')
     # H = circuit.hamiltonian(modes = [0],taylor = 4,excitations = [50])
     # print(H)
-    circuit = GUI(filename = './src/test.txt',edit=False,plot=False)
+    # circuit = GUI(filename = './src/test.txt',edit=False,plot=False)
     # circuit.f_k_A_chi()
-    print(circuit.resistors[0].phasor(0,'voltage'))
-    circuit.show_normal_mode(0,quantity='voltage')
+    # print(circuit.resistors[0].phasor(0,'voltage'))
+    # circuit.show_normal_mode(0,quantity='voltage')
     # circuit.hamiltonian(L_J = 1e-9,modes=[0],excitations=[5],return_ops=True,taylor=4)
     # circuit.eigenfrequencies(L_J = np.linspace(1e-9,2e-9,4))
     # circuit.f_k_A_chi(L_J = np.linspace(1e-9,2e-9,4))

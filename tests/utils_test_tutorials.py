@@ -16,8 +16,12 @@ def parse_cell(code):
         if len(line.replace(' ',''))>0:
             if not line.replace(' ','')[0]=='%' and not 'plt.show(' in line:
                 if 'GUI(' in line and line.rfind(')') != -1:
-                    line = line[:line.rfind(')')]+',_unittesting=True'+line[line.rfind(')'):]
+                    if 'edit' in line:
+                        line.replace('True','False')
+                    else:
+                        line = line[:line.rfind(')')]+',edit=False'+line[line.rfind(')'):]
                 valid_lines += line+'\n'
+                print(line)
     return valid_lines
 
 
