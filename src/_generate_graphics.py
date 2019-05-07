@@ -18,8 +18,8 @@ class DummyCircuit(object):
 
 def generate_icon(comp,hover = False, selected = False):
     pp = deepcopy(plotting_parameters_GUI)
-    comp.node_minus_plot = '0,0'
-    comp.node_plus_plot = '1,0'
+    comp._node_minus_plot = '0,0'
+    comp._node_plus_plot = '1,0'
     comp._set_plot_coordinates()
 
     comp._circuit = DummyCircuit()
