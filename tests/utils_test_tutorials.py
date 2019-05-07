@@ -15,13 +15,12 @@ def parse_cell(code):
     for line in lines:
         if len(line.replace(' ',''))>0:
             if not line.replace(' ','')[0]=='%' and not 'plt.show(' in line:
-                if 'GUI(' in line and line.rfind(')') != -1:
-                    if 'edit' in line:
-                        line.replace('True','False')
-                    else:
-                        line = line[:line.rfind(')')]+',edit=False'+line[line.rfind(')'):]
+                if 'GUI(' in line:
+                    valid_lines += 'def GUI(*args,edit=False,**kwargs):\n'
+                    valid_lines += '    from qucat import GUI\n'
+                    valid_lines += '    return GUI(*args,edit=False,**kwargs)\n'
                 valid_lines += line+'\n'
-                print(line)
+    print(valid_lines)
     return valid_lines
 
 
@@ -29,8 +28,8 @@ def parse_cell(code):
 def run_notebook(notebook_name):
     tutorials_folder = join(dirname(dirname(__file__)),'docs','source','tutorials')
     nb = nbformat.read(join(tutorials_folder,notebook_name), 4)
-    sys.stdout = open(devnull, "w")
-    sys.stderr = open(devnull, "w")
+    # sys.stdout = open(devnull, "w")
+    # sys.stderr = open(devnull, "w")
     for c in nb['cells']:
         if c['cell_type'] == 'code':
             to_run = parse_cell(c['source'])
