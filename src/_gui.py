@@ -3685,5 +3685,5 @@ class GuiWindow(ttk.Frame):
             self.mainloop()
 
 if __name__ == '__main__':
-    # GuiWindow(sys.argv[1])
-    GuiWindow('test.txt',_verbose=True)
+    GuiWindow(sys.argv[1])
+    # GuiWindow('test.txt',_verbose=True)

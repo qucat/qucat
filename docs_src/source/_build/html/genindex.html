@@ -25,6 +25,9 @@
         <script type="text/javascript" src="_static/jquery.js"></script>
         <script type="text/javascript" src="_static/underscore.js"></script>
         <script type="text/javascript" src="_static/doctools.js"></script>
+        <script type="text/javascript" src="_static/language_data.js"></script>
+        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script type="text/x-mathjax-config">MathJax.Hub.Config({"tex2jax": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true, "ignoreClass": "document", "processClass": "math|output_area"}})</script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
@@ -33,6 +36,7 @@
   
   <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="author" title="About these documents" href="about.html" />
     <link rel="index" title="Index" href="#" />
     <link rel="search" title="Search" href="search.html" /> 
 </head>
@@ -80,7 +84,11 @@
             
               <p class="caption"><span class="caption-text">Contents:</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="API/API.html">API of the qucat package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="about.html">About</a></li>
+<li class="toctree-l1"><a class="reference internal" href="citing.html">Citing this project</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorials/tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="API/API.html">Documentation</a></li>
 </ul>
 
             
@@ -149,38 +157,27 @@
 <div class="genindex-jumpbox">
  <a href="#A"><strong>A</strong></a>
  | <a href="#C"><strong>C</strong></a>
- | <a href="#D"><strong>D</strong></a>
  | <a href="#E"><strong>E</strong></a>
  | <a href="#F"><strong>F</strong></a>
  | <a href="#G"><strong>G</strong></a>
  | <a href="#H"><strong>H</strong></a>
+ | <a href="#J"><strong>J</strong></a>
  | <a href="#K"><strong>K</strong></a>
  | <a href="#L"><strong>L</strong></a>
  | <a href="#N"><strong>N</strong></a>
- | <a href="#Q"><strong>Q</strong></a>
  | <a href="#R"><strong>R</strong></a>
  | <a href="#S"><strong>S</strong></a>
- | <a href="#T"><strong>T</strong></a>
- | <a href="#V"><strong>V</strong></a>
- | <a href="#W"><strong>W</strong></a>
+ | <a href="#Z"><strong>Z</strong></a>
  
 </div>
 <h2 id="A">A</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="API/components.html#qucat.C.admittance">admittance() (qucat.C method)</a>
-
-      <ul>
-        <li><a href="API/components.html#qucat.L.admittance">(qucat.L method)</a>
+      <li><a href="API/circuit_functions/anharmonicities.html#qucat.Qcircuit.anharmonicities">anharmonicities() (qucat.Qcircuit method)</a>
 </li>
-        <li><a href="API/components.html#qucat.R.admittance">(qucat.R method)</a>
-</li>
-      </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="API/circuit_functions.html#qucat.Qcircuit.anharmonicities">anharmonicities() (qucat.Qcircuit method)</a>
-</li>
-      <li><a href="API/circuit_functions.html#qucat.Qcircuit.anharmonicities_per_junction">anharmonicities_per_junction() (qucat.Qcircuit method)</a>
+      <li><a href="API/components/J.html#qucat.J.anharmonicity">anharmonicity() (qucat.J method)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -188,61 +185,7 @@
 <h2 id="C">C</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="API/components.html#qucat.C">C (class in qucat)</a>
-</li>
-      <li><a href="API/components.html#qucat.C.charge">charge() (qucat.C method)</a>
-
-      <ul>
-        <li><a href="API/components.html#qucat.L.charge">(qucat.L method)</a>
-</li>
-        <li><a href="API/components.html#qucat.R.charge">(qucat.R method)</a>
-</li>
-      </ul></li>
-      <li><a href="API/circuit_functions.html#qucat.Qcircuit.check_kwargs">check_kwargs() (qucat.Qcircuit method)</a>
-</li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="API/circuit_functions.html#qucat.Qcircuit.compute_dY_analytically">compute_dY_analytically() (qucat.Qcircuit method)</a>
-</li>
-      <li><a href="API/circuit_functions.html#qucat.Qcircuit.compute_Y">compute_Y() (qucat.Qcircuit method)</a>
-</li>
-      <li><a href="API/components.html#qucat.C.current">current() (qucat.C method)</a>
-
-      <ul>
-        <li><a href="API/components.html#qucat.L.current">(qucat.L method)</a>
-</li>
-        <li><a href="API/components.html#qucat.R.current">(qucat.R method)</a>
-</li>
-      </ul></li>
-  </ul></td>
-</tr></table>
-
-<h2 id="D">D</h2>
-<table style="width: 100%" class="indextable genindextable"><tr>
-  <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="API/components.html#qucat.C.draw">draw() (qucat.C method)</a>
-
-      <ul>
-        <li><a href="API/components.html#qucat.G.draw">(qucat.G method)</a>
-</li>
-        <li><a href="API/components.html#qucat.L.draw">(qucat.L method)</a>
-</li>
-        <li><a href="API/components.html#qucat.R.draw">(qucat.R method)</a>
-</li>
-        <li><a href="API/components.html#qucat.W.draw">(qucat.W method)</a>
-</li>
-      </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="API/components.html#qucat.C.draw_label">draw_label() (qucat.C method)</a>
-
-      <ul>
-        <li><a href="API/components.html#qucat.L.draw_label">(qucat.L method)</a>
-</li>
-        <li><a href="API/components.html#qucat.R.draw_label">(qucat.R method)</a>
-</li>
-      </ul></li>
-      <li><a href="API/circuit_functions.html#qucat.Qcircuit.dY">dY() (qucat.Qcircuit method)</a>
+      <li><a href="API/components/C.html#qucat.C">C (class in qucat)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -250,7 +193,7 @@
 <h2 id="E">E</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="API/circuit_functions.html#qucat.Qcircuit.eigenfrequencies">eigenfrequencies() (qucat.Qcircuit method)</a>
+      <li><a href="API/circuit_functions/eigenfrequencies.html#qucat.Qcircuit.eigenfrequencies">eigenfrequencies() (qucat.Qcircuit method)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -258,41 +201,15 @@
 <h2 id="F">F</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="API/components.html#qucat.C.flux">flux (qucat.C attribute)</a>
-
-      <ul>
-        <li><a href="API/components.html#qucat.L.flux">(qucat.L attribute)</a>
+      <li><a href="API/circuit_functions/f_k_A_chi.html#qucat.Qcircuit.f_k_A_chi">f_k_A_chi() (qucat.Qcircuit method)</a>
 </li>
-        <li><a href="API/components.html#qucat.R.flux">(qucat.R attribute)</a>
-</li>
-      </ul></li>
   </ul></td>
 </tr></table>
 
 <h2 id="G">G</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="API/components.html#qucat.G">G (class in qucat)</a>
-</li>
-      <li><a href="API/components.html#qucat.C.get_RLC_matrix_components">get_RLC_matrix_components() (qucat.C method)</a>
-
-      <ul>
-        <li><a href="API/components.html#qucat.L.get_RLC_matrix_components">(qucat.L method)</a>
-</li>
-        <li><a href="API/components.html#qucat.R.get_RLC_matrix_components">(qucat.R method)</a>
-</li>
-      </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="API/components.html#qucat.C.get_value">get_value() (qucat.C method)</a>
-
-      <ul>
-        <li><a href="API/components.html#qucat.L.get_value">(qucat.L method)</a>
-</li>
-        <li><a href="API/components.html#qucat.R.get_value">(qucat.R method)</a>
-</li>
-      </ul></li>
-      <li><a href="API/builders.html#qucat.GUI">GUI (class in qucat)</a>
+      <li><a href="API/gui.html#qucat.GUI">GUI (class in qucat)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -300,7 +217,15 @@
 <h2 id="H">H</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="API/circuit_functions.html#qucat.Qcircuit.hamiltonian">hamiltonian() (qucat.Qcircuit method)</a>
+      <li><a href="API/circuit_functions/hamiltonian.html#qucat.Qcircuit.hamiltonian">hamiltonian() (qucat.Qcircuit method)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="J">J</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="API/components/J.html#qucat.J">J (class in qucat)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -308,7 +233,7 @@
 <h2 id="K">K</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="API/circuit_functions.html#qucat.Qcircuit.kerr">kerr() (qucat.Qcircuit method)</a>
+      <li><a href="API/circuit_functions/kerr.html#qucat.Qcircuit.kerr">kerr() (qucat.Qcircuit method)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -316,11 +241,11 @@
 <h2 id="L">L</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="API/components.html#qucat.L">L (class in qucat)</a>
+      <li><a href="API/components/L.html#qucat.L">L (class in qucat)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="API/circuit_functions.html#qucat.Qcircuit.loss_rates">loss_rates() (qucat.Qcircuit method)</a>
+      <li><a href="API/circuit_functions/loss_rates.html#qucat.Qcircuit.loss_rates">loss_rates() (qucat.Qcircuit method)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -328,15 +253,7 @@
 <h2 id="N">N</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="API/builders.html#qucat.Network">Network (class in qucat)</a>
-</li>
-  </ul></td>
-</tr></table>
-
-<h2 id="Q">Q</h2>
-<table style="width: 100%" class="indextable genindextable"><tr>
-  <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="API/circuit_functions.html#qucat.Qcircuit">Qcircuit (class in qucat)</a>
+      <li><a href="API/network.html#qucat.Network">Network (class in qucat)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -344,7 +261,7 @@
 <h2 id="R">R</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="API/components.html#qucat.R">R (class in qucat)</a>
+      <li><a href="API/components/R.html#qucat.R">R (class in qucat)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -352,76 +269,28 @@
 <h2 id="S">S</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="API/components.html#qucat.C.set_component_lists">set_component_lists() (qucat.C method)</a>
-
-      <ul>
-        <li><a href="API/components.html#qucat.G.set_component_lists">(qucat.G method)</a>
+      <li><a href="API/circuit_functions/show.html#qucat.Qcircuit.show">show() (qucat.Qcircuit method)</a>
 </li>
-        <li><a href="API/components.html#qucat.L.set_component_lists">(qucat.L method)</a>
-</li>
-        <li><a href="API/components.html#qucat.R.set_component_lists">(qucat.R method)</a>
-</li>
-        <li><a href="API/components.html#qucat.W.set_component_lists">(qucat.W method)</a>
-</li>
-      </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="API/components.html#qucat.C.set_plot_coordinates">set_plot_coordinates() (qucat.C method)</a>
-
-      <ul>
-        <li><a href="API/components.html#qucat.L.set_plot_coordinates">(qucat.L method)</a>
-</li>
-        <li><a href="API/components.html#qucat.R.set_plot_coordinates">(qucat.R method)</a>
-</li>
-      </ul></li>
-      <li><a href="API/circuit_functions.html#qucat.Qcircuit.set_w_cpx">set_w_cpx() (qucat.Qcircuit method)</a>
-</li>
-      <li><a href="API/circuit_functions.html#qucat.Qcircuit.show">show() (qucat.Qcircuit method)</a>
-</li>
-      <li><a href="API/circuit_functions.html#qucat.Qcircuit.show_normal_mode">show_normal_mode() (qucat.Qcircuit method)</a>
+      <li><a href="API/circuit_functions/show_normal_mode.html#qucat.Qcircuit.show_normal_mode">show_normal_mode() (qucat.Qcircuit method)</a>
 </li>
   </ul></td>
 </tr></table>
 
-<h2 id="T">T</h2>
+<h2 id="Z">Z</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="API/components.html#qucat.C.to_string">to_string() (qucat.C method)</a>
+      <li><a href="API/components/C.html#qucat.C.zpf">zpf() (qucat.C method)</a>
 
       <ul>
-        <li><a href="API/components.html#qucat.L.to_string">(qucat.L method)</a>
+        <li><a href="API/components/J.html#qucat.J.zpf">(qucat.J method)</a>
 </li>
-        <li><a href="API/components.html#qucat.R.to_string">(qucat.R method)</a>
+        <li><a href="API/components/L.html#qucat.L.zpf">(qucat.L method)</a>
 </li>
-        <li><a href="API/components.html#qucat.W.to_string">(qucat.W method)</a>
-</li>
-      </ul></li>
-  </ul></td>
-</tr></table>
-
-<h2 id="V">V</h2>
-<table style="width: 100%" class="indextable genindextable"><tr>
-  <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="API/components.html#qucat.C.voltage">voltage() (qucat.C method)</a>
-
-      <ul>
-        <li><a href="API/components.html#qucat.L.voltage">(qucat.L method)</a>
-</li>
-        <li><a href="API/components.html#qucat.R.voltage">(qucat.R method)</a>
+        <li><a href="API/components/R.html#qucat.R.zpf">(qucat.R method)</a>
 </li>
       </ul></li>
-  </ul></td>
-</tr></table>
-
-<h2 id="W">W</h2>
-<table style="width: 100%" class="indextable genindextable"><tr>
-  <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="API/components.html#qucat.W">W (class in qucat)</a>
-</li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="API/circuit_functions.html#qucat.Qcircuit.f_k_A_chi">f_k_A_chi() (qucat.Qcircuit method)</a>
-</li>
   </ul></td>
 </tr></table>
 

@@ -10,4 +10,8 @@ TODO: write a general introduction to the documentation, add a picture.
     :maxdepth: 3
     :caption: Contents:
 
-    API of the qucat package <API/API>
+    about
+    citing
+    installation
+    Tutorials <tutorials/tutorials>
+    Documentation <API/API>

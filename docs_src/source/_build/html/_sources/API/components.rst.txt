@@ -2,25 +2,10 @@
 Circuit components
 *************************
 
-.. autoclass:: qucat.R
-    :members:
-    :undoc-members:
-    :inherited-members:
-
-.. autoclass:: qucat.L
-    :members:
-    :undoc-members:
-    :inherited-members:
-
-.. autoclass:: qucat.C
-    :members:
-    :undoc-members:
-    :inherited-members:
-
-.. autoclass:: qucat.W
-    :members:
-    :undoc-members:
-
-.. autoclass:: qucat.G
-    :members:
-    :undoc-members:
+.. toctree::
+    :maxdepth: 3
+   
+    components/J.rst  
+    components/L.rst  
+    components/C.rst  
+    components/R.rst

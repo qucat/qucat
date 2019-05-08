@@ -24,6 +24,9 @@
         <script type="text/javascript" src="../_static/jquery.js"></script>
         <script type="text/javascript" src="../_static/underscore.js"></script>
         <script type="text/javascript" src="../_static/doctools.js"></script>
+        <script type="text/javascript" src="../_static/language_data.js"></script>
+        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script type="text/x-mathjax-config">MathJax.Hub.Config({"tex2jax": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true, "ignoreClass": "document", "processClass": "math|output_area"}})</script>
     
     <script type="text/javascript" src="../_static/js/theme.js"></script>
 
@@ -32,10 +35,11 @@
   
   <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="author" title="About these documents" href="../about.html" />
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Circuit builders" href="builders.html" />
-    <link rel="prev" title="qucat" href="../index.html" /> 
+    <link rel="next" title="Creating a circuit" href="builders.html" />
+    <link rel="prev" title="Coupled Transmon / LC-oscillator (without the GUI)" href="../tutorials/transmon_LC_programmatically.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -81,9 +85,13 @@
             
               <p class="caption"><span class="caption-text">Contents:</span></p>
 <ul class="current">
-<li class="toctree-l1 current"><a class="current reference internal" href="#">API of the qucat package</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="builders.html">Circuit builders</a></li>
-<li class="toctree-l2"><a class="reference internal" href="circuit_functions.html">Circuit functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../about.html">About</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../citing.html">Citing this project</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/tutorials.html">Tutorials</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Documentation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="builders.html">Creating a circuit</a></li>
+<li class="toctree-l2"><a class="reference internal" href="circuit_functions.html">Circuit analysis</a></li>
 <li class="toctree-l2"><a class="reference internal" href="components.html">Circuit components</a></li>
 </ul>
 </li>
@@ -151,15 +159,59 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="api-documentation">
+  
+<style>
+/* CSS overrides for sphinx_rtd_theme */
+
+/* 24px margin */
+.nbinput.nblast,
+.nboutput.nblast {
+    margin-bottom: 19px;  /* padding has already 5px */
+}
+
+/* ... except between code cells! */
+.nblast + .nbinput {
+    margin-top: -19px;
+}
+
+.admonition > p:before {
+    margin-right: 4px;  /* make room for the exclamation icon */
+}
+
+/* Fix math alignment, see https://github.com/rtfd/sphinx_rtd_theme/pull/686 */
+.math {
+    text-align: unset;
+}
+</style>
+<div class="section" id="api-documentation">
 <h1>API documentation<a class="headerlink" href="#api-documentation" title="Permalink to this headline">¶</a></h1>
 <p>This chapter contains automatically generated API documentation, including a
 complete list of qucat public classes and functions.</p>
 <div class="toctree-wrapper compound">
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="builders.html">Circuit builders</a></li>
-<li class="toctree-l1"><a class="reference internal" href="circuit_functions.html">Circuit functions</a></li>
-<li class="toctree-l1"><a class="reference internal" href="components.html">Circuit components</a></li>
+<li class="toctree-l1"><a class="reference internal" href="builders.html">Creating a circuit</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="gui.html">Graphically</a></li>
+<li class="toctree-l2"><a class="reference internal" href="network.html">Programmatically</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="circuit_functions.html">Circuit analysis</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="circuit_functions/eigenfrequencies.html"> Calculating eigen-frequencies</a></li>
+<li class="toctree-l2"><a class="reference internal" href="circuit_functions/loss_rates.html"> Calculating losses</a></li>
+<li class="toctree-l2"><a class="reference internal" href="circuit_functions/anharmonicities.html"> Calculating anharmonicities</a></li>
+<li class="toctree-l2"><a class="reference internal" href="circuit_functions/kerr.html"> Calculating Kerr couplings</a></li>
+<li class="toctree-l2"><a class="reference internal" href="circuit_functions/f_k_A_chi.html"> Combined calculation of all the above</a></li>
+<li class="toctree-l2"><a class="reference internal" href="circuit_functions/hamiltonian.html"> Generate a QuTiP Hamiltonian</a></li>
+<li class="toctree-l2"><a class="reference internal" href="circuit_functions/show.html"> Plot the circuit</a></li>
+<li class="toctree-l2"><a class="reference internal" href="circuit_functions/show_normal_mode.html"> Visualize a normal mode of the circuit</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="components.html">Circuit components</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="components/J.html">Josephson junction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="components/L.html">Inductor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="components/C.html">Capacitor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="components/R.html">Resistor</a></li>
+</ul>
+</li>
 </ul>
 </div>
 </div>
@@ -172,10 +224,10 @@ complete list of qucat public classes and functions.</p>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="builders.html" class="btn btn-neutral float-right" title="Circuit builders" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="builders.html" class="btn btn-neutral float-right" title="Creating a circuit" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="../index.html" class="btn btn-neutral float-left" title="qucat" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="../tutorials/transmon_LC_programmatically.html" class="btn btn-neutral float-left" title="Coupled Transmon / LC-oscillator (without the GUI)" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   

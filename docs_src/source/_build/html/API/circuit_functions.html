@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Circuit functions &mdash; qucat  documentation</title>
+  <title>Circuit analysis &mdash; qucat  documentation</title>
   
 
   
@@ -24,6 +24,9 @@
         <script type="text/javascript" src="../_static/jquery.js"></script>
         <script type="text/javascript" src="../_static/underscore.js"></script>
         <script type="text/javascript" src="../_static/doctools.js"></script>
+        <script type="text/javascript" src="../_static/language_data.js"></script>
+        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script type="text/x-mathjax-config">MathJax.Hub.Config({"tex2jax": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true, "ignoreClass": "document", "processClass": "math|output_area"}})</script>
     
     <script type="text/javascript" src="../_static/js/theme.js"></script>
 
@@ -32,10 +35,11 @@
   
   <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="author" title="About these documents" href="../about.html" />
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Circuit components" href="components.html" />
-    <link rel="prev" title="Circuit builders" href="builders.html" /> 
+    <link rel="next" title="Calculating eigen-frequencies" href="circuit_functions/eigenfrequencies.html" />
+    <link rel="prev" title="Building a circuit programmatically" href="network.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -81,9 +85,23 @@
             
               <p class="caption"><span class="caption-text">Contents:</span></p>
 <ul class="current">
-<li class="toctree-l1 current"><a class="reference internal" href="API.html">API of the qucat package</a><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="builders.html">Circuit builders</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="#">Circuit functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../about.html">About</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../citing.html">Citing this project</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/tutorials.html">Tutorials</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="API.html">Documentation</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="builders.html">Creating a circuit</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Circuit analysis</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="circuit_functions/eigenfrequencies.html"> Calculating eigen-frequencies</a></li>
+<li class="toctree-l3"><a class="reference internal" href="circuit_functions/loss_rates.html"> Calculating losses</a></li>
+<li class="toctree-l3"><a class="reference internal" href="circuit_functions/anharmonicities.html"> Calculating anharmonicities</a></li>
+<li class="toctree-l3"><a class="reference internal" href="circuit_functions/kerr.html"> Calculating Kerr couplings</a></li>
+<li class="toctree-l3"><a class="reference internal" href="circuit_functions/f_k_A_chi.html"> Combined calculation of all the above</a></li>
+<li class="toctree-l3"><a class="reference internal" href="circuit_functions/hamiltonian.html"> Generate a QuTiP Hamiltonian</a></li>
+<li class="toctree-l3"><a class="reference internal" href="circuit_functions/show.html"> Plot the circuit</a></li>
+<li class="toctree-l3"><a class="reference internal" href="circuit_functions/show_normal_mode.html"> Visualize a normal mode of the circuit</a></li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="components.html">Circuit components</a></li>
 </ul>
 </li>
@@ -134,7 +152,7 @@
         
           <li><a href="API.html">API documentation</a> &raquo;</li>
         
-      <li>Circuit functions</li>
+      <li>Circuit analysis</li>
     
     
       <li class="wy-breadcrumbs-aside">
@@ -153,84 +171,45 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="circuit-functions">
-<h1>Circuit functions<a class="headerlink" href="#circuit-functions" title="Permalink to this headline">¶</a></h1>
-<dl class="class">
-<dt id="qucat.Qcircuit">
-<em class="property">class </em><code class="descclassname">qucat.</code><code class="descname">Qcircuit</code><span class="sig-paren">(</span><em>netlist</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/qucat/src/core.html#Qcircuit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#qucat.Qcircuit" title="Permalink to this definition">¶</a></dt>
-<dd><p>docstring for BBQcircuit</p>
-<dl class="method">
-<dt id="qucat.Qcircuit.anharmonicities">
-<code class="descname">anharmonicities</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/qucat/src/core.html#Qcircuit.anharmonicities"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#qucat.Qcircuit.anharmonicities" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+  
+<style>
+/* CSS overrides for sphinx_rtd_theme */
 
-<dl class="method">
-<dt id="qucat.Qcircuit.anharmonicities_per_junction">
-<code class="descname">anharmonicities_per_junction</code><span class="sig-paren">(</span><em>pretty_print=False</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/qucat/src/core.html#Qcircuit.anharmonicities_per_junction"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#qucat.Qcircuit.anharmonicities_per_junction" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+/* 24px margin */
+.nbinput.nblast,
+.nboutput.nblast {
+    margin-bottom: 19px;  /* padding has already 5px */
+}
 
-<dl class="method">
-<dt id="qucat.Qcircuit.check_kwargs">
-<code class="descname">check_kwargs</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/qucat/src/core.html#Qcircuit.check_kwargs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#qucat.Qcircuit.check_kwargs" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+/* ... except between code cells! */
+.nblast + .nbinput {
+    margin-top: -19px;
+}
 
-<dl class="method">
-<dt id="qucat.Qcircuit.compute_Y">
-<code class="descname">compute_Y</code><span class="sig-paren">(</span><em>**kw</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/qucat/src/core.html#Qcircuit.compute_Y"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#qucat.Qcircuit.compute_Y" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+.admonition > p:before {
+    margin-right: 4px;  /* make room for the exclamation icon */
+}
 
-<dl class="method">
-<dt id="qucat.Qcircuit.compute_dY_analytically">
-<code class="descname">compute_dY_analytically</code><span class="sig-paren">(</span><em>**kw</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/qucat/src/core.html#Qcircuit.compute_dY_analytically"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#qucat.Qcircuit.compute_dY_analytically" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="qucat.Qcircuit.dY">
-<code class="descname">dY</code><span class="sig-paren">(</span><em>w</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/qucat/src/core.html#Qcircuit.dY"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#qucat.Qcircuit.dY" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="qucat.Qcircuit.eigenfrequencies">
-<code class="descname">eigenfrequencies</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/qucat/src/core.html#Qcircuit.eigenfrequencies"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#qucat.Qcircuit.eigenfrequencies" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="qucat.Qcircuit.hamiltonian">
-<code class="descname">hamiltonian</code><span class="sig-paren">(</span><em>modes='all'</em>, <em>junc_pot_taylor_exp=4</em>, <em>excitations=6</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/qucat/src/core.html#Qcircuit.hamiltonian"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#qucat.Qcircuit.hamiltonian" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="qucat.Qcircuit.kerr">
-<code class="descname">kerr</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/qucat/src/core.html#Qcircuit.kerr"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#qucat.Qcircuit.kerr" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="qucat.Qcircuit.loss_rates">
-<code class="descname">loss_rates</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/qucat/src/core.html#Qcircuit.loss_rates"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#qucat.Qcircuit.loss_rates" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="qucat.Qcircuit.set_w_cpx">
-<code class="descname">set_w_cpx</code><span class="sig-paren">(</span><em>**kw</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/qucat/src/core.html#Qcircuit.set_w_cpx"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#qucat.Qcircuit.set_w_cpx" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="qucat.Qcircuit.show">
-<code class="descname">show</code><span class="sig-paren">(</span><em>plot=True, full_output=False, pp={'C': {'gap': 0.2, 'height': 0.25, 'lw': 6}, 'J': {'lw': 6, 'width': 0.22}, 'L': {'N_points': 150, 'N_turns': 5, 'height': 0.25, 'lw': 2, 'width': 0.7}, 'P': {'side_wire_width': 0.25}, 'R': {'N_points': 150, 'N_ridges': 4, 'height': 0.25, 'lw': 2, 'width': 0.6}, 'W': {'lw': 1}, 'color': '#1c1c1c', 'figsize_scaling': 1, 'label': {'fontsize': 10, 'text_position_horizontal': [0.0, -0.22], 'text_position_vertical': [0.22, 0.0]}, 'node': {'diameter': 12}, 'x_fig_margin': 1, 'y_fig_margin': 0.5}, save_to=None, **savefig_kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/qucat/src/core.html#Qcircuit.show"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#qucat.Qcircuit.show" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="qucat.Qcircuit.show_normal_mode">
-<code class="descname">show_normal_mode</code><span class="sig-paren">(</span><em>mode</em>, <em>unit='current'</em>, <em>plot=True</em>, <em>save_to=None</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/qucat/src/core.html#Qcircuit.show_normal_mode"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#qucat.Qcircuit.show_normal_mode" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="qucat.Qcircuit.f_k_A_chi">
-<code class="descname">f_k_A_chi</code><span class="sig-paren">(</span><em>pretty_print=False</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/qucat/src/core.html#Qcircuit.f_k_A_chi"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#qucat.Qcircuit.f_k_A_chi" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-</dd></dl>
-
+/* Fix math alignment, see https://github.com/rtfd/sphinx_rtd_theme/pull/686 */
+.math {
+    text-align: unset;
+}
+</style>
+<div class="section" id="circuit-analysis">
+<span id="circuit-functions"></span><h1>Circuit analysis<a class="headerlink" href="#circuit-analysis" title="Permalink to this headline">¶</a></h1>
+<p><strong>The following methods are available to analyze a Qcircuit built with the GUI or Network</strong></p>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="circuit_functions/eigenfrequencies.html"> Calculating eigen-frequencies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="circuit_functions/loss_rates.html"> Calculating losses</a></li>
+<li class="toctree-l1"><a class="reference internal" href="circuit_functions/anharmonicities.html"> Calculating anharmonicities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="circuit_functions/kerr.html"> Calculating Kerr couplings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="circuit_functions/f_k_A_chi.html"> Combined calculation of all the above</a></li>
+<li class="toctree-l1"><a class="reference internal" href="circuit_functions/hamiltonian.html"> Generate a QuTiP Hamiltonian</a></li>
+<li class="toctree-l1"><a class="reference internal" href="circuit_functions/show.html"> Plot the circuit</a></li>
+<li class="toctree-l1"><a class="reference internal" href="circuit_functions/show_normal_mode.html"> Visualize a normal mode of the circuit</a></li>
+</ul>
+</div>
 </div>
 
 
@@ -241,10 +220,10 @@
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="components.html" class="btn btn-neutral float-right" title="Circuit components" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="circuit_functions/eigenfrequencies.html" class="btn btn-neutral float-right" title="Calculating eigen-frequencies" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="builders.html" class="btn btn-neutral float-left" title="Circuit builders" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="network.html" class="btn btn-neutral float-left" title="Building a circuit programmatically" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   

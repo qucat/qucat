@@ -24,6 +24,9 @@
         <script type="text/javascript" src="_static/jquery.js"></script>
         <script type="text/javascript" src="_static/underscore.js"></script>
         <script type="text/javascript" src="_static/doctools.js"></script>
+        <script type="text/javascript" src="_static/language_data.js"></script>
+        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script type="text/x-mathjax-config">MathJax.Hub.Config({"tex2jax": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true, "ignoreClass": "document", "processClass": "math|output_area"}})</script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
@@ -32,9 +35,10 @@
   
   <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="author" title="About these documents" href="about.html" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="API documentation" href="API/API.html" /> 
+    <link rel="next" title="About" href="about.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -80,7 +84,11 @@
             
               <p class="caption"><span class="caption-text">Contents:</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="API/API.html">API of the qucat package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="about.html">About</a></li>
+<li class="toctree-l1"><a class="reference internal" href="citing.html">Citing this project</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorials/tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="API/API.html">Documentation</a></li>
 </ul>
 
             
@@ -145,16 +153,93 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="qucat">
+  
+<style>
+/* CSS overrides for sphinx_rtd_theme */
+
+/* 24px margin */
+.nbinput.nblast,
+.nboutput.nblast {
+    margin-bottom: 19px;  /* padding has already 5px */
+}
+
+/* ... except between code cells! */
+.nblast + .nbinput {
+    margin-top: -19px;
+}
+
+.admonition > p:before {
+    margin-right: 4px;  /* make room for the exclamation icon */
+}
+
+/* Fix math alignment, see https://github.com/rtfd/sphinx_rtd_theme/pull/686 */
+.math {
+    text-align: unset;
+}
+</style>
+<div class="section" id="qucat">
 <h1>qucat<a class="headerlink" href="#qucat" title="Permalink to this headline">¶</a></h1>
 <p>TODO: write a general introduction to the documentation, add a picture.</p>
 <div class="toctree-wrapper compound">
 <p class="caption"><span class="caption-text">Contents:</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="API/API.html">API of the qucat package</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="API/builders.html">Circuit builders</a></li>
-<li class="toctree-l2"><a class="reference internal" href="API/circuit_functions.html">Circuit functions</a></li>
-<li class="toctree-l2"><a class="reference internal" href="API/components.html">Circuit components</a></li>
+<li class="toctree-l1"><a class="reference internal" href="about.html">About</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="about.html#about-this-project">About this project</a></li>
+<li class="toctree-l2"><a class="reference internal" href="about.html#about-this-documentation">About this documentation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="about.html#authors">Authors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="about.html#contact">Contact</a></li>
+<li class="toctree-l2"><a class="reference internal" href="about.html#contributing">Contributing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="about.html#funding">Funding</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="citing.html">Citing this project</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#requirements">Requirements</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#installing-via-pip">Installing via pip</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#installing-from-source">Installing from source</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="tutorials/tutorials.html">Tutorials</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="tutorials/transmon_LC_GUI.html">Coupled Transmon / LC-oscillator (using the GUI)</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="tutorials/transmon_LC_GUI.html#Construct-the-circuit">Construct the circuit</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorials/transmon_LC_GUI.html#Circuit-parameters">Circuit parameters</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorials/transmon_LC_GUI.html#Visualizing-normal-modes">Visualizing normal modes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorials/transmon_LC_GUI.html#Further-analysis-in-QuTiP">Further analysis in QuTiP</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="tutorials/transmon_LC_programmatically.html">Coupled Transmon / LC-oscillator (without the GUI)</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="tutorials/transmon_LC_programmatically.html#Building-the-circuit">Building the circuit</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorials/transmon_LC_programmatically.html#Calculating-circuit-parameters">Calculating circuit parameters</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorials/transmon_LC_programmatically.html#Hamiltonian,-and-further-analysis-with-QuTiP">Hamiltonian, and further analysis with QuTiP</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorials/transmon_LC_programmatically.html#Sweeping-a-parameter:-the-avoided-crossing">Sweeping a parameter: the avoided crossing</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="API/API.html">Documentation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="API/builders.html">Creating a circuit</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="API/gui.html">Graphically</a></li>
+<li class="toctree-l3"><a class="reference internal" href="API/network.html">Programmatically</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="API/circuit_functions.html">Circuit analysis</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="API/circuit_functions/eigenfrequencies.html"> Calculating eigen-frequencies</a></li>
+<li class="toctree-l3"><a class="reference internal" href="API/circuit_functions/loss_rates.html"> Calculating losses</a></li>
+<li class="toctree-l3"><a class="reference internal" href="API/circuit_functions/anharmonicities.html"> Calculating anharmonicities</a></li>
+<li class="toctree-l3"><a class="reference internal" href="API/circuit_functions/kerr.html"> Calculating Kerr couplings</a></li>
+<li class="toctree-l3"><a class="reference internal" href="API/circuit_functions/f_k_A_chi.html"> Combined calculation of all the above</a></li>
+<li class="toctree-l3"><a class="reference internal" href="API/circuit_functions/hamiltonian.html"> Generate a QuTiP Hamiltonian</a></li>
+<li class="toctree-l3"><a class="reference internal" href="API/circuit_functions/show.html"> Plot the circuit</a></li>
+<li class="toctree-l3"><a class="reference internal" href="API/circuit_functions/show_normal_mode.html"> Visualize a normal mode of the circuit</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="API/components.html">Circuit components</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="API/components/J.html">Josephson junction</a></li>
+<li class="toctree-l3"><a class="reference internal" href="API/components/L.html">Inductor</a></li>
+<li class="toctree-l3"><a class="reference internal" href="API/components/C.html">Capacitor</a></li>
+<li class="toctree-l3"><a class="reference internal" href="API/components/R.html">Resistor</a></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -169,7 +254,7 @@
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="API/API.html" class="btn btn-neutral float-right" title="API documentation" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="about.html" class="btn btn-neutral float-right" title="About" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
     </div>
