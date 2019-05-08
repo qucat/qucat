@@ -19,7 +19,7 @@ setuptools.setup(
     description="QUantum Circuit Analysis Tool",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/mgely/qucat",
+    url="https://qucat.org",
     package_dir={'qucat': 'src'},
     packages= ['qucat'],
     classifiers=[
