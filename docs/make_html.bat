@@ -1,1 +1,1 @@
-make html
+make html --html_baseurl
