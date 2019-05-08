@@ -1,0 +1,1 @@
+make html & RMDIR /s/q ..\docs & Xcopy build\html ..\docs\
