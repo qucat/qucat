@@ -4,6 +4,7 @@
 .temp
 test*.txt
 .ipynb_checkpoints
+dist/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
