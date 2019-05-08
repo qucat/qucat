@@ -1,4 +1,11 @@
 import setuptools
+from distutils.dir_util import remove_tree
+
+try:
+	remove_tree('build')
+except FileNotFoundError:
+	# First attempt at building
+	pass
 
 with open("README.md", "r") as fh:
     long_description = fh.read()
@@ -12,8 +19,8 @@ setuptools.setup(
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/mgely/qucat",
-    packages=setuptools.find_packages('src'),
-    package_dir={'': 'src'},
+    package_dir={'qucat': 'src'},
+    packages= ['qucat'],
     classifiers=[
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT License",

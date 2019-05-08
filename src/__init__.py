@@ -1,2 +1,2 @@
 name = "qucat"
-from core import *
+from qucat.core import *

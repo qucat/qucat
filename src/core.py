@@ -8,16 +8,16 @@ from numbers import Number
 from math import floor, factorial
 import os
 from subprocess import run
-from qucat.src._constants import *
+from qucat._constants import *
 import inspect
-from qucat.src._utility import pretty_value,\
+from qucat._utility import pretty_value,\
         shift,\
         to_string,\
         safely_evaluate,\
         vectorize
 import matplotlib.pyplot as plt
 import time
-from qucat.src.plotting_settings import plotting_parameters_show,plotting_parameters_normal_modes
+from qucat.plotting_settings import plotting_parameters_show,plotting_parameters_normal_modes
 PROFILING = False
 
 def timeit(method):

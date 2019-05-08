@@ -1,5 +1,5 @@
 import unittest
-import qucat.src.core as core
+import qucat.core as core
 from math import isclose
 import numpy as np
 from scipy.constants import e, pi, h, hbar
@@ -257,7 +257,7 @@ class TestGraphics(TestCaseAppended):
             circuit.show_normal_mode()
         
     def test_generate_graphics(self):
-        import qucat.src._generate_graphics
+        import qucat._generate_graphics
     
     def test_show_transmon_RLC(self):
         cir=self.open_gui_file('show_normal_mode_transmon_RLC_Lj_as_parameter.txt')
