@@ -1,6 +1,7 @@
 import setuptools
 from distutils.dir_util import remove_tree
 
+# Clean up previous build
 try:
 	remove_tree('build')
 except FileNotFoundError:
@@ -26,4 +27,6 @@ setuptools.setup(
         "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
     ],
+    include_package_data=True,
+    package_data={'qucat': ['.graphics/*']},
 )
