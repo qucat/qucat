@@ -16,6 +16,7 @@ from _constants import *
 from plotting_settings import *
 from copy import deepcopy
 import time
+import platform
  
 
 def track_event(track_events_to, event,sequence):
@@ -282,23 +283,35 @@ class CircuitEditor(tk.Canvas):
     def __init__(self, master, grid_unit, netlist_filename,
             track_events_to = None, unittesting = False,verbose = False,os_type = 'windows'):
         
+<<<<<<< HEAD
         if os_type == 'mac':
             self.font_size = 14
         else:
             self.font_size = 8
 
         self.paired_sequences = {}
+=======
+>>>>>>> 31a6f4bc0b00770a83a0de02dc8cea2850999fe5
         if os_type == 'mac':
-            self.paired_sequences.update({
-                'Control':'Mod1', # for OSX users
-                'Delete':'BackSpace', # No delete button on OSX
-                '-3':'-2', # button 2 (right-click on for OSX) same as MS/Unix right-click
-            })
+            self.font_size = 14
         if os_type == 'linux':
-            self.paired_sequences.update({
-            'MouseWheel':'Button-5', # wheel in linux
-            'MouseWheel':'Button-4', # wheel in linux
-            })
+            self.font_size = 10
+        else:
+            self.font_size = 8
+
+        self.paired_sequences = []
+        if os_type == 'mac':
+            self.paired_sequences += [
+                ['Control','Mod1'], # for OSX users
+                ['Delete','BackSpace'], # No delete button on OSX
+                ['-3','-2'], # button 2 (right-click on for OSX) same as MS/Unix right-click
+            ]
+        if os_type == 'linux':
+            self.paired_sequences += [
+            ['MouseWheel','Button-5'], # wheel in linux
+            ['MouseWheel','Button-4'], # wheel in linux
+            ['Return','<KP_Enter>'], # Keypad enter in linux
+            ]
         '''
         Pair certain key-strokes or sequences which should have
         the same effect, for cross-platform compatibility
@@ -1169,7 +1182,7 @@ class CircuitEditor(tk.Canvas):
         we also bind <Command- ... > for OSX users
         '''
 
-        for key,paired_key in self.paired_sequences.items():
+        for key,paired_key in self.paired_sequences:
             if key in sequence:
                 self.bind(
                     sequence = sequence.replace(key,paired_key),
@@ -1198,7 +1211,7 @@ class CircuitEditor(tk.Canvas):
         we also bind <Command- ... > for OSX users
         '''
 
-        for key,paired_key in self.paired_sequences.items():
+        for key,paired_key in self.paired_sequences:
             if key in sequence:
                 self.tag_bind(tagOrId,
                     sequence = sequence.replace(key,paired_key),
@@ -1220,7 +1233,7 @@ class CircuitEditor(tk.Canvas):
         we also unbind <Command- ... > for OSX users
         '''
 
-        for key,paired_key in self.paired_sequences.items():
+        for key,paired_key in self.paired_sequences:
             if key in sequence:
                 self.unbind(sequence.replace(key,paired_key))
         super(CircuitEditor, self).unbind(sequence)
@@ -3520,6 +3533,7 @@ class RequestValueLabelWindow(tk.Toplevel):
 
         # Bind Return, OK and cancel buttons
         self.bind('<Return>', lambda event: self.ok())
+        self.bind('<KP_Enter>', lambda event: self.ok()) # Keypad enter on linux
         ok_button = tk.Button(self, text='OK', command=self.ok)
         ok_button.pack(side=tk.LEFT, padx=5, pady=5)
         cancel_button = tk.Button(self, text='Cancel', command=self.cancel)
@@ -3626,9 +3640,9 @@ class GuiWindow(ttk.Frame):
 
         # Find out what kind of system the gui is running on
         if _os_type is None:
-            if os.name == 'posix':
+            if platform.system() == 'Darwin':
                 _os_type = 'mac'
-            elif sys.platform.startswith('linux'):
+            elif platform.system() == 'Linux':
                 _os_type = 'linux'
             else:
                 _os_type = 'windows'
@@ -3642,12 +3656,13 @@ class GuiWindow(ttk.Frame):
         self.master.geometry('800x600')
 
         # Load the logo to the title bar
-        try:
-            self.master.iconbitmap(r'C:\ProgramData\Anaconda3\Lib\site-packages\qucat\artwork\logo.ico')
-        except Exception as e:
-            # Anticipating possible non-Windows related issues
-            if self.verbose:
-                print("There has been an error loading the applications icon:\n"+str(e))
+        # TODO: enable for all os
+        if _os_type == 'windows':
+            try:
+                self.master.iconbitmap(os.path.join(os.path.dirname(os.path.dirname(__file__)),'artwork','logo.ico'))
+            except Exception as e:
+                if _verbose:
+                    print("There has been an error loading the applications icon:\n"+str(e))
 
         # Make the fram a 1x1 expandable grid
         self.master.rowconfigure(0, weight=1)
