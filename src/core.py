@@ -192,12 +192,28 @@ class Qcircuit(object):
     def eigenfrequencies(self, **kwargs):
         '''Returns the normal mode frequencies of the circuit.
 
+        Frequencies are provided in units of Hertz, 
+        not in angular frequency.
+
+        Parameters
+        ----------
+        kwargs:     
+                    Values for un-specified circuit compoenents, 
+                    ex: ``L=1e-9``.
+
+        Returns
+        -------
+        numpy.array
+            Normal mode frequencies of the circuit, ordered from lowest
+            to highest frequency, given in Hertz.
+
+        Notes
+        -----
+
         These eigen-frequencies :math:`f_m` correspond to the real parts
         of the complex frequencies which make the conductance matrix
         singular, or equivalently the real parts of the poles of the impedance
         calculated between the nodes of an inductor or josephon junction.
-        Frequencies are provided in units of Hertz, 
-        not in angular frequency.
 
         The Hamiltonian of the circuit is
 
@@ -211,18 +227,6 @@ class Qcircuit(object):
         were replaced with linear inductors. In that case the 
         non-linear part of the Hamiltonian :math:`\hat{U}`, 
         originating in the junction non-linearity, would be 0.
-
-        Parameters
-        ----------
-        kwargs:     
-                    Values for un-specified circuit compoenents, 
-                    ex: ``L=1e-9``.
-
-        Returns
-        -------
-        numpy.array
-            Normal mode frequencies of the circuit, ordered from lowest
-            to highest frequency, given in Hertz.
         '''
         self._set_w_cpx(**kwargs)
         return np.real(self.w_cpx)/2./pi
@@ -234,6 +238,20 @@ class Qcircuit(object):
         Such that the first element of the array corresponds to the loss
         rate of the lowest frequency mode. Losses are provided in units of Hertz, 
         **not in angular frequency**.
+
+        Parameters
+        ----------
+        kwargs:     
+                    Values for un-specified circuit compoenents, 
+                    ex: ``L=1e-9``.
+
+        Returns
+        -------
+        numpy.array
+            Normal mode losses of the circuit
+
+        Notes
+        -----
 
         These loss rates :math:`\kappa_m` correspond to the imaginary parts
         of the complex frequencies which make the conductance matrix
@@ -253,17 +271,6 @@ class Qcircuit(object):
         then it too should be converted to angular frequencies by multiplying 
         the entire hamiltonian by :math:`2\pi` when performing time-dependant 
         simulations.
-
-        Parameters
-        ----------
-        kwargs:     
-                    Values for un-specified circuit compoenents, 
-                    ex: ``L=1e-9``.
-
-        Returns
-        -------
-        numpy.array
-            Normal mode losses of the circuit
         '''
         self._set_w_cpx(**kwargs)
         return np.imag(self.w_cpx)/2./pi
@@ -276,6 +283,20 @@ class Qcircuit(object):
         rate of the lowest frequency mode. Losses are provided in units of Hertz, 
         not in angular frequency.
 
+
+        Parameters
+        ----------
+        kwargs:     
+                    Values for un-specified circuit compoenents, 
+                    ex: ``L=1e-9``.
+
+        Returns
+        -------
+        numpy.array
+            Normal mode anharmonicities
+
+        Notes
+        -----
         The Hamiltonian of the circuit is
 
         :math:`\hat{H} = \sum_m hf_m\hat{a}_m^\dagger\hat{a}_m + \sum_j E_j[1-\cos{\hat{\varphi_j}}-\frac{\hat{\varphi_j}^2}{2}]`,
@@ -306,18 +327,7 @@ class Qcircuit(object):
 
         :math:`A_{m,j} = E_j/2/h\left(\frac{\phi_{zpf,m,j}}{\phi_0}\right)^4`
 
-        is the contribution of junction j to the total anharmonicity of a mode m
-
-        Parameters
-        ----------
-        kwargs:     
-                    Values for un-specified circuit compoenents, 
-                    ex: ``L=1e-9``.
-
-        Returns
-        -------
-        numpy.array
-            Normal mode anharmonicities
+        is the contribution of junction j to the total anharmonicity of a mode m.
         '''
         Ks = self.kerr(**kwargs)
         return np.array([Ks[i, i] for i in range(Ks.shape[0])])
@@ -335,7 +345,20 @@ class Qcircuit(object):
         Kerr parameters are provided in units of Hertz, 
         not in angular frequency.
 
-        
+        Parameters
+        ----------
+        kwargs:     
+                    Values for un-specified circuit compoenents, 
+                    ex: ``L=1e-9``.
+
+        Returns
+        -------
+        numpy.array of dimension 2
+            Kerr parameters
+
+        Notes
+        -----
+
         The Hamiltonian of the circuit is
 
         :math:`\hat{H} = \sum_m hf_m\hat{a}_m^\dagger\hat{a}_m + \sum_j E_j[1-\cos{\hat{\varphi_j}}-\frac{\hat{\varphi_j}^2}{2}]`,
@@ -365,17 +388,6 @@ class Qcircuit(object):
         :math:`A_{m,j} = E_j/2/h\left(\frac{\phi_{zpf,m,j}}{\phi_0}\right)^4`
 
         is the contribution of junction j to the total anharmonicity of a mode m
-
-        Parameters
-        ----------
-        kwargs:     
-                    Values for un-specified circuit compoenents, 
-                    ex: ``L=1e-9``.
-
-        Returns
-        -------
-        numpy.array of dimension 2
-            Kerr parameters
         '''
         As = self._anharmonicities_per_junction(**kwargs)
         N_modes = len(self.w_cpx)
@@ -483,22 +495,6 @@ class Qcircuit(object):
     def hamiltonian(self, modes='all', taylor=4, excitations=6, return_ops = False, **kwargs):
         r'''Returns the cuircuits Hamiltonian for further analysis with QuTiP
 
-        The Hamiltonian of the circuit, with the non-linearity of the Josephson junctions
-        Taylor-expanded, is given by
-
-        :math:`\hat{H} = \sum_{m\in\text{modes}} hf_m\hat{a}_m^\dagger\hat{a}_m + \sum_j\sum_{2n\le\text{taylor}}E_j\frac{(-1)^{n+1}}{(2n)!}\left[\frac{\phi_{zpf,m,j}}{\phi_0}(\hat{a}_m^\dagger+\hat{a}_m)\right]^{2n}`,
-        
-        where :math:`\hat{a}_m` is the annihilation operator of the m-th
-        normal mode of the circuit and :math:`f_m` is the frequency of 
-        the m-th normal mode, :math:`E_j` is the Josephson energy of
-        the j-th junction, :math:`phi_0 = \hbar/2e` and
-
-        :math:`\phi_{zpf,m} = \sqrt{\frac{\hbar}{\omega_mImY'(\omega_m)}}`
-
-        is the zero-point fluctuations in flux if a mode through the junction, 
-        with frequency :math:`\omega_m` and admittance to the rest of the circuit :math:`Y`
-
-
         Parameters
         ----------
         modes:      array of integers, optional
@@ -534,6 +530,24 @@ class Qcircuit(object):
         -------
         qutip.qobj
             Hamiltonian of the circuit
+        
+        Notes
+        -----
+        
+        The Hamiltonian of the circuit, with the non-linearity of the Josephson junctions
+        Taylor-expanded, is given by
+
+        :math:`\hat{H} = \sum_{m\in\text{modes}} hf_m\hat{a}_m^\dagger\hat{a}_m + \sum_j\sum_{2n\le\text{taylor}}E_j\frac{(-1)^{n+1}}{(2n)!}\left[\frac{\phi_{zpf,m,j}}{\phi_0}(\hat{a}_m^\dagger+\hat{a}_m)\right]^{2n}`,
+        
+        where :math:`\hat{a}_m` is the annihilation operator of the m-th
+        normal mode of the circuit and :math:`f_m` is the frequency of 
+        the m-th normal mode, :math:`E_j` is the Josephson energy of
+        the j-th junction, :math:`phi_0 = \hbar/2e` and
+
+        :math:`\phi_{zpf,m} = \sqrt{\frac{\hbar}{\omega_mImY'(\omega_m)}}`
+
+        is the zero-point fluctuations in flux if a mode through the junction, 
+        with frequency :math:`\omega_m` and admittance to the rest of the circuit :math:`Y`.
         '''
         from qutip import destroy, qeye, tensor
 
@@ -666,59 +680,20 @@ class Qcircuit(object):
 
         Only works if the circuit was created using the GUI.
         Plots a schematic of the circuit overlayed with 
-        arrows representing the quantum flucuations of a certain quantity 
+        arrows representing the complex amplitude of a certain quantity 
         :math:`\hat{X}` which can be flux, current, charge or voltage.
-        This quantity has contributions from all the modes 
 
-        :math:`\hat{X} = \sum_m X_{zpf,m}(\hat{a}_m\pm\hat{a}_m^\dagger)`
+        More specifically, the complex amplitude of :math:`\hat{X}` if a 
+        single-photon coherent state were populating a given mode ``mode``.
 
-        Where :math:`X_{zpf,m}` corresponds to the contribution of mode
-        m to the zero-point fluctuations of the component.
-        This is because if we calculate the expectation value 
-        :math:`\langle\psi_0|\hat{X}^2|\psi_0\rangle` 
-        where :math:`|\psi_0\rangle` is the ground-state, 
-        we obtain
-
-        :math:`\langle\hat{X}^2\rangle = \sum_m X_{zpf,m}^2`
-
-
-        By specifying a mode :math:`m`, 
-        size of the arrows and their annotation indicate the
-        magnitude of the zero-point fluctuations through that component
-        :math:`X_{zpf,m}`.
         Current is shown in units of Ampere, voltage in Volts, 
         charge in electron charge, and flux in units of the
         reduced flux quantum 
         (defined as :math:`\hbar/2e`)
 
-        This quantity is calculated from the magnitude of the
-        transfer function between a reference component with
-        known :math:`X_{zpf,m}`
-        and all the others.
-        The reference component
-        is an inductor or a junction 
-        for which we have calculated
+        The direction of the arrows show what we are defining 
+        as positive current for that component.
 
-        :math:`\phi_{zpf,m} = \sqrt{\frac{\hbar}{\omega_mImY'(\omega_m)}}`
-
-        Which can be transformed to other quantities:
-        
-        :math:`\hat{v} = j\omega\hat\phi`
-
-        :math:`\hat{i} = \hat v Y`
-
-        :math:`\hat{q} = \hat i/j\omega`  
-
-        The relative direction of the arrows is given by the sign 
-        of the expectation value of the current
-        :math:`\langle\alpha_m|\hat{i}|\alpha_m\rangle`,
-        where :math:`|\alpha_m\rangle` is a coherent
-        state populating mode :math:`|\alpha_m\rangle`.
-        This quantity is calculated from the phase of the
-        transfer function between a reference component
-        and all the others.
-
-        
         Parameters
         ----------
         mode:           integer
@@ -743,6 +718,38 @@ class Qcircuit(object):
                         If set to True (default), the function will 
                         add a legend detailing the definition of 
                         arrow size and arrow direction
+
+        Notes
+        -----
+
+        This annotated quantity, called a phasor, is calculated by multiplying the
+        voltage transfer function :math:`T` (between a reference component
+        and the annotated component), with
+        :math:`X_{zpf,m}`, the zero-point fluctuations of :math:`\hat{X}`.
+
+        The reference component
+        is an inductor or a junction with inductance :math:`L_r`
+        for which we have calculated
+
+        :math:`\phi_{zpf,m} = \sqrt{\frac{\hbar}{\omega_mImY'(\omega_m)}}`
+
+        Which can be transformed to other quantities:
+        
+        :math:`v = j\omega\phi`
+
+        :math:`i =  v /j\omega L_r`
+
+        :math:`q =  i/j\omega`  
+        
+        In the limit of high quality factor modes, the imaginary part
+        of the transfer function :math:`T` is negligable, making the 
+        phasor approximately 
+        equal to the contribution :math:`X_{zpf,m}` of the mode ``m`` to the zero-point fluctuations 
+        of :math:`\hat{X}`, such that :math:`\hat{X}` (varying per component) is
+
+        :math:`\hat{X} = \sum_m X_{zpf,m}(\hat{a}_m\pm\hat{a}_m^\dagger)`
+
+        where :math:`\hat{a}_m` is the annihilation operator of mode :math:`m`.
         '''
 
         # This changes the default plotting settings 
@@ -1942,34 +1949,12 @@ class Component(Circuit):
 
 
     def zpf(self, mode, quantity, **kwargs):
-        r'''Returns contribution of a certain mode to the zero-point fluctuations of a quantity for this component.
+        r'''Returns contribution of a mode to the zero-point fluctuations of a quantity for this component.
 
         The quantity can be current current (in units of Ampere), 
         voltage (in Volts), 
         charge (in electron charge), 
-        or flux (in units of the reduced flux quantum, :math:`\hbar/2e`)
-
-        This quantity is calculated from the magnitude of the
-        transfer function between a reference component with :math:`\phi_{zpf,m}` and all the others.
-        The reference component
-        is an inductor or a junction 
-        for which we have calculated
-
-        :math:`\phi_{zpf,m} = \sqrt{\frac{\hbar}{\omega_mImY'(\omega_m)}}`
-
-        the zero-point fluctuations in flux of the mode 
-        with frequency :math:`\omega_m` through the reference component with
-        admittance to the rest of the circuit :math:`Y`
-
-        :math:`\phi_{zpf,m}` can be transformed to other quantities
-        
-        :math:`v_{zpf,m} = \omega\phi_{zpf,m}`
-
-        :math:`i_{zpf,m} = v_{zpf,m} / Z(\omega)`
-
-        :math:`q_{zpf,m} = i_{zpf,m}/\omega`  
-
-        Where :math:`Z(\omega)` is this components impedance.
+        or flux (in units of the reduced flux quantum, :math:`\hbar/2e`).
 
         Parameters
         ----------
@@ -1987,6 +1972,30 @@ class Component(Circuit):
         -------
         float
             contribution of the ``mode`` to the zero-point fluctuations of the ``quantity``
+
+        Notes
+        -----
+        This quantity is calculated from the magnitude of the
+        transfer function between a reference component an this one.
+        The reference component
+        is an inductor or a junction with inductance :math:`L_r`
+        for which we have calculated
+
+        :math:`\phi_{zpf,m} = \sqrt{\frac{\hbar}{\omega_mImY'(\omega_m)}}`
+
+        the zero-point fluctuations in flux of the mode 
+        with frequency :math:`\omega_m` through the reference component with
+        admittance to the rest of the circuit :math:`Y`
+
+        :math:`\phi_{zpf,m}` can be transformed to other quantities
+        
+        :math:`v_{zpf,m} = \omega\phi_{zpf,m}`
+
+        :math:`i_{zpf,m} = v_{zpf,m} / L_r\omega`
+
+        :math:`q_{zpf,m} = i_{zpf,m}/\omega`  
+
+        Where :math:`Z(\omega)` is this components impedance.
         '''
         mode_w = self._circuit.eigenfrequencies(**kwargs)[mode]*2.*np.pi
         return self._zpf(mode_w, quantity, **kwargs)
@@ -2233,6 +2242,23 @@ class J(L):
 
         Returned in units of Hertz, not angular frequency.
 
+        Parameters
+        ----------
+        kwargs:     
+                    Values for un-specified circuit compoenents, 
+                    ex: ``L=1e-9``.
+        
+        mode:           integer
+                        Determine what mode to plot, where 0 designates
+                        the lowest frequency mode, and the others
+                        are arranged in order of increasing frequency
+        Returns
+        -------
+        float
+            contribution of this junction to the anharmonicity of a given normal mode
+        
+        Notes
+        -----
         This quantity (in units of Hertz) is defined as 
 
         :math:`A_{m,j} = E_j/2/h\left(\frac{\phi_{zpf,m,j}}{\phi_0}\right)^4`
@@ -2248,21 +2274,6 @@ class J(L):
 
         Following first order perturbation, the total anharmonicity of a mode is obtained
         by summing these contribution over all modes.
-
-        Parameters
-        ----------
-        kwargs:     
-                    Values for un-specified circuit compoenents, 
-                    ex: ``L=1e-9``.
-        
-        mode:           integer
-                        Determine what mode to plot, where 0 designates
-                        the lowest frequency mode, and the others
-                        are arranged in order of increasing frequency
-        Returns
-        -------
-        float
-            contribution of this junction to the anharmonicity of a given normal mode
         '''
         mode_w = self._circuit.eigenfrequencies(**kwargs)[mode]*2.*np.pi
         return _anharmonicity(self, mode_w, **kwargs)
