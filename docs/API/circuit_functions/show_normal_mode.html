@@ -200,50 +200,21 @@
 <div class="section" id="visualizing-normal-modes">
 <h1>Visualizing normal-modes<a class="headerlink" href="#visualizing-normal-modes" title="Permalink to this headline">¶</a></h1>
 <dl class="method">
-<dt id="qucat.Qcircuit.show_normal_mode">
-<code class="descclassname">Qcircuit.</code><code class="descname">show_normal_mode</code><span class="sig-paren">(</span><em>mode</em>, <em>quantity='current'</em>, <em>plot=True</em>, <em>return_fig_ax=False</em>, <em>add_title=True</em>, <em>add_legend=True</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qucat/core.html#Qcircuit.show_normal_mode"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#qucat.Qcircuit.show_normal_mode" title="Permalink to this definition">¶</a></dt>
+<dt id="core.Qcircuit.show_normal_mode">
+<code class="descclassname">Qcircuit.</code><code class="descname">show_normal_mode</code><span class="sig-paren">(</span><em>mode</em>, <em>quantity='current'</em>, <em>plot=True</em>, <em>return_fig_ax=False</em>, <em>add_title=True</em>, <em>add_legend=True</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/core.html#Qcircuit.show_normal_mode"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#core.Qcircuit.show_normal_mode" title="Permalink to this definition">¶</a></dt>
 <dd><p>Plots a visual representation of a normal mode.</p>
 <p>Only works if the circuit was created using the GUI.
 Plots a schematic of the circuit overlayed with
-arrows representing the quantum flucuations of a certain quantity
-<span class="math notranslate nohighlight">\(\hat{X}\)</span> which can be flux, current, charge or voltage.
-This quantity has contributions from all the modes</p>
-<p><span class="math notranslate nohighlight">\(\hat{X} = \sum_m X_{zpf,m}(\hat{a}_m\pm\hat{a}_m^\dagger)\)</span></p>
-<p>Where <span class="math notranslate nohighlight">\(X_{zpf,m}\)</span> corresponds to the contribution of mode
-m to the zero-point fluctuations of the component.
-This is because if we calculate the expectation value
-<span class="math notranslate nohighlight">\(\langle\psi_0|\hat{X}^2|\psi_0\rangle\)</span>
-where <span class="math notranslate nohighlight">\(|\psi_0\rangle\)</span> is the ground-state,
-we obtain</p>
-<p><span class="math notranslate nohighlight">\(\langle\hat{X}^2\rangle = \sum_m X_{zpf,m}^2\)</span></p>
-<p>By specifying a mode <span class="math notranslate nohighlight">\(m\)</span>,
-size of the arrows and their annotation indicate the
-magnitude of the zero-point fluctuations through that component
-<span class="math notranslate nohighlight">\(X_{zpf,m}\)</span>.
-Current is shown in units of Ampere, voltage in Volts,
+arrows representing the complex amplitude of a certain quantity
+<span class="math notranslate nohighlight">\(\hat{X}\)</span> which can be flux, current, charge or voltage.</p>
+<p>More specifically, the complex amplitude of <span class="math notranslate nohighlight">\(\hat{X}\)</span> if a
+single-photon coherent state were populating a given mode <code class="docutils literal notranslate"><span class="pre">mode</span></code>.</p>
+<p>Current is shown in units of Ampere, voltage in Volts,
 charge in electron charge, and flux in units of the
 reduced flux quantum
 (defined as <span class="math notranslate nohighlight">\(\hbar/2e\)</span>)</p>
-<p>This quantity is calculated from the magnitude of the
-transfer function between a reference component with
-known <span class="math notranslate nohighlight">\(X_{zpf,m}\)</span>
-and all the others.
-The reference component
-is an inductor or a junction
-for which we have calculated</p>
-<p><span class="math notranslate nohighlight">\(\phi_{zpf,m} = \sqrt{\frac{\hbar}{\omega_mImY'(\omega_m)}}\)</span></p>
-<p>Which can be transformed to other quantities:</p>
-<p><span class="math notranslate nohighlight">\(\hat{v} = j\omega\hat\phi\)</span></p>
-<p><span class="math notranslate nohighlight">\(\hat{i} = \hat v Y\)</span></p>
-<p><span class="math notranslate nohighlight">\(\hat{q} = \hat i/j\omega\)</span></p>
-<p>The relative direction of the arrows is given by the sign
-of the expectation value of the current
-<span class="math notranslate nohighlight">\(\langle\alpha_m|\hat{i}|\alpha_m\rangle\)</span>,
-where <span class="math notranslate nohighlight">\(|\alpha_m\rangle\)</span> is a coherent
-state populating mode <span class="math notranslate nohighlight">\(|\alpha_m\rangle\)</span>.
-This quantity is calculated from the phase of the
-transfer function between a reference component
-and all the others.</p>
+<p>The direction of the arrows show what we are defining
+as positive current for that component.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -270,6 +241,26 @@ arrow size and arrow direction</li>
 </tr>
 </tbody>
 </table>
+<p class="rubric">Notes</p>
+<p>This annotated quantity, called a phasor, is calculated by multiplying the
+voltage transfer function <span class="math notranslate nohighlight">\(T\)</span> (between a reference component
+and the annotated component), with
+<span class="math notranslate nohighlight">\(X_{zpf,m}\)</span>, the zero-point fluctuations of <span class="math notranslate nohighlight">\(\hat{X}\)</span>.</p>
+<p>The reference component
+is an inductor or a junction with inductance <span class="math notranslate nohighlight">\(L_r\)</span>
+for which we have calculated</p>
+<p><span class="math notranslate nohighlight">\(\phi_{zpf,m} = \sqrt{\frac{\hbar}{\omega_mImY'(\omega_m)}}\)</span></p>
+<p>Which can be transformed to other quantities:</p>
+<p><span class="math notranslate nohighlight">\(v = j\omega\phi\)</span></p>
+<p><span class="math notranslate nohighlight">\(i =  v /j\omega L_r\)</span></p>
+<p><span class="math notranslate nohighlight">\(q =  i/j\omega\)</span></p>
+<p>In the limit of high quality factor modes, the imaginary part
+of the transfer function <span class="math notranslate nohighlight">\(T\)</span> is negligable, making the
+phasor approximately
+equal to the contribution <span class="math notranslate nohighlight">\(X_{zpf,m}\)</span> of the mode <code class="docutils literal notranslate"><span class="pre">m</span></code> to the zero-point fluctuations
+of <span class="math notranslate nohighlight">\(\hat{X}\)</span>, such that <span class="math notranslate nohighlight">\(\hat{X}\)</span> (varying per component) is</p>
+<p><span class="math notranslate nohighlight">\(\hat{X} = \sum_m X_{zpf,m}(\hat{a}_m\pm\hat{a}_m^\dagger)\)</span></p>
+<p>where <span class="math notranslate nohighlight">\(\hat{a}_m\)</span> is the annihilation operator of mode <span class="math notranslate nohighlight">\(m\)</span>.</p>
 </dd></dl>
 
 </div>

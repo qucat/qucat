@@ -2,4 +2,4 @@
 Graphical user interface
 *************************
 
-.. autoclass:: qucat.GUI(filename, edit=True, plot=True, print_network=True)
+.. autoclass:: core.GUI(filename, edit=True, plot=True, print_network=True)

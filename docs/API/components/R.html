@@ -195,8 +195,8 @@
 <div class="section" id="resistor">
 <span id="id1"></span><h1>Resistor<a class="headerlink" href="#resistor" title="Permalink to this headline">¶</a></h1>
 <dl class="class">
-<dt id="qucat.R">
-<em class="property">class </em><code class="descclassname">qucat.</code><code class="descname">R</code><span class="sig-paren">(</span><em>node_minus</em>, <em>node_plus</em>, <em>*args</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qucat/core.html#R"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#qucat.R" title="Permalink to this definition">¶</a></dt>
+<dt id="core.R">
+<em class="property">class </em><code class="descclassname">core.</code><code class="descname">R</code><span class="sig-paren">(</span><em>node_minus</em>, <em>node_plus</em>, <em>*args</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/core.html#R"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#core.R" title="Permalink to this definition">¶</a></dt>
 <dd><p>A class representing an resistor</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -223,27 +223,13 @@ such as the dissipation rate can be performed much faster.</li>
 </tbody>
 </table>
 <dl class="method">
-<dt id="qucat.R.zpf">
-<code class="descname">zpf</code><span class="sig-paren">(</span><em>mode</em>, <em>quantity</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#qucat.R.zpf" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns contribution of a certain mode to the zero-point fluctuations of a quantity for this component.</p>
+<dt id="core.R.zpf">
+<code class="descname">zpf</code><span class="sig-paren">(</span><em>mode</em>, <em>quantity</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#core.R.zpf" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns contribution of a mode to the zero-point fluctuations of a quantity for this component.</p>
 <p>The quantity can be current current (in units of Ampere),
 voltage (in Volts),
 charge (in electron charge),
-or flux (in units of the reduced flux quantum, <span class="math notranslate nohighlight">\(\hbar/2e\)</span>)</p>
-<p>This quantity is calculated from the magnitude of the
-transfer function between a reference component with <span class="math notranslate nohighlight">\(\phi_{zpf,m}\)</span> and all the others.
-The reference component
-is an inductor or a junction
-for which we have calculated</p>
-<p><span class="math notranslate nohighlight">\(\phi_{zpf,m} = \sqrt{\frac{\hbar}{\omega_mImY'(\omega_m)}}\)</span></p>
-<p>the zero-point fluctuations in flux of the mode
-with frequency <span class="math notranslate nohighlight">\(\omega_m\)</span> through the reference component with
-admittance to the rest of the circuit <span class="math notranslate nohighlight">\(Y\)</span></p>
-<p><span class="math notranslate nohighlight">\(\phi_{zpf,m}\)</span> can be transformed to other quantities</p>
-<p><span class="math notranslate nohighlight">\(v_{zpf,m} = \omega\phi_{zpf,m}\)</span></p>
-<p><span class="math notranslate nohighlight">\(i_{zpf,m} = v_{zpf,m} / Z(\omega)\)</span></p>
-<p><span class="math notranslate nohighlight">\(q_{zpf,m} = i_{zpf,m}/\omega\)</span></p>
-<p>Where <span class="math notranslate nohighlight">\(Z(\omega)\)</span> is this components impedance.</p>
+or flux (in units of the reduced flux quantum, <span class="math notranslate nohighlight">\(\hbar/2e\)</span>).</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -266,6 +252,21 @@ ex: <code class="docutils literal notranslate"><span class="pre">L=1e-9</span></
 </tr>
 </tbody>
 </table>
+<p class="rubric">Notes</p>
+<p>This quantity is calculated from the magnitude of the
+transfer function between a reference component an this one.
+The reference component
+is an inductor or a junction with inductance <span class="math notranslate nohighlight">\(L_r\)</span>
+for which we have calculated</p>
+<p><span class="math notranslate nohighlight">\(\phi_{zpf,m} = \sqrt{\frac{\hbar}{\omega_mImY'(\omega_m)}}\)</span></p>
+<p>the zero-point fluctuations in flux of the mode
+with frequency <span class="math notranslate nohighlight">\(\omega_m\)</span> through the reference component with
+admittance to the rest of the circuit <span class="math notranslate nohighlight">\(Y\)</span></p>
+<p><span class="math notranslate nohighlight">\(\phi_{zpf,m}\)</span> can be transformed to other quantities</p>
+<p><span class="math notranslate nohighlight">\(v_{zpf,m} = \omega\phi_{zpf,m}\)</span></p>
+<p><span class="math notranslate nohighlight">\(i_{zpf,m} = v_{zpf,m} / L_r\omega\)</span></p>
+<p><span class="math notranslate nohighlight">\(q_{zpf,m} = i_{zpf,m}/\omega\)</span></p>
+<p>Where <span class="math notranslate nohighlight">\(Z(\omega)\)</span> is this components impedance.</p>
 </dd></dl>
 
 </dd></dl>

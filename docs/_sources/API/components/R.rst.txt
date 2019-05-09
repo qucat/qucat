@@ -3,6 +3,6 @@
 Resistor
 =========
 
-.. autoclass:: qucat.R
+.. autoclass:: core.R
     :members:
     :inherited-members:

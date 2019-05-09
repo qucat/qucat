@@ -200,25 +200,11 @@
 <div class="section" id="calculating-eigen-frequencies">
 <h1>Calculating eigen-frequencies<a class="headerlink" href="#calculating-eigen-frequencies" title="Permalink to this headline">¶</a></h1>
 <dl class="method">
-<dt id="qucat.Qcircuit.eigenfrequencies">
-<code class="descclassname">Qcircuit.</code><code class="descname">eigenfrequencies</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qucat/core.html#Qcircuit.eigenfrequencies"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#qucat.Qcircuit.eigenfrequencies" title="Permalink to this definition">¶</a></dt>
+<dt id="core.Qcircuit.eigenfrequencies">
+<code class="descclassname">Qcircuit.</code><code class="descname">eigenfrequencies</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/core.html#Qcircuit.eigenfrequencies"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#core.Qcircuit.eigenfrequencies" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns the normal mode frequencies of the circuit.</p>
-<p>These eigen-frequencies <span class="math notranslate nohighlight">\(f_m\)</span> correspond to the real parts
-of the complex frequencies which make the conductance matrix
-singular, or equivalently the real parts of the poles of the impedance
-calculated between the nodes of an inductor or josephon junction.
-Frequencies are provided in units of Hertz,
+<p>Frequencies are provided in units of Hertz,
 not in angular frequency.</p>
-<p>The Hamiltonian of the circuit is</p>
-<p><span class="math notranslate nohighlight">\(\hat{H} = \sum_m hf_m\hat{a}_m^\dagger\hat{a}_m + \hat{U}\)</span>,</p>
-<p>where <span class="math notranslate nohighlight">\(h\)</span> is Plancks constant,
-<span class="math notranslate nohighlight">\(\hat{a}_m\)</span> is the annihilation operator of the m-th
-normal mode of the circuit and <span class="math notranslate nohighlight">\(f_m\)</span> is the frequency of
-the m-th normal mode. The frequencies <span class="math notranslate nohighlight">\(f_m\)</span> would
-be the resonance frequencies of the circuit if all junctions
-were replaced with linear inductors. In that case the
-non-linear part of the Hamiltonian <span class="math notranslate nohighlight">\(\hat{U}\)</span>,
-originating in the junction non-linearity, would be 0.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -233,6 +219,21 @@ to highest frequency, given in Hertz.</td>
 </tr>
 </tbody>
 </table>
+<p class="rubric">Notes</p>
+<p>These eigen-frequencies <span class="math notranslate nohighlight">\(f_m\)</span> correspond to the real parts
+of the complex frequencies which make the conductance matrix
+singular, or equivalently the real parts of the poles of the impedance
+calculated between the nodes of an inductor or josephon junction.</p>
+<p>The Hamiltonian of the circuit is</p>
+<p><span class="math notranslate nohighlight">\(\hat{H} = \sum_m hf_m\hat{a}_m^\dagger\hat{a}_m + \hat{U}\)</span>,</p>
+<p>where <span class="math notranslate nohighlight">\(h\)</span> is Plancks constant,
+<span class="math notranslate nohighlight">\(\hat{a}_m\)</span> is the annihilation operator of the m-th
+normal mode of the circuit and <span class="math notranslate nohighlight">\(f_m\)</span> is the frequency of
+the m-th normal mode. The frequencies <span class="math notranslate nohighlight">\(f_m\)</span> would
+be the resonance frequencies of the circuit if all junctions
+were replaced with linear inductors. In that case the
+non-linear part of the Hamiltonian <span class="math notranslate nohighlight">\(\hat{U}\)</span>,
+originating in the junction non-linearity, would be 0.</p>
 </dd></dl>
 
 </div>

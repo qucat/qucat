@@ -200,13 +200,27 @@
 <div class="section" id="calculating-anharmonicities">
 <h1>Calculating anharmonicities<a class="headerlink" href="#calculating-anharmonicities" title="Permalink to this headline">¶</a></h1>
 <dl class="method">
-<dt id="qucat.Qcircuit.anharmonicities">
-<code class="descclassname">Qcircuit.</code><code class="descname">anharmonicities</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qucat/core.html#Qcircuit.anharmonicities"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#qucat.Qcircuit.anharmonicities" title="Permalink to this definition">¶</a></dt>
+<dt id="core.Qcircuit.anharmonicities">
+<code class="descclassname">Qcircuit.</code><code class="descname">anharmonicities</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/core.html#Qcircuit.anharmonicities"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#core.Qcircuit.anharmonicities" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns the anharmonicity of the circuit normal modes.</p>
 <p>The array is ordered ordered with increasing normal mode frequencies.
 Such that the first element of the array corresponds to the loss
 rate of the lowest frequency mode. Losses are provided in units of Hertz,
 not in angular frequency.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>kwargs</strong> – Values for un-specified circuit compoenents,
+ex: <code class="docutils literal notranslate"><span class="pre">L=1e-9</span></code>.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">Normal mode anharmonicities</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">numpy.array</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Notes</p>
 <p>The Hamiltonian of the circuit is</p>
 <p><span class="math notranslate nohighlight">\(\hat{H} = \sum_m hf_m\hat{a}_m^\dagger\hat{a}_m + \sum_j E_j[1-\cos{\hat{\varphi_j}}-\frac{\hat{\varphi_j}^2}{2}]\)</span>,</p>
 <p>where <span class="math notranslate nohighlight">\(\hat{a}_m\)</span> is the annihilation operator of the m-th
@@ -224,20 +238,7 @@ with frequency <span class="math notranslate nohighlight">\(\omega_m\)</span> an
 <p><span class="math notranslate nohighlight">\(A_m = \sum_j A_{m,j}\)</span></p>
 <p>where</p>
 <p><span class="math notranslate nohighlight">\(A_{m,j} = E_j/2/h\left(\frac{\phi_{zpf,m,j}}{\phi_0}\right)^4\)</span></p>
-<p>is the contribution of junction j to the total anharmonicity of a mode m</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>kwargs</strong> – Values for un-specified circuit compoenents,
-ex: <code class="docutils literal notranslate"><span class="pre">L=1e-9</span></code>.</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">Normal mode anharmonicities</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">numpy.array</td>
-</tr>
-</tbody>
-</table>
+<p>is the contribution of junction j to the total anharmonicity of a mode m.</p>
 </dd></dl>
 
 </div>

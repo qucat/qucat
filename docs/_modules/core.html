@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>qucat.core &mdash; qucat  documentation</title>
+  <title>core &mdash; qucat  documentation</title>
   
 
   
@@ -17,27 +17,27 @@
   
 
   
-  <script type="text/javascript" src="../../_static/js/modernizr.min.js"></script>
+  <script type="text/javascript" src="../_static/js/modernizr.min.js"></script>
   
     
-      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
-        <script type="text/javascript" src="../../_static/jquery.js"></script>
-        <script type="text/javascript" src="../../_static/underscore.js"></script>
-        <script type="text/javascript" src="../../_static/doctools.js"></script>
-        <script type="text/javascript" src="../../_static/language_data.js"></script>
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../_static/jquery.js"></script>
+        <script type="text/javascript" src="../_static/underscore.js"></script>
+        <script type="text/javascript" src="../_static/doctools.js"></script>
+        <script type="text/javascript" src="../_static/language_data.js"></script>
         <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
         <script type="text/x-mathjax-config">MathJax.Hub.Config({"tex2jax": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true, "ignoreClass": "document", "processClass": "math|output_area"}})</script>
     
-    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
 
     
 
   
-  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
-    <link rel="author" title="About these documents" href="../../about.html" />
-    <link rel="index" title="Index" href="../../genindex.html" />
-    <link rel="search" title="Search" href="../../search.html" /> 
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="author" title="About these documents" href="../about.html" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -51,7 +51,7 @@
           
 
           
-            <a href="../../index.html" class="icon icon-home"> qucat
+            <a href="../index.html" class="icon icon-home"> qucat
           
 
           
@@ -64,7 +64,7 @@
 
           
 <div role="search">
-  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
@@ -83,11 +83,11 @@
             
               <p class="caption"><span class="caption-text">Contents:</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../about.html">About</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../citing.html">Citing this project</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../installation.html">Installation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../tutorials/tutorials.html">Tutorials</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../API/API.html">Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../about.html">About</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../citing.html">Citing this project</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../API/API.html">Documentation</a></li>
 </ul>
 
             
@@ -102,7 +102,7 @@
       <nav class="wy-nav-top" aria-label="top navigation">
         
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-          <a href="../../index.html">qucat</a>
+          <a href="../index.html">qucat</a>
         
       </nav>
 
@@ -131,11 +131,11 @@
 
   <ul class="wy-breadcrumbs">
     
-      <li><a href="../../index.html">Docs</a> &raquo;</li>
+      <li><a href="../index.html">Docs</a> &raquo;</li>
         
-          <li><a href="../index.html">Module code</a> &raquo;</li>
+          <li><a href="index.html">Module code</a> &raquo;</li>
         
-      <li>qucat.core</li>
+      <li>core</li>
     
     
       <li class="wy-breadcrumbs-aside">
@@ -150,7 +150,7 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <h1>Source code for qucat.core</h1><div class="highlight"><pre>
+  <h1>Source code for core</h1><div class="highlight"><pre>
 <span></span><span class="kn">import</span> <span class="nn">sympy</span> <span class="k">as</span> <span class="nn">sp</span>
 <span class="kn">from</span> <span class="nn">sympy.utilities.lambdify</span> <span class="k">import</span> <span class="n">lambdify</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
@@ -342,15 +342,31 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_set_w_cpx</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
         <span class="k">return</span> <span class="p">[</span><span class="n">j</span><span class="o">.</span><span class="n">_anharmonicity</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">w_cpx</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">junctions</span><span class="p">]</span>
 
-<div class="viewcode-block" id="Qcircuit.eigenfrequencies"><a class="viewcode-back" href="../../API/circuit_functions/eigenfrequencies.html#qucat.Qcircuit.eigenfrequencies">[docs]</a>    <span class="k">def</span> <span class="nf">eigenfrequencies</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<div class="viewcode-block" id="Qcircuit.eigenfrequencies"><a class="viewcode-back" href="../API/circuit_functions/eigenfrequencies.html#core.Qcircuit.eigenfrequencies">[docs]</a>    <span class="k">def</span> <span class="nf">eigenfrequencies</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="sd">&#39;&#39;&#39;Returns the normal mode frequencies of the circuit.</span>
+
+<span class="sd">        Frequencies are provided in units of Hertz, </span>
+<span class="sd">        not in angular frequency.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        kwargs:     </span>
+<span class="sd">                    Values for un-specified circuit compoenents, </span>
+<span class="sd">                    ex: ``L=1e-9``.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        numpy.array</span>
+<span class="sd">            Normal mode frequencies of the circuit, ordered from lowest</span>
+<span class="sd">            to highest frequency, given in Hertz.</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
 
 <span class="sd">        These eigen-frequencies :math:`f_m` correspond to the real parts</span>
 <span class="sd">        of the complex frequencies which make the conductance matrix</span>
 <span class="sd">        singular, or equivalently the real parts of the poles of the impedance</span>
 <span class="sd">        calculated between the nodes of an inductor or josephon junction.</span>
-<span class="sd">        Frequencies are provided in units of Hertz, </span>
-<span class="sd">        not in angular frequency.</span>
 
 <span class="sd">        The Hamiltonian of the circuit is</span>
 
@@ -364,6 +380,17 @@
 <span class="sd">        were replaced with linear inductors. In that case the </span>
 <span class="sd">        non-linear part of the Hamiltonian :math:`\hat{U}`, </span>
 <span class="sd">        originating in the junction non-linearity, would be 0.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_set_w_cpx</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">w_cpx</span><span class="p">)</span><span class="o">/</span><span class="mf">2.</span><span class="o">/</span><span class="n">pi</span></div>
+
+<div class="viewcode-block" id="Qcircuit.loss_rates"><a class="viewcode-back" href="../API/circuit_functions/loss_rates.html#core.Qcircuit.loss_rates">[docs]</a>    <span class="k">def</span> <span class="nf">loss_rates</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;Returns the loss rates of the circuit normal modes.</span>
+
+<span class="sd">        The array is ordered ordered with increasing normal mode frequencies.</span>
+<span class="sd">        Such that the first element of the array corresponds to the loss</span>
+<span class="sd">        rate of the lowest frequency mode. Losses are provided in units of Hertz, </span>
+<span class="sd">        **not in angular frequency**.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -374,19 +401,10 @@
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
 <span class="sd">        numpy.array</span>
-<span class="sd">            Normal mode frequencies of the circuit, ordered from lowest</span>
-<span class="sd">            to highest frequency, given in Hertz.</span>
-<span class="sd">        &#39;&#39;&#39;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_set_w_cpx</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">w_cpx</span><span class="p">)</span><span class="o">/</span><span class="mf">2.</span><span class="o">/</span><span class="n">pi</span></div>
+<span class="sd">            Normal mode losses of the circuit</span>
 
-<div class="viewcode-block" id="Qcircuit.loss_rates"><a class="viewcode-back" href="../../API/circuit_functions/loss_rates.html#qucat.Qcircuit.loss_rates">[docs]</a>    <span class="k">def</span> <span class="nf">loss_rates</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="sd">&#39;&#39;&#39;Returns the loss rates of the circuit normal modes.</span>
-
-<span class="sd">        The array is ordered ordered with increasing normal mode frequencies.</span>
-<span class="sd">        Such that the first element of the array corresponds to the loss</span>
-<span class="sd">        rate of the lowest frequency mode. Losses are provided in units of Hertz, </span>
-<span class="sd">        **not in angular frequency**.</span>
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
 
 <span class="sd">        These loss rates :math:`\kappa_m` correspond to the imaginary parts</span>
 <span class="sd">        of the complex frequencies which make the conductance matrix</span>
@@ -406,6 +424,18 @@
 <span class="sd">        then it too should be converted to angular frequencies by multiplying </span>
 <span class="sd">        the entire hamiltonian by :math:`2\pi` when performing time-dependant </span>
 <span class="sd">        simulations.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_set_w_cpx</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">imag</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">w_cpx</span><span class="p">)</span><span class="o">/</span><span class="mf">2.</span><span class="o">/</span><span class="n">pi</span></div>
+
+<div class="viewcode-block" id="Qcircuit.anharmonicities"><a class="viewcode-back" href="../API/circuit_functions/anharmonicities.html#core.Qcircuit.anharmonicities">[docs]</a>    <span class="k">def</span> <span class="nf">anharmonicities</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sa">r</span><span class="sd">&#39;&#39;&#39;Returns the anharmonicity of the circuit normal modes.</span>
+
+<span class="sd">        The array is ordered ordered with increasing normal mode frequencies.</span>
+<span class="sd">        Such that the first element of the array corresponds to the loss</span>
+<span class="sd">        rate of the lowest frequency mode. Losses are provided in units of Hertz, </span>
+<span class="sd">        not in angular frequency.</span>
+
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -416,19 +446,10 @@
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
 <span class="sd">        numpy.array</span>
-<span class="sd">            Normal mode losses of the circuit</span>
-<span class="sd">        &#39;&#39;&#39;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_set_w_cpx</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">imag</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">w_cpx</span><span class="p">)</span><span class="o">/</span><span class="mf">2.</span><span class="o">/</span><span class="n">pi</span></div>
+<span class="sd">            Normal mode anharmonicities</span>
 
-<div class="viewcode-block" id="Qcircuit.anharmonicities"><a class="viewcode-back" href="../../API/circuit_functions/anharmonicities.html#qucat.Qcircuit.anharmonicities">[docs]</a>    <span class="k">def</span> <span class="nf">anharmonicities</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="sa">r</span><span class="sd">&#39;&#39;&#39;Returns the anharmonicity of the circuit normal modes.</span>
-
-<span class="sd">        The array is ordered ordered with increasing normal mode frequencies.</span>
-<span class="sd">        Such that the first element of the array corresponds to the loss</span>
-<span class="sd">        rate of the lowest frequency mode. Losses are provided in units of Hertz, </span>
-<span class="sd">        not in angular frequency.</span>
-
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
 <span class="sd">        The Hamiltonian of the circuit is</span>
 
 <span class="sd">        :math:`\hat{H} = \sum_m hf_m\hat{a}_m^\dagger\hat{a}_m + \sum_j E_j[1-\cos{\hat{\varphi_j}}-\frac{\hat{\varphi_j}^2}{2}]`,</span>
@@ -459,23 +480,12 @@
 
 <span class="sd">        :math:`A_{m,j} = E_j/2/h\left(\frac{\phi_{zpf,m,j}}{\phi_0}\right)^4`</span>
 
-<span class="sd">        is the contribution of junction j to the total anharmonicity of a mode m</span>
-
-<span class="sd">        Parameters</span>
-<span class="sd">        ----------</span>
-<span class="sd">        kwargs:     </span>
-<span class="sd">                    Values for un-specified circuit compoenents, </span>
-<span class="sd">                    ex: ``L=1e-9``.</span>
-
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        numpy.array</span>
-<span class="sd">            Normal mode anharmonicities</span>
+<span class="sd">        is the contribution of junction j to the total anharmonicity of a mode m.</span>
 <span class="sd">        &#39;&#39;&#39;</span>
         <span class="n">Ks</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">kerr</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">Ks</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">Ks</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])])</span></div>
 
-<div class="viewcode-block" id="Qcircuit.kerr"><a class="viewcode-back" href="../../API/circuit_functions/kerr.html#qucat.Qcircuit.kerr">[docs]</a>    <span class="k">def</span> <span class="nf">kerr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<div class="viewcode-block" id="Qcircuit.kerr"><a class="viewcode-back" href="../API/circuit_functions/kerr.html#core.Qcircuit.kerr">[docs]</a>    <span class="k">def</span> <span class="nf">kerr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="sa">r</span><span class="sd">&#39;&#39;&#39;Returns the Kerr parameters for the circuit normal modes.</span>
 
 <span class="sd">        The diagonal component ``K[m,m]`` of the returned matrix correspond to the</span>
@@ -488,7 +498,20 @@
 <span class="sd">        Kerr parameters are provided in units of Hertz, </span>
 <span class="sd">        not in angular frequency.</span>
 
-<span class="sd">        </span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        kwargs:     </span>
+<span class="sd">                    Values for un-specified circuit compoenents, </span>
+<span class="sd">                    ex: ``L=1e-9``.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        numpy.array of dimension 2</span>
+<span class="sd">            Kerr parameters</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+
 <span class="sd">        The Hamiltonian of the circuit is</span>
 
 <span class="sd">        :math:`\hat{H} = \sum_m hf_m\hat{a}_m^\dagger\hat{a}_m + \sum_j E_j[1-\cos{\hat{\varphi_j}}-\frac{\hat{\varphi_j}^2}{2}]`,</span>
@@ -518,17 +541,6 @@
 <span class="sd">        :math:`A_{m,j} = E_j/2/h\left(\frac{\phi_{zpf,m,j}}{\phi_0}\right)^4`</span>
 
 <span class="sd">        is the contribution of junction j to the total anharmonicity of a mode m</span>
-
-<span class="sd">        Parameters</span>
-<span class="sd">        ----------</span>
-<span class="sd">        kwargs:     </span>
-<span class="sd">                    Values for un-specified circuit compoenents, </span>
-<span class="sd">                    ex: ``L=1e-9``.</span>
-
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        numpy.array of dimension 2</span>
-<span class="sd">            Kerr parameters</span>
 <span class="sd">        &#39;&#39;&#39;</span>
         <span class="n">As</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_anharmonicities_per_junction</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
         <span class="n">N_modes</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">w_cpx</span><span class="p">)</span>
@@ -549,7 +561,7 @@
                         <span class="n">Ks</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span> <span class="o">+=</span> <span class="mf">2.</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">As</span><span class="p">[</span><span class="n">k</span><span class="p">][</span><span class="n">i</span><span class="p">]</span><span class="o">*</span><span class="n">As</span><span class="p">[</span><span class="n">k</span><span class="p">][</span><span class="n">j</span><span class="p">])</span>
         <span class="k">return</span> <span class="n">Ks</span></div>
 
-<div class="viewcode-block" id="Qcircuit.f_k_A_chi"><a class="viewcode-back" href="../../API/circuit_functions/f_k_A_chi.html#qucat.Qcircuit.f_k_A_chi">[docs]</a>    <span class="k">def</span> <span class="nf">f_k_A_chi</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pretty_print</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<div class="viewcode-block" id="Qcircuit.f_k_A_chi"><a class="viewcode-back" href="../API/circuit_functions/f_k_A_chi.html#core.Qcircuit.f_k_A_chi">[docs]</a>    <span class="k">def</span> <span class="nf">f_k_A_chi</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pretty_print</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="sa">r</span><span class="sd">&#39;&#39;&#39;Returns the eigenfrequency, loss-rates, anharmonicity, and Kerr parameters of the circuit. </span>
 
 <span class="sd">        Returns these quantities in the form ``[[f_0,f_1,..],[k_0,k_1,..],[A_0,A_1,..],[[A_0,chi_01,..],[chi_10,A_1,..]..]]``</span>
@@ -633,24 +645,8 @@
         <span class="k">return</span> <span class="n">to_return</span></div>
 
 
-<div class="viewcode-block" id="Qcircuit.hamiltonian"><a class="viewcode-back" href="../../API/circuit_functions/hamiltonian.html#qucat.Qcircuit.hamiltonian">[docs]</a>    <span class="k">def</span> <span class="nf">hamiltonian</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">modes</span><span class="o">=</span><span class="s1">&#39;all&#39;</span><span class="p">,</span> <span class="n">taylor</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">excitations</span><span class="o">=</span><span class="mi">6</span><span class="p">,</span> <span class="n">return_ops</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<div class="viewcode-block" id="Qcircuit.hamiltonian"><a class="viewcode-back" href="../API/circuit_functions/hamiltonian.html#core.Qcircuit.hamiltonian">[docs]</a>    <span class="k">def</span> <span class="nf">hamiltonian</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">modes</span><span class="o">=</span><span class="s1">&#39;all&#39;</span><span class="p">,</span> <span class="n">taylor</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">excitations</span><span class="o">=</span><span class="mi">6</span><span class="p">,</span> <span class="n">return_ops</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="sa">r</span><span class="sd">&#39;&#39;&#39;Returns the cuircuits Hamiltonian for further analysis with QuTiP</span>
-
-<span class="sd">        The Hamiltonian of the circuit, with the non-linearity of the Josephson junctions</span>
-<span class="sd">        Taylor-expanded, is given by</span>
-
-<span class="sd">        :math:`\hat{H} = \sum_{m\in\text{modes}} hf_m\hat{a}_m^\dagger\hat{a}_m + \sum_j\sum_{2n\le\text{taylor}}E_j\frac{(-1)^{n+1}}{(2n)!}\left[\frac{\phi_{zpf,m,j}}{\phi_0}(\hat{a}_m^\dagger+\hat{a}_m)\right]^{2n}`,</span>
-<span class="sd">        </span>
-<span class="sd">        where :math:`\hat{a}_m` is the annihilation operator of the m-th</span>
-<span class="sd">        normal mode of the circuit and :math:`f_m` is the frequency of </span>
-<span class="sd">        the m-th normal mode, :math:`E_j` is the Josephson energy of</span>
-<span class="sd">        the j-th junction, :math:`phi_0 = \hbar/2e` and</span>
-
-<span class="sd">        :math:`\phi_{zpf,m} = \sqrt{\frac{\hbar}{\omega_mImY&#39;(\omega_m)}}`</span>
-
-<span class="sd">        is the zero-point fluctuations in flux if a mode through the junction, </span>
-<span class="sd">        with frequency :math:`\omega_m` and admittance to the rest of the circuit :math:`Y`</span>
-
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -687,6 +683,24 @@
 <span class="sd">        -------</span>
 <span class="sd">        qutip.qobj</span>
 <span class="sd">            Hamiltonian of the circuit</span>
+<span class="sd">        </span>
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        </span>
+<span class="sd">        The Hamiltonian of the circuit, with the non-linearity of the Josephson junctions</span>
+<span class="sd">        Taylor-expanded, is given by</span>
+
+<span class="sd">        :math:`\hat{H} = \sum_{m\in\text{modes}} hf_m\hat{a}_m^\dagger\hat{a}_m + \sum_j\sum_{2n\le\text{taylor}}E_j\frac{(-1)^{n+1}}{(2n)!}\left[\frac{\phi_{zpf,m,j}}{\phi_0}(\hat{a}_m^\dagger+\hat{a}_m)\right]^{2n}`,</span>
+<span class="sd">        </span>
+<span class="sd">        where :math:`\hat{a}_m` is the annihilation operator of the m-th</span>
+<span class="sd">        normal mode of the circuit and :math:`f_m` is the frequency of </span>
+<span class="sd">        the m-th normal mode, :math:`E_j` is the Josephson energy of</span>
+<span class="sd">        the j-th junction, :math:`phi_0 = \hbar/2e` and</span>
+
+<span class="sd">        :math:`\phi_{zpf,m} = \sqrt{\frac{\hbar}{\omega_mImY&#39;(\omega_m)}}`</span>
+
+<span class="sd">        is the zero-point fluctuations in flux if a mode through the junction, </span>
+<span class="sd">        with frequency :math:`\omega_m` and admittance to the rest of the circuit :math:`Y`.</span>
 <span class="sd">        &#39;&#39;&#39;</span>
         <span class="kn">from</span> <span class="nn">qutip</span> <span class="k">import</span> <span class="n">destroy</span><span class="p">,</span> <span class="n">qeye</span><span class="p">,</span> <span class="n">tensor</span>
 
@@ -733,7 +747,7 @@
             <span class="k">return</span> <span class="n">H</span><span class="p">,</span> <span class="n">operators</span>
         <span class="k">return</span> <span class="n">H</span></div>
 
-<div class="viewcode-block" id="Qcircuit.show"><a class="viewcode-back" href="../../API/circuit_functions/show.html#qucat.Qcircuit.show">[docs]</a>    <span class="k">def</span> <span class="nf">show</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+<div class="viewcode-block" id="Qcircuit.show"><a class="viewcode-back" href="../API/circuit_functions/show.html#core.Qcircuit.show">[docs]</a>    <span class="k">def</span> <span class="nf">show</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
              <span class="n">plot</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
              <span class="n">return_fig_ax</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
         <span class="sd">&#39;&#39;&#39;Plots the circuit.</span>
@@ -807,7 +821,7 @@
 
         <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">()</span></div>
 
-<div class="viewcode-block" id="Qcircuit.show_normal_mode"><a class="viewcode-back" href="../../API/circuit_functions/show_normal_mode.html#qucat.Qcircuit.show_normal_mode">[docs]</a>    <span class="k">def</span> <span class="nf">show_normal_mode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> 
+<div class="viewcode-block" id="Qcircuit.show_normal_mode"><a class="viewcode-back" href="../API/circuit_functions/show_normal_mode.html#core.Qcircuit.show_normal_mode">[docs]</a>    <span class="k">def</span> <span class="nf">show_normal_mode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> 
         <span class="n">mode</span><span class="p">,</span> 
         <span class="n">quantity</span><span class="o">=</span><span class="s1">&#39;current&#39;</span><span class="p">,</span>
         <span class="n">plot</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
@@ -819,59 +833,20 @@
 
 <span class="sd">        Only works if the circuit was created using the GUI.</span>
 <span class="sd">        Plots a schematic of the circuit overlayed with </span>
-<span class="sd">        arrows representing the quantum flucuations of a certain quantity </span>
+<span class="sd">        arrows representing the complex amplitude of a certain quantity </span>
 <span class="sd">        :math:`\hat{X}` which can be flux, current, charge or voltage.</span>
-<span class="sd">        This quantity has contributions from all the modes </span>
 
-<span class="sd">        :math:`\hat{X} = \sum_m X_{zpf,m}(\hat{a}_m\pm\hat{a}_m^\dagger)`</span>
+<span class="sd">        More specifically, the complex amplitude of :math:`\hat{X}` if a </span>
+<span class="sd">        single-photon coherent state were populating a given mode ``mode``.</span>
 
-<span class="sd">        Where :math:`X_{zpf,m}` corresponds to the contribution of mode</span>
-<span class="sd">        m to the zero-point fluctuations of the component.</span>
-<span class="sd">        This is because if we calculate the expectation value </span>
-<span class="sd">        :math:`\langle\psi_0|\hat{X}^2|\psi_0\rangle` </span>
-<span class="sd">        where :math:`|\psi_0\rangle` is the ground-state, </span>
-<span class="sd">        we obtain</span>
-
-<span class="sd">        :math:`\langle\hat{X}^2\rangle = \sum_m X_{zpf,m}^2`</span>
-
-
-<span class="sd">        By specifying a mode :math:`m`, </span>
-<span class="sd">        size of the arrows and their annotation indicate the</span>
-<span class="sd">        magnitude of the zero-point fluctuations through that component</span>
-<span class="sd">        :math:`X_{zpf,m}`.</span>
 <span class="sd">        Current is shown in units of Ampere, voltage in Volts, </span>
 <span class="sd">        charge in electron charge, and flux in units of the</span>
 <span class="sd">        reduced flux quantum </span>
 <span class="sd">        (defined as :math:`\hbar/2e`)</span>
 
-<span class="sd">        This quantity is calculated from the magnitude of the</span>
-<span class="sd">        transfer function between a reference component with</span>
-<span class="sd">        known :math:`X_{zpf,m}`</span>
-<span class="sd">        and all the others.</span>
-<span class="sd">        The reference component</span>
-<span class="sd">        is an inductor or a junction </span>
-<span class="sd">        for which we have calculated</span>
+<span class="sd">        The direction of the arrows show what we are defining </span>
+<span class="sd">        as positive current for that component.</span>
 
-<span class="sd">        :math:`\phi_{zpf,m} = \sqrt{\frac{\hbar}{\omega_mImY&#39;(\omega_m)}}`</span>
-
-<span class="sd">        Which can be transformed to other quantities:</span>
-<span class="sd">        </span>
-<span class="sd">        :math:`\hat{v} = j\omega\hat\phi`</span>
-
-<span class="sd">        :math:`\hat{i} = \hat v Y`</span>
-
-<span class="sd">        :math:`\hat{q} = \hat i/j\omega`  </span>
-
-<span class="sd">        The relative direction of the arrows is given by the sign </span>
-<span class="sd">        of the expectation value of the current</span>
-<span class="sd">        :math:`\langle\alpha_m|\hat{i}|\alpha_m\rangle`,</span>
-<span class="sd">        where :math:`|\alpha_m\rangle` is a coherent</span>
-<span class="sd">        state populating mode :math:`|\alpha_m\rangle`.</span>
-<span class="sd">        This quantity is calculated from the phase of the</span>
-<span class="sd">        transfer function between a reference component</span>
-<span class="sd">        and all the others.</span>
-
-<span class="sd">        </span>
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
 <span class="sd">        mode:           integer</span>
@@ -896,6 +871,38 @@
 <span class="sd">                        If set to True (default), the function will </span>
 <span class="sd">                        add a legend detailing the definition of </span>
 <span class="sd">                        arrow size and arrow direction</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+
+<span class="sd">        This annotated quantity, called a phasor, is calculated by multiplying the</span>
+<span class="sd">        voltage transfer function :math:`T` (between a reference component</span>
+<span class="sd">        and the annotated component), with</span>
+<span class="sd">        :math:`X_{zpf,m}`, the zero-point fluctuations of :math:`\hat{X}`.</span>
+
+<span class="sd">        The reference component</span>
+<span class="sd">        is an inductor or a junction with inductance :math:`L_r`</span>
+<span class="sd">        for which we have calculated</span>
+
+<span class="sd">        :math:`\phi_{zpf,m} = \sqrt{\frac{\hbar}{\omega_mImY&#39;(\omega_m)}}`</span>
+
+<span class="sd">        Which can be transformed to other quantities:</span>
+<span class="sd">        </span>
+<span class="sd">        :math:`v = j\omega\phi`</span>
+
+<span class="sd">        :math:`i =  v /j\omega L_r`</span>
+
+<span class="sd">        :math:`q =  i/j\omega`  </span>
+<span class="sd">        </span>
+<span class="sd">        In the limit of high quality factor modes, the imaginary part</span>
+<span class="sd">        of the transfer function :math:`T` is negligable, making the </span>
+<span class="sd">        phasor approximately </span>
+<span class="sd">        equal to the contribution :math:`X_{zpf,m}` of the mode ``m`` to the zero-point fluctuations </span>
+<span class="sd">        of :math:`\hat{X}`, such that :math:`\hat{X}` (varying per component) is</span>
+
+<span class="sd">        :math:`\hat{X} = \sum_m X_{zpf,m}(\hat{a}_m\pm\hat{a}_m^\dagger)`</span>
+
+<span class="sd">        where :math:`\hat{a}_m` is the annihilation operator of mode :math:`m`.</span>
 <span class="sd">        &#39;&#39;&#39;</span>
 
         <span class="c1"># This changes the default plotting settings </span>
@@ -1144,7 +1151,7 @@
         <span class="k">if</span> <span class="n">return_fig_ax</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span></div>
 
-<div class="viewcode-block" id="Network"><a class="viewcode-back" href="../../API/network.html#qucat.Network">[docs]</a><span class="k">class</span> <span class="nc">Network</span><span class="p">(</span><span class="n">Qcircuit</span><span class="p">):</span>
+<div class="viewcode-block" id="Network"><a class="viewcode-back" href="../API/network.html#core.Network">[docs]</a><span class="k">class</span> <span class="nc">Network</span><span class="p">(</span><span class="n">Qcircuit</span><span class="p">):</span>
     <span class="sa">r</span><span class="sd">&#39;&#39;&#39;Constructs a Qcircuit object from a list of components without resorting to a graphical user interface.</span>
 
 <span class="sd">    The list can be composed of instances of the :class:`qucat.L`, :class:`qucat.C`, </span>
@@ -1210,7 +1217,7 @@
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">netlist</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">(</span><span class="n">Network</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">netlist</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="GUI"><a class="viewcode-back" href="../../API/gui.html#qucat.GUI">[docs]</a><span class="k">class</span> <span class="nc">GUI</span><span class="p">(</span><span class="n">Qcircuit</span><span class="p">):</span>
+<div class="viewcode-block" id="GUI"><a class="viewcode-back" href="../API/gui.html#core.GUI">[docs]</a><span class="k">class</span> <span class="nc">GUI</span><span class="p">(</span><span class="n">Qcircuit</span><span class="p">):</span>
     <span class="sa">r</span><span class="sd">&#39;&#39;&#39;Opens a graphical user interface to constructs a circuit.</span>
 
 <span class="sd">    Parameters</span>
@@ -2095,34 +2102,12 @@
 
 
     <span class="k">def</span> <span class="nf">zpf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mode</span><span class="p">,</span> <span class="n">quantity</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="sa">r</span><span class="sd">&#39;&#39;&#39;Returns contribution of a certain mode to the zero-point fluctuations of a quantity for this component.</span>
+        <span class="sa">r</span><span class="sd">&#39;&#39;&#39;Returns contribution of a mode to the zero-point fluctuations of a quantity for this component.</span>
 
 <span class="sd">        The quantity can be current current (in units of Ampere), </span>
 <span class="sd">        voltage (in Volts), </span>
 <span class="sd">        charge (in electron charge), </span>
-<span class="sd">        or flux (in units of the reduced flux quantum, :math:`\hbar/2e`)</span>
-
-<span class="sd">        This quantity is calculated from the magnitude of the</span>
-<span class="sd">        transfer function between a reference component with :math:`\phi_{zpf,m}` and all the others.</span>
-<span class="sd">        The reference component</span>
-<span class="sd">        is an inductor or a junction </span>
-<span class="sd">        for which we have calculated</span>
-
-<span class="sd">        :math:`\phi_{zpf,m} = \sqrt{\frac{\hbar}{\omega_mImY&#39;(\omega_m)}}`</span>
-
-<span class="sd">        the zero-point fluctuations in flux of the mode </span>
-<span class="sd">        with frequency :math:`\omega_m` through the reference component with</span>
-<span class="sd">        admittance to the rest of the circuit :math:`Y`</span>
-
-<span class="sd">        :math:`\phi_{zpf,m}` can be transformed to other quantities</span>
-<span class="sd">        </span>
-<span class="sd">        :math:`v_{zpf,m} = \omega\phi_{zpf,m}`</span>
-
-<span class="sd">        :math:`i_{zpf,m} = v_{zpf,m} / Z(\omega)`</span>
-
-<span class="sd">        :math:`q_{zpf,m} = i_{zpf,m}/\omega`  </span>
-
-<span class="sd">        Where :math:`Z(\omega)` is this components impedance.</span>
+<span class="sd">        or flux (in units of the reduced flux quantum, :math:`\hbar/2e`).</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -2140,6 +2125,30 @@
 <span class="sd">        -------</span>
 <span class="sd">        float</span>
 <span class="sd">            contribution of the ``mode`` to the zero-point fluctuations of the ``quantity``</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        This quantity is calculated from the magnitude of the</span>
+<span class="sd">        transfer function between a reference component an this one.</span>
+<span class="sd">        The reference component</span>
+<span class="sd">        is an inductor or a junction with inductance :math:`L_r`</span>
+<span class="sd">        for which we have calculated</span>
+
+<span class="sd">        :math:`\phi_{zpf,m} = \sqrt{\frac{\hbar}{\omega_mImY&#39;(\omega_m)}}`</span>
+
+<span class="sd">        the zero-point fluctuations in flux of the mode </span>
+<span class="sd">        with frequency :math:`\omega_m` through the reference component with</span>
+<span class="sd">        admittance to the rest of the circuit :math:`Y`</span>
+
+<span class="sd">        :math:`\phi_{zpf,m}` can be transformed to other quantities</span>
+<span class="sd">        </span>
+<span class="sd">        :math:`v_{zpf,m} = \omega\phi_{zpf,m}`</span>
+
+<span class="sd">        :math:`i_{zpf,m} = v_{zpf,m} / L_r\omega`</span>
+
+<span class="sd">        :math:`q_{zpf,m} = i_{zpf,m}/\omega`  </span>
+
+<span class="sd">        Where :math:`Z(\omega)` is this components impedance.</span>
 <span class="sd">        &#39;&#39;&#39;</span>
         <span class="n">mode_w</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_circuit</span><span class="o">.</span><span class="n">eigenfrequencies</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)[</span><span class="n">mode</span><span class="p">]</span><span class="o">*</span><span class="mf">2.</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_zpf</span><span class="p">(</span><span class="n">mode_w</span><span class="p">,</span> <span class="n">quantity</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
@@ -2224,7 +2233,7 @@
         <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">angle</span> <span class="o">==</span> <span class="n">SOUTH</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">shift</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">x_plot_center</span><span class="p">),</span> <span class="n">shift</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">y_plot_center</span><span class="p">),</span> <span class="n">line_type</span>
 
-<div class="viewcode-block" id="L"><a class="viewcode-back" href="../../API/components/L.html#qucat.L">[docs]</a><span class="k">class</span> <span class="nc">L</span><span class="p">(</span><span class="n">Component</span><span class="p">):</span>
+<div class="viewcode-block" id="L"><a class="viewcode-back" href="../API/components/L.html#core.L">[docs]</a><span class="k">class</span> <span class="nc">L</span><span class="p">(</span><span class="n">Component</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;A class representing an inductor</span>
 <span class="sd">    </span>
 <span class="sd">    Parameters</span>
@@ -2313,7 +2322,7 @@
             <span class="s1">&#39;C&#39;</span><span class="p">:</span><span class="mi">0</span>
         <span class="p">}</span></div>
 
-<div class="viewcode-block" id="J"><a class="viewcode-back" href="../../API/components/J.html#qucat.J">[docs]</a><span class="k">class</span> <span class="nc">J</span><span class="p">(</span><span class="n">L</span><span class="p">):</span>
+<div class="viewcode-block" id="J"><a class="viewcode-back" href="../API/components/J.html#core.J">[docs]</a><span class="k">class</span> <span class="nc">J</span><span class="p">(</span><span class="n">L</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;A class representing an junction</span>
 <span class="sd">    </span>
 <span class="sd">    Parameters</span>
@@ -2381,26 +2390,10 @@
     <span class="k">def</span> <span class="nf">_anharmonicity</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">w</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_Ej</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">_zpf</span><span class="p">(</span><span class="n">w</span><span class="p">,</span><span class="s1">&#39;flux&#39;</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span><span class="o">**</span><span class="mi">4</span>
 
-<div class="viewcode-block" id="J.anharmonicity"><a class="viewcode-back" href="../../API/components/J.html#qucat.J.anharmonicity">[docs]</a>    <span class="k">def</span> <span class="nf">anharmonicity</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mode</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<div class="viewcode-block" id="J.anharmonicity"><a class="viewcode-back" href="../API/components/J.html#core.J.anharmonicity">[docs]</a>    <span class="k">def</span> <span class="nf">anharmonicity</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mode</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="sa">r</span><span class="sd">&#39;&#39;&#39;Returns the contribution of this junction to the anharmonicity of a given normal mode.</span>
 
 <span class="sd">        Returned in units of Hertz, not angular frequency.</span>
-
-<span class="sd">        This quantity (in units of Hertz) is defined as </span>
-
-<span class="sd">        :math:`A_{m,j} = E_j/2/h\left(\frac{\phi_{zpf,m,j}}{\phi_0}\right)^4`</span>
-
-<span class="sd">        where :math:`phi_0 = \hbar/2e`, </span>
-<span class="sd">        :math:`E_j` is this junctions Josephson energy,</span>
-<span class="sd">        and </span>
-
-<span class="sd">        :math:`\phi_{zpf,m} = \sqrt{\frac{\hbar}{\omega_mImY&#39;(\omega_m)}}`</span>
-
-<span class="sd">        is the zero-point fluctuations in flux if a mode through the junction, </span>
-<span class="sd">        with frequency :math:`\omega_m` and admittance to the rest of the circuit :math:`Y`</span>
-
-<span class="sd">        Following first order perturbation, the total anharmonicity of a mode is obtained</span>
-<span class="sd">        by summing these contribution over all modes.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -2416,6 +2409,24 @@
 <span class="sd">        -------</span>
 <span class="sd">        float</span>
 <span class="sd">            contribution of this junction to the anharmonicity of a given normal mode</span>
+<span class="sd">        </span>
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        This quantity (in units of Hertz) is defined as </span>
+
+<span class="sd">        :math:`A_{m,j} = E_j/2/h\left(\frac{\phi_{zpf,m,j}}{\phi_0}\right)^4`</span>
+
+<span class="sd">        where :math:`phi_0 = \hbar/2e`, </span>
+<span class="sd">        :math:`E_j` is this junctions Josephson energy,</span>
+<span class="sd">        and </span>
+
+<span class="sd">        :math:`\phi_{zpf,m} = \sqrt{\frac{\hbar}{\omega_mImY&#39;(\omega_m)}}`</span>
+
+<span class="sd">        is the zero-point fluctuations in flux if a mode through the junction, </span>
+<span class="sd">        with frequency :math:`\omega_m` and admittance to the rest of the circuit :math:`Y`</span>
+
+<span class="sd">        Following first order perturbation, the total anharmonicity of a mode is obtained</span>
+<span class="sd">        by summing these contribution over all modes.</span>
 <span class="sd">        &#39;&#39;&#39;</span>
         <span class="n">mode_w</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_circuit</span><span class="o">.</span><span class="n">eigenfrequencies</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)[</span><span class="n">mode</span><span class="p">]</span><span class="o">*</span><span class="mf">2.</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span>
         <span class="k">return</span> <span class="n">_anharmonicity</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mode_w</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
@@ -2448,7 +2459,7 @@
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">angle</span><span class="o">%</span><span class="mf">180.</span> <span class="o">==</span> <span class="mf">90.</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">shift</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">x_plot_center</span><span class="p">),</span> <span class="n">shift</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">y_plot_center</span><span class="p">),</span> <span class="n">line_type</span></div>
 
-<div class="viewcode-block" id="R"><a class="viewcode-back" href="../../API/components/R.html#qucat.R">[docs]</a><span class="k">class</span> <span class="nc">R</span><span class="p">(</span><span class="n">Component</span><span class="p">):</span>
+<div class="viewcode-block" id="R"><a class="viewcode-back" href="../API/components/R.html#core.R">[docs]</a><span class="k">class</span> <span class="nc">R</span><span class="p">(</span><span class="n">Component</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;A class representing an resistor</span>
 <span class="sd">    </span>
 <span class="sd">    Parameters</span>
@@ -2539,7 +2550,7 @@
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">angle</span><span class="o">%</span><span class="mf">180.</span> <span class="o">==</span> <span class="mf">90.</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">shift</span><span class="p">(</span><span class="n">y_list</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">x_plot_center</span><span class="p">),</span> <span class="n">shift</span><span class="p">(</span><span class="n">x_list</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">y_plot_center</span><span class="p">),</span> <span class="n">line_type</span></div>
 
-<div class="viewcode-block" id="C"><a class="viewcode-back" href="../../API/components/C.html#qucat.C">[docs]</a><span class="k">class</span> <span class="nc">C</span><span class="p">(</span><span class="n">Component</span><span class="p">):</span>
+<div class="viewcode-block" id="C"><a class="viewcode-back" href="../API/components/C.html#core.C">[docs]</a><span class="k">class</span> <span class="nc">C</span><span class="p">(</span><span class="n">Component</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;A class representing a capacitor</span>
 <span class="sd">    </span>
 <span class="sd">    Parameters</span>

@@ -1,4 +1,4 @@
 Calculating anharmonicities
 ---------------------------
 
-.. automethod:: qucat.Qcircuit.anharmonicities
+.. automethod:: core.Qcircuit.anharmonicities
