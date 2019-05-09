@@ -667,7 +667,7 @@
     "\n",
     "We use the ``show_normal_mode`` function to visualize the two different modes.\n",
     "\n",
-    "In the plot below, the size and annotation of the arrows corresponds to the complex amplitude of the current entering a component if a single-photon coherent state were populating a given modec ``m``.\n",
+    "In the plot below, the size and annotation of the arrows corresponds to the complex amplitude of the current entering a component if a single-photon coherent state were populating a given mode ``m``.\n",
     "\n",
     "In the limit of high quality factor modes, this amplitude is approximately equal to the contribution of the mode ``m`` to the zero-point fluctuations in current $i_\\text{zpf,m}$ entering that component, such that the operator for the total current entering a component is\n",
     "\n",
@@ -677,7 +677,7 @@
     "\n",
     "The direction of the arrows show what we are defining as positive current for that component.\n",
     "\n",
-    "By changing the parameter ``quantity``, we show the value of other zero-point fluctuations, and we can enter ``'voltage'``, ``'charge'``, or ``'flux'``. The direction of the arrows however, always represent the current."
+    "By changing the parameter ``quantity``, we show the value of other zero-point fluctuations, and we can enter ``'voltage'``, ``'charge'``, or ``'flux'``."
    ]
   },
   {
