@@ -13,7 +13,7 @@ from core import Network,GUI,J,L,C,R
 # junction.zpf(mode=0,quantity = 'flux')
 # H = circuit.hamiltonian(modes = [0],taylor = 4,excitations = [50])
 # print(H)
-circuit = GUI(filename = 'test.txt',edit=False,plot=False)
+circuit = GUI(filename = 'test.txt',edit=True,plot=True)
 circuit.show_normal_mode(0,quantity='current',L_J=1e-8)
 # circuit.f_k_A_chi()
 # print(circuit.resistors[0].phasor(0,'voltage'))

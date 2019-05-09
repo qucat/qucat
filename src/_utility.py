@@ -96,7 +96,7 @@ def get_float_part(v,exponent_3,maximum_info):
 
     if maximum_info == False:
         if float_part >= 100.:
-            float_part = "%2.0f" % (float_part)
+            float_part = "%2.0f." % (float_part)
         elif float_part >= 10.:
             float_part = "%1.1f" % (float_part)
         else:
@@ -108,9 +108,11 @@ def get_float_part(v,exponent_3,maximum_info):
             float_part = float_part[:-1]
 
     else:
-        if float_part-float("%.6f"%float_part) != 0:
+        if (v-float("%2.6e"%v) != 0 and float_part >= 100.)\
+            or (v-float("%1.6e"%v) != 0 and 100 > float_part >= 10.)\
+            or (v-float("%.6e"%v) != 0 and float_part < 10.) :
             # if there is a digit beyond digit 6
-            float_part ="%.6f.."%float_part
+            float_part ="%2.6f.."%float_part
         else:
             float_part ="%.6f"%float_part
             while float_part[-1]=="0":

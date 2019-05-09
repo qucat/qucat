@@ -13,7 +13,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="qucat",
-    version="0.2",
+    version="0.3",
     author="Mario Gely",
     author_email="mario.f.gely@gmail.com",
     description="QUantum Circuit Analysis Tool",
