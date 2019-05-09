@@ -8,16 +8,13 @@ except FileNotFoundError:
 	# First attempt at building
 	pass
 
-with open("README.md", "r") as fh:
-    long_description = fh.read()
-
 setuptools.setup(
     name="qucat",
-    version="0.3",
+    version="0.4.1",
     author="Mario Gely",
     author_email="mario.f.gely@gmail.com",
     description="QUantum Circuit Analysis Tool",
-    long_description=long_description,
+    long_description='QUCAT: QUantum Circuit Analyzer Tool.\n\nSee https://qucat.org/ for installation, documentation, tutorials and more.',
     long_description_content_type="text/markdown",
     url="https://qucat.org",
     package_dir={'qucat': 'src'},
