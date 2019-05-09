@@ -403,7 +403,7 @@ div.rendered_html tbody tr:hover {
 <h1>Coupled Transmon / LC-oscillator (without the GUI)<a class="headerlink" href="#Coupled-Transmon-/-LC-oscillator-(without-the-GUI)" title="Permalink to this headline">¶</a></h1>
 <p>The first step is to import the objects we will be needing from qucat</p>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[105]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -421,7 +421,7 @@ div.rendered_html tbody tr:hover {
 <p>Note that the components (<code class="docutils literal notranslate"><span class="pre">R</span></code>, <code class="docutils literal notranslate"><span class="pre">L</span></code>, <code class="docutils literal notranslate"><span class="pre">C</span></code>, <code class="docutils literal notranslate"><span class="pre">J</span></code>) accept node indexes as their two first arguments, here we will use the node <code class="docutils literal notranslate"><span class="pre">0</span></code> to designate ground. The last arguments should be a label (<code class="docutils literal notranslate"><span class="pre">str</span></code>) or a value (<code class="docutils literal notranslate"><span class="pre">float</span></code>) or both, the order in which these arguments are provided are unimportant.</p>
 <p>For the moment, we will specify the value of all the components</p>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[106]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -438,7 +438,7 @@ div.rendered_html tbody tr:hover {
 </div>
 <p>This implements the following circuit, where we have also indexed the nodes, and we have fixed the value of <span class="math notranslate nohighlight">\(L_J\)</span> to <code class="docutils literal notranslate"><span class="pre">8e-9</span></code></p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[107]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -448,7 +448,7 @@ div.rendered_html tbody tr:hover {
 </div>
 </div>
 <div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[107]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
 </pre></div>
 </div>
 <div class="output_area docutils container">
@@ -463,7 +463,7 @@ div.rendered_html tbody tr:hover {
 <div class="section" id="Eigen-frequencies">
 <h3>Eigen-frequencies<a class="headerlink" href="#Eigen-frequencies" title="Permalink to this headline">¶</a></h3>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[108]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -472,7 +472,7 @@ div.rendered_html tbody tr:hover {
 </div>
 </div>
 <div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[108]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
 </pre></div>
 </div>
 <div class="output_area highlight-none notranslate"><div class="highlight"><pre>
@@ -486,7 +486,7 @@ div.rendered_html tbody tr:hover {
 <div class="section" id="Anharmonicity">
 <h3>Anharmonicity<a class="headerlink" href="#Anharmonicity" title="Permalink to this headline">¶</a></h3>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[109]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -495,7 +495,7 @@ div.rendered_html tbody tr:hover {
 </div>
 </div>
 <div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[109]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
 </pre></div>
 </div>
 <div class="output_area highlight-none notranslate"><div class="highlight"><pre>
@@ -510,7 +510,7 @@ div.rendered_html tbody tr:hover {
 <p>In this regime of far detuning in frequency, the two modes will interact through a cross-Kerr or dispersive shift, which quantifies the amount by which one mode will shift if frequency if the other is populated with a photon.</p>
 <p>We can access this by calculating the Kerr parameters.</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[110]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -520,18 +520,18 @@ div.rendered_html tbody tr:hover {
 </div>
 </div>
 <div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[110]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
 </pre></div>
 </div>
 <div class="output_area highlight-none notranslate"><div class="highlight"><pre>
-<span></span>668055.8212288042
+<span></span>668055.8212288043
 </pre></div>
 </div>
 </div>
 <p>In this two dimensional array, the components <code class="docutils literal notranslate"><span class="pre">K[i,j]</span></code> correspond to the cross-Kerr interaction of mode <code class="docutils literal notranslate"><span class="pre">i</span></code> with mode <code class="docutils literal notranslate"><span class="pre">j</span></code>. From the above, we have found that the cross-Kerr interaction between these two modes is of about 670 kHz.</p>
 <p>This should correspond to <span class="math notranslate nohighlight">\(2\sqrt{A_0A_1}\)</span> where <span class="math notranslate nohighlight">\(A_i\)</span> is the anharmonicity of mode <span class="math notranslate nohighlight">\(i\)</span></p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[111]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -541,11 +541,11 @@ div.rendered_html tbody tr:hover {
 </div>
 </div>
 <div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[111]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
 </pre></div>
 </div>
 <div class="output_area highlight-none notranslate"><div class="highlight"><pre>
-<span></span>668055.8212288042
+<span></span>668055.8212288043
 </pre></div>
 </div>
 </div>
@@ -554,7 +554,7 @@ div.rendered_html tbody tr:hover {
 <h3>Loss rates<a class="headerlink" href="#Loss-rates" title="Permalink to this headline">¶</a></h3>
 <p>In the studied circuit, the only resistor is located in the resonator. In this regime of large frequency, detuning, we would thus expect the resonator to be more lossy than the transmon.</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[112]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -563,7 +563,7 @@ div.rendered_html tbody tr:hover {
 </div>
 </div>
 <div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[112]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
 </pre></div>
 </div>
 <div class="output_area highlight-none notranslate"><div class="highlight"><pre>
@@ -576,7 +576,7 @@ div.rendered_html tbody tr:hover {
 <h3>T_1<a class="headerlink" href="#T_1" title="Permalink to this headline">¶</a></h3>
 <p>When converting these rates to <span class="math notranslate nohighlight">\(T_1\)</span> times, one should not forget the <span class="math notranslate nohighlight">\(2\pi\)</span> in the conversion</p>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[113]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -586,7 +586,7 @@ div.rendered_html tbody tr:hover {
 </div>
 <p>All these relevant parameters can be computed using a single function</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[114]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -595,7 +595,7 @@ div.rendered_html tbody tr:hover {
 </div>
 </div>
 <div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[114]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
 </pre></div>
 </div>
 <div class="output_area highlight-none notranslate"><div class="highlight"><pre>
@@ -609,7 +609,7 @@ div.rendered_html tbody tr:hover {
 </div>
 <p>And using the option <code class="docutils literal notranslate"><span class="pre">pretty_print</span> <span class="pre">=</span> <span class="pre">True</span></code> a more readable summary can be printed</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[115]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -623,8 +623,8 @@ div.rendered_html tbody tr:hover {
 <div class="output_area docutils container">
 <div class="highlight"><pre>
     mode |  freq.  |  diss.  |  anha.  |
-       0 | 5.0 GHz | 786 kHz |  584 Hz |
-       1 | 5.6 GHz | 1.9 kHz | 191 MHz |
+       0 | 5.01 GHz | 786 kHz |  584 Hz |
+       1 | 5.6 GHz | 1.92 kHz | 191 MHz |
 
 Kerr coefficients
 (diagonal = Kerr, off-diagonal = cross-Kerr)
@@ -644,7 +644,7 @@ Kerr coefficients
 <p><span class="math notranslate nohighlight">\(\hat{H} = \sum_{m\in\text{modes}} hf_m\hat{a}_m^\dagger\hat{a}_m +\sum_j\sum_{2n\le\text{taylor}}E_j\frac{(-1)^{n+1}}{(2n)!}\left(\frac{\phi_{zpf,m,j}}{\phi_0}(\hat{a}_m^\dagger+\hat{a}_m)\right)^{2n}\)</span></p>
 <p>And in its construction, we have the freedom to choose the set of <code class="docutils literal notranslate"><span class="pre">modes</span></code> to include, the order of the Taylor expansion of the junction potential, and the number of excitations of each mode to consider.</p>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[116]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -658,7 +658,7 @@ Kerr coefficients
 </div>
 <p>The first transition of the resonator is</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[117]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[13]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -667,7 +667,7 @@ Kerr coefficients
 </div>
 </div>
 <div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[117]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[13]:
 </pre></div>
 </div>
 <div class="output_area highlight-none notranslate"><div class="highlight"><pre>
@@ -677,7 +677,7 @@ Kerr coefficients
 </div>
 <p>and of the transmon</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[118]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[14]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -686,7 +686,7 @@ Kerr coefficients
 </div>
 </div>
 <div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[118]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[14]:
 </pre></div>
 </div>
 <div class="output_area highlight-none notranslate"><div class="highlight"><pre>
@@ -697,7 +697,7 @@ Kerr coefficients
 <p>Notice the difference, especially for the transmon, with the corresponding normal-mode frequency calculated above. This is a consequence of the zero-point fluctuations entering the junction and changing the effective transition frequency.</p>
 <p>Following first-order perturbation frequency, the shift in transition frequency can be estimated from the anharmonicity <span class="math notranslate nohighlight">\(A_1\)</span> and cross-kerr coupling <span class="math notranslate nohighlight">\(\chi_{0,1}\)</span> and should be given by <span class="math notranslate nohighlight">\(-A_1-\chi_{0,1}/2\)</span>. We see below that we get fairly close (7 MHz) from the value obtained from the hamiltonian diagonalization.</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[119]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[15]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -707,7 +707,7 @@ Kerr coefficients
 </div>
 </div>
 <div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[119]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[15]:
 </pre></div>
 </div>
 <div class="output_area highlight-none notranslate"><div class="highlight"><pre>
@@ -720,7 +720,7 @@ Kerr coefficients
 <h3>Open-system dynamics<a class="headerlink" href="#Open-system-dynamics" title="Permalink to this headline">¶</a></h3>
 <p>A more elaborate use of QuTiP would be to compute the dynamics (for example with qutip.mesolve). The Hamiltonian and collapse operators to use are</p>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[120]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[16]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -743,7 +743,7 @@ Kerr coefficients
 <p>The most computationally expensive part of the analysis is performed upon initializing the Network. To avoid doing this, we have the option to enter a symbolic value for a component.</p>
 <p>We will only provide a label <code class="docutils literal notranslate"><span class="pre">L_J</span></code> for the junction here, and its value should be passed as a keyword argument in subsequent function calls, for example <code class="docutils literal notranslate"><span class="pre">L_J=1e-9</span></code>.</p>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[121]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[17]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -759,7 +759,7 @@ Kerr coefficients
 </div>
 </div>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[122]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[18]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -769,7 +769,7 @@ Kerr coefficients
 </div>
 </div>
 <div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[122]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[18]:
 </pre></div>
 </div>
 <div class="output_area docutils container">
@@ -778,7 +778,7 @@ Kerr coefficients
 </div>
 <p>Since the junction was created without a value, we now have to specify it as a keyword argument</p>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[123]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[19]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -787,7 +787,7 @@ Kerr coefficients
 </div>
 </div>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[124]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[20]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -799,7 +799,7 @@ Kerr coefficients
 </div>
 </div>
 <div class="nboutput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[124]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[20]:
 </pre></div>
 </div>
 <div class="output_area highlight-none notranslate"><div class="highlight"><pre>

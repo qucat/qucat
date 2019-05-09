@@ -61,7 +61,7 @@ plotting_parameters_show = {
 
 pp = deepcopy(plotting_parameters_show)
 
-scale = 1.25
+scale = 1.5
 pp["figsize_scaling"] = scale
 pp["C"]["gap"] /= scale
 pp["C"]["height"] /= scale
@@ -94,7 +94,7 @@ pp["normal_mode_arrow"]= {
 plotting_parameters_normal_modes = pp
 
 #######################################
-# Plotting parameters for the GUI
+# Plotting parameters for the GUI components
 #######################################
 
 plotting_parameters_GUI = {

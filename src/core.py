@@ -173,7 +173,7 @@ class Qcircuit(object):
         order = np.argsort(np.real(w_cpx))
         self.w_cpx = w_cpx[order]
 
-    def _anharmonicities_per_junction(self, pretty_print=False, **kwargs):
+    def _anharmonicities_per_junction(self, **kwargs):
         self._set_w_cpx(**kwargs)
         return [j._anharmonicity(self.w_cpx, **kwargs) for j in self.junctions]
 
@@ -929,13 +929,13 @@ class Qcircuit(object):
 
         if add_legend:
             if quantity == 'current':
-                value_text= "|I|e"
+                value_text= "|I|"
             elif quantity == 'voltage':
                 value_text= u"|V|"
             if quantity == 'flux':
-                value_text= u"|\u03A6|e"
+                value_text= u"|\u03A6|"
             elif quantity == 'charge':
-                value_text= "|Q|e"
+                value_text= "|Q|"
             value_text += u"exp(i\u03B8)"
         
         x_legend = ax.get_xlim()[0]+0.4
@@ -2457,21 +2457,21 @@ class Admittance(Component):
 
 # @timeit
 def main():
-    Cj = 100e-15
+    # Cj = 100e-15
     # Lj = 10e-9
-    junction = J(0,1,'Lj')
-    circuit = Network([
-        C(0,1,Cj),
-        junction
-        ])
-    circuit.f_k_A_chi(Lj=1)
+    # junction = J(0,1,'Lj')
+    # circuit = Network([
+    #     C(0,1,Cj),
+    #     junction
+    #     ])
+    # circuit.f_k_A_chi(Lj=1)
     # junction.zpf(mode=0,quantity = 'flux')
     # H = circuit.hamiltonian(modes = [0],taylor = 4,excitations = [50])
     # print(H)
-    # circuit = GUI(filename = './src/test.txt',edit=False,plot=False)
+    circuit = GUI(filename = './src/test.txt',edit=False,plot=False)
     # circuit.f_k_A_chi()
     # print(circuit.resistors[0].phasor(0,'voltage'))
-    # circuit.show_normal_mode(0,quantity='voltage')
+    circuit.show_normal_mode(0,quantity='current')
     # circuit.hamiltonian(L_J = 1e-9,modes=[0],excitations=[5],return_ops=True,taylor=4)
     # circuit.eigenfrequencies(L_J = np.linspace(1e-9,2e-9,4))
     # circuit.f_k_A_chi(L_J = np.linspace(1e-9,2e-9,4))

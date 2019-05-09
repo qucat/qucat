@@ -394,34 +394,34 @@ div.rendered_html tbody tr:hover {
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<div class="input_area highlight-none notranslate"><div class="highlight"><pre>
+<span></span>import numpy as np
 
-<span class="c1"># Import the graphical user interface</span>
-<span class="kn">from</span> <span class="nn">qucat</span> <span class="k">import</span> <span class="n">GUI</span>
+# Import the graphical user interface
+from qucat import GUI
 
-<span class="c1"># For the purpose of this tutorial,</span>
-<span class="c1"># we create a file describing the circuit</span>
-<span class="c1"># which would typically done by the user</span>
-<span class="c1"># from a blank editor</span>
-<span class="kn">import</span> <span class="nn">os</span>
-<span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="s1">&#39;circuits/&#39;</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s1">&#39;circuits/transmon_LC_GUI.txt&#39;</span><span class="p">,</span><span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
-    <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;C;0,-1;1,-1;1.000000e-15;</span>
-<span class="s2">C;-1,0;-1,-1;1.000000e-13;</span>
-<span class="s2">J;0,0;0,-1;;L_J</span>
-<span class="s2">W;-1,0;0,0;;</span>
-<span class="s2">W;-1,-1;0,-1;;</span>
-<span class="s2">C;1,0;1,-1;1.000000e-13;</span>
-<span class="s2">L;2,0;2,-1;1.000000e-08;</span>
-<span class="s2">W;1,0;2,0;;</span>
-<span class="s2">W;1,-1;2,-1;;</span>
-<span class="s2">G;2,1;2,0;;</span>
-<span class="s2">G;-1,1;-1,0;;</span>
-<span class="s2">R;3,0;3,-1;1.000000e+06;</span>
-<span class="s2">W;2,0;3,0;;</span>
-<span class="s2">W;2,-1;3,-1;;</span>
-<span class="s2">&quot;&quot;&quot;</span><span class="p">)</span>
+# For the purpose of this tutorial,
+# we create a file describing the circuit
+# which would typically done by the user
+# from a blank editor
+import os
+os.makedirs(&#39;circuits/&#39;, exist_ok=True)
+with open(&#39;circuits/transmon_LC_GUI.txt&#39;,&#39;w&#39;) as f:
+    f.write(&quot;&quot;&quot;C;0,-1;1,-1;1.000000e-15;
+C;-1,0;-1,-1;1.000000e-13;
+J;0,0;0,-1;;L_J
+W;-1,0;0,0;;
+W;-1,-1;0,-1;;
+C;1,0;1,-1;1.000000e-13;
+L;2,0;2,-1;1.000000e-08;
+W;1,0;2,0;;
+W;1,-1;2,-1;;
+G;2,1;2,0;;
+G;-1,1;-1,0;;
+R;3,0;3,-1;1.000000e+06;
+W;2,0;3,0;;
+W;2,-1;3,-1;;
+&quot;&quot;&quot;)
 </pre></div>
 </div>
 </div>
@@ -433,12 +433,12 @@ div.rendered_html tbody tr:hover {
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">cir</span> <span class="o">=</span> <span class="n">GUI</span><span class="p">(</span><span class="s1">&#39;circuits/transmon_LC_GUI.txt&#39;</span><span class="p">,</span> <span class="c1"># location of the circuit file</span>
-        <span class="n">edit</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="c1"># open the GUI to edit the circuit</span>
-        <span class="n">plot</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="c1"># plot the circuit after having edited it</span>
-        <span class="n">print_network</span><span class="o">=</span><span class="kc">True</span> <span class="c1"># print the network</span>
-       <span class="p">)</span>
+<div class="input_area highlight-none notranslate"><div class="highlight"><pre>
+<span></span>cir = GUI(&#39;circuits/transmon_LC_GUI.txt&#39;, # location of the circuit file
+        edit=True, # open the GUI to edit the circuit
+        plot=True, # plot the circuit after having edited it
+        print_network=True # print the network
+       )
 </pre></div>
 </div>
 </div>
@@ -477,197 +477,75 @@ R 0 2 1 MOhm
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<div class="input_area highlight-none notranslate"><div class="highlight"><pre>
+<span></span>import matplotlib.pyplot as plt
 
-<span class="c1"># Create a 2x2 grid of plots</span>
-<span class="n">fig</span><span class="p">,</span><span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="n">sharex</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span><span class="n">figsize</span> <span class="o">=</span> <span class="p">(</span><span class="mi">8</span><span class="p">,</span><span class="mi">4</span><span class="p">))</span>
+# Create a 2x2 grid of plots
+fig,ax = plt.subplots(2,2,sharex = True,figsize = (8,4))
 
-<span class="c1"># Here we specify the values the junction inductance should take</span>
-<span class="n">L_J</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mf">11e-9</span><span class="p">,</span><span class="mf">9e-9</span><span class="p">,</span> <span class="mi">1001</span><span class="p">)</span>
+# Here we specify the values the junction inductance should take
+L_J = np.linspace(11e-9,9e-9, 1001)
 
-<span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">L_J</span><span class="o">*</span><span class="mf">1e9</span><span class="p">,[</span><span class="n">cir</span><span class="o">.</span><span class="n">eigenfrequencies</span><span class="p">(</span><span class="n">L_J</span> <span class="o">=</span> <span class="n">x</span><span class="p">)</span><span class="o">/</span><span class="mf">1e9</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">L_J</span><span class="p">])</span>
-<span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s1">&#39;$\omega_m$ (GHz)&#39;</span><span class="p">)</span>
+ax[0][0].plot(L_J*1e9,[cir.eigenfrequencies(L_J = x)/1e9 for x in L_J])
+ax[0][0].set_ylabel(&#39;$\omega_m$ (GHz)&#39;)
 
 
-<span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">L_J</span><span class="o">*</span><span class="mf">1e9</span><span class="p">,[</span><span class="n">cir</span><span class="o">.</span><span class="n">loss_rates</span><span class="p">(</span><span class="n">L_J</span> <span class="o">=</span> <span class="n">x</span><span class="p">)</span><span class="o">/</span><span class="mf">1e6</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">L_J</span><span class="p">])</span>
-<span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s1">&#39;$\kappa_m$ (MHz)&#39;</span><span class="p">)</span>
+ax[0][1].plot(L_J*1e9,[cir.loss_rates(L_J = x)/1e6 for x in L_J])
+ax[0][1].set_ylabel(&#39;$\kappa_m$ (MHz)&#39;)
 
-<span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">L_J</span><span class="o">*</span><span class="mf">1e9</span><span class="p">,[</span><span class="n">cir</span><span class="o">.</span><span class="n">anharmonicities</span><span class="p">(</span><span class="n">L_J</span> <span class="o">=</span> <span class="n">x</span><span class="p">)</span><span class="o">/</span><span class="mf">1e6</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">L_J</span><span class="p">])</span>
-<span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s1">&#39;$A_m$ (MHz)&#39;</span><span class="p">)</span>
+ax[1][0].plot(L_J*1e9,[cir.anharmonicities(L_J = x)/1e6 for x in L_J])
+ax[1][0].set_ylabel(&#39;$A_m$ (MHz)&#39;)
 
-<span class="c1"># the components ``K[i,j]`` of the matrix returned by the kerr function</span>
-<span class="c1"># corresponds to the cross-Kerr interaction of mode ``i`` with mode ``j``</span>
-<span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">L_J</span><span class="o">*</span><span class="mf">1e9</span><span class="p">,[</span><span class="n">cir</span><span class="o">.</span><span class="n">kerr</span><span class="p">(</span><span class="n">L_J</span> <span class="o">=</span> <span class="n">x</span><span class="p">)[</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span><span class="o">/</span><span class="mf">1e6</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">L_J</span><span class="p">])</span>
-<span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s1">&#39;$\chi_</span><span class="si">{01}</span><span class="s1">$ (MHz)&#39;</span><span class="p">)</span>
+# the components ``K[i,j]`` of the matrix returned by the kerr function
+# corresponds to the cross-Kerr interaction of mode ``i`` with mode ``j``
+ax[1][1].plot(L_J*1e9,[cir.kerr(L_J = x)[0,1]/1e6 for x in L_J])
+ax[1][1].set_ylabel(&#39;$\chi_{01}$ (MHz)&#39;)
 
-<span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s1">&#39;$L_J$ (nH)&#39;</span><span class="p">)</span>
-<span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s1">&#39;$L_J$ (nH)&#39;</span><span class="p">)</span>
+ax[1][0].set_xlabel(&#39;$L_J$ (nH)&#39;)
+ax[1][1].set_xlabel(&#39;$L_J$ (nH)&#39;)
 
-<span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+plt.tight_layout()
+plt.show()
 </pre></div>
 </div>
-</div>
-<div class="nboutput docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area docutils container">
-<div class="highlight"><pre>
-<span class="ansi-red-fg">---------------------------------------------------------------------------</span>
-<span class="ansi-red-fg">TypeError</span>                                 Traceback (most recent call last)
-<span class="ansi-green-fg">&lt;ipython-input-3-36fd586f8c99&gt;</span> in <span class="ansi-cyan-fg">&lt;module&gt;</span>
-<span class="ansi-green-intense-fg ansi-bold">     14</span> ax<span class="ansi-blue-fg">[</span><span class="ansi-cyan-fg">0</span><span class="ansi-blue-fg">]</span><span class="ansi-blue-fg">[</span><span class="ansi-cyan-fg">1</span><span class="ansi-blue-fg">]</span><span class="ansi-blue-fg">.</span>set_ylabel<span class="ansi-blue-fg">(</span><span class="ansi-blue-fg">&#39;$\kappa_m$ (MHz)&#39;</span><span class="ansi-blue-fg">)</span>
-<span class="ansi-green-intense-fg ansi-bold">     15</span>
-<span class="ansi-green-fg">---&gt; 16</span><span class="ansi-red-fg"> </span>ax<span class="ansi-blue-fg">[</span><span class="ansi-cyan-fg">1</span><span class="ansi-blue-fg">]</span><span class="ansi-blue-fg">[</span><span class="ansi-cyan-fg">0</span><span class="ansi-blue-fg">]</span><span class="ansi-blue-fg">.</span>plot<span class="ansi-blue-fg">(</span>L_J<span class="ansi-blue-fg">*</span><span class="ansi-cyan-fg">1e9</span><span class="ansi-blue-fg">,</span><span class="ansi-blue-fg">[</span>cir<span class="ansi-blue-fg">.</span>anharmonicities<span class="ansi-blue-fg">(</span>L_J <span class="ansi-blue-fg">=</span> x<span class="ansi-blue-fg">)</span><span class="ansi-blue-fg">/</span><span class="ansi-cyan-fg">1e6</span> <span class="ansi-green-fg">for</span> x <span class="ansi-green-fg">in</span> L_J<span class="ansi-blue-fg">]</span><span class="ansi-blue-fg">)</span>
-<span class="ansi-green-intense-fg ansi-bold">     17</span> ax<span class="ansi-blue-fg">[</span><span class="ansi-cyan-fg">1</span><span class="ansi-blue-fg">]</span><span class="ansi-blue-fg">[</span><span class="ansi-cyan-fg">0</span><span class="ansi-blue-fg">]</span><span class="ansi-blue-fg">.</span>set_ylabel<span class="ansi-blue-fg">(</span><span class="ansi-blue-fg">&#39;$A_m$ (MHz)&#39;</span><span class="ansi-blue-fg">)</span>
-<span class="ansi-green-intense-fg ansi-bold">     18</span>
-
-<span class="ansi-green-fg">&lt;ipython-input-3-36fd586f8c99&gt;</span> in <span class="ansi-cyan-fg">&lt;listcomp&gt;</span><span class="ansi-blue-fg">(.0)</span>
-<span class="ansi-green-intense-fg ansi-bold">     14</span> ax<span class="ansi-blue-fg">[</span><span class="ansi-cyan-fg">0</span><span class="ansi-blue-fg">]</span><span class="ansi-blue-fg">[</span><span class="ansi-cyan-fg">1</span><span class="ansi-blue-fg">]</span><span class="ansi-blue-fg">.</span>set_ylabel<span class="ansi-blue-fg">(</span><span class="ansi-blue-fg">&#39;$\kappa_m$ (MHz)&#39;</span><span class="ansi-blue-fg">)</span>
-<span class="ansi-green-intense-fg ansi-bold">     15</span>
-<span class="ansi-green-fg">---&gt; 16</span><span class="ansi-red-fg"> </span>ax<span class="ansi-blue-fg">[</span><span class="ansi-cyan-fg">1</span><span class="ansi-blue-fg">]</span><span class="ansi-blue-fg">[</span><span class="ansi-cyan-fg">0</span><span class="ansi-blue-fg">]</span><span class="ansi-blue-fg">.</span>plot<span class="ansi-blue-fg">(</span>L_J<span class="ansi-blue-fg">*</span><span class="ansi-cyan-fg">1e9</span><span class="ansi-blue-fg">,</span><span class="ansi-blue-fg">[</span>cir<span class="ansi-blue-fg">.</span>anharmonicities<span class="ansi-blue-fg">(</span>L_J <span class="ansi-blue-fg">=</span> x<span class="ansi-blue-fg">)</span><span class="ansi-blue-fg">/</span><span class="ansi-cyan-fg">1e6</span> <span class="ansi-green-fg">for</span> x <span class="ansi-green-fg">in</span> L_J<span class="ansi-blue-fg">]</span><span class="ansi-blue-fg">)</span>
-<span class="ansi-green-intense-fg ansi-bold">     17</span> ax<span class="ansi-blue-fg">[</span><span class="ansi-cyan-fg">1</span><span class="ansi-blue-fg">]</span><span class="ansi-blue-fg">[</span><span class="ansi-cyan-fg">0</span><span class="ansi-blue-fg">]</span><span class="ansi-blue-fg">.</span>set_ylabel<span class="ansi-blue-fg">(</span><span class="ansi-blue-fg">&#39;$A_m$ (MHz)&#39;</span><span class="ansi-blue-fg">)</span>
-<span class="ansi-green-intense-fg ansi-bold">     18</span>
-
-<span class="ansi-green-fg">/anaconda3/lib/python3.7/site-packages/qucat/src/core.py</span> in <span class="ansi-cyan-fg">anharmonicities</span><span class="ansi-blue-fg">(self, **kwargs)</span>
-<span class="ansi-green-intense-fg ansi-bold">    308</span>             Normal mode anharmonicities
-<span class="ansi-green-intense-fg ansi-bold">    309</span>         &#39;&#39;&#39;
-<span class="ansi-green-fg">--&gt; 310</span><span class="ansi-red-fg">         </span>Ks <span class="ansi-blue-fg">=</span> self<span class="ansi-blue-fg">.</span>kerr<span class="ansi-blue-fg">(</span><span class="ansi-blue-fg">**</span>kwargs<span class="ansi-blue-fg">)</span>
-<span class="ansi-green-intense-fg ansi-bold">    311</span>         <span class="ansi-green-fg">return</span> np<span class="ansi-blue-fg">.</span>array<span class="ansi-blue-fg">(</span><span class="ansi-blue-fg">[</span>Ks<span class="ansi-blue-fg">[</span>i<span class="ansi-blue-fg">,</span> i<span class="ansi-blue-fg">]</span> <span class="ansi-green-fg">for</span> i <span class="ansi-green-fg">in</span> range<span class="ansi-blue-fg">(</span>Ks<span class="ansi-blue-fg">.</span>shape<span class="ansi-blue-fg">[</span><span class="ansi-cyan-fg">0</span><span class="ansi-blue-fg">]</span><span class="ansi-blue-fg">)</span><span class="ansi-blue-fg">]</span><span class="ansi-blue-fg">)</span>
-<span class="ansi-green-intense-fg ansi-bold">    312</span>
-
-<span class="ansi-green-fg">/anaconda3/lib/python3.7/site-packages/qucat/src/core.py</span> in <span class="ansi-cyan-fg">kerr</span><span class="ansi-blue-fg">(self, **kwargs)</span>
-<span class="ansi-green-intense-fg ansi-bold">    366</span>             Kerr parameters
-<span class="ansi-green-intense-fg ansi-bold">    367</span>         &#39;&#39;&#39;
-<span class="ansi-green-fg">--&gt; 368</span><span class="ansi-red-fg">         </span>As <span class="ansi-blue-fg">=</span> self<span class="ansi-blue-fg">.</span>_anharmonicities_per_junction<span class="ansi-blue-fg">(</span><span class="ansi-blue-fg">**</span>kwargs<span class="ansi-blue-fg">)</span>
-<span class="ansi-green-intense-fg ansi-bold">    369</span>         N_modes <span class="ansi-blue-fg">=</span> len<span class="ansi-blue-fg">(</span>self<span class="ansi-blue-fg">.</span>w_cpx<span class="ansi-blue-fg">)</span>
-<span class="ansi-green-intense-fg ansi-bold">    370</span>         N_junctions <span class="ansi-blue-fg">=</span> len<span class="ansi-blue-fg">(</span>self<span class="ansi-blue-fg">.</span>junctions<span class="ansi-blue-fg">)</span>
-
-<span class="ansi-green-fg">/anaconda3/lib/python3.7/site-packages/qucat/src/core.py</span> in <span class="ansi-cyan-fg">_anharmonicities_per_junction</span><span class="ansi-blue-fg">(self, pretty_print, **kwargs)</span>
-<span class="ansi-green-intense-fg ansi-bold">    176</span>     <span class="ansi-green-fg">def</span> _anharmonicities_per_junction<span class="ansi-blue-fg">(</span>self<span class="ansi-blue-fg">,</span> pretty_print<span class="ansi-blue-fg">=</span><span class="ansi-green-fg">False</span><span class="ansi-blue-fg">,</span> <span class="ansi-blue-fg">**</span>kwargs<span class="ansi-blue-fg">)</span><span class="ansi-blue-fg">:</span>
-<span class="ansi-green-intense-fg ansi-bold">    177</span>         self<span class="ansi-blue-fg">.</span>_set_w_cpx<span class="ansi-blue-fg">(</span><span class="ansi-blue-fg">**</span>kwargs<span class="ansi-blue-fg">)</span>
-<span class="ansi-green-fg">--&gt; 178</span><span class="ansi-red-fg">         </span><span class="ansi-green-fg">return</span> <span class="ansi-blue-fg">[</span>j<span class="ansi-blue-fg">.</span>_anharmonicity<span class="ansi-blue-fg">(</span>self<span class="ansi-blue-fg">.</span>w_cpx<span class="ansi-blue-fg">,</span> <span class="ansi-blue-fg">**</span>kwargs<span class="ansi-blue-fg">)</span> <span class="ansi-green-fg">for</span> j <span class="ansi-green-fg">in</span> self<span class="ansi-blue-fg">.</span>junctions<span class="ansi-blue-fg">]</span>
-<span class="ansi-green-intense-fg ansi-bold">    179</span>
-<span class="ansi-green-intense-fg ansi-bold">    180</span>     <span class="ansi-green-fg">def</span> eigenfrequencies<span class="ansi-blue-fg">(</span>self<span class="ansi-blue-fg">,</span> <span class="ansi-blue-fg">**</span>kwargs<span class="ansi-blue-fg">)</span><span class="ansi-blue-fg">:</span>
-
-<span class="ansi-green-fg">/anaconda3/lib/python3.7/site-packages/qucat/src/core.py</span> in <span class="ansi-cyan-fg">&lt;listcomp&gt;</span><span class="ansi-blue-fg">(.0)</span>
-<span class="ansi-green-intense-fg ansi-bold">    176</span>     <span class="ansi-green-fg">def</span> _anharmonicities_per_junction<span class="ansi-blue-fg">(</span>self<span class="ansi-blue-fg">,</span> pretty_print<span class="ansi-blue-fg">=</span><span class="ansi-green-fg">False</span><span class="ansi-blue-fg">,</span> <span class="ansi-blue-fg">**</span>kwargs<span class="ansi-blue-fg">)</span><span class="ansi-blue-fg">:</span>
-<span class="ansi-green-intense-fg ansi-bold">    177</span>         self<span class="ansi-blue-fg">.</span>_set_w_cpx<span class="ansi-blue-fg">(</span><span class="ansi-blue-fg">**</span>kwargs<span class="ansi-blue-fg">)</span>
-<span class="ansi-green-fg">--&gt; 178</span><span class="ansi-red-fg">         </span><span class="ansi-green-fg">return</span> <span class="ansi-blue-fg">[</span>j<span class="ansi-blue-fg">.</span>_anharmonicity<span class="ansi-blue-fg">(</span>self<span class="ansi-blue-fg">.</span>w_cpx<span class="ansi-blue-fg">,</span> <span class="ansi-blue-fg">**</span>kwargs<span class="ansi-blue-fg">)</span> <span class="ansi-green-fg">for</span> j <span class="ansi-green-fg">in</span> self<span class="ansi-blue-fg">.</span>junctions<span class="ansi-blue-fg">]</span>
-<span class="ansi-green-intense-fg ansi-bold">    179</span>
-<span class="ansi-green-intense-fg ansi-bold">    180</span>     <span class="ansi-green-fg">def</span> eigenfrequencies<span class="ansi-blue-fg">(</span>self<span class="ansi-blue-fg">,</span> <span class="ansi-blue-fg">**</span>kwargs<span class="ansi-blue-fg">)</span><span class="ansi-blue-fg">:</span>
-
-<span class="ansi-green-fg">/anaconda3/lib/python3.7/site-packages/qucat/src/core.py</span> in <span class="ansi-cyan-fg">_anharmonicity</span><span class="ansi-blue-fg">(self, w, **kwargs)</span>
-<span class="ansi-green-intense-fg ansi-bold">   2221</span>
-<span class="ansi-green-intense-fg ansi-bold">   2222</span>     <span class="ansi-green-fg">def</span> _anharmonicity<span class="ansi-blue-fg">(</span>self<span class="ansi-blue-fg">,</span>w<span class="ansi-blue-fg">,</span><span class="ansi-blue-fg">**</span>kwargs<span class="ansi-blue-fg">)</span><span class="ansi-blue-fg">:</span>
-<span class="ansi-green-fg">-&gt; 2223</span><span class="ansi-red-fg">         </span><span class="ansi-green-fg">return</span> self<span class="ansi-blue-fg">.</span>_get_Ej<span class="ansi-blue-fg">(</span><span class="ansi-blue-fg">)</span><span class="ansi-blue-fg">/</span><span class="ansi-cyan-fg">2</span><span class="ansi-blue-fg">*</span>self<span class="ansi-blue-fg">.</span>_zpf<span class="ansi-blue-fg">(</span>w<span class="ansi-blue-fg">,</span><span class="ansi-blue-fg">&#39;flux&#39;</span><span class="ansi-blue-fg">)</span><span class="ansi-blue-fg">**</span><span class="ansi-cyan-fg">4</span>
-<span class="ansi-green-intense-fg ansi-bold">   2224</span>
-<span class="ansi-green-intense-fg ansi-bold">   2225</span>     <span class="ansi-green-fg">def</span> anharmonicity<span class="ansi-blue-fg">(</span>self<span class="ansi-blue-fg">,</span> mode<span class="ansi-blue-fg">,</span> <span class="ansi-blue-fg">**</span>kwargs<span class="ansi-blue-fg">)</span><span class="ansi-blue-fg">:</span>
-
-<span class="ansi-green-fg">/anaconda3/lib/python3.7/site-packages/qucat/src/core.py</span> in <span class="ansi-cyan-fg">_zpf</span><span class="ansi-blue-fg">(self, w, quantity, **kwargs)</span>
-<span class="ansi-green-intense-fg ansi-bold">   1921</span>
-<span class="ansi-green-intense-fg ansi-bold">   1922</span>         <span class="ansi-red-fg"># Note that the flux defined in _flux</span>
-<span class="ansi-green-fg">-&gt; 1923</span><span class="ansi-red-fg">         </span>phi_zpf <span class="ansi-blue-fg">=</span> self<span class="ansi-blue-fg">.</span>_flux<span class="ansi-blue-fg">(</span>w<span class="ansi-blue-fg">,</span><span class="ansi-blue-fg">**</span>kwargs<span class="ansi-blue-fg">)</span>
-<span class="ansi-green-intense-fg ansi-bold">   1924</span>         <span class="ansi-red-fg"># is complex.</span>
-<span class="ansi-green-intense-fg ansi-bold">   1925</span>         <span class="ansi-red-fg"># This causes a problem for the quantization:</span>
-
-<span class="ansi-green-fg">/anaconda3/lib/python3.7/site-packages/qucat/src/core.py</span> in <span class="ansi-cyan-fg">_flux</span><span class="ansi-blue-fg">(self, w, **kwargs)</span>
-<span class="ansi-green-intense-fg ansi-bold">   1885</span>         <span class="ansi-red-fg">#  = sqrt(hbar/w/ImdY[w])</span>
-<span class="ansi-green-intense-fg ansi-bold">   1886</span>         <span class="ansi-red-fg"># The minus is there since 1/Im(Y)  = -Im(1/Y)</span>
-<span class="ansi-green-fg">-&gt; 1887</span><span class="ansi-red-fg">         </span>phi_zpf_r <span class="ansi-blue-fg">=</span> np<span class="ansi-blue-fg">.</span>sqrt<span class="ansi-blue-fg">(</span>hbar<span class="ansi-blue-fg">/</span>w<span class="ansi-blue-fg">*</span>np<span class="ansi-blue-fg">.</span>imag<span class="ansi-blue-fg">(</span><span class="ansi-blue-fg">-</span>self<span class="ansi-blue-fg">.</span>_circuit<span class="ansi-blue-fg">.</span>_inverse_of_dY<span class="ansi-blue-fg">(</span>w<span class="ansi-blue-fg">,</span><span class="ansi-blue-fg">**</span>kwargs<span class="ansi-blue-fg">)</span><span class="ansi-blue-fg">)</span><span class="ansi-blue-fg">)</span>
-<span class="ansi-green-intense-fg ansi-bold">   1888</span>
-<span class="ansi-green-intense-fg ansi-bold">   1889</span>         <span class="ansi-red-fg"># Note that the flux defined here</span>
-
-<span class="ansi-green-fg">/anaconda3/lib/python3.7/site-packages/qucat/src/_utility.py</span> in <span class="ansi-cyan-fg">wrapper_vectorize</span><span class="ansi-blue-fg">(self, w, **kwargs)</span>
-<span class="ansi-green-intense-fg ansi-bold">     62</span>         <span class="ansi-green-fg">else</span><span class="ansi-blue-fg">:</span>
-<span class="ansi-green-intense-fg ansi-bold">     63</span>             <span class="ansi-red-fg"># iterable = True</span>
-<span class="ansi-green-fg">---&gt; 64</span><span class="ansi-red-fg">             </span><span class="ansi-green-fg">return</span> np<span class="ansi-blue-fg">.</span>vectorize<span class="ansi-blue-fg">(</span><span class="ansi-green-fg">lambda</span> w_single<span class="ansi-blue-fg">:</span> func_to_evaluate<span class="ansi-blue-fg">(</span>self<span class="ansi-blue-fg">,</span>w_single<span class="ansi-blue-fg">,</span><span class="ansi-blue-fg">**</span>kwargs<span class="ansi-blue-fg">)</span><span class="ansi-blue-fg">)</span><span class="ansi-blue-fg">(</span>w<span class="ansi-blue-fg">)</span>
-<span class="ansi-green-intense-fg ansi-bold">     65</span>     <span class="ansi-green-fg">return</span> wrapper_vectorize
-<span class="ansi-green-intense-fg ansi-bold">     66</span>
-
-<span class="ansi-green-fg">/anaconda3/lib/python3.7/site-packages/numpy/lib/function_base.py</span> in <span class="ansi-cyan-fg">__call__</span><span class="ansi-blue-fg">(self, *args, **kwargs)</span>
-<span class="ansi-green-intense-fg ansi-bold">   2089</span>             vargs<span class="ansi-blue-fg">.</span>extend<span class="ansi-blue-fg">(</span><span class="ansi-blue-fg">[</span>kwargs<span class="ansi-blue-fg">[</span>_n<span class="ansi-blue-fg">]</span> <span class="ansi-green-fg">for</span> _n <span class="ansi-green-fg">in</span> names<span class="ansi-blue-fg">]</span><span class="ansi-blue-fg">)</span>
-<span class="ansi-green-intense-fg ansi-bold">   2090</span>
-<span class="ansi-green-fg">-&gt; 2091</span><span class="ansi-red-fg">         </span><span class="ansi-green-fg">return</span> self<span class="ansi-blue-fg">.</span>_vectorize_call<span class="ansi-blue-fg">(</span>func<span class="ansi-blue-fg">=</span>func<span class="ansi-blue-fg">,</span> args<span class="ansi-blue-fg">=</span>vargs<span class="ansi-blue-fg">)</span>
-<span class="ansi-green-intense-fg ansi-bold">   2092</span>
-<span class="ansi-green-intense-fg ansi-bold">   2093</span>     <span class="ansi-green-fg">def</span> _get_ufunc_and_otypes<span class="ansi-blue-fg">(</span>self<span class="ansi-blue-fg">,</span> func<span class="ansi-blue-fg">,</span> args<span class="ansi-blue-fg">)</span><span class="ansi-blue-fg">:</span>
-
-<span class="ansi-green-fg">/anaconda3/lib/python3.7/site-packages/numpy/lib/function_base.py</span> in <span class="ansi-cyan-fg">_vectorize_call</span><span class="ansi-blue-fg">(self, func, args)</span>
-<span class="ansi-green-intense-fg ansi-bold">   2159</span>             res <span class="ansi-blue-fg">=</span> func<span class="ansi-blue-fg">(</span><span class="ansi-blue-fg">)</span>
-<span class="ansi-green-intense-fg ansi-bold">   2160</span>         <span class="ansi-green-fg">else</span><span class="ansi-blue-fg">:</span>
-<span class="ansi-green-fg">-&gt; 2161</span><span class="ansi-red-fg">             </span>ufunc<span class="ansi-blue-fg">,</span> otypes <span class="ansi-blue-fg">=</span> self<span class="ansi-blue-fg">.</span>_get_ufunc_and_otypes<span class="ansi-blue-fg">(</span>func<span class="ansi-blue-fg">=</span>func<span class="ansi-blue-fg">,</span> args<span class="ansi-blue-fg">=</span>args<span class="ansi-blue-fg">)</span>
-<span class="ansi-green-intense-fg ansi-bold">   2162</span>
-<span class="ansi-green-intense-fg ansi-bold">   2163</span>             <span class="ansi-red-fg"># Convert args to object arrays first</span>
-
-<span class="ansi-green-fg">/anaconda3/lib/python3.7/site-packages/numpy/lib/function_base.py</span> in <span class="ansi-cyan-fg">_get_ufunc_and_otypes</span><span class="ansi-blue-fg">(self, func, args)</span>
-<span class="ansi-green-intense-fg ansi-bold">   2119</span>
-<span class="ansi-green-intense-fg ansi-bold">   2120</span>             inputs <span class="ansi-blue-fg">=</span> <span class="ansi-blue-fg">[</span>arg<span class="ansi-blue-fg">.</span>flat<span class="ansi-blue-fg">[</span><span class="ansi-cyan-fg">0</span><span class="ansi-blue-fg">]</span> <span class="ansi-green-fg">for</span> arg <span class="ansi-green-fg">in</span> args<span class="ansi-blue-fg">]</span>
-<span class="ansi-green-fg">-&gt; 2121</span><span class="ansi-red-fg">             </span>outputs <span class="ansi-blue-fg">=</span> func<span class="ansi-blue-fg">(</span><span class="ansi-blue-fg">*</span>inputs<span class="ansi-blue-fg">)</span>
-<span class="ansi-green-intense-fg ansi-bold">   2122</span>
-<span class="ansi-green-intense-fg ansi-bold">   2123</span>             <span class="ansi-red-fg"># Performance note: profiling indicates that -- for simple</span>
-
-<span class="ansi-green-fg">/anaconda3/lib/python3.7/site-packages/qucat/src/_utility.py</span> in <span class="ansi-cyan-fg">&lt;lambda&gt;</span><span class="ansi-blue-fg">(w_single)</span>
-<span class="ansi-green-intense-fg ansi-bold">     62</span>         <span class="ansi-green-fg">else</span><span class="ansi-blue-fg">:</span>
-<span class="ansi-green-intense-fg ansi-bold">     63</span>             <span class="ansi-red-fg"># iterable = True</span>
-<span class="ansi-green-fg">---&gt; 64</span><span class="ansi-red-fg">             </span><span class="ansi-green-fg">return</span> np<span class="ansi-blue-fg">.</span>vectorize<span class="ansi-blue-fg">(</span><span class="ansi-green-fg">lambda</span> w_single<span class="ansi-blue-fg">:</span> func_to_evaluate<span class="ansi-blue-fg">(</span>self<span class="ansi-blue-fg">,</span>w_single<span class="ansi-blue-fg">,</span><span class="ansi-blue-fg">**</span>kwargs<span class="ansi-blue-fg">)</span><span class="ansi-blue-fg">)</span><span class="ansi-blue-fg">(</span>w<span class="ansi-blue-fg">)</span>
-<span class="ansi-green-intense-fg ansi-bold">     65</span>     <span class="ansi-green-fg">return</span> wrapper_vectorize
-<span class="ansi-green-intense-fg ansi-bold">     66</span>
-
-<span class="ansi-green-fg">/anaconda3/lib/python3.7/site-packages/qucat/src/_utility.py</span> in <span class="ansi-cyan-fg">wrapper_safely_evaluate</span><span class="ansi-blue-fg">(self, w, **kwargs)</span>
-<span class="ansi-green-intense-fg ansi-bold">     37</span>     <span class="ansi-green-fg">def</span> wrapper_safely_evaluate<span class="ansi-blue-fg">(</span>self<span class="ansi-blue-fg">,</span>w<span class="ansi-blue-fg">,</span> <span class="ansi-blue-fg">**</span>kwargs<span class="ansi-blue-fg">)</span><span class="ansi-blue-fg">:</span>
-<span class="ansi-green-intense-fg ansi-bold">     38</span>         <span class="ansi-green-fg">try</span><span class="ansi-blue-fg">:</span>
-<span class="ansi-green-fg">---&gt; 39</span><span class="ansi-red-fg">             </span><span class="ansi-green-fg">return</span> func_to_evaluate<span class="ansi-blue-fg">(</span>self<span class="ansi-blue-fg">,</span>w<span class="ansi-blue-fg">,</span> <span class="ansi-blue-fg">**</span>kwargs<span class="ansi-blue-fg">)</span>
-<span class="ansi-green-intense-fg ansi-bold">     40</span>         <span class="ansi-green-fg">except</span> FloatingPointError <span class="ansi-green-fg">as</span> e<span class="ansi-blue-fg">:</span>
-<span class="ansi-green-intense-fg ansi-bold">     41</span>             warn<span class="ansi-blue-fg">(</span>str<span class="ansi-blue-fg">(</span>e<span class="ansi-blue-fg">)</span><span class="ansi-blue-fg">+</span><span class="ansi-blue-fg">f&#34;\n\tPerturbing f = {w/2./np.pi} to find finite value&#34;</span><span class="ansi-blue-fg">)</span>
-
-<span class="ansi-green-fg">/anaconda3/lib/python3.7/site-packages/qucat/src/core.py</span> in <span class="ansi-cyan-fg">_inverse_of_dY</span><span class="ansi-blue-fg">(self, w, **kwargs)</span>
-<span class="ansi-green-intense-fg ansi-bold">    135</span>     <span class="ansi-blue-fg">@</span>safely_evaluate
-<span class="ansi-green-intense-fg ansi-bold">    136</span>     <span class="ansi-green-fg">def</span> _inverse_of_dY<span class="ansi-blue-fg">(</span>self<span class="ansi-blue-fg">,</span> w<span class="ansi-blue-fg">,</span><span class="ansi-blue-fg">**</span>kwargs<span class="ansi-blue-fg">)</span><span class="ansi-blue-fg">:</span>
-<span class="ansi-green-fg">--&gt; 137</span><span class="ansi-red-fg">         </span><span class="ansi-green-fg">return</span> self<span class="ansi-blue-fg">.</span>_inverse_of_dY_lambdified<span class="ansi-blue-fg">(</span>w<span class="ansi-blue-fg">,</span><span class="ansi-blue-fg">**</span>kwargs<span class="ansi-blue-fg">)</span>
-<span class="ansi-green-intense-fg ansi-bold">    138</span>
-<span class="ansi-green-intense-fg ansi-bold">    139</span>     <span class="ansi-green-fg">def</span> _check_kwargs<span class="ansi-blue-fg">(</span>self<span class="ansi-blue-fg">,</span> <span class="ansi-blue-fg">**</span>kwargs<span class="ansi-blue-fg">)</span><span class="ansi-blue-fg">:</span>
-
-<span class="ansi-red-fg">TypeError</span>: _lambdifygenerated() missing 1 required positional argument: &#39;L_J&#39;
-</pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../_images/tutorials_transmon_LC_GUI_8_1.png" src="../_images/tutorials_transmon_LC_GUI_8_1.png" />
+<img alt="../_images/tutorials_transmon_LC_GUI_8_0.png" src="../_images/tutorials_transmon_LC_GUI_8_0.png" />
 </div>
 </div>
 <p>Alternatively, we can obtain all these parameters at once for a given value of the junction inductance</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[19]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">cir</span><span class="o">.</span><span class="n">f_k_A_chi</span><span class="p">(</span><span class="n">L_J</span><span class="o">=</span><span class="mf">1e-8</span><span class="p">)</span>
+<div class="input_area highlight-none notranslate"><div class="highlight"><pre>
+<span></span>cir.f_k_A_chi(L_J=1e-8)
 </pre></div>
 </div>
 </div>
 <div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[19]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
 </pre></div>
 </div>
 <div class="output_area highlight-none notranslate"><div class="highlight"><pre>
 <span></span>(array([4.98333767e+09, 5.03291805e+09]),
  array([390085.6448015 , 397887.35776132]),
- array([47500085.74918161, 48449966.18128259]),
- array([[47500085.74918161, 95945350.03127295],
-        [95945350.03127295, 48449966.18128259]]))
+ array([47500085.74918161, 48449966.18128257]),
+ array([[47500085.74918161, 95945350.03127293],
+        [95945350.03127293, 48449966.18128257]]))
 </pre></div>
 </div>
 </div>
 <p>and print them in a pretty way</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[20]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">f</span><span class="p">,</span><span class="n">k</span><span class="p">,</span><span class="n">A</span><span class="p">,</span><span class="n">chi</span> <span class="o">=</span> <span class="n">cir</span><span class="o">.</span><span class="n">f_k_A_chi</span><span class="p">(</span><span class="n">L_J</span><span class="o">=</span><span class="mf">1e-8</span><span class="p">,</span><span class="n">pretty_print</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span>
+<div class="input_area highlight-none notranslate"><div class="highlight"><pre>
+<span></span>f,k,A,chi = cir.f_k_A_chi(L_J=1e-8,pretty_print = True)
 </pre></div>
 </div>
 </div>
@@ -677,14 +555,14 @@ R 0 2 1 MOhm
 <div class="output_area docutils container">
 <div class="highlight"><pre>
     mode |  freq.  |  diss.  |  anha.  |
-       0 | 5.0 GHz | 390 kHz |  48 MHz |
-       1 | 5.0 GHz | 398 kHz |  48 MHz |
+       0 | 4.98 GHz |  39 kHz | 47.5 MHz |
+       1 | 5.03 GHz | 398 kHz | 48.4 MHz |
 
 Kerr coefficients
 (diagonal = Kerr, off-diagonal = cross-Kerr)
     mode |    0    |    1    |
-       0 |  48 MHz |         |
-       1 |  96 MHz |  48 MHz |
+       0 | 47.5 MHz |         |
+       1 | 95.9 MHz | 48.4 MHz |
 
 </pre></div></div>
 </div>
@@ -699,12 +577,12 @@ Kerr coefficients
 <p>The relative direction of the arrows is given by the direction current would flow through that component if mode <span class="math notranslate nohighlight">\(m\)</span> was in a coherent state.</p>
 <p>By changing the parameter <code class="docutils literal notranslate"><span class="pre">quantity</span></code>, we show the value of other zero-point fluctuations, and we can enter <code class="docutils literal notranslate"><span class="pre">'voltage'</span></code>, <code class="docutils literal notranslate"><span class="pre">'charge'</span></code>, or <code class="docutils literal notranslate"><span class="pre">'flux'</span></code>. The direction of the arrows however, always represent the current.</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">cir</span><span class="o">.</span><span class="n">show_normal_mode</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span><span class="n">quantity</span><span class="o">=</span><span class="s1">&#39;current&#39;</span><span class="p">,</span> <span class="n">L_J</span> <span class="o">=</span> <span class="mf">10e-9</span><span class="p">)</span>
-<span class="n">cir</span><span class="o">.</span><span class="n">show_normal_mode</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span><span class="n">quantity</span><span class="o">=</span><span class="s1">&#39;current&#39;</span><span class="p">,</span> <span class="n">L_J</span> <span class="o">=</span> <span class="mf">10e-9</span><span class="p">)</span>
+<div class="input_area highlight-none notranslate"><div class="highlight"><pre>
+<span></span>cir.show_normal_mode(mode=0,quantity=&#39;current&#39;, L_J = 10e-9)
+cir.show_normal_mode(mode=1,quantity=&#39;current&#39;, L_J = 10e-9)
 </pre></div>
 </div>
 </div>
@@ -725,42 +603,42 @@ Kerr coefficients
 <p>We see above that the symmetry on each side of the coupling capacitor is changing between the modes, the above is called the anti-symmetric mode, with a voltage build-up on either side of the coupling capacitor leading to a current going through it. Mode 1 is the anti-symmetric mode.</p>
 <p>These zero-point fluctuations can also be accessed programmatically in the case we build the circuit with the Network function, see below:</p>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="c1"># Import the circuit builder</span>
-<span class="kn">from</span> <span class="nn">qucat</span> <span class="k">import</span> <span class="n">Network</span>
-<span class="c1"># Import the circuit components</span>
-<span class="kn">from</span> <span class="nn">qucat</span> <span class="k">import</span> <span class="n">L</span><span class="p">,</span><span class="n">J</span><span class="p">,</span><span class="n">C</span><span class="p">,</span><span class="n">R</span>
+<div class="input_area highlight-none notranslate"><div class="highlight"><pre>
+<span></span># Import the circuit builder
+from qucat import Network
+# Import the circuit components
+from qucat import L,J,C,R
 
-<span class="c1"># create the coupling capacitor seperately,</span>
-<span class="c1"># enabling us to interact with it afterwards</span>
-<span class="n">coupling_capacitor</span> <span class="o">=</span> <span class="n">C</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mf">1e-15</span><span class="p">)</span>
+# create the coupling capacitor seperately,
+# enabling us to interact with it afterwards
+coupling_capacitor = C(1,2,1e-15)
 
-<span class="c1"># construct the circuit</span>
-<span class="n">cir_net</span> <span class="o">=</span> <span class="n">Network</span><span class="p">([</span>
-    <span class="n">C</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mf">100e-15</span><span class="p">),</span>
-    <span class="n">J</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mf">10e-9</span><span class="p">),</span>
-    <span class="n">coupling_capacitor</span><span class="p">,</span>
-    <span class="n">C</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mf">100e-15</span><span class="p">),</span>
-    <span class="n">L</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mf">10e-9</span><span class="p">),</span>
-    <span class="n">R</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mf">1e6</span><span class="p">)</span>
-<span class="p">])</span>
+# construct the circuit
+cir_net = Network([
+    C(0,1,100e-15),
+    J(0,1,10e-9),
+    coupling_capacitor,
+    C(2,0,100e-15),
+    L(2,0,10e-9),
+    R(2,0,1e6)
+])
 </pre></div>
 </div>
 </div>
 The lower frequency (anti-symmetric)  mode has a frequency:<div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">cir_net</span><span class="o">.</span><span class="n">eigenfrequencies</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span><span class="o">/</span><span class="mf">1e9</span>
+<div class="input_area highlight-none notranslate"><div class="highlight"><pre>
+<span></span>cir_net.eigenfrequencies()[0]/1e9
 </pre></div>
 </div>
 </div>
 <div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
 </pre></div>
 </div>
 <div class="output_area highlight-none notranslate"><div class="highlight"><pre>
@@ -770,16 +648,16 @@ The lower frequency (anti-symmetric)  mode has a frequency:<div class="nbinput d
 </div>
 <p>Which is lower due a higher zero-point voltage fluctuation across the coupling capacitor</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">coupling_capacitor</span><span class="o">.</span><span class="n">zpf</span><span class="p">(</span><span class="n">mode</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">quantity</span> <span class="o">=</span> <span class="s1">&#39;voltage&#39;</span><span class="p">)</span>
+<div class="input_area highlight-none notranslate"><div class="highlight"><pre>
+<span></span>coupling_capacitor.zpf(mode = 0, quantity = &#39;voltage&#39;)
 </pre></div>
 </div>
 </div>
 <div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
 </pre></div>
 </div>
 <div class="output_area highlight-none notranslate"><div class="highlight"><pre>
@@ -789,16 +667,16 @@ The lower frequency (anti-symmetric)  mode has a frequency:<div class="nbinput d
 </div>
 <p>Compared to the symmetric mode with frequency:</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">cir_net</span><span class="o">.</span><span class="n">eigenfrequencies</span><span class="p">()[</span><span class="mi">1</span><span class="p">]</span><span class="o">/</span><span class="mf">1e9</span>
+<div class="input_area highlight-none notranslate"><div class="highlight"><pre>
+<span></span>cir_net.eigenfrequencies()[1]/1e9
 </pre></div>
 </div>
 </div>
 <div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
 </pre></div>
 </div>
 <div class="output_area highlight-none notranslate"><div class="highlight"><pre>
@@ -808,20 +686,20 @@ The lower frequency (anti-symmetric)  mode has a frequency:<div class="nbinput d
 </div>
 <p>And zero-point voltage fluctuation across the coupling capacitor</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">coupling_capacitor</span><span class="o">.</span><span class="n">zpf</span><span class="p">(</span><span class="n">mode</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="n">quantity</span> <span class="o">=</span> <span class="s1">&#39;voltage&#39;</span><span class="p">)</span>
+<div class="input_area highlight-none notranslate"><div class="highlight"><pre>
+<span></span>coupling_capacitor.zpf(mode = 1, quantity = &#39;voltage&#39;)
 </pre></div>
 </div>
 </div>
 <div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
 </pre></div>
 </div>
 <div class="output_area highlight-none notranslate"><div class="highlight"><pre>
-<span></span>-2.5231302064585313e-09j
+<span></span>-2.5231302064979965e-09j
 </pre></div>
 </div>
 </div>
@@ -833,34 +711,34 @@ The lower frequency (anti-symmetric)  mode has a frequency:<div class="nbinput d
 <p>And in its construction, we have the freedom to choose the set of <code class="docutils literal notranslate"><span class="pre">modes</span></code> to include, the order of the Taylor expansion of the junction potential, and the number of excitations of each mode to consider.</p>
 <p>We will use the diagonalization of the hamiltonian to produce the evolution of two first transition frequencies of the system as a function of <code class="docutils literal notranslate"><span class="pre">L_J</span></code></p>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[51]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[13]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">eigen_energies</span> <span class="o">=</span> <span class="p">[]</span>
-<span class="n">L_J</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mf">10e-9</span><span class="p">,</span><span class="mf">8e-9</span><span class="p">,</span> <span class="mi">101</span><span class="p">)</span>
-<span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">L_J</span><span class="p">:</span>
-    <span class="c1"># Note that we could use either ``cir`` or the circuit built above ``cir_net``</span>
-    <span class="n">H</span> <span class="o">=</span> <span class="n">cir</span><span class="o">.</span><span class="n">hamiltonian</span><span class="p">(</span><span class="n">modes</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">],</span><span class="n">taylor</span> <span class="o">=</span> <span class="mi">8</span><span class="p">,</span><span class="n">excitations</span> <span class="o">=</span> <span class="p">[</span><span class="mi">10</span><span class="p">,</span><span class="mi">10</span><span class="p">],</span> <span class="n">L_J</span> <span class="o">=</span> <span class="n">x</span><span class="p">)</span>
-    <span class="n">eigen_energies</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">H</span><span class="o">.</span><span class="n">eigenenergies</span><span class="p">())</span>
-<span class="n">eigen_energies</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">absolute</span><span class="p">(</span><span class="n">eigen_energies</span><span class="p">)</span>
+<div class="input_area highlight-none notranslate"><div class="highlight"><pre>
+<span></span>eigen_energies = []
+L_J = np.linspace(10e-9,8e-9, 101)
+for x in L_J:
+    # Note that we could use either ``cir`` or the circuit built above ``cir_net``
+    H = cir.hamiltonian(modes = [0,1],taylor = 8,excitations = [10,10], L_J = x)
+    eigen_energies.append(H.eigenenergies())
+eigen_energies = np.absolute(eigen_energies)
 </pre></div>
 </div>
 </div>
 <p>We can for example compare the size of the avoided crossing computed from a diagonalization of the Hamiltonian (usually called the vacuum-Rabi splitting), with that calculated from a normal mode analysis (called normal-mode splitting)</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[52]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[14]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">first_transition</span> <span class="o">=</span> <span class="p">(</span><span class="n">eigen_energies</span><span class="p">[:,</span><span class="mi">1</span><span class="p">]</span><span class="o">-</span><span class="n">eigen_energies</span><span class="p">[:,</span><span class="mi">0</span><span class="p">])</span>
-<span class="n">second_transition</span> <span class="o">=</span> <span class="p">(</span><span class="n">eigen_energies</span><span class="p">[:,</span><span class="mi">2</span><span class="p">]</span><span class="o">-</span><span class="n">eigen_energies</span><span class="p">[:,</span><span class="mi">0</span><span class="p">])</span>
+<div class="input_area highlight-none notranslate"><div class="highlight"><pre>
+<span></span>first_transition = (eigen_energies[:,1]-eigen_energies[:,0])
+second_transition = (eigen_energies[:,2]-eigen_energies[:,0])
 
-<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">L_J</span><span class="o">*</span><span class="mf">1e9</span><span class="p">,</span><span class="n">first_transition</span><span class="o">/</span><span class="mf">1e9</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">L_J</span><span class="o">*</span><span class="mf">1e9</span><span class="p">,</span><span class="n">second_transition</span><span class="o">/</span><span class="mf">1e9</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">&#39;L_J (nH)&#39;</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s1">&#39;First two transitions of the circuit (GHz)&#39;</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+plt.plot(L_J*1e9,first_transition/1e9)
+plt.plot(L_J*1e9,second_transition/1e9)
+plt.xlabel(&#39;L_J (nH)&#39;)
+plt.ylabel(&#39;First two transitions of the circuit (GHz)&#39;)
+plt.show()
 </pre></div>
 </div>
 </div>
@@ -874,15 +752,15 @@ The lower frequency (anti-symmetric)  mode has a frequency:<div class="nbinput d
 <p>Note that the splitting does not occur at 10nH anymore. This is because the Transmon “bare” frequency is shifted by the quantum fluctuations through the junctions.</p>
 <p>However, the magnitude of the frequency spliting that occurs is approximately the same and can be predicted without recourse to a Hamiltonian diagonalization. This splitting is also twice the coupling <span class="math notranslate nohighlight">\(g\)</span> that one would use when formulating this problem in the context of the Rabi or Jaynes-Cummings Hamiltonian.</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[54]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[15]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">rabi_splitting</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">second_transition</span><span class="o">-</span><span class="n">first_transition</span><span class="p">)</span><span class="o">/</span><span class="mf">1e6</span>
-<span class="n">mode_splitting</span> <span class="o">=</span> <span class="p">(</span><span class="n">cir</span><span class="o">.</span><span class="n">eigenfrequencies</span><span class="p">(</span><span class="n">L_J</span><span class="o">=</span><span class="mf">10e-9</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span><span class="o">-</span><span class="n">cir</span><span class="o">.</span><span class="n">eigenfrequencies</span><span class="p">(</span><span class="n">L_J</span><span class="o">=</span><span class="mf">10e-9</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span><span class="o">/</span><span class="mf">1e6</span>
+<div class="input_area highlight-none notranslate"><div class="highlight"><pre>
+<span></span>rabi_splitting = min(second_transition-first_transition)/1e6
+mode_splitting = (cir.eigenfrequencies(L_J=10e-9)[1]-cir.eigenfrequencies(L_J=10e-9)[0])/1e6
 
-<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Quantum calculation -- Rabi splitting is </span><span class="si">%.2f</span><span class="s2"> MHz&quot;</span><span class="o">%</span><span class="k">rabi_splitting</span>)
-<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Classical calculation -- normal-mode splitting is </span><span class="si">%.2f</span><span class="s2"> MHz&quot;</span><span class="o">%</span><span class="k">mode_splitting</span>)
+print(&quot;Quantum calculation -- Rabi splitting is %.2f MHz&quot;%rabi_splitting)
+print(&quot;Classical calculation -- normal-mode splitting is %.2f MHz&quot;%mode_splitting)
 </pre></div>
 </div>
 </div>

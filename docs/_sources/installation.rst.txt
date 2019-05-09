@@ -2,6 +2,25 @@
 Installation
 *************
 
+Installing via pip
+==================
+
+The recommended way to install qucat is via pip by opening a terminal and running
+
+``pip install qucat``
+
+Installing from source
+======================
+
+The latest source code is available on our Github repository
+
+`<https://github.com/mgely/qucat>`_
+
+To install from source, download or clone the source code, 
+open a terminal and navigate to the qucat folder, and run 
+``pip install .``
+
+
 Requirements
 ============
 
@@ -15,22 +34,8 @@ The following packages are currently required:
 
 Additional features are available with the following packages:
 
-* [QuTiP](http://qutip.org/docs/latest/installation.html "QuTiP website"), tested on version 4.3
+* `QuTiP <http://qutip.org/docs/latest/installation.html>`_, tested on version 4.3
 
 We recommend installing python and these packages by 
 downloading and installing 
-[Anaconda](https://www.anaconda.com/distribution/ "Anaconda website").
-
-Installing via pip
-==================
-
-Installing from source
-======================
-
-The latest source code is available on our Github repository
-
-<https://github.com/mgely/qucat>
-
-To install from source, download or clone the source code, 
-open a terminal and navigate to the qucat folder, and run 
-``pip install .``
+`Anaconda <https://www.anaconda.com/distribution/>`_.
