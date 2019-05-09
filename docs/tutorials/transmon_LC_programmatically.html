@@ -97,7 +97,7 @@
 <li class="toctree-l4"><a class="reference internal" href="#Anharmonicity">Anharmonicity</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#Cross-Kerr-or-dispersive-shift">Cross-Kerr or dispersive shift</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#Loss-rates">Loss rates</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#T_1">T_1</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#T_1-times"><span class="math notranslate nohighlight">\(T_1\)</span> times</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="#Hamiltonian,-and-further-analysis-with-QuTiP">Hamiltonian, and further analysis with QuTiP</a><ul>
@@ -401,9 +401,10 @@ div.rendered_html tbody tr:hover {
 </style>
 <div class="section" id="Using-qucat-programmatically">
 <h1>Using qucat programmatically<a class="headerlink" href="#Using-qucat-programmatically" title="Permalink to this headline">¶</a></h1>
-<p>The first step is to import the objects we will be needing from qucat</p>
+<p>In this example we study a typical circuit QED system consisting of a transmon qubit coupled to a resonator.</p>
+<p>The first step is to import the objects we will be needing from qucat.</p>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[23]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -419,26 +420,27 @@ div.rendered_html tbody tr:hover {
 <div class="section" id="Building-the-circuit">
 <h2>Building the circuit<a class="headerlink" href="#Building-the-circuit" title="Permalink to this headline">¶</a></h2>
 <p>Note that the components (<code class="docutils literal notranslate"><span class="pre">R</span></code>, <code class="docutils literal notranslate"><span class="pre">L</span></code>, <code class="docutils literal notranslate"><span class="pre">C</span></code>, <code class="docutils literal notranslate"><span class="pre">J</span></code>) accept node indexes as their two first arguments, here we will use the node <code class="docutils literal notranslate"><span class="pre">0</span></code> to designate ground. The last arguments should be a label (<code class="docutils literal notranslate"><span class="pre">str</span></code>) or a value (<code class="docutils literal notranslate"><span class="pre">float</span></code>) or both, the order in which these arguments are provided are unimportant.</p>
-<p>For the moment, we will specify the value of all the components</p>
+<p>For the moment, we will specify the value of all the components.</p>
+<p><strong>Note: by default the junction is parametrized by its josephson inductance</strong></p>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[24]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
 <span></span><span class="n">cir</span> <span class="o">=</span> <span class="n">Network</span><span class="p">([</span>
-    <span class="n">C</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mf">100e-15</span><span class="p">),</span>
-    <span class="n">J</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mf">8e-9</span><span class="p">),</span>
-    <span class="n">C</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mf">1e-15</span><span class="p">),</span>
-    <span class="n">C</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mf">100e-15</span><span class="p">),</span>
-    <span class="n">L</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mf">10e-9</span><span class="p">),</span>
-    <span class="n">R</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mf">1e6</span><span class="p">)</span>
+    <span class="n">C</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mf">100e-15</span><span class="p">),</span> <span class="c1"># Add a capacitor between nodes 0 and 1, with a value of 100fF</span>
+    <span class="n">J</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mf">8e-9</span><span class="p">),</span> <span class="c1"># Add a josephson junction, the value is given as Josephson inductance</span>
+    <span class="n">C</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mf">1e-15</span><span class="p">),</span> <span class="c1"># Add the coupling capacitor</span>
+    <span class="n">C</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mf">100e-15</span><span class="p">),</span> <span class="c1"># Add the resonator capacitor</span>
+    <span class="n">L</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mf">10e-9</span><span class="p">),</span> <span class="c1"># Add the resonator inductor</span>
+    <span class="n">R</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mf">1e6</span><span class="p">)</span> <span class="c1"># Add the resonator resistor</span>
 <span class="p">])</span>
 </pre></div>
 </div>
 </div>
-<p>This implements the following circuit, where we have also indexed the nodes, and we have fixed the value of <span class="math notranslate nohighlight">\(L_J\)</span> to <code class="docutils literal notranslate"><span class="pre">8e-9</span></code></p>
+<p>This implements the following circuit, where we have also indexed the nodes, and we have fixed the value of <span class="math notranslate nohighlight">\(L_J\)</span> to <code class="docutils literal notranslate"><span class="pre">8e-9</span></code> H</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[25]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -448,7 +450,7 @@ div.rendered_html tbody tr:hover {
 </div>
 </div>
 <div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[25]:
 </pre></div>
 </div>
 <div class="output_area docutils container">
@@ -463,7 +465,7 @@ div.rendered_html tbody tr:hover {
 <div class="section" id="Eigen-frequencies">
 <h3>Eigen-frequencies<a class="headerlink" href="#Eigen-frequencies" title="Permalink to this headline">¶</a></h3>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[26]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -472,7 +474,7 @@ div.rendered_html tbody tr:hover {
 </div>
 </div>
 <div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[26]:
 </pre></div>
 </div>
 <div class="output_area highlight-none notranslate"><div class="highlight"><pre>
@@ -486,7 +488,7 @@ div.rendered_html tbody tr:hover {
 <div class="section" id="Anharmonicity">
 <h3>Anharmonicity<a class="headerlink" href="#Anharmonicity" title="Permalink to this headline">¶</a></h3>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[27]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -495,7 +497,7 @@ div.rendered_html tbody tr:hover {
 </div>
 </div>
 <div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[27]:
 </pre></div>
 </div>
 <div class="output_area highlight-none notranslate"><div class="highlight"><pre>
@@ -508,53 +510,51 @@ div.rendered_html tbody tr:hover {
 <div class="section" id="Cross-Kerr-or-dispersive-shift">
 <h3>Cross-Kerr or dispersive shift<a class="headerlink" href="#Cross-Kerr-or-dispersive-shift" title="Permalink to this headline">¶</a></h3>
 <p>In this regime of far detuning in frequency, the two modes will interact through a cross-Kerr or dispersive shift, which quantifies the amount by which one mode will shift if frequency if the other is populated with a photon.</p>
-<p>We can access this by calculating the Kerr parameters.</p>
+<p>We can access this by calculating the Kerr parameters <code class="docutils literal notranslate"><span class="pre">K</span></code>. In this two dimensional array, the components <code class="docutils literal notranslate"><span class="pre">K[i,j]</span></code> correspond to the cross-Kerr interaction of mode <code class="docutils literal notranslate"><span class="pre">i</span></code> with mode <code class="docutils literal notranslate"><span class="pre">j</span></code>.</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[30]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
 <span></span><span class="n">K</span> <span class="o">=</span> <span class="n">cir</span><span class="o">.</span><span class="n">kerr</span><span class="p">()</span>
-<span class="n">K</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%.2f</span><span class="s2"> kHz&quot;</span><span class="o">%</span><span class="p">(</span><span class="n">K</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span><span class="o">/</span><span class="mf">1e3</span><span class="p">))</span>
 </pre></div>
 </div>
 </div>
 <div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
-</pre></div>
+<div class="prompt empty docutils container">
 </div>
-<div class="output_area highlight-none notranslate"><div class="highlight"><pre>
-<span></span>668055.8212288043
-</pre></div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+668.06 kHz
+</pre></div></div>
 </div>
-</div>
-<p>In this two dimensional array, the components <code class="docutils literal notranslate"><span class="pre">K[i,j]</span></code> correspond to the cross-Kerr interaction of mode <code class="docutils literal notranslate"><span class="pre">i</span></code> with mode <code class="docutils literal notranslate"><span class="pre">j</span></code>. From the above, we have found that the cross-Kerr interaction between these two modes is of about 670 kHz.</p>
-<p>This should correspond to <span class="math notranslate nohighlight">\(2\sqrt{A_0A_1}\)</span> where <span class="math notranslate nohighlight">\(A_i\)</span> is the anharmonicity of mode <span class="math notranslate nohighlight">\(i\)</span></p>
+<p>From the above, we have found that the cross-Kerr interaction between these two modes is of about 670 kHz.</p>
+<p>This should correspond to <span class="math notranslate nohighlight">\(2\sqrt{A_0A_1}\)</span> where <span class="math notranslate nohighlight">\(A_i\)</span> is the anharmonicity of mode <span class="math notranslate nohighlight">\(i\)</span>. Let’s check that:</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[31]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
 <span></span><span class="n">A</span> <span class="o">=</span> <span class="n">cir</span><span class="o">.</span><span class="n">anharmonicities</span><span class="p">()</span>
-<span class="mi">2</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">A</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">*</span><span class="n">A</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%.2f</span><span class="s2"> kHz&quot;</span><span class="o">%</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">A</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">*</span><span class="n">A</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span><span class="o">/</span><span class="mf">1e3</span><span class="p">))</span>
 </pre></div>
 </div>
 </div>
 <div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
-</pre></div>
+<div class="prompt empty docutils container">
 </div>
-<div class="output_area highlight-none notranslate"><div class="highlight"><pre>
-<span></span>668055.8212288043
-</pre></div>
-</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+668.06 kHz
+</pre></div></div>
 </div>
 </div>
 <div class="section" id="Loss-rates">
 <h3>Loss rates<a class="headerlink" href="#Loss-rates" title="Permalink to this headline">¶</a></h3>
 <p>In the studied circuit, the only resistor is located in the resonator. In this regime of large frequency, detuning, we would thus expect the resonator to be more lossy than the transmon.</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[32]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -563,7 +563,7 @@ div.rendered_html tbody tr:hover {
 </div>
 </div>
 <div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[32]:
 </pre></div>
 </div>
 <div class="output_area highlight-none notranslate"><div class="highlight"><pre>
@@ -572,21 +572,30 @@ div.rendered_html tbody tr:hover {
 </div>
 </div>
 </div>
-<div class="section" id="T_1">
-<h3>T_1<a class="headerlink" href="#T_1" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="T_1-times">
+<h3><span class="math notranslate nohighlight">\(T_1\)</span> times<a class="headerlink" href="#T_1-times" title="Permalink to this headline">¶</a></h3>
 <p>When converting these rates to <span class="math notranslate nohighlight">\(T_1\)</span> times, one should not forget the <span class="math notranslate nohighlight">\(2\pi\)</span> in the conversion</p>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[33]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
 <span></span><span class="n">T_1</span> <span class="o">=</span> <span class="mi">1</span><span class="o">/</span><span class="n">cir</span><span class="o">.</span><span class="n">loss_rates</span><span class="p">()</span><span class="o">/</span><span class="mi">2</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">T_1</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
-<p>All these relevant parameters can be computed using a single function</p>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+[2.02473701e-07 8.28681681e-05]
+</pre></div></div>
+</div>
+<p>All these relevant parameters (frequency, dissipation, anharmonicity and Kerr parameters) can be computed using a single function</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[34]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -595,7 +604,7 @@ div.rendered_html tbody tr:hover {
 </div>
 </div>
 <div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[34]:
 </pre></div>
 </div>
 <div class="output_area highlight-none notranslate"><div class="highlight"><pre>
@@ -607,9 +616,9 @@ div.rendered_html tbody tr:hover {
 </pre></div>
 </div>
 </div>
-<p>And using the option <code class="docutils literal notranslate"><span class="pre">pretty_print</span> <span class="pre">=</span> <span class="pre">True</span></code> a more readable summary can be printed</p>
+<p>Using the option <code class="docutils literal notranslate"><span class="pre">pretty_print</span> <span class="pre">=</span> <span class="pre">True</span></code> a more readable summary can be printed</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[35]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -642,14 +651,17 @@ Kerr coefficients
 <h3>Generating a Hamiltonian<a class="headerlink" href="#Generating-a-Hamiltonian" title="Permalink to this headline">¶</a></h3>
 <p>The Hamiltonian of the circuit, with the non-linearity of the Josephson junctions Taylor-expanded, is given by</p>
 <p><span class="math notranslate nohighlight">\(\hat{H} = \sum_{m\in\text{modes}} hf_m\hat{a}_m^\dagger\hat{a}_m +\sum_j\sum_{2n\le\text{taylor}}E_j\frac{(-1)^{n+1}}{(2n)!}\left(\frac{\phi_{zpf,m,j}}{\phi_0}(\hat{a}_m^\dagger+\hat{a}_m)\right)^{2n}\)</span></p>
-<p>And in its construction, we have the freedom to choose the set of <code class="docutils literal notranslate"><span class="pre">modes</span></code> to include, the order of the Taylor expansion of the junction potential, and the number of excitations of each mode to consider.</p>
+<p>And in its construction, we have the freedom to choose the set of <code class="docutils literal notranslate"><span class="pre">modes</span></code> to include, the order of the Taylor expansion of the junction potential <code class="docutils literal notranslate"><span class="pre">taylor</span></code>, and the number of excitations of each mode to consider.</p>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[36]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
 <span></span><span class="c1"># Compute hamiltonian (for h=1, so all energies are expressed in frequency units, not angular)</span>
-<span class="n">H</span> <span class="o">=</span> <span class="n">cir</span><span class="o">.</span><span class="n">hamiltonian</span><span class="p">(</span><span class="n">modes</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">],</span><span class="n">taylor</span> <span class="o">=</span> <span class="mi">4</span><span class="p">,</span><span class="n">excitations</span> <span class="o">=</span> <span class="p">[</span><span class="mi">10</span><span class="p">,</span><span class="mi">10</span><span class="p">])</span>
+<span class="n">H</span> <span class="o">=</span> <span class="n">cir</span><span class="o">.</span><span class="n">hamiltonian</span><span class="p">(</span>
+    <span class="n">modes</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">],</span><span class="c1"># Include modes 0 and 1</span>
+    <span class="n">taylor</span> <span class="o">=</span> <span class="mi">4</span><span class="p">,</span><span class="c1"># Taylor the Josephson potential to the power 4</span>
+    <span class="n">excitations</span> <span class="o">=</span> <span class="p">[</span><span class="mi">8</span><span class="p">,</span><span class="mi">10</span><span class="p">])</span><span class="c1"># Consider 8 excitations in mode 0, 10 for mode 1</span>
 
 <span class="c1"># QuTiP method which return the eigenergies of the system</span>
 <span class="n">ee</span> <span class="o">=</span> <span class="n">H</span><span class="o">.</span><span class="n">eigenenergies</span><span class="p">()</span>
@@ -658,69 +670,66 @@ Kerr coefficients
 </div>
 <p>The first transition of the resonator is</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[13]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[37]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">ee</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">-</span><span class="n">ee</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+<span></span><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%.3f</span><span class="s2"> GHz&quot;</span><span class="o">%</span><span class="p">((</span><span class="n">ee</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">-</span><span class="n">ee</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">/</span><span class="mf">1e9</span><span class="p">))</span>
 </pre></div>
 </div>
 </div>
 <div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[13]:
-</pre></div>
+<div class="prompt empty docutils container">
 </div>
-<div class="output_area highlight-none notranslate"><div class="highlight"><pre>
-<span></span>5006408876.608672
-</pre></div>
-</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+5.006 GHz
+</pre></div></div>
 </div>
 <p>and of the transmon</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[14]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[38]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">ee</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">-</span><span class="n">ee</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+<span></span><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%.3f</span><span class="s2"> GHz&quot;</span><span class="o">%</span><span class="p">((</span><span class="n">ee</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">-</span><span class="n">ee</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">/</span><span class="mf">1e9</span><span class="p">))</span>
 </pre></div>
 </div>
 </div>
 <div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[14]:
-</pre></div>
+<div class="prompt empty docutils container">
 </div>
-<div class="output_area highlight-none notranslate"><div class="highlight"><pre>
-<span></span>5393689685.854876
-</pre></div>
-</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+5.394 GHz
+</pre></div></div>
 </div>
 <p>Notice the difference, especially for the transmon, with the corresponding normal-mode frequency calculated above. This is a consequence of the zero-point fluctuations entering the junction and changing the effective transition frequency.</p>
-<p>Following first-order perturbation frequency, the shift in transition frequency can be estimated from the anharmonicity <span class="math notranslate nohighlight">\(A_1\)</span> and cross-kerr coupling <span class="math notranslate nohighlight">\(\chi_{0,1}\)</span> and should be given by <span class="math notranslate nohighlight">\(-A_1-\chi_{0,1}/2\)</span>. We see below that we get fairly close (7 MHz) from the value obtained from the hamiltonian diagonalization.</p>
+<p>Following first-order perturbation, the shift in transition frequency can be estimated from the anharmonicity <span class="math notranslate nohighlight">\(A_1\)</span> and cross-kerr coupling <span class="math notranslate nohighlight">\(\chi_{0,1}\)</span> and should be given by <span class="math notranslate nohighlight">\(-A_1-\chi_{0,1}/2\)</span>. We see below that we get fairly close (7 MHz) from the value obtained from the hamiltonian diagonalization.</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[15]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[39]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
 <span></span><span class="n">f</span><span class="p">,</span><span class="n">k</span><span class="p">,</span><span class="n">A</span><span class="p">,</span><span class="n">K</span> <span class="o">=</span> <span class="n">cir</span><span class="o">.</span><span class="n">f_k_A_chi</span><span class="p">()</span>
-<span class="n">f</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">-</span><span class="n">A</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">-</span><span class="n">K</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span><span class="o">/</span><span class="mi">2</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%.3f</span><span class="s2"> GHz&quot;</span><span class="o">%</span><span class="p">((</span><span class="n">f</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">-</span><span class="n">A</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">-</span><span class="n">K</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span><span class="o">/</span><span class="mf">1e9</span><span class="p">))</span>
 </pre></div>
 </div>
 </div>
 <div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[15]:
-</pre></div>
+<div class="prompt empty docutils container">
 </div>
-<div class="output_area highlight-none notranslate"><div class="highlight"><pre>
-<span></span>5408956281.581059
-</pre></div>
-</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+5.409 GHz
+</pre></div></div>
 </div>
 </div>
 <div class="section" id="Open-system-dynamics">
 <h3>Open-system dynamics<a class="headerlink" href="#Open-system-dynamics" title="Permalink to this headline">¶</a></h3>
 <p>A more elaborate use of QuTiP would be to compute the dynamics (for example with qutip.mesolve). The Hamiltonian and collapse operators to use are</p>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[16]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[40]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -743,7 +752,7 @@ Kerr coefficients
 <p>The most computationally expensive part of the analysis is performed upon initializing the Network. To avoid doing this, we have the option to enter a symbolic value for a component.</p>
 <p>We will only provide a label <code class="docutils literal notranslate"><span class="pre">L_J</span></code> for the junction here, and its value should be passed as a keyword argument in subsequent function calls, for example <code class="docutils literal notranslate"><span class="pre">L_J=1e-9</span></code>.</p>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[17]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[41]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -758,8 +767,9 @@ Kerr coefficients
 </pre></div>
 </div>
 </div>
+<p>The implemented circuit, overlayed with the nodes, is:</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[18]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[42]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -769,16 +779,16 @@ Kerr coefficients
 </div>
 </div>
 <div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[18]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[42]:
 </pre></div>
 </div>
 <div class="output_area docutils container">
-<img alt="../_images/tutorials_transmon_LC_programmatically_46_0.png" src="../_images/tutorials_transmon_LC_programmatically_46_0.png" />
+<img alt="../_images/tutorials_transmon_LC_programmatically_47_0.png" src="../_images/tutorials_transmon_LC_programmatically_47_0.png" />
 </div>
 </div>
 <p>Since the junction was created without a value, we now have to specify it as a keyword argument</p>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[19]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[43]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -787,23 +797,23 @@ Kerr coefficients
 </div>
 </div>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[20]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[44]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">L_J</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mf">8e-9</span><span class="p">,</span><span class="mf">12e-9</span><span class="p">,</span><span class="mi">1001</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">L_J</span><span class="o">*</span><span class="mf">1e9</span><span class="p">,[</span><span class="n">cir</span><span class="o">.</span><span class="n">eigenfrequencies</span><span class="p">(</span><span class="n">L_J</span> <span class="o">=</span> <span class="n">x</span><span class="p">)</span><span class="o">/</span><span class="mf">1e9</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">L_J</span><span class="p">])</span>
+<span></span><span class="c1"># array of values for the josephson inductance</span>
+<span class="n">L_J</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mf">8e-9</span><span class="p">,</span><span class="mf">12e-9</span><span class="p">,</span><span class="mi">1001</span><span class="p">)</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span>
+    <span class="n">L_J</span><span class="o">*</span><span class="mf">1e9</span><span class="p">,</span><span class="c1"># xaxis will be the inductance in units of nano-Henry</span>
+    <span class="p">[</span><span class="n">cir</span><span class="o">.</span><span class="n">eigenfrequencies</span><span class="p">(</span><span class="n">L_J</span> <span class="o">=</span> <span class="n">x</span><span class="p">)</span><span class="o">/</span><span class="mf">1e9</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">L_J</span><span class="p">])</span> <span class="c1"># yaxis an array of eigenfrequencies</span>
+
+<span class="c1"># Add plot labels</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">&#39;L_J (nH)&#39;</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s1">&#39;Normal mode frequency (GHz)&#39;</span><span class="p">)</span>
-</pre></div>
-</div>
-</div>
-<div class="nboutput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[20]:
-</pre></div>
-</div>
-<div class="output_area highlight-none notranslate"><div class="highlight"><pre>
-<span></span>Text(0, 0.5, &#39;Normal mode frequency (GHz)&#39;)
+
+<span class="c1"># show the figure</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </pre></div>
 </div>
 </div>
@@ -811,7 +821,7 @@ Kerr coefficients
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../_images/tutorials_transmon_LC_programmatically_49_1.png" src="../_images/tutorials_transmon_LC_programmatically_49_1.png" />
+<img alt="../_images/tutorials_transmon_LC_programmatically_50_0.png" src="../_images/tutorials_transmon_LC_programmatically_50_0.png" />
 </div>
 </div>
 </div>
