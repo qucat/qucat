@@ -175,8 +175,3 @@ def to_string(unit,label,value, use_unicode=True, maximum_info = False):
         if unit is not None:
             s+=unit
     return s
-
-if __name__ == "__main__":
-    print(get_float_part(1.123e-13,-15,False))
-    print(get_float_part(1.123e-14,-15,False))
-    print(get_float_part(1.123e-15,-15,False))

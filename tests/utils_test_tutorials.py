@@ -20,13 +20,17 @@ def parse_cell(code):
                     valid_lines += '    from qucat import GUI\n'
                     valid_lines += '    return GUI(*args,edit=False,**kwargs)\n'
                 valid_lines += line+'\n'
-    print(valid_lines)
+
+        valid_lines = valid_lines.replace('qucat.','').replace('from qucat ','from core ')
     return valid_lines
 
 
 
 def run_notebook(notebook_name):
-    tutorials_folder = join(dirname(dirname(__file__)),'docs','source','tutorials')
+    import sys
+    import os
+    sys.path.append(os.path.join(os.path.join(os.path.dirname(os.path.dirname(__file__)),'src')))
+    tutorials_folder = join(dirname(dirname(__file__)),'docs_src','source','tutorials')
     nb = nbformat.read(join(tutorials_folder,notebook_name), 4)
     sys.stdout = open(devnull, "w")
     sys.stderr = open(devnull, "w")

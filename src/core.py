@@ -8,16 +8,16 @@ from numbers import Number
 from math import floor, factorial
 import os
 from subprocess import run
-from qucat._constants import *
+from _constants import *
 import inspect
-from qucat._utility import pretty_value,\
+from _utility import pretty_value,\
         shift,\
         to_string,\
         safely_evaluate,\
         vectorize
 import matplotlib.pyplot as plt
 import time
-from qucat.plotting_settings import plotting_parameters_show,plotting_parameters_normal_modes
+from plotting_settings import plotting_parameters_show,plotting_parameters_normal_modes
 PROFILING = False
 
 def timeit(method):
@@ -2454,31 +2454,3 @@ class Admittance(Component):
 
     def _admittance(self):
         return self.Y
-
-# @timeit
-def main():
-    # Cj = 100e-15
-    # Lj = 10e-9
-    # junction = J(0,1,'Lj')
-    # circuit = Network([
-    #     C(0,1,Cj),
-    #     junction
-    #     ])
-    # circuit.f_k_A_chi(Lj=1)
-    # junction.zpf(mode=0,quantity = 'flux')
-    # H = circuit.hamiltonian(modes = [0],taylor = 4,excitations = [50])
-    # print(H)
-    circuit = GUI(filename = './src/test.txt',edit=False,plot=False)
-    # circuit.f_k_A_chi()
-    # print(circuit.resistors[0].phasor(0,'voltage'))
-    circuit.show_normal_mode(0,quantity='current')
-    # circuit.hamiltonian(L_J = 1e-9,modes=[0],excitations=[5],return_ops=True,taylor=4)
-    # circuit.eigenfrequencies(L_J = np.linspace(1e-9,2e-9,4))
-    # circuit.f_k_A_chi(L_J = np.linspace(1e-9,2e-9,4))
-    # print(circuit.Y)
-    # print(sp.together(circuit.Y))
-    # print(circuit.eigenfrequencies())
-    # circuit.show_normal_mode(2)
-
-if __name__ == '__main__':
-    main()

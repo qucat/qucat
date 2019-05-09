@@ -1,9 +1,11 @@
+import sys
+import os
+sys.path.append(os.path.join(os.path.join(os.path.dirname(os.path.dirname(__file__)),'src')))
 import unittest
-import qucat.core as core
+import core
 from math import isclose
 import numpy as np
 from scipy.constants import e, pi, h, hbar
-import os
 
 # Run plt.ion() to avoid hanging on plt.show() calls
 import matplotlib.pyplot as plt
@@ -257,7 +259,7 @@ class TestGraphics(TestCaseAppended):
             circuit.show_normal_mode()
         
     def test_generate_graphics(self):
-        import qucat._generate_graphics
+        import _generate_graphics
     
     def test_show_transmon_RLC(self):
         cir=self.open_gui_file('show_normal_mode_transmon_RLC_Lj_as_parameter.txt')

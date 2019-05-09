@@ -3686,4 +3686,3 @@ class GuiWindow(ttk.Frame):
 
 if __name__ == '__main__':
     GuiWindow(sys.argv[1])
-    # GuiWindow('test.txt',_verbose=True)
