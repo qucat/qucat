@@ -1,10 +1,12 @@
 .. qucat documentation
 
 
-qucat
+QUCAT
 =====================================
 
-TODO: write a general introduction to the documentation, add a picture.
+.. image:: ../artwork/logo.png
+   :width: 150
+QUantum Circuit Analyzer Tool
 
 .. toctree::
     :maxdepth: 3
