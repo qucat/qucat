@@ -161,16 +161,28 @@
 <span class="kn">from</span> <span class="nn">math</span> <span class="k">import</span> <span class="n">floor</span><span class="p">,</span> <span class="n">factorial</span>
 <span class="kn">import</span> <span class="nn">os</span>
 <span class="kn">from</span> <span class="nn">subprocess</span> <span class="k">import</span> <span class="n">run</span>
-<span class="kn">from</span> <span class="nn">qucat._constants</span> <span class="k">import</span> <span class="o">*</span>
+<span class="k">try</span><span class="p">:</span>
+    
+    <span class="kn">from</span> <span class="nn">._constants</span> <span class="k">import</span> <span class="o">*</span>
+    <span class="kn">from</span> <span class="nn">._utility</span> <span class="k">import</span> <span class="n">pretty_value</span><span class="p">,</span>\
+            <span class="n">shift</span><span class="p">,</span>\
+            <span class="n">to_string</span><span class="p">,</span>\
+            <span class="n">safely_evaluate</span><span class="p">,</span>\
+            <span class="n">vectorize</span>
+    <span class="kn">from</span> <span class="nn">.plotting_settings</span> <span class="k">import</span> <span class="n">plotting_parameters_show</span><span class="p">,</span><span class="n">plotting_parameters_normal_modes</span>
+<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+    <span class="c1"># When running from source without pip installation</span>
+    <span class="kn">from</span> <span class="nn">_constants</span> <span class="k">import</span> <span class="o">*</span>
+    <span class="kn">from</span> <span class="nn">_utility</span> <span class="k">import</span> <span class="n">pretty_value</span><span class="p">,</span>\
+            <span class="n">shift</span><span class="p">,</span>\
+            <span class="n">to_string</span><span class="p">,</span>\
+            <span class="n">safely_evaluate</span><span class="p">,</span>\
+            <span class="n">vectorize</span>
+    <span class="kn">from</span> <span class="nn">plotting_settings</span> <span class="k">import</span> <span class="n">plotting_parameters_show</span><span class="p">,</span><span class="n">plotting_parameters_normal_modes</span>
+
 <span class="kn">import</span> <span class="nn">inspect</span>
-<span class="kn">from</span> <span class="nn">qucat._utility</span> <span class="k">import</span> <span class="n">pretty_value</span><span class="p">,</span>\
-        <span class="n">shift</span><span class="p">,</span>\
-        <span class="n">to_string</span><span class="p">,</span>\
-        <span class="n">safely_evaluate</span><span class="p">,</span>\
-        <span class="n">vectorize</span>
 <span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
 <span class="kn">import</span> <span class="nn">time</span>
-<span class="kn">from</span> <span class="nn">qucat.plotting_settings</span> <span class="k">import</span> <span class="n">plotting_parameters_show</span><span class="p">,</span><span class="n">plotting_parameters_normal_modes</span>
 <span class="n">PROFILING</span> <span class="o">=</span> <span class="kc">False</span>
 
 <span class="k">def</span> <span class="nf">timeit</span><span class="p">(</span><span class="n">method</span><span class="p">):</span>
@@ -326,7 +338,7 @@
         <span class="n">order</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">w_cpx</span><span class="p">))</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">w_cpx</span> <span class="o">=</span> <span class="n">w_cpx</span><span class="p">[</span><span class="n">order</span><span class="p">]</span>
 
-    <span class="k">def</span> <span class="nf">_anharmonicities_per_junction</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pretty_print</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_anharmonicities_per_junction</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_set_w_cpx</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
         <span class="k">return</span> <span class="p">[</span><span class="n">j</span><span class="o">.</span><span class="n">_anharmonicity</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">w_cpx</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">junctions</span><span class="p">]</span>
 
@@ -1082,13 +1094,13 @@
 
         <span class="k">if</span> <span class="n">add_legend</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">quantity</span> <span class="o">==</span> <span class="s1">&#39;current&#39;</span><span class="p">:</span>
-                <span class="n">value_text</span><span class="o">=</span> <span class="s2">&quot;|I|e&quot;</span>
+                <span class="n">value_text</span><span class="o">=</span> <span class="s2">&quot;|I|&quot;</span>
             <span class="k">elif</span> <span class="n">quantity</span> <span class="o">==</span> <span class="s1">&#39;voltage&#39;</span><span class="p">:</span>
                 <span class="n">value_text</span><span class="o">=</span> <span class="sa">u</span><span class="s2">&quot;|V|&quot;</span>
             <span class="k">if</span> <span class="n">quantity</span> <span class="o">==</span> <span class="s1">&#39;flux&#39;</span><span class="p">:</span>
-                <span class="n">value_text</span><span class="o">=</span> <span class="sa">u</span><span class="s2">&quot;|</span><span class="se">\u03A6</span><span class="s2">|e&quot;</span>
+                <span class="n">value_text</span><span class="o">=</span> <span class="sa">u</span><span class="s2">&quot;|</span><span class="se">\u03A6</span><span class="s2">|&quot;</span>
             <span class="k">elif</span> <span class="n">quantity</span> <span class="o">==</span> <span class="s1">&#39;charge&#39;</span><span class="p">:</span>
-                <span class="n">value_text</span><span class="o">=</span> <span class="s2">&quot;|Q|e&quot;</span>
+                <span class="n">value_text</span><span class="o">=</span> <span class="s2">&quot;|Q|&quot;</span>
             <span class="n">value_text</span> <span class="o">+=</span> <span class="sa">u</span><span class="s2">&quot;exp(i</span><span class="se">\u03B8</span><span class="s2">)&quot;</span>
         
         <span class="n">x_legend</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">get_xlim</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span><span class="o">+</span><span class="mf">0.4</span>
@@ -2607,34 +2619,6 @@
 
     <span class="k">def</span> <span class="nf">_admittance</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">Y</span>
-
-<span class="c1"># @timeit</span>
-<span class="k">def</span> <span class="nf">main</span><span class="p">():</span>
-    <span class="n">Cj</span> <span class="o">=</span> <span class="mf">100e-15</span>
-    <span class="c1"># Lj = 10e-9</span>
-    <span class="n">junction</span> <span class="o">=</span> <span class="n">J</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="s1">&#39;Lj&#39;</span><span class="p">)</span>
-    <span class="n">circuit</span> <span class="o">=</span> <span class="n">Network</span><span class="p">([</span>
-        <span class="n">C</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="n">Cj</span><span class="p">),</span>
-        <span class="n">junction</span>
-        <span class="p">])</span>
-    <span class="n">circuit</span><span class="o">.</span><span class="n">f_k_A_chi</span><span class="p">(</span><span class="n">Lj</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
-    <span class="c1"># junction.zpf(mode=0,quantity = &#39;flux&#39;)</span>
-    <span class="c1"># H = circuit.hamiltonian(modes = [0],taylor = 4,excitations = [50])</span>
-    <span class="c1"># print(H)</span>
-    <span class="c1"># circuit = GUI(filename = &#39;./src/test.txt&#39;,edit=False,plot=False)</span>
-    <span class="c1"># circuit.f_k_A_chi()</span>
-    <span class="c1"># print(circuit.resistors[0].phasor(0,&#39;voltage&#39;))</span>
-    <span class="c1"># circuit.show_normal_mode(0,quantity=&#39;voltage&#39;)</span>
-    <span class="c1"># circuit.hamiltonian(L_J = 1e-9,modes=[0],excitations=[5],return_ops=True,taylor=4)</span>
-    <span class="c1"># circuit.eigenfrequencies(L_J = np.linspace(1e-9,2e-9,4))</span>
-    <span class="c1"># circuit.f_k_A_chi(L_J = np.linspace(1e-9,2e-9,4))</span>
-    <span class="c1"># print(circuit.Y)</span>
-    <span class="c1"># print(sp.together(circuit.Y))</span>
-    <span class="c1"># print(circuit.eigenfrequencies())</span>
-    <span class="c1"># circuit.show_normal_mode(2)</span>
-
-<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
-    <span class="n">main</span><span class="p">()</span>
 </pre></div>
 
            </div>

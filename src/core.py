@@ -8,16 +8,28 @@ from numbers import Number
 from math import floor, factorial
 import os
 from subprocess import run
-from _constants import *
 import inspect
-from _utility import pretty_value,\
-        shift,\
-        to_string,\
-        safely_evaluate,\
-        vectorize
 import matplotlib.pyplot as plt
 import time
-from plotting_settings import plotting_parameters_show,plotting_parameters_normal_modes
+try:
+    
+    from ._constants import *
+    from ._utility import pretty_value,\
+            shift,\
+            to_string,\
+            safely_evaluate,\
+            vectorize
+    from .plotting_settings import plotting_parameters_show,plotting_parameters_normal_modes
+except ImportError:
+    # When running from source without pip installation
+    from _constants import *
+    from _utility import pretty_value,\
+            shift,\
+            to_string,\
+            safely_evaluate,\
+            vectorize
+    from plotting_settings import plotting_parameters_show,plotting_parameters_normal_modes
+
 PROFILING = False
 
 def timeit(method):

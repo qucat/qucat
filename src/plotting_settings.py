@@ -60,6 +60,7 @@ plotting_parameters_show = {
 #################################
 
 pp = deepcopy(plotting_parameters_show)
+pp["y_fig_margin"]= 0.7
 
 scale = 1.5
 pp["figsize_scaling"] = scale
