@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Coupled Transmon / LC-oscillator (using the GUI) &mdash; qucat  documentation</title>
+  <title>Using qucap with the graphical circuit editor &mdash; qucat  documentation</title>
   
 
   
@@ -38,8 +38,8 @@
     <link rel="author" title="About these documents" href="../about.html" />
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Coupled Transmon / LC-oscillator (without the GUI)" href="transmon_LC_programmatically.html" />
-    <link rel="prev" title="tutorials" href="tutorials.html" /> 
+    <link rel="next" title="Using qucap programmatically" href="transmon_LC_programmatically.html" />
+    <link rel="prev" title="Tutorials" href="tutorials.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -89,14 +89,14 @@
 <li class="toctree-l1"><a class="reference internal" href="../citing.html">Citing this project</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="tutorials.html">Tutorials</a><ul class="current">
-<li class="toctree-l2 current"><a class="current reference internal" href="#">Coupled Transmon / LC-oscillator (using the GUI)</a><ul>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Using qucap with the graphical circuit editor</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#Construct-the-circuit">Construct the circuit</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#Circuit-parameters">Circuit parameters</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#Visualizing-normal-modes">Visualizing normal modes</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#Further-analysis-in-QuTiP">Further analysis in QuTiP</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="transmon_LC_programmatically.html">Coupled Transmon / LC-oscillator (without the GUI)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="transmon_LC_programmatically.html">Using qucap programmatically</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../API/API.html">Documentation</a></li>
@@ -145,9 +145,9 @@
     
       <li><a href="../index.html">Docs</a> &raquo;</li>
         
-          <li><a href="tutorials.html">tutorials</a> &raquo;</li>
+          <li><a href="tutorials.html">Tutorials</a> &raquo;</li>
         
-      <li>Coupled Transmon / LC-oscillator (using the GUI)</li>
+      <li>Using qucap with the graphical circuit editor</li>
     
     
       <li class="wy-breadcrumbs-aside">
@@ -388,8 +388,9 @@ div.rendered_html tbody tr:hover {
     text-align: unset;
 }
 </style>
-<div class="section" id="Coupled-Transmon-/-LC-oscillator-(using-the-GUI)">
-<h1>Coupled Transmon / LC-oscillator (using the GUI)<a class="headerlink" href="#Coupled-Transmon-/-LC-oscillator-(using-the-GUI)" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="Using-qucap-with-the-graphical-circuit-editor">
+<h1>Using qucap with the graphical circuit editor<a class="headerlink" href="#Using-qucap-with-the-graphical-circuit-editor" title="Permalink to this headline">¶</a></h1>
+<p>In this example we study a typical circuit QED system consisting of a transmon qubit coupled to a resonator.</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[16]:
 </pre></div>
@@ -446,7 +447,7 @@ div.rendered_html tbody tr:hover {
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../_images/tutorials_transmon_LC_GUI_4_0.png" src="../_images/tutorials_transmon_LC_GUI_4_0.png" />
+<img alt="../_images/tutorials_transmon_LC_GUI_5_0.png" src="../_images/tutorials_transmon_LC_GUI_5_0.png" />
 </div>
 </div>
 <div class="nboutput nblast docutils container">
@@ -513,7 +514,7 @@ R 0 2 1 MOhm
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../_images/tutorials_transmon_LC_GUI_8_0.png" src="../_images/tutorials_transmon_LC_GUI_8_0.png" />
+<img alt="../_images/tutorials_transmon_LC_GUI_9_0.png" src="../_images/tutorials_transmon_LC_GUI_9_0.png" />
 </div>
 </div>
 <p>Alternatively, we can obtain all these parameters at once for a given value of the junction inductance</p>
@@ -590,14 +591,14 @@ Kerr coefficients
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../_images/tutorials_transmon_LC_GUI_15_0.png" src="../_images/tutorials_transmon_LC_GUI_15_0.png" />
+<img alt="../_images/tutorials_transmon_LC_GUI_16_0.png" src="../_images/tutorials_transmon_LC_GUI_16_0.png" />
 </div>
 </div>
 <div class="nboutput nblast docutils container">
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../_images/tutorials_transmon_LC_GUI_15_1.png" src="../_images/tutorials_transmon_LC_GUI_15_1.png" />
+<img alt="../_images/tutorials_transmon_LC_GUI_16_1.png" src="../_images/tutorials_transmon_LC_GUI_16_1.png" />
 </div>
 </div>
 <p>We see above that the symmetry on each side of the coupling capacitor is changing between the modes, the above is called the anti-symmetric mode, with a voltage build-up on either side of the coupling capacitor leading to a current going through it. Mode 1 is the anti-symmetric mode.</p>
@@ -746,7 +747,7 @@ The lower frequency (anti-symmetric)  mode has a frequency:<div class="nbinput d
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../_images/tutorials_transmon_LC_GUI_30_0.png" src="../_images/tutorials_transmon_LC_GUI_30_0.png" />
+<img alt="../_images/tutorials_transmon_LC_GUI_31_0.png" src="../_images/tutorials_transmon_LC_GUI_31_0.png" />
 </div>
 </div>
 <p>Note that the splitting does not occur at 10nH anymore. This is because the Transmon “bare” frequency is shifted by the quantum fluctuations through the junctions.</p>
@@ -784,10 +785,10 @@ Classical calculation -- normal-mode splitting is 49.58 MHz
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="transmon_LC_programmatically.html" class="btn btn-neutral float-right" title="Coupled Transmon / LC-oscillator (without the GUI)" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="transmon_LC_programmatically.html" class="btn btn-neutral float-right" title="Using qucap programmatically" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="tutorials.html" class="btn btn-neutral float-left" title="tutorials" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="tutorials.html" class="btn btn-neutral float-left" title="Tutorials" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   

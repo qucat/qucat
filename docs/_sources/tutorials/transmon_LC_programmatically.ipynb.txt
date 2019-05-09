@@ -4,7 +4,7 @@
    "cell_type": "markdown",
    "metadata": {},
    "source": [
-    "# Coupled Transmon / LC-oscillator (without the GUI)"
+    "# Using qucap programmatically"
    ]
   },
   {
