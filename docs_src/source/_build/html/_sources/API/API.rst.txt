@@ -2,8 +2,7 @@
 API documentation
 *****************
 
-This chapter contains automatically generated API documentation, including a
-complete list of qucat public classes and functions.
+This chapter contains the documentation for all qucat public classes and functions.
 
 .. toctree::
    :maxdepth: 3

@@ -83,11 +83,11 @@
             
               <p class="caption"><span class="caption-text">Contents:</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../about.html">About</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../citing.html">Citing this project</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../tutorials/tutorials.html">Tutorials</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../API/API.html">Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../contact.html">Contact</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../report_a_bug.html">Report a bug</a></li>
 </ul>
 
             
@@ -646,7 +646,9 @@
 
 
 <div class="viewcode-block" id="Qcircuit.hamiltonian"><a class="viewcode-back" href="../API/circuit_functions/hamiltonian.html#core.Qcircuit.hamiltonian">[docs]</a>    <span class="k">def</span> <span class="nf">hamiltonian</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">modes</span><span class="o">=</span><span class="s1">&#39;all&#39;</span><span class="p">,</span> <span class="n">taylor</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">excitations</span><span class="o">=</span><span class="mi">6</span><span class="p">,</span> <span class="n">return_ops</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="sa">r</span><span class="sd">&#39;&#39;&#39;Returns the cuircuits Hamiltonian for further analysis with QuTiP</span>
+        <span class="sa">r</span><span class="sd">&#39;&#39;&#39;Returns the circuits Hamiltonian for further analysis with QuTiP.</span>
+<span class="sd">        The Hamiltonian is provided in units of frequency (not angular frequency), </span>
+<span class="sd">        such that :math:`h`=1.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -690,17 +692,27 @@
 <span class="sd">        The Hamiltonian of the circuit, with the non-linearity of the Josephson junctions</span>
 <span class="sd">        Taylor-expanded, is given by</span>
 
-<span class="sd">        :math:`\hat{H} = \sum_{m\in\text{modes}} hf_m\hat{a}_m^\dagger\hat{a}_m + \sum_j\sum_{2n\le\text{taylor}}E_j\frac{(-1)^{n+1}}{(2n)!}\left[\frac{\phi_{zpf,m,j}}{\phi_0}(\hat{a}_m^\dagger+\hat{a}_m)\right]^{2n}`,</span>
+<span class="sd">        :math:`\hat{H} = \sum_{m\in\text{modes}} \hbar \omega_m\hat{a}_m^\dagger\hat{a}_m + \sum_j\sum_{2n\le\text{taylor}}E_j\frac{(-1)^{n+1}}{(2n)!}\left[\frac{\phi_{zpf,m,j}}{\phi_0}(\hat{a}_m^\dagger+\hat{a}_m)\right]^{2n}`,</span>
 <span class="sd">        </span>
 <span class="sd">        where :math:`\hat{a}_m` is the annihilation operator of the m-th</span>
 <span class="sd">        normal mode of the circuit and :math:`f_m` is the frequency of </span>
 <span class="sd">        the m-th normal mode, :math:`E_j` is the Josephson energy of</span>
-<span class="sd">        the j-th junction, :math:`phi_0 = \hbar/2e` and</span>
+<span class="sd">        the j-th junction and :math:`\phi_0 = \hbar/2e`.</span>
+<span class="sd">            </span>
+<span class="sd">        The zero point fluctuations :math:`\phi_{zpf,m,j}` of mode </span>
+<span class="sd">        :math:`m` through junction :math:`j` is calculated </span>
+<span class="sd">        by multiplying the voltage transfer function between a reference junction</span>
+<span class="sd">        and the junction :math:`j` with the zero-point fluctuations</span>
+<span class="sd">        of the reference junction</span>
 
 <span class="sd">        :math:`\phi_{zpf,m} = \sqrt{\frac{\hbar}{\omega_mImY&#39;(\omega_m)}}`</span>
 
-<span class="sd">        is the zero-point fluctuations in flux if a mode through the junction, </span>
-<span class="sd">        with frequency :math:`\omega_m` and admittance to the rest of the circuit :math:`Y`.</span>
+<span class="sd">        where :math:`Y` is the admittance of</span>
+<span class="sd">        the circuit calculated at the nodes of the reference junction.</span>
+
+<span class="sd">        If the circuit has at least one resistor, the voltage transfer </span>
+<span class="sd">        functions will become complex, but we take the approximation</span>
+<span class="sd">        of high-quality factor modes by neglecting the imaginary part.</span>
 <span class="sd">        &#39;&#39;&#39;</span>
         <span class="kn">from</span> <span class="nn">qutip</span> <span class="k">import</span> <span class="n">destroy</span><span class="p">,</span> <span class="n">qeye</span><span class="p">,</span> <span class="n">tensor</span>
 
@@ -834,9 +846,9 @@
 <span class="sd">        Only works if the circuit was created using the GUI.</span>
 <span class="sd">        Plots a schematic of the circuit overlayed with </span>
 <span class="sd">        arrows representing the complex amplitude of a certain quantity </span>
-<span class="sd">        :math:`\hat{X}` which can be flux, current, charge or voltage.</span>
+<span class="sd">        :math:`X` which can be flux, current, charge or voltage.</span>
 
-<span class="sd">        More specifically, the complex amplitude of :math:`\hat{X}` if a </span>
+<span class="sd">        More specifically, the complex amplitude of :math:`X` if a </span>
 <span class="sd">        single-photon coherent state were populating a given mode ``mode``.</span>
 
 <span class="sd">        Current is shown in units of Ampere, voltage in Volts, </span>
@@ -2136,9 +2148,9 @@
 
 <span class="sd">        :math:`\phi_{zpf,m} = \sqrt{\frac{\hbar}{\omega_mImY&#39;(\omega_m)}}`</span>
 
-<span class="sd">        the zero-point fluctuations in flux of the mode </span>
-<span class="sd">        with frequency :math:`\omega_m` through the reference component with</span>
-<span class="sd">        admittance to the rest of the circuit :math:`Y`</span>
+<span class="sd">        the zero-point fluctuations in flux of mode :math:`m`</span>
+<span class="sd">        with frequency :math:`\omega_m` using the admittance of</span>
+<span class="sd">        the circuit calculated at the nodes of the reference junction</span>
 
 <span class="sd">        :math:`\phi_{zpf,m}` can be transformed to other quantities</span>
 <span class="sd">        </span>

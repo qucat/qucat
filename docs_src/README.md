@@ -1,2 +1,1 @@
-To generate the documentation, open a terminal and enter:
-make html
+To generate the documentation (on Windows), run make_html.bat

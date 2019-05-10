@@ -1,0 +1,1 @@
+This project is being developped by Mario Gely at the University of Delft, in the `Steele Lab <https://github.com/mgely/qucat>`_.

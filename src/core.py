@@ -493,7 +493,9 @@ class Qcircuit(object):
 
 
     def hamiltonian(self, modes='all', taylor=4, excitations=6, return_ops = False, **kwargs):
-        r'''Returns the cuircuits Hamiltonian for further analysis with QuTiP
+        r'''Returns the circuits Hamiltonian for further analysis with QuTiP.
+        The Hamiltonian is provided in units of frequency (not angular frequency), 
+        such that :math:`h`=1.
 
         Parameters
         ----------
@@ -537,17 +539,27 @@ class Qcircuit(object):
         The Hamiltonian of the circuit, with the non-linearity of the Josephson junctions
         Taylor-expanded, is given by
 
-        :math:`\hat{H} = \sum_{m\in\text{modes}} hf_m\hat{a}_m^\dagger\hat{a}_m + \sum_j\sum_{2n\le\text{taylor}}E_j\frac{(-1)^{n+1}}{(2n)!}\left[\frac{\phi_{zpf,m,j}}{\phi_0}(\hat{a}_m^\dagger+\hat{a}_m)\right]^{2n}`,
+        :math:`\hat{H} = \sum_{m\in\text{modes}} \hbar \omega_m\hat{a}_m^\dagger\hat{a}_m + \sum_j\sum_{2n\le\text{taylor}}E_j\frac{(-1)^{n+1}}{(2n)!}\left[\frac{\phi_{zpf,m,j}}{\phi_0}(\hat{a}_m^\dagger+\hat{a}_m)\right]^{2n}`,
         
         where :math:`\hat{a}_m` is the annihilation operator of the m-th
         normal mode of the circuit and :math:`f_m` is the frequency of 
         the m-th normal mode, :math:`E_j` is the Josephson energy of
-        the j-th junction, :math:`phi_0 = \hbar/2e` and
+        the j-th junction and :math:`\phi_0 = \hbar/2e`.
+            
+        The zero point fluctuations :math:`\phi_{zpf,m,j}` of mode 
+        :math:`m` through junction :math:`j` is calculated 
+        by multiplying the voltage transfer function between a reference junction
+        and the junction :math:`j` with the zero-point fluctuations
+        of the reference junction
 
         :math:`\phi_{zpf,m} = \sqrt{\frac{\hbar}{\omega_mImY'(\omega_m)}}`
 
-        is the zero-point fluctuations in flux if a mode through the junction, 
-        with frequency :math:`\omega_m` and admittance to the rest of the circuit :math:`Y`.
+        where :math:`Y` is the admittance of
+        the circuit calculated at the nodes of the reference junction.
+
+        If the circuit has at least one resistor, the voltage transfer 
+        functions will become complex, but we take the approximation
+        of high-quality factor modes by neglecting the imaginary part.
         '''
         from qutip import destroy, qeye, tensor
 
@@ -681,9 +693,9 @@ class Qcircuit(object):
         Only works if the circuit was created using the GUI.
         Plots a schematic of the circuit overlayed with 
         arrows representing the complex amplitude of a certain quantity 
-        :math:`\hat{X}` which can be flux, current, charge or voltage.
+        :math:`X` which can be flux, current, charge or voltage.
 
-        More specifically, the complex amplitude of :math:`\hat{X}` if a 
+        More specifically, the complex amplitude of :math:`X` if a 
         single-photon coherent state were populating a given mode ``mode``.
 
         Current is shown in units of Ampere, voltage in Volts, 
@@ -1983,9 +1995,9 @@ class Component(Circuit):
 
         :math:`\phi_{zpf,m} = \sqrt{\frac{\hbar}{\omega_mImY'(\omega_m)}}`
 
-        the zero-point fluctuations in flux of the mode 
-        with frequency :math:`\omega_m` through the reference component with
-        admittance to the rest of the circuit :math:`Y`
+        the zero-point fluctuations in flux of mode :math:`m`
+        with frequency :math:`\omega_m` using the admittance of
+        the circuit calculated at the nodes of the reference junction
 
         :math:`\phi_{zpf,m}` can be transformed to other quantities
         
