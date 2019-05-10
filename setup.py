@@ -1,16 +1,9 @@
 import setuptools
 from distutils.dir_util import remove_tree
 
-# Clean up previous build
-try:
-	remove_tree('build')
-except FileNotFoundError:
-	# First attempt at building
-	pass
-
 setuptools.setup(
     name="qucat",
-    version="0.4.1",
+    version="0.4.4",
     author="Mario Gely",
     author_email="mario.f.gely@gmail.com",
     description="QUantum Circuit Analysis Tool",
@@ -24,6 +17,7 @@ setuptools.setup(
         "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
     ],
+    python_requires='>3.0.0',
     include_package_data=True,
     package_data={'qucat': ['.graphics/*']},
 )

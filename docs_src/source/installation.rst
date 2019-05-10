@@ -2,6 +2,8 @@
 Installation
 *************
 
+**Important: QuCAT only supports python 3**
+
 Installing via pip
 ==================
 
