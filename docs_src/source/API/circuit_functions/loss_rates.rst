@@ -1,4 +1,4 @@
 Calculating loss rates
 ----------------------
 
-.. automethod:: core.Qcircuit.loss_rates
+.. automethod:: qucat.Qcircuit.loss_rates

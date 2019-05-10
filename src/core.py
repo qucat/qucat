@@ -495,7 +495,7 @@ class Qcircuit(object):
     def hamiltonian(self, modes='all', taylor=4, excitations=6, return_ops = False, **kwargs):
         r'''Returns the circuits Hamiltonian for further analysis with QuTiP.
         The Hamiltonian is provided in units of frequency (not angular frequency), 
-        such that :math:`h`=1.
+        such that :math:`h=1`.
 
         Parameters
         ----------

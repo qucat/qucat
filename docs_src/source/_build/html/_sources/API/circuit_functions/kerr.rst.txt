@@ -1,4 +1,4 @@
 Calculating Kerr parameters
 ---------------------------
 
-.. automethod:: core.Qcircuit.kerr
+.. automethod:: qucat.Qcircuit.kerr

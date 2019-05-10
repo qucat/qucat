@@ -1,7 +1,3 @@
-import sys
-from os.path import dirname, join
-sys.path.append(join(dirname(dirname(dirname(__file__))),'src'))
-
 # -*- coding: utf-8 -*-
 #
 # Configuration file for the Sphinx documentation builder.

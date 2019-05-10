@@ -3,6 +3,6 @@
 Capacitor
 =========
 
-.. autoclass:: core.C
+.. autoclass:: qucat.C
     :members:
     :inherited-members:

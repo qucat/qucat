@@ -1,4 +1,4 @@
 Visualizing normal-modes
 ------------------------
 
-.. automethod:: core.Qcircuit.show_normal_mode
+.. automethod:: qucat.Qcircuit.show_normal_mode

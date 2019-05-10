@@ -2,4 +2,4 @@
 Building a circuit programmatically
 ************************************
 
-.. autoclass:: core.Network
+.. autoclass:: qucat.Network

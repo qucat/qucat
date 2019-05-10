@@ -3,6 +3,6 @@
 Inductor
 =========
 
-.. autoclass:: core.L
+.. autoclass:: qucat.L
     :members:
     :inherited-members:

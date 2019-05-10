@@ -1,4 +1,4 @@
 Plotting the circuit
 --------------------
 
-.. automethod:: core.Qcircuit.show
+.. automethod:: qucat.Qcircuit.show

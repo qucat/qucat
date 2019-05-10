@@ -196,8 +196,8 @@
 <div class="section" id="josephson-junction">
 <span id="junction"></span><h1>Josephson junction<a class="headerlink" href="#josephson-junction" title="Permalink to this headline">¶</a></h1>
 <dl class="class">
-<dt id="core.J">
-<em class="property">class </em><code class="descclassname">core.</code><code class="descname">J</code><span class="sig-paren">(</span><em>node_minus</em>, <em>node_plus</em>, <em>*args</em>, <em>use_E=False</em>, <em>use_I=False</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/core.html#J"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#core.J" title="Permalink to this definition">¶</a></dt>
+<dt id="qucat.J">
+<em class="property">class </em><code class="descclassname">qucat.</code><code class="descname">J</code><span class="sig-paren">(</span><em>node_minus</em>, <em>node_plus</em>, <em>*args</em>, <em>use_E=False</em>, <em>use_I=False</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qucat/core.html#J"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#qucat.J" title="Permalink to this definition">¶</a></dt>
 <dd><p>A class representing an junction</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -231,8 +231,8 @@ than its Josephson inductance</li>
 </tbody>
 </table>
 <dl class="method">
-<dt id="core.J.anharmonicity">
-<code class="descname">anharmonicity</code><span class="sig-paren">(</span><em>mode</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/core.html#J.anharmonicity"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#core.J.anharmonicity" title="Permalink to this definition">¶</a></dt>
+<dt id="qucat.J.anharmonicity">
+<code class="descname">anharmonicity</code><span class="sig-paren">(</span><em>mode</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qucat/core.html#J.anharmonicity"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#qucat.J.anharmonicity" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns the contribution of this junction to the anharmonicity of a given normal mode.</p>
 <p>Returned in units of Hertz, not angular frequency.</p>
 <table class="docutils field-list" frame="void" rules="none">
@@ -270,8 +270,8 @@ by summing these contribution over all modes.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="core.J.zpf">
-<code class="descname">zpf</code><span class="sig-paren">(</span><em>mode</em>, <em>quantity</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#core.J.zpf" title="Permalink to this definition">¶</a></dt>
+<dt id="qucat.J.zpf">
+<code class="descname">zpf</code><span class="sig-paren">(</span><em>mode</em>, <em>quantity</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#qucat.J.zpf" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns contribution of a mode to the zero-point fluctuations of a quantity for this component.</p>
 <p>The quantity can be current current (in units of Ampere),
 voltage (in Volts),

@@ -1,4 +1,4 @@
 Generating QuTiP hamiltonian
 ----------------------------
 
-.. automethod:: core.Qcircuit.hamiltonian
+.. automethod:: qucat.Qcircuit.hamiltonian

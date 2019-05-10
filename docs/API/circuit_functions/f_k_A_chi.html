@@ -200,8 +200,8 @@
 <div class="section" id="calculating-eigenfrequencies-loss-rates-anharmonicities-and-kerr-parameters">
 <h1>Calculating eigenfrequencies, loss-rates, anharmonicities, and Kerr parameters<a class="headerlink" href="#calculating-eigenfrequencies-loss-rates-anharmonicities-and-kerr-parameters" title="Permalink to this headline">¶</a></h1>
 <dl class="method">
-<dt id="core.Qcircuit.f_k_A_chi">
-<code class="descclassname">Qcircuit.</code><code class="descname">f_k_A_chi</code><span class="sig-paren">(</span><em>pretty_print=False</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/core.html#Qcircuit.f_k_A_chi"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#core.Qcircuit.f_k_A_chi" title="Permalink to this definition">¶</a></dt>
+<dt id="qucat.Qcircuit.f_k_A_chi">
+<code class="descclassname">Qcircuit.</code><code class="descname">f_k_A_chi</code><span class="sig-paren">(</span><em>pretty_print=False</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qucat/core.html#Qcircuit.f_k_A_chi"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#qucat.Qcircuit.f_k_A_chi" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns the eigenfrequency, loss-rates, anharmonicity, and Kerr parameters of the circuit.</p>
 <p>Returns these quantities in the form <code class="docutils literal notranslate"><span class="pre">[[f_0,f_1,..],[k_0,k_1,..],[A_0,A_1,..],[[A_0,chi_01,..],[chi_10,A_1,..]..]]</span></code></p>
 <p>Each quantity is returned as a numpy arrays,
@@ -212,10 +212,10 @@ not in angular frequency.</p>
 <p>This method is equivalent to calling</p>
 <p><code class="docutils literal notranslate"><span class="pre">[_.eigenfrequencies(**kwargs),_.loss_rates(**kwargs),</span> <span class="pre">_.anharmonicities(**kwargs),_.kerr(**kwargs)]</span></code></p>
 <p>For more details, refer to the functions</p>
-<p><code class="xref py py-meth docutils literal notranslate"><span class="pre">qucat.Qcircuit.eigenfrequencies()</span></code></p>
-<p><code class="xref py py-meth docutils literal notranslate"><span class="pre">qucat.Qcircuit.loss_rates()</span></code></p>
-<p><code class="xref py py-meth docutils literal notranslate"><span class="pre">qucat.Qcircuit.anharmonicities()</span></code></p>
-<p><code class="xref py py-meth docutils literal notranslate"><span class="pre">qucat.Qcircuit.kerr()</span></code></p>
+<p><a class="reference internal" href="eigenfrequencies.html#qucat.Qcircuit.eigenfrequencies" title="qucat.Qcircuit.eigenfrequencies"><code class="xref py py-meth docutils literal notranslate"><span class="pre">qucat.Qcircuit.eigenfrequencies()</span></code></a></p>
+<p><a class="reference internal" href="loss_rates.html#qucat.Qcircuit.loss_rates" title="qucat.Qcircuit.loss_rates"><code class="xref py py-meth docutils literal notranslate"><span class="pre">qucat.Qcircuit.loss_rates()</span></code></a></p>
+<p><a class="reference internal" href="anharmonicities.html#qucat.Qcircuit.anharmonicities" title="qucat.Qcircuit.anharmonicities"><code class="xref py py-meth docutils literal notranslate"><span class="pre">qucat.Qcircuit.anharmonicities()</span></code></a></p>
+<p><a class="reference internal" href="kerr.html#qucat.Qcircuit.kerr" title="qucat.Qcircuit.kerr"><code class="xref py py-meth docutils literal notranslate"><span class="pre">qucat.Qcircuit.kerr()</span></code></a></p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
