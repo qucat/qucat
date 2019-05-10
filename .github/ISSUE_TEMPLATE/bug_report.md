@@ -7,4 +7,4 @@ assignees: ''
 
 ---
 
-Write here a detailed description of the bug, which could include: steps to reproduce the bug, the behavior you would have expected, screenshots and/or details about your python setup or OS.
+Write here a description of the bug. This could include: the code or steps to reproduce the bug, the behavior you would have expected and/or screenshots.
