@@ -247,7 +247,7 @@ ex: <code class="docutils literal notranslate"><span class="pre">L=1e-9</span></
 <p class="rubric">Notes</p>
 <p>The Hamiltonian of the circuit, with the non-linearity of the Josephson junctions
 Taylor-expanded, is given by</p>
-<p><span class="math notranslate nohighlight">\(\hat{H} = \sum_{m\in\text{modes}} \hbar \omega_m\hat{a}_m^\dagger\hat{a}_m + \sum_j\sum_{2n\le\text{taylor}}E_j\frac{(-1)^{n+1}}{(2n)!}\left[\frac{\phi_{zpf,m,j}}{\phi_0}(\hat{a}_m^\dagger+\hat{a}_m)\right]^{2n}\)</span>,</p>
+<p><span class="math notranslate nohighlight">\(\hat{H} = \sum_{m\in\text{modes}} \hbar \omega_m\hat{a}_m^\dagger\hat{a}_m + \sum_j\sum_{2n\le\text{taylor}}E_j\frac{(-1)^{n+1}}{(2n)!}\left[\frac{\phi_{\text{zpf,m,j}}}{\phi_0}(\hat{a}_m^\dagger+\hat{a}_m)\right]^{2n}\)</span>,</p>
 <p>where <span class="math notranslate nohighlight">\(\hat{a}_m\)</span> is the annihilation operator of the m-th
 normal mode of the circuit and <span class="math notranslate nohighlight">\(f_m\)</span> is the frequency of
 the m-th normal mode, <span class="math notranslate nohighlight">\(E_j\)</span> is the Josephson energy of
@@ -257,7 +257,7 @@ the j-th junction and <span class="math notranslate nohighlight">\(\phi_0 = \hba
 by multiplying the voltage transfer function between a reference junction
 and the junction <span class="math notranslate nohighlight">\(j\)</span> with the zero-point fluctuations
 of the reference junction</p>
-<p><span class="math notranslate nohighlight">\(\phi_{zpf,m} = \sqrt{\frac{\hbar}{\omega_mImY'(\omega_m)}}\)</span></p>
+<p><span class="math notranslate nohighlight">\(\phi_{\text{zpf,m}} = \sqrt{\hbar\left(\omega_m\operatorname{Im}Y'(\omega_m)\right)^{-1}}\)</span></p>
 <p>where <span class="math notranslate nohighlight">\(Y\)</span> is the admittance of
 the circuit calculated at the nodes of the reference junction.</p>
 <p>If the circuit has at least one resistor, the voltage transfer
