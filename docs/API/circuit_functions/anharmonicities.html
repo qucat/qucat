@@ -222,14 +222,14 @@ ex: <code class="docutils literal notranslate"><span class="pre">L=1e-9</span></
 </table>
 <p class="rubric">Notes</p>
 <p>The Hamiltonian of the circuit is</p>
-<p><span class="math notranslate nohighlight">\(\hat{H} = \sum_m hf_m\hat{a}_m^\dagger\hat{a}_m + \sum_j E_j[1-\cos{\hat{\varphi_j}}-\frac{\hat{\varphi_j}^2}{2}]\)</span>,</p>
+<p><span class="math notranslate nohighlight">\(\hat{H} = \sum_m hf_m\hat{a}_m^\dagger\hat{a}_m + \sum_j E_j[1-\cos{\hat{\varphi}_j}-\frac{\hat{\varphi}_j^2}{2}]\)</span>,</p>
 <p>where <span class="math notranslate nohighlight">\(\hat{a}_m\)</span> is the annihilation operator of the m-th
 normal mode of the circuit and <span class="math notranslate nohighlight">\(f_m\)</span> is the frequency of
 the m-th normal mode, <span class="math notranslate nohighlight">\(E_j\)</span> is the Josephson energy of
 the j-th junction and</p>
-<p><span class="math notranslate nohighlight">\(\varphi_j = \sum_m\frac{\phi_{zpf,m,j}}{\phi_0}(\hat{a}_m^\dagger+\hat{a}_m)\)</span>.</p>
-<p>where <span class="math notranslate nohighlight">\(phi_0 = \hbar/2e\)</span> and</p>
-<p><span class="math notranslate nohighlight">\(\phi_{zpf,m} = \sqrt{\frac{\hbar}{\omega_mImY'(\omega_m)}}\)</span></p>
+<p><span class="math notranslate nohighlight">\(\varphi_j = \sum_m\frac{\phi_{\text{zpf,m,j}}}{\phi_0}(\hat{a}_m^\dagger+\hat{a}_m)\)</span>.</p>
+<p>where <span class="math notranslate nohighlight">\(\phi_0 = \hbar/2e\)</span> and</p>
+<p><span class="math notranslate nohighlight">\(\phi_{\text{zpf,m}} = \sqrt{\hbar\left(\omega_m\operatorname{Im}Y'(\omega_m)\right)^{-1}}\)</span></p>
 <p>is the zero-point fluctuations in flux if a mode through the junction,
 with frequency <span class="math notranslate nohighlight">\(\omega_m\)</span> and admittance to the rest of the circuit <span class="math notranslate nohighlight">\(Y\)</span></p>
 <p>By keeping only terms which play a role up to first order perturbation</p>
@@ -237,7 +237,7 @@ with frequency <span class="math notranslate nohighlight">\(\omega_m\)</span> an
 <p>This function returns the anharmonicities</p>
 <p><span class="math notranslate nohighlight">\(A_m = \sum_j A_{m,j}\)</span></p>
 <p>where</p>
-<p><span class="math notranslate nohighlight">\(A_{m,j} = E_j/2/h\left(\frac{\phi_{zpf,m,j}}{\phi_0}\right)^4\)</span></p>
+<p><span class="math notranslate nohighlight">\(A_{m,j} = E_j/(2h)\left(\frac{\phi_{\text{zpf,m,j}}}{\phi_0}\right)^4\)</span></p>
 <p>is the contribution of junction j to the total anharmonicity of a mode m.</p>
 </dd></dl>
 
