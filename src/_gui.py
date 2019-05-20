@@ -345,6 +345,10 @@ class CircuitEditor(tk.Canvas):
         '''List which stores all the circuit elements 
         currently placed on the canvas'''
 
+        self.selected_elements = []
+        '''List which stores all the circuit elements 
+        currently placed on the canvas'''
+
         self.in_creation = None
         '''in_creation is None if no element is being created.
         It is equal to a circuit element if that 
@@ -515,6 +519,11 @@ class CircuitEditor(tk.Canvas):
         menu.add_command(
             label=label_template.format("Delete", "Del"), 
             command=(lambda :self.event_generate('<Delete>')), 
+            font=menu_font)
+
+        menu.add_command(
+            label=label_template.format("Rotate", "Arrows"), 
+            command=(lambda :self.event_generate('<Alt-r>')), 
             font=menu_font)
 
         def generate_delete_all_key_sequence():
@@ -1275,11 +1284,14 @@ class CircuitEditor(tk.Canvas):
         self.bindings_undo_redo = [
         ['<Control-y>', self.ctrl_y],
         ['<Control-z>', self.ctrl_z]]
+        self.bindings_rotate = [
+        ['<Alt-r>', self.rotate]]
         self.bindings_edit =\
             self.bindings_delete+\
             self.bindings_cut_copy_paste+\
             self.bindings_select_all+\
-            self.bindings_undo_redo
+            self.bindings_undo_redo+\
+            self.bindings_rotate
         #############################
         # VIEW menu functionalities
         #############################
@@ -1639,7 +1651,7 @@ class CircuitEditor(tk.Canvas):
         # we forbid any additions the history variable to be on the safe side
         self.track_changes = False
 
-        to_copy = [el for el in self.elements if el.selected]
+        to_copy = self.selected_elements
 
         # If somthing has been copied 
         # and then you do CTRL-C with nothing selected
@@ -1818,8 +1830,7 @@ class CircuitEditor(tk.Canvas):
             if deselect:
                 self.selected_without_selection_rectangle = []
             else:
-                self.selected_without_selection_rectangle = [
-                    el for el in self.elements if el.selected ]
+                self.selected_without_selection_rectangle = self.selected_elements
 
 
             # Store location at which the user clicks 
@@ -1909,8 +1920,8 @@ class CircuitEditor(tk.Canvas):
 
         # Delete all selected components without tracking those changes
         self.track_changes = False
-        to_delete = [el for el in self.elements if el.selected]
-        for el in to_delete:
+
+        for el in self.selected_elements:
             el.delete()
 
         # Append these changes to the history variable depending on the value 
@@ -2098,6 +2109,12 @@ class CircuitEditor(tk.Canvas):
         self.configure_scrollregion()
         self.draw_grid()
 
+    def rotate(self,event = None, angle = 90):
+        '''Rotates the selection by an angle in degrees
+        where anti-clockwise is a positive angle.
+        '''
+        #TOWRITE
+
     #############################
     #  UTILITIES
     ##############################
@@ -2135,25 +2152,6 @@ class CircuitEditor(tk.Canvas):
         if not self.unittesting:
             self.message = ('\n').join((self.message.split('\n'))[:-1])
             self.text_widget.config(text=self.message[1:])
-
-
-
-    def is_more_than_one_selected(self):
-        '''
-        Check if there is more than one circuit element selected.
-
-        Returns
-        -------
-        Boolean:    True if there is more than one element selected
-                    False if not
-        '''
-        i=0
-        for el in self.elements:
-            if el.selected:
-                i+=1
-                if i>1:
-                    return True
-        return False
 
     def add_nodes(self, save_at_the_end = False):
         '''Add nodes where a node of an element intersects a wire
@@ -2201,9 +2199,8 @@ class TwoNodeElement(object):
 
     def __init__(self, canvas, event=None, auto_place_info=None):
         self.canvas = canvas
-        self.was_rotated = False
         self.hover = False
-        self.selected = False
+        self._selected = False
         self.dot_minus = None
         self.dot_plus = None
         self.state = -1
@@ -2382,7 +2379,7 @@ class TwoNodeElement(object):
     ###########################################  
 
     def right_click(self, event):
-        if self.canvas.is_more_than_one_selected() and self.selected:
+        if len(self.canvas.selected_elements)>1 and self.selected:
             self.canvas.bind("<ButtonRelease-3>", self.open_right_click_menu)
         else:
             self.canvas.deselect_all()
@@ -2434,7 +2431,10 @@ class TwoNodeElement(object):
 
         for el in self.elements_to_move:
             el.move(dx, dy)
-    
+
+    def on_updownleftright(self, event, angle):
+        self.canvas.rotate(angle-self._angle)
+
     ###########################################
     # DROPPING BEHAVIOUR
     ###########################################  
@@ -2545,12 +2545,6 @@ class TwoNodeElement(object):
         for el in self.elements_to_move:
             el.snap_to_grid()
             el.add_or_replace_label()
-        
-        # This was only occur if 
-        # a single element was selected and moved
-        if self.was_rotated:
-            self.set_node_coordinates()
-            self.was_rotated = False
 
         self.force_select()
 
@@ -2563,7 +2557,18 @@ class TwoNodeElement(object):
     ###########################################
     # SELECTION
     ###########################################
-    
+    @property
+    def selected(self):
+        return self._selected
+
+    @selected.setter
+    def selected(self, selected):
+        if selected == True and self._selected == False:
+            self.canvas.selected_elements.append(self)
+        elif selected == False and self._selected == True:
+            self.canvas.selected_elements.remove(self)
+        self._selected = selected
+
     def select(self, event = None):
         self.canvas.deselect_all()
         if self.selected is False:
@@ -2871,9 +2876,6 @@ class W(TwoNodeElement):
         self.canvas.move(self.line, dx, dy)
         self.canvas.move(self.dot_minus, dx, dy)
         self.canvas.move(self.dot_plus, dx, dy)
-    
-    def on_updownleftright(self, event=None, angle = None):
-        pass
 
     ###########################################
     # DROPPING BEHAVIOUR
@@ -3169,13 +3171,13 @@ class Component(TwoNodeElement):
     def open_right_click_menu(self, event):
 
         menu = tk.Menu(self.canvas, tearoff=0)
-        if self.canvas.is_more_than_one_selected():
+        if len(self.canvas.selected_elements)>1:
             menu.add_command(label="Delete", command=(lambda: self.canvas.event_generate('<Delete>')))
             menu.add_command(label="Copy", command=(lambda: self.canvas.event_generate('<Control-c>')))
             menu.add_command(label="Cut", command=(lambda: self.canvas.event_generate('<Control-x>')))
         else:
             menu.add_command(label="Edit", command=self.modify_values)
-            # menu.add_command(label="Rotate", command=self.rotate)
+            menu.add_command(label="Rotate", command=(lambda :self.canvas.event_generate('<Alt-r>')))
             menu.add_command(label="Delete", command=(lambda: self.canvas.event_generate('<Delete>')))
             menu.add_separator()
             menu.add_command(label="Copy", command=(lambda: self.canvas.event_generate('<Control-c>')))
@@ -3186,18 +3188,6 @@ class Component(TwoNodeElement):
     ###########################################
     # DRAGGING BEHAVIOUR
     ###########################################  
-    def rotate(self):
-        if self.pos[2] % 180. == 0.:
-            self.pos = [self.pos[0]-0.5, self.pos[1] +
-                        0.5, (self.pos[2]+90.) % 360.]
-        elif self.pos[2] % 180. == 90.:
-            self.pos = [self.pos[0]+0.5, self.pos[1] -
-                        0.5, (self.pos[2]+90.) % 360.]
-
-        self.update_graphic()
-        self.canvas.coords(self.image, *self.grid_to_canvas(self.pos[:2]))
-        self.add_or_replace_label()
-        self.add_or_replace_node_dots()
     
     def move(self, dx, dy):
         '''
@@ -3211,22 +3201,6 @@ class Component(TwoNodeElement):
             self.canvas.delete(self.dot_plus)
             self.dot_plus = None
         self.add_or_replace_label()
-
-    def on_updownleftright(self, event, angle):
-        self.canvas.used_arrows = True
-        gu = self.canvas.grid_unit
-        if angle != self.pos[2]:
-            self._angle = angle
-            self.update_graphic()
-            self.add_or_replace_label()
-
-            if self.dot_minus is not None:
-                self.canvas.delete(self.dot_minus)
-                self.dot_minus = None
-            if self.dot_plus is not None:
-                self.canvas.delete(self.dot_plus)
-                self.dot_plus = None
-            self.was_rotated = True
  
     ###########################################
     # DROPPING BEHAVIOUR
@@ -3460,7 +3434,7 @@ class G(Component):
     
     def open_right_click_menu(self, event):
         menu = tk.Menu(self.canvas, tearoff=0)
-        # menu.add_command(label="Rotate", command=self.rotate)
+        menu.add_command(label="Rotate", command=(lambda :self.canvas.event_generate('<Alt-r>')))
         menu.add_command(label="Delete", command=(lambda :self.canvas.event_generate('<Delete>')))
         menu.add_command(label="Copy", command=(lambda :self.canvas.event_generate('<Control-c>')))
         menu.add_command(label="Cut", command=(lambda :self.canvas.event_generate('<Control-x>')))
