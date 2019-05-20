@@ -12,7 +12,6 @@ import inspect
 import matplotlib.pyplot as plt
 import time
 try:
-    
     from ._constants import *
     from ._utility import pretty_value,\
             shift,\
@@ -982,16 +981,6 @@ class Qcircuit(object):
         ax.text(x_legend, y_legend,
             value_text,
             **legend_text_kwargs)
-
-        superscript_text = u"i\u03B8"
-        superscript_dx = 0.25
-        superscript_dy = 0.06
-
-        # legend_text_kwargs['fontsize']=8
-
-        # ax.text(x_legend+superscript_dx, y_legend+superscript_dy,
-        #     superscript_text,
-        #     **legend_text_kwargs)
 
         v01 = 0.7
         ax.arrow(x_legend-arrow_width(value_01 = v01)/2, 
