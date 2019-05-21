@@ -3,7 +3,7 @@ from distutils.dir_util import remove_tree
 
 setuptools.setup(
     name="qucat",
-    version="0.4.4",
+    version="0.5",
     author="Mario Gely",
     author_email="mario.f.gely@gmail.com",
     description="QUantum Circuit Analysis Tool",
