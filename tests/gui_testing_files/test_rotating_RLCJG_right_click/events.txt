@@ -1,0 +1,27 @@
+'<Motion>', serial = 2412, state = 8, x = 591, y = 14
+'<Motion>', serial = 2412, state = 8, x = 586, y = 22
+'<Motion>', serial = 2412, state = 8, x = 581, y = 32
+'<Motion>', serial = 2412, state = 8, x = 574, y = 43
+'<Motion>', serial = 2412, state = 8, x = 570, y = 49
+'<Motion>', serial = 2412, state = 8, x = 565, y = 59
+'<Motion>', serial = 2412, state = 8, x = 560, y = 68
+'<Motion>', serial = 2412, state = 8, x = 557, y = 74
+'<Motion>', serial = 2412, state = 8, x = 552, y = 82
+'<Motion>', serial = 2412, state = 8, x = 549, y = 88
+'<Motion>', serial = 2412, state = 8, x = 547, y = 92
+'<Motion>', serial = 2412, state = 8, x = 544, y = 98
+'<Motion>', serial = 2412, state = 8, x = 541, y = 103
+'<Motion>', serial = 2412, state = 8, x = 539, y = 105
+'<Motion>', serial = 2412, state = 8, x = 539, y = 106
+'<Motion>', serial = 2412, state = 8, x = 538, y = 106
+'<Motion>', serial = 2412, state = 8, x = 537, y = 107
+'<Motion>', serial = 2412, state = 8, x = 537, y = 108
+'<Motion>', serial = 2412, state = 8, x = 536, y = 108
+'<Motion>', serial = 2412, state = 8, x = 535, y = 108
+'<Control-a>', serial = 2413, keycode = 65, state = 12, x = 535, y = 108, keysym = 'a'
+'<Alt-r>', serial = 2470, keycode = 82, state = 131080, x = 535, y = 108, keysym = 'r'
+'<Motion>', serial = 2484, state = 0, x = 535, y = 108
+'<Alt-r>', serial = 2525, keycode = 82, state = 131080, x = 535, y = 108, keysym = 'r'
+'<Motion>', serial = 2539, state = 0, x = 535, y = 108
+'<Alt-r>', serial = 2580, keycode = 82, state = 131080, x = 535, y = 108, keysym = 'r'
+'<Motion>', serial = 2594, state = 0, x = 535, y = 108

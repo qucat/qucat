@@ -547,27 +547,27 @@ class CircuitEditor(tk.Canvas):
 
         # add cascade menu items
         menu.add_command(
-            label=label_template.format("Wire", "W"), 
+            label=label_template.format("Wire", "<W>"), 
             command=(lambda: self.event_generate('w')), 
             font=menu_font)
         menu.add_command(
-            label=label_template.format("Junction", "J"), 
+            label=label_template.format("Junction", "<J>"), 
             command=(lambda: self.event_generate('j')), 
             font=menu_font)
         menu.add_command(
-            label=label_template.format("Inductor", "L"), 
+            label=label_template.format("Inductor", "<L>"), 
             command=(lambda: self.event_generate('l')), 
             font=menu_font)
         menu.add_command(
-            label=label_template.format("Capacitor", "C"), 
+            label=label_template.format("Capacitor", "<C>"), 
             command=(lambda: self.event_generate('c')), 
             font=menu_font)
         menu.add_command(
-            label=label_template.format("Resistor", "R"), 
+            label=label_template.format("Resistor", "<R>"), 
             command=(lambda: self.event_generate('r')), 
             font=menu_font)
         menu.add_command(
-            label=label_template.format("Ground", "G"), 
+            label=label_template.format("Ground", "<G>"), 
             command=(lambda: self.event_generate('g')), 
             font=menu_font)
 
@@ -1527,12 +1527,12 @@ class CircuitEditor(tk.Canvas):
             # Move and scale all ALREADY CREATED elements to adapt to the 
             # new grid
             for el in self.elements:
-                el.adapt_to_grid_unit()
+                el.redraw()
 
             # Move and scale all IN CREATION elements to adapt to the 
             # new grid    
             if self.in_creation is not None:
-                self.in_creation.init_adapt_to_grid_unit(event)
+                self.in_creation.init_redraw(event)
 
             # redraw the grid such that it fills the 
             # visible canvas
@@ -1685,7 +1685,7 @@ class CircuitEditor(tk.Canvas):
                 # create the component
                 el.create()
                 # scale the component and position it where it was copied
-                el.adapt_to_grid_unit()
+                el.redraw()
                 # select it
                 el.force_select()
 
@@ -1777,8 +1777,12 @@ class CircuitEditor(tk.Canvas):
         background of the canvas.
         Deselects all components and opens the right click menu.
         '''
+        label_template = "{:<15}{:>6}"
+        menu_font = Font(family="Courier New", size=self.canvas.font_size, weight='normal')
+
         menu = tk.Menu(self, tearoff=0)
-        menu.add_command(label="Paste", command=(lambda :self.event_generate('<Control-v>')))
+        menu.add_command(label=label_template.format("Paste","Ctrl-V"), command=(lambda :self.event_generate('<Control-v>')),
+            font = menu_font)
         menu.tk_popup(event.x_root, event.y_root)
         self.bind("<ButtonRelease-3>", lambda event: None)
 
@@ -1830,7 +1834,8 @@ class CircuitEditor(tk.Canvas):
             if deselect:
                 self.selected_without_selection_rectangle = []
             else:
-                self.selected_without_selection_rectangle = self.selected_elements
+                # use "list" to make a copy of selected_elements
+                self.selected_without_selection_rectangle = list(self.selected_elements)
 
 
             # Store location at which the user clicks 
@@ -1889,7 +1894,7 @@ class CircuitEditor(tk.Canvas):
         Deselects all components on the canvas.
         '''
         for el in self.elements:
-            el.deselect()
+            el.selected = False
 
     def select_all(self, event=None):
         '''
@@ -1921,7 +1926,13 @@ class CircuitEditor(tk.Canvas):
         # Delete all selected components without tracking those changes
         self.track_changes = False
 
-        for el in self.selected_elements:
+        # we have to define a to_delete list
+        # which is a copy of the selected elements list
+        # so that we can delete elements without 
+        # messing up the for loop
+        to_delete = list(self.selected_elements)
+
+        for el in to_delete:
             el.delete()
 
         # Append these changes to the history variable depending on the value 
@@ -2109,11 +2120,50 @@ class CircuitEditor(tk.Canvas):
         self.configure_scrollregion()
         self.draw_grid()
 
-    def rotate(self,event = None, angle = 90):
-        '''Rotates the selection by an angle in degrees
+    def rotate(self,event = None, angle = 90, around = None):
+        '''Rotates the selection around the component 
+        ``around`` by an angle given in degrees
         where anti-clockwise is a positive angle.
         '''
-        #TOWRITE
+        if around is None and len(self.selected_elements) == 0:
+            return
+        elif around is None and len(self.selected_elements) > 0:
+            around = self.selected_elements[0]
+            to_rotate = self.selected_elements
+        elif around in self.selected_elements:
+            to_rotate = self.selected_elements
+        else:
+            to_rotate = around 
+        
+        x0 = around.x_plus
+        y0 = around.y_plus
+
+        def transform(xy):
+            x = xy[0]-x0
+            y = xy[1]-y0
+
+            if angle%360 == 0:
+                return [x0+x,y0+y]
+            if angle%360 == 90:
+                return [x0-y,y0+x]
+            if angle%360 == 180:
+                return [x0-x,y0-y]
+            if angle%360 == 270:
+                return [x0+y,y0-x]
+
+        self.track_changes = False
+        for el in to_rotate:
+            el.pos = transform(el.pos[:2])+transform(el.pos[2:])
+            el.redraw()
+        
+
+        # shift the mouse by 0,0 such that if
+        # the elements were following the mouse, 
+        # they would move under the mouse
+        self.event_generate('<Motion>', warp=False,
+            x=self.get_mouse_location(units='window')[0],
+            y=self.get_mouse_location(units='window')[1])
+
 
     #############################
     #  UTILITIES
@@ -2204,6 +2254,10 @@ class TwoNodeElement(object):
         self.dot_minus = None
         self.dot_plus = None
         self.state = -1
+        self.x_minus = None
+        self.y_minus = None
+        self.x_plus = None
+        self.y_plus = None
 
         # Radius of the node dot, in grid units
         self.node_dot_radius = 1./30.
@@ -2228,6 +2282,47 @@ class TwoNodeElement(object):
         newone.prop = deepcopy(self.prop)
         return newone
 
+    def delete(self,event=None):
+        if self.selected:
+            self.canvas.selected_elements.remove(self)
+        self.canvas.elements.remove(self)
+        self.canvas.delete(self.dot_minus)
+        self.canvas.delete(self.dot_plus)
+        self.canvas.save()
+        del self
+
+
+    #############################
+    # POSITION and PROPERTIES
+    # defined such that
+    # the network is automatically
+    # saved each time these are 
+    # modified
+    ##############################
+
+    @property
+    def prop(self):
+        # only defined for components
+        return [None, None]
+
+    @prop.setter
+    def prop(self, prop):
+        # only defined for components
+        pass
+
+    @property
+    def pos(self):
+        return [self.x_minus, self.y_minus, self.x_plus, self.y_plus]
+
+    @pos.setter
+    def pos(self, pos):
+        if pos != self.pos:
+            self.x_minus = pos[0]
+            self.y_minus = pos[1]
+            self.x_plus = pos[2]
+            self.y_plus = pos[3]
+            self.canvas.save()
+
     ###########################################
     # CREATION
     ###########################################
@@ -2249,11 +2344,8 @@ class TwoNodeElement(object):
             v = float(v)
 
         self.prop = [v, l]
-
-        self.x_minus, self.y_minus = self.node_string_to_grid(
-            auto_place_info[1])
-        self.x_plus, self.y_plus = self.node_string_to_grid(
-            auto_place_info[2])
+        self.pos = self.node_string_to_grid(auto_place_info[1])+self.node_string_to_grid(auto_place_info[2])
+        self.create()
     
     def abort_creation(self,event = None, rerun_command = True):
         '''
@@ -2386,6 +2478,33 @@ class TwoNodeElement(object):
             self.select()
             self.canvas.bind("<ButtonRelease-3>", self.open_right_click_menu)
 
+    
+    def open_right_click_menu(self, event):
+
+        label_template = "{:<10}{:>12}"
+        menu_font = Font(family="Courier New", size=self.canvas.font_size, weight='normal')
+
+        menu = tk.Menu(self.canvas, tearoff=0)
+        if len(self.canvas.selected_elements)==1 and not isinstance(self,W) and not isinstance(self,G) :
+            menu.add_command(label=label_template.format("Edit","Double-Click"), 
+                command=self.modify_values,
+                font = menu_font)
+        menu.add_command(label=label_template.format("Rotate",r"Drag+Arrows"), 
+            command=(lambda :self.canvas.event_generate('<Alt-r>')),
+            font = menu_font)
+        menu.add_command(label=label_template.format("Delete","Del"), 
+            command=(lambda: self.canvas.event_generate('<Delete>')),
+            font = menu_font)
+        menu.add_separator()
+        menu.add_command(label=label_template.format("Copy","Ctrl-C"), 
+            command=(lambda: self.canvas.event_generate('<Control-c>')),
+            font = menu_font)
+        menu.add_command(label=label_template.format("Cut","Ctrl-X"), 
+            command=(lambda: self.canvas.event_generate('<Control-x>')),
+            font = menu_font)
+        menu.tk_popup(event.x_root, event.y_root)
+        self.canvas.bind("<ButtonRelease-3>", lambda event: None)
+
     ###########################################
     # DRAGGING BEHAVIOUR
     ###########################################  
@@ -2410,12 +2529,11 @@ class TwoNodeElement(object):
                 if el.selected or el == self:
                     self.elements_to_move.append(el)
 
-            # If only one element is being moved, allow rotation
-            if len(self.elements_to_move)==1:
-                self.canvas.bind('<Left>', lambda event: self.on_updownleftright(event, angle=WEST))
-                self.canvas.bind('<Right>', lambda event: self.on_updownleftright(event, angle=EAST))
-                self.canvas.bind('<Up>', lambda event: self.on_updownleftright(event, angle=NORTH))
-                self.canvas.bind('<Down>', lambda event: self.on_updownleftright(event, angle=SOUTH))
+            # Enable rotation
+            self.canvas.bind('<Left>', lambda event: self.on_updownleftright(event, angle=WEST))
+            self.canvas.bind('<Right>', lambda event: self.on_updownleftright(event, angle=EAST))
+            self.canvas.bind('<Up>', lambda event: self.on_updownleftright(event, angle=NORTH))
+            self.canvas.bind('<Down>', lambda event: self.on_updownleftright(event, angle=SOUTH))
 
             # Bind the release sequence to the release motion
             self.canvas.tag_bind(self.binding_object, "<%s>"%release_sequence, self.release_motion)
@@ -2433,7 +2551,7 @@ class TwoNodeElement(object):
             el.move(dx, dy)
 
     def on_updownleftright(self, event, angle):
-        self.canvas.rotate(angle-self._angle)
+        self.canvas.rotate(event = event,angle = angle-self.center_pos[2],around = self)
 
     ###########################################
     # DROPPING BEHAVIOUR
@@ -2562,45 +2680,32 @@ class TwoNodeElement(object):
         return self._selected
 
     @selected.setter
-    def selected(self, selected):
-        if selected == True and self._selected == False:
+    def selected(self, next_selection_state):
+        if next_selection_state == True and self._selected == False:
             self.canvas.selected_elements.append(self)
-        elif selected == False and self._selected == True:
+            self._selected = next_selection_state
+            self.update_graphic()
+        elif next_selection_state == False and self._selected == True:
             self.canvas.selected_elements.remove(self)
-        self._selected = selected
-
+            self._selected = next_selection_state
+            self.update_graphic()
+            
     def select(self, event = None):
         self.canvas.deselect_all()
-        if self.selected is False:
-            self.selected = True
-            self.update_graphic()
+        self.selected = True
 
     def ctrl_shift_select(self, select = None):
-        if self.selected is False:
+        if self.selected:
+            self.selected = False
+        else:
             self.selected = True
-            self.update_graphic()
-        elif self.selected is True:
-            self.deselect()
 
     def force_select(self):
         self.selected = True
-        self.update_graphic()
-
-    def deselect(self):
-        self.selected = False
-        self.update_graphic()
 
     ###########################################
     # POSITIONING
     ###########################################
-
-    @property
-    def pos(self):
-        return []
-
-    @pos.setter
-    def pos(self, pos):
-        pass
 
     def grid_to_node_string(self, x, y):
 
@@ -2616,17 +2721,6 @@ class TwoNodeElement(object):
     def grid_to_canvas(self, pos):
         return self.canvas.grid_to_canvas(pos)
 
-    def set_node_coordinates(self):
-        '''
-        Based on the center position of the component
-        and its orientation, determine the coordinates
-        of the minus and plus nodes.
-
-        The wire has no center position and hence this function will
-        do nothing in that case
-        '''
-        pass
-    
     ###########################################
     # (RE-)DRAWING
     ###########################################
@@ -2675,10 +2769,6 @@ class TwoNodeElement(object):
 class W(TwoNodeElement):
 
     def __init__(self, canvas, event=None, auto_place_info=None):
-        self.x_minus = None
-        self.y_minus = None
-        self.x_plus = None
-        self.y_plus = None
         
         # Width of the wires in grid units
         self.lw = 1./50.
@@ -2693,50 +2783,13 @@ class W(TwoNodeElement):
         return self.line
     
     def delete(self, event=None):
-        self.canvas.elements.remove(self)
+        
         self.canvas.delete(self.line)
-        self.canvas.delete(self.dot_minus)
-        self.canvas.delete(self.dot_plus)
-        self.canvas.save()
-        del self
-
-
-    #############################
-    # POSITION and PROPERTIES
-    # defined such that
-    # the network is automatically
-    # saved each time these are 
-    # modified
-    ##############################
-
-    @property
-    def pos(self):
-        return [self.x_minus, self.y_minus, self.x_plus, self.y_plus]
-
-    @pos.setter
-    def pos(self, pos):
-        if pos != self.pos:
-            self.x_minus = pos[0]
-            self.y_minus = pos[1]
-            self.x_plus = pos[2]
-            self.y_plus = pos[3]
-            self.canvas.save()
-
-    @property
-    def prop(self):
-        return [None, None]
-
-    @prop.setter
-    def prop(self, prop):
-        pass
+        super(W,self).delete()
     
     ###########################################
     # CREATION
     ###########################################  
-    
-    def auto_place(self, auto_place_info):
-        super(W, self).auto_place(auto_place_info)
-        self.create()
     
     def abort_creation(self, event=None, rerun_command = True):
         self.canvas.bind("<ButtonPress-1>", lambda event: None)
@@ -2849,19 +2902,14 @@ class W(TwoNodeElement):
         self.add_or_replace_node_dots()
         self.canvas.elements.append(self)
 
+        if canvas_coords_minus == canvas_coords_plus:
+            self.delete()
+
  
     ###########################################
     # HOVER BEHAVIOUR
     ###########################################  
     
-    def open_right_click_menu(self, event):
-        menu = tk.Menu(self.canvas, tearoff=0)
-        menu.add_command(label="Delete", command=(lambda :self.canvas.event_generate('<Delete>')))
-        menu.add_command(label="Copy", command=(lambda :self.canvas.event_generate('<Control-c>')))
-        menu.add_command(label="Cut", command=(lambda :self.canvas.event_generate('<Control-x>')))
-        menu.tk_popup(event.x_root, event.y_root)
-        self.canvas.bind("<ButtonRelease-3>", lambda event: None)
-
     def double_click(self, event=None):
         pass
 
@@ -2944,7 +2992,7 @@ class W(TwoNodeElement):
         else:
             self.canvas.itemconfig(self.line, fill=light_black, width=self.lw*self.canvas.grid_unit)
 
-    def adapt_to_grid_unit(self):
+    def redraw(self):
         canvas_coords_minus = self.grid_to_canvas(self.pos[:2])
         canvas_coords_plus = self.grid_to_canvas(self.pos[2:])
         self.canvas.coords(
@@ -2952,7 +3000,7 @@ class W(TwoNodeElement):
         self.update_graphic()
         self.add_or_replace_node_dots()
 
-    def init_adapt_to_grid_unit(self, event):
+    def init_redraw(self, event):
         self.show_line(event)
         self.add_or_replace_node_dots(plus = False)
 
@@ -2992,14 +3040,10 @@ class Component(TwoNodeElement):
         super(Component, self).__init__(canvas, event, auto_place_info)
     
     def delete(self, event=None):
-        self.canvas.elements.remove(self)
         self.canvas.delete(self.image)
         if self.text is not None:
             self.canvas.delete(self.text)
-        self.canvas.delete(self.dot_minus)
-        self.canvas.delete(self.dot_plus)
-        self.canvas.save()
-        del self
+        super(Component,self).delete()
 
     @property
     def binding_object(self):
@@ -3014,18 +3058,39 @@ class Component(TwoNodeElement):
     ##############################
 
     @property
-    def pos(self):
-        return [self._x_center, self._y_center, self._angle]
+    def center_pos(self):
+        xm,ym,xp,yp = self.pos
 
-    @pos.setter
-    def pos(self, pos):
-        # Defined in grid units, _x/y_center should be n+(0. or 0.5) with n an integer
-        if pos != self.pos:
-            self._x_center = pos[0]
-            self._y_center = pos[1]
-            self._angle = pos[2]
-            self.set_node_coordinates()
-            self.canvas.save()
+        if xm is None:
+            return [None,None,self.init_angle]
+
+        if xm == xp:
+            # increasing y = SOUTH in tkinter
+            if ym < yp:
+                return [xm, (ym+yp)/2, SOUTH]
+            else:
+                return [xm, (ym+yp)/2, NORTH]
+        elif ym == yp:
+            if xm < xp:
+                return [(xm+xp)/2, ym, EAST]
+            else:
+                return [(xm+xp)/2, ym, WEST]
+
+    @center_pos.setter
+    def center_pos(self, center_pos):
+
+        self._angle = center_pos[2]
+        self._x_center = center_pos[0]
+        self._y_center = center_pos[1]
+
+        if self._angle == SOUTH:
+            self.pos = [center_pos[0],center_pos[1]-0.5,center_pos[0],center_pos[1]+0.5]
+        elif self._angle == NORTH:
+            self.pos = [center_pos[0],center_pos[1]+0.5,center_pos[0],center_pos[1]-0.5]
+        elif self._angle == EAST:
+            self.pos = [center_pos[0]-0.5,center_pos[1],center_pos[0]+0.5,center_pos[1]]
+        elif self._angle == WEST:
+            self.pos = [center_pos[0]+0.5,center_pos[1],center_pos[0]-0.5,center_pos[1]]
 
     @property
     def prop(self):
@@ -3065,29 +3130,10 @@ class Component(TwoNodeElement):
     ###########################################
     # CREATION
     ###########################################  
-    
-    def auto_place(self, auto_place_info):
-        super(Component, self).auto_place(auto_place_info)
-
-        if self.x_minus == self.x_plus:
-            # increasing y = SOUTH in tkinter
-            if self.y_minus < self.y_plus:
-                self.pos = [self.x_minus, (self.y_minus+self.y_plus)/2, SOUTH]
-                self.create()
-            else:
-                self.pos = [self.x_minus, (self.y_minus+self.y_plus)/2, NORTH]
-                self.create()
-        elif self.y_minus == self.y_plus:
-            if self.x_minus < self.x_plus:
-                self.pos = [(self.x_minus+self.x_plus)/2, self.y_minus, EAST]
-                self.create()
-            else:
-                self.pos = [(self.x_minus+self.x_plus)/2, self.y_minus, WEST]
-                self.create()
 
     def create(self):
         self.add_or_replace_node_dots()
-        x, y, angle = self.pos
+        x, y, angle = self.center_pos
         self.import_image()
         self.image = self.canvas.create_image(
             *self.grid_to_canvas([x, y]), image=self.tk_image)
@@ -3120,7 +3166,7 @@ class Component(TwoNodeElement):
 
         self.init_angle = angle
 
-        # Impor the image and plot it on the canvas
+        # Import the image and plot it on the canvas
         self.import_image()
         self.image = self.canvas.create_image(*self.canvas.get_mouse_location(), image=self.tk_image)
 
@@ -3145,7 +3191,6 @@ class Component(TwoNodeElement):
         self.canvas.move(self.image, dx, dy)
     
     def init_release(self, event):
-
         
         self.canvas.bind('<Motion>', lambda event:None)
         self.canvas.track_changes = False
@@ -3162,29 +3207,6 @@ class Component(TwoNodeElement):
         self.canvas.elements.append(self)
         self.canvas.exit_state(4)
         
-
-
-    ###########################################
-    # HOVER BEHAVIOUR
-    ########################################### 
-    
-    def open_right_click_menu(self, event):
-
-        menu = tk.Menu(self.canvas, tearoff=0)
-        if len(self.canvas.selected_elements)>1:
-            menu.add_command(label="Delete", command=(lambda: self.canvas.event_generate('<Delete>')))
-            menu.add_command(label="Copy", command=(lambda: self.canvas.event_generate('<Control-c>')))
-            menu.add_command(label="Cut", command=(lambda: self.canvas.event_generate('<Control-x>')))
-        else:
-            menu.add_command(label="Edit", command=self.modify_values)
-            menu.add_command(label="Rotate", command=(lambda :self.canvas.event_generate('<Alt-r>')))
-            menu.add_command(label="Delete", command=(lambda: self.canvas.event_generate('<Delete>')))
-            menu.add_separator()
-            menu.add_command(label="Copy", command=(lambda: self.canvas.event_generate('<Control-c>')))
-            menu.add_command(label="Cut", command=(lambda: self.canvas.event_generate('<Control-x>')))
-        menu.tk_popup(event.x_root, event.y_root)
-        self.canvas.bind("<ButtonRelease-3>", lambda event: None)
-
     ###########################################
     # DRAGGING BEHAVIOUR
     ###########################################  
@@ -3205,6 +3227,7 @@ class Component(TwoNodeElement):
     ###########################################
     # DROPPING BEHAVIOUR
     ###########################################   
+
     def snap_to_grid(self, event=None):
         '''
         Called in release_motion or init_release
@@ -3213,24 +3236,20 @@ class Component(TwoNodeElement):
         x0, y0 = self.canvas.canvas_center
         gu = float(self.canvas.grid_unit)
 
-        if self.pos[2] is None:
-            angle = self.init_angle
-        else:
-            angle = self.pos[2]
 
-        if angle % 180. == 90.:
-            self.pos = [
+        if self.center_pos[2] % 180. == 90.:
+            self.center_pos = [
                 round(float(x-x0)/gu),
                 round(float(y-y0-gu/2.)/gu) + 0.5,
-                angle]
-            self.canvas.coords(self.image, *self.grid_to_canvas(self.pos[:2]))
+                self.center_pos[2]]
+            self.canvas.coords(self.image, *self.grid_to_canvas(self.center_pos[:2]))
 
-        elif angle % 180. == 0.:
-            self.pos = [
+        elif self.center_pos[2] % 180. == 0.:
+            self.center_pos = [
                 0.5 + round(float(x-x0-gu/2.)/gu),
                 round(float(y-y0)/gu),
-                angle]
-            self.canvas.coords(self.image, *self.grid_to_canvas(self.pos[:2]))
+                self.center_pos[2]]
+            self.canvas.coords(self.image, *self.grid_to_canvas(self.center_pos[:2]))
 
 
         # Add circles at the nodes of the component
@@ -3256,36 +3275,6 @@ class Component(TwoNodeElement):
         # returns center in canvas units
         return self.canvas.coords(self.image)
     
-    def set_node_coordinates(self):
-        '''
-        Based on the center position of the component
-        and its orientation, determine the coordinates
-        of the minus and plus nodes.
-        '''
-
-        # positive y points south
-        pos = self.pos
-        if self._angle == SOUTH:
-            self.x_minus = pos[0]
-            self.y_minus = pos[1]-0.5
-            self.x_plus = pos[0]
-            self.y_plus = pos[1]+0.5
-        elif self._angle == NORTH:
-            self.x_minus = pos[0]
-            self.y_minus = pos[1]+0.5
-            self.x_plus = pos[0]
-            self.y_plus = pos[1]-0.5
-
-        elif self._angle == EAST:
-            self.x_minus = pos[0]-0.5
-            self.y_minus = pos[1]
-            self.x_plus = pos[0]+0.5
-            self.y_plus = pos[1]
-        elif self._angle == WEST:
-            self.x_minus = pos[0]+0.5
-            self.y_minus = pos[1]
-            self.x_plus = pos[0]-0.5
-            self.y_plus = pos[1]
 
     ###########################################
     # (RE-)DRAWING
@@ -3299,10 +3288,10 @@ class Component(TwoNodeElement):
             png += '_selected'
         png += '.png'
 
-        if self.pos[2] is None:
+        if self.center_pos[2] is None:
             angle = self.init_angle
         else:
-            angle = self.pos[2]
+            angle = self.center_pos[2]
 
         # Location to store the inductor/capacitor/.. graphics
         png_directory = os.path.join(os.path.dirname(__file__), ".graphics")
@@ -3316,18 +3305,18 @@ class Component(TwoNodeElement):
         self.import_image()
         self.canvas.itemconfig(self.image, image=self.tk_image)
     
-    def adapt_to_grid_unit(self):
+    def redraw(self):
         self.update_graphic()
-        self.canvas.coords(self.image, *self.grid_to_canvas(self.pos[:2]))
+        self.canvas.coords(self.image, *self.grid_to_canvas(self.center_pos[:2]))
         self.add_or_replace_label()
         self.add_or_replace_node_dots()
     
-    def init_adapt_to_grid_unit(self,event):
+    def init_redraw(self,event):
         self.update_graphic()
 
     def add_or_replace_label(self):
         gu = self.canvas.grid_unit
-        _, _, angle = self.pos
+        _, _, angle = self.center_pos
         x, y = self.canvas.coords(self.image)
         value, label = self.prop
         text = to_string(self.unit, label, value,
@@ -3431,15 +3420,6 @@ class G(Component):
     # Adapt to the fact that 
     # has no properties
     ###########################################
-    
-    def open_right_click_menu(self, event):
-        menu = tk.Menu(self.canvas, tearoff=0)
-        menu.add_command(label="Rotate", command=(lambda :self.canvas.event_generate('<Alt-r>')))
-        menu.add_command(label="Delete", command=(lambda :self.canvas.event_generate('<Delete>')))
-        menu.add_command(label="Copy", command=(lambda :self.canvas.event_generate('<Control-c>')))
-        menu.add_command(label="Cut", command=(lambda :self.canvas.event_generate('<Control-x>')))
-        menu.tk_popup(event.x_root, event.y_root)
-        self.canvas.bind("<ButtonRelease-3>", lambda event: None)
 
     def add_or_replace_label(self):
         pass

@@ -232,10 +232,13 @@ class TestMovingComponentsAround(AutomaticTesting):
         self.launch_gui_testing()
 
     def test_rotating_capacitor(self):
-        self.launch_gui_testing()
+        self.launch_gui_testing(force_build=False,run_slower=False)
 
     def test_rotating_ground(self):
-        self.launch_gui_testing()
+        self.launch_gui_testing(force_build=False,run_slower=False)
+
+    def test_rotating_RLCJG_right_click(self):
+        self.launch_gui_testing(force_build=False,run_slower=False)
 
     def test_moving_capacitor_twice(self):
         self.launch_gui_testing()
