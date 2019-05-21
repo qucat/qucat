@@ -240,6 +240,9 @@ class TestMovingComponentsAround(AutomaticTesting):
     def test_rotating_RLCJG_right_click(self):
         self.launch_gui_testing(force_build=False,run_slower=False)
 
+    def test_rotating_nothing_using_Alt_R(self):
+        self.launch_gui_testing(force_build=False,run_slower=False)
+
     def test_moving_capacitor_twice(self):
         self.launch_gui_testing()
 
