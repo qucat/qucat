@@ -168,11 +168,30 @@ class Qcircuit(object):
         self._check_kwargs(**kwargs)
         char_poly_coeffs = [complex(coeff(**kwargs)) for coeff in self._char_poly_coeffs]
         if len(self.resistors) == 0:
+        
             # The variable of the characteristic polynomial is w^2
-            w_cpx = np.sqrt(np.real(np.roots(char_poly_coeffs)))
+            w2 = np.real(np.roots(char_poly_coeffs))
+
+            # Sometimes, when the circuits has vastly different
+            # values for its circuit components, the symbolic 
+            # calculations can yield an incorrect char_poly_coeffs
+            # We can easily discard some of these casese by throwing away
+            # negative solutions
+            w2 = w2[np.nonzero(w2 > 0.)]
+
+            w_cpx = np.sqrt(w2)
         else:
             w_cpx = np.roots(char_poly_coeffs)
             w_cpx = w_cpx[np.nonzero(np.real(w_cpx) > 0.)]
+
+        
+        # Sometimes, when the circuits has vastly different
+        # values for its circuit components, the symbolic 
+        # calculations can yield an incorrect char_poly_coeffs
+        # We can easily discard some of these cases by throwing away
+        # any solutions with a complex impedance (ImY'<0)
+        # The minus sign is there since 1/Im(Y)  = -Im(1/Y)
+        w_cpx = w_cpx[np.nonzero(np.imag(-self._inverse_of_dY(np.real(w_cpx),**kwargs))>0)]
 
         # Only consider modes with Q>self.Q_min (=1 by default)
         # 0-frequency solutions (with real parts close to 0)
