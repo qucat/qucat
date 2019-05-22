@@ -1397,10 +1397,6 @@ class _Network(object):
         self.is_lossy = is_lossy
         ntr = deepcopy(self) # ntr stands for Network To Reduce
 
-        # remove nodes which only have on type of element
-        # connections to other nodes
-        ntr.simplify()
-
         # compute conductance matrix
         ntr.compute_RLC_matrices()
 
@@ -1429,10 +1425,6 @@ class _Network(object):
             n+=1
         self.char_poly_coeffs_analytical = self.char_poly_coeffs_analytical[:self.char_poly_order+2-n]
         return self.char_poly_coeffs_analytical
-
-    def simplify(self):
-        # TODO write method to speed up determinant calculation
-        pass
 
     def compute_RLC_matrices(self):
         N_nodes = len(self.net_dict)
