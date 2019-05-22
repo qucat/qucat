@@ -200,8 +200,13 @@ class TestComponentCreation(AutomaticTesting):
         self.launch_gui_testing()
     def test_building_inductor(self):
         self.launch_gui_testing()
-
     def test_building_transmon(self):
+        self.launch_gui_testing()
+    def test_cancel_wire_build_before_first_node(self):
+        self.launch_gui_testing()
+    def test_cancel_wire_build_after_first_node(self):
+        self.launch_gui_testing()
+    def test_cancel_junction_build(self):
         self.launch_gui_testing()
     
 class TestCutCopyPaste(AutomaticTesting):
