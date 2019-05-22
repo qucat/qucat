@@ -5,7 +5,7 @@ import unittest
 import core
 from math import isclose
 import numpy as np
-from scipy.constants import e, pi, h, hbar
+from _constants import e, pi, h, hbar
 
 # Run plt.ion() to avoid hanging on plt.show() calls
 import matplotlib.pyplot as plt

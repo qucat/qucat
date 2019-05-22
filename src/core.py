@@ -1,7 +1,6 @@
 import sympy as sp
 from sympy.utilities.lambdify import lambdify
 import numpy as np
-from scipy.constants import e, pi, h, hbar
 from sympy.core.mul import Mul, Pow, Add
 from copy import deepcopy
 from numbers import Number
