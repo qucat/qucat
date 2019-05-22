@@ -1170,8 +1170,13 @@ class GUI(Qcircuit):
             with open(filename, 'r') as f:
                 pass
         except FileNotFoundError:
-            # if file does not exist, also open the gui
+            # if file does not exist force the gui to open
             edit = True
+            # and create the folder 
+            os.makedirs(os.path.dirname(filename), exist_ok=True)
+            # ... and file
+            with open(filename, "w") as f:
+                pass
 
         if edit:
             run([sys.executable,
