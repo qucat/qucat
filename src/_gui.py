@@ -2120,7 +2120,7 @@ class CircuitEditor(tk.Canvas):
         self.configure_scrollregion()
         self.draw_grid()
 
-    def rotate(self,event = None, angle = 90, around = None):
+    def rotate(self,event = None, angle = 90, around = None,recentering_sequence = None):
         '''Rotates the selection around the component 
         ``around`` by an angle given in degrees
         where anti-clockwise is a positive angle.
@@ -2156,13 +2156,15 @@ class CircuitEditor(tk.Canvas):
             el.pos = transform(el.pos[:2])+transform(el.pos[2:])
             el.redraw()
         
-
-        # shift the mouse by 0,0 such that if
-        # the elements were following the mouse, 
-        # they would move under the mouse
-        self.event_generate('<Motion>', warp=False,
-            x=self.get_mouse_location(units='window')[0],
-            y=self.get_mouse_location(units='window')[1])
+        if recentering_sequence is not None:
+            # shift the mouse by 0,0 such that if
+            # the elements were following the mouse, 
+            # they would move under the mouse
+            # Using B1 here seems to be necessary when
+            # creating unittests
+            self.event_generate(recentering_sequence, warp=False,
+                x=self.get_mouse_location(units='window')[0],
+                y=self.get_mouse_location(units='window')[1])
 
 
     #############################
@@ -2529,11 +2531,16 @@ class TwoNodeElement(object):
                 if el.selected or el == self:
                     self.elements_to_move.append(el)
 
+            if release_sequence == "ButtonPress-1":
+                recentering_sequence = "<Motion>"
+            elif release_sequence == "ButtonRelease-1":
+                recentering_sequence = "<B1-Motion>"
+
             # Enable rotation
-            self.canvas.bind('<Left>', lambda event: self.on_updownleftright(event, angle=WEST))
-            self.canvas.bind('<Right>', lambda event: self.on_updownleftright(event, angle=EAST))
-            self.canvas.bind('<Up>', lambda event: self.on_updownleftright(event, angle=NORTH))
-            self.canvas.bind('<Down>', lambda event: self.on_updownleftright(event, angle=SOUTH))
+            self.canvas.bind('<Left>', lambda event: self.on_updownleftright(event, angle=WEST,recentering_sequence = recentering_sequence))
+            self.canvas.bind('<Right>', lambda event: self.on_updownleftright(event, angle=EAST,recentering_sequence = recentering_sequence))
+            self.canvas.bind('<Up>', lambda event: self.on_updownleftright(event, angle=NORTH,recentering_sequence = recentering_sequence))
+            self.canvas.bind('<Down>', lambda event: self.on_updownleftright(event, angle=SOUTH,recentering_sequence = recentering_sequence))
 
             # Bind the release sequence to the release motion
             self.canvas.tag_bind(self.binding_object, "<%s>"%release_sequence, self.release_motion)
@@ -2550,8 +2557,8 @@ class TwoNodeElement(object):
         for el in self.elements_to_move:
             el.move(dx, dy)
 
-    def on_updownleftright(self, event, angle):
-        self.canvas.rotate(event = event,angle = angle-self.center_pos[2],around = self)
+    def on_updownleftright(self, event, angle,recentering_sequence):
+        self.canvas.rotate(event = event,angle = angle-self.center_pos[2],around = self,recentering_sequence = recentering_sequence)
 
     ###########################################
     # DROPPING BEHAVIOUR

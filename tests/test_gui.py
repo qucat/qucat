@@ -104,6 +104,8 @@ class AutomaticTesting(GuiTestingHandler):
                 if l[0] == '#':
                     # Scrollbar event
                     exec('self.gui.canvas.scroll_'+l[1]+'('+l[3:]+')', globals(), locals())
+                # elif '<Motion>' in l:
+                #      exec('self.gui.canvas.event_generate('+l+',warp=True)', globals(), locals())
                 else:
                     exec('self.gui.canvas.event_generate('+l+')', globals(), locals())
 
@@ -194,6 +196,8 @@ class TestComponentCreation(AutomaticTesting):
         self.launch_gui_testing()
     def test_building_ground(self):
         self.launch_gui_testing()
+    def test_building_rotated_ground(self):
+        self.launch_gui_testing()
     def test_building_inductor(self):
         self.launch_gui_testing()
 
@@ -229,7 +233,7 @@ class TestUndoRedo(AutomaticTesting):
 class TestMovingComponentsAround(AutomaticTesting):
 
     def test_moving_capacitor_horizontally(self):
-        self.launch_gui_testing()
+        self.launch_gui_testing(run_slower=False)
 
     def test_rotating_capacitor(self):
         self.launch_gui_testing(force_build=False,run_slower=False)
@@ -238,6 +242,8 @@ class TestMovingComponentsAround(AutomaticTesting):
         self.launch_gui_testing(force_build=False,run_slower=False)
 
     def test_rotating_RLCJG_right_click(self):
+        self.launch_gui_testing(force_build=False,run_slower=False)
+    def test_rotating_RLCJG_draggin_arrows(self):
         self.launch_gui_testing(force_build=False,run_slower=False)
 
     def test_rotating_nothing_using_Alt_R(self):
