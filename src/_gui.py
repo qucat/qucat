@@ -282,10 +282,10 @@ class CircuitEditor(tk.Canvas):
     """
     def __init__(self, master, grid_unit, netlist_filename,
             track_events_to = None, unittesting = False,verbose = False,os_type = 'windows'):
-        
+
         if os_type == 'mac':
             self.font_size = 14
-        if os_type == 'linux':
+        elif os_type == 'linux':
             self.font_size = 10
         else:
             self.font_size = 8
