@@ -1237,8 +1237,10 @@ class _Network(object):
             raise ValueError("There are no components in the circuit")
         if not self.is_connected():
             raise ValueError("There are two sub-circuits which are not connected")
+        if self.has_shorts():
+            raise ValueError("Your circuit appears to be shorted, making the analysis impossible")
         if self.has_opens():
-            raise ValueError("Analyzing an open circuit is impossible")
+            raise ValueError("Your circuit appears to be open, making the analysis impossible")
 
     @timeit
     def is_connected(self, 
@@ -1275,10 +1277,50 @@ class _Network(object):
         else:
             return True
 
+    def has_shorts(self):
+        '''
+        Determines if there is an short circuit. 
+
+        For each node, we construct the network where
+        that node has been removed. 
+        
+        If the removal of that node leads to two distinct, 
+        non-connected circuits, then that node was a point 
+        at which the circuit was being shorted.
+        '''
+        for node_to_remove in range(len(self.net_dict)):
+            # create a copy of the network
+            partial_network = deepcopy(self)
+
+            # remove the node_to_remove from the network
+            for other_node in partial_network.net_dict[node_to_remove]:
+                del partial_network.net_dict[other_node][node_to_remove]
+            del partial_network.net_dict[node_to_remove]
+            
+            # check if that network is connected
+            if not partial_network.is_connected():
+                return True
+
+        # No shorts were found
+        return False
+        
     def has_opens(self):
-        for node, connections in self.net_dict.items():
+        '''
+        Determines if there is an open connection in the 
+        circuit. 
+
+        If there are only two nodes in the circuit, it cannot be open. 
+        This is because through another check we are imposing that the circuit has at least
+        two types of components, one inductive, one capacitive.
+        So a two node circuit will at minimum be an LC or JC circuit.
+
+        If there are more than two nodes, and one of the nodes is connected 
+        to only one other, the circuit is open.
+        '''
+        for _, connections in self.net_dict.items():
             if len(connections) == 1 and len(self.net_dict)>2:
                 return True
+        return False
 
     def parse_netlist(self):
 
@@ -1393,6 +1435,8 @@ class _Network(object):
             if not isinstance(el,W):
                 el.node_minus = plot_node_to_new_node(el.node_minus)
                 el.node_plus = plot_node_to_new_node(el.node_plus)
+                if el.node_minus == el.node_plus:
+                    raise ValueError("Your circuit appears to be shorted, making the analysis impossible")
                 for n in [el.node_minus, el.node_plus]:
                     if n not in self.nodes:
                         self.nodes.append(n)

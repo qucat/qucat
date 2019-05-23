@@ -427,6 +427,16 @@ class TestNetworkAnalysis(TestCaseAppended):
                 core.J(2,3,'Z'),
                 ])
 
+    def test_shorted_LC(self):
+        with self.assertRaises(ValueError):
+            self.open_gui_file('shorted_circuit_3.txt')
+    def test_shorted_circuit_1(self):
+        with self.assertRaises(ValueError):
+            self.open_gui_file('shorted_circuit_1.txt')
+    def test_shorted_circuit_2(self):
+        with self.assertRaises(ValueError):
+            self.open_gui_file('shorted_circuit_2.txt')
+
     def test_connectivity_check_single_element_not_connected(self):
         with self.assertRaises(ValueError):
             net = core._Network([
