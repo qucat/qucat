@@ -283,12 +283,20 @@ class CircuitEditor(tk.Canvas):
     def __init__(self, master, grid_unit, netlist_filename,
             track_events_to = None, unittesting = False,verbose = False,os_type = 'windows'):
 
+        # Set font size depending on OS type
         if os_type == 'mac':
             self.font_size = 14
         elif os_type == 'linux':
             self.font_size = 10
         else:
             self.font_size = 8
+
+        self.graphics_extension = '.png'
+        # for old versions of mac OS, use jpg rather than png
+        if os_type == 'mac':
+            if int(platform.mac_ver()[0].split('.')[0]) <= 10:
+                if int(platform.mac_ver()[0].split('.')[1]) <= 13:
+                    self.graphics_extension = '.jpg'
 
         self.paired_sequences = []
         if os_type == 'mac':
@@ -3139,12 +3147,12 @@ class Component(TwoNodeElement):
     ###########################################  
 
     def create(self):
-        self.add_or_replace_node_dots()
         x, y, angle = self.center_pos
         self.import_image()
         self.image = self.canvas.create_image(
             *self.grid_to_canvas([x, y]), image=self.tk_image)
         self.add_or_replace_label()
+        self.add_or_replace_node_dots()
         self.canvas.elements.append(self)
         self.canvas.set_state(0)
      
@@ -3288,12 +3296,12 @@ class Component(TwoNodeElement):
     ###########################################
     
     def import_image(self):
-        png = type(self).__name__
+        img_name = type(self).__name__
         if self.hover:
-            png += '_hover'
+            img_name += '_hover'
         if self.selected:
-            png += '_selected'
-        png += '.png'
+            img_name += '_selected'
+        img_name += self.canvas.graphics_extension
 
         if self.center_pos[2] is None:
             angle = self.init_angle
@@ -3301,8 +3309,8 @@ class Component(TwoNodeElement):
             angle = self.center_pos[2]
 
         # Location to store the inductor/capacitor/.. graphics
-        png_directory = os.path.join(os.path.dirname(__file__), ".graphics")
-        img = Image.open(os.path.join(png_directory, png))
+        img_directory = os.path.join(os.path.dirname(__file__), ".graphics")
+        img = Image.open(os.path.join(img_directory, img_name))
         size = int(self.canvas.grid_unit*(1-1*self.node_dot_radius))
         img = img.resize((size, int(size/2)))
         img = img.rotate(angle,expand = True)
