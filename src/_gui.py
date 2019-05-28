@@ -3448,10 +3448,6 @@ class RequestValueLabelWindow(tk.Toplevel):
         tk.Toplevel.__init__(self, master)
         self.component = component
 
-        # TODO add suggestions
-        # TODO inform that filling two fields is optional
-        fields = 'Value', 'Label'
-
         # Determine values v(value) and l(label) fields
         v, l = self.component.prop
         if v is None:
@@ -3468,12 +3464,38 @@ class RequestValueLabelWindow(tk.Toplevel):
             l = ''
         field_values = [v, l]
 
+        # Information to be displayed
+        if isinstance(self.component,C):
+            info_text = 'Specify label and/or capacitance (in units of Farad)'
+            self.value_string = 'Capacitance'
+        elif isinstance(self.component,J):
+            self.value_string = 'Inductance'
+            info_text = 'Specify label and/or Josephson inductance (in units of Henry)'
+            info_text += '\nNote that L = (hbar/2/e)**2/[Josephson Energy in Joules]'
+        elif isinstance(self.component,L):
+            self.value_string = 'Inductance'
+            info_text = 'Specify label and/or inductance (in units of Henry)'
+        elif isinstance(self.component,R):
+            self.value_string = 'Resistance'
+            info_text = 'Specify label and/or resistance (in units of Ohm)'
+
+        # Entry field strings
+        fields = self.value_string, 'Label'
+
+        info_font = ("Helvetica", self.component.canvas.font_size, "normal italic")
+
+        # Add information field
+        row = tk.Frame(self)
+        lab = tk.Label(row, text=info_text, anchor='sw',justify=tk.LEFT,font = info_font)
+        row.pack(side=tk.TOP, fill=tk.X, padx=5, pady=5)
+        lab.pack(side=tk.LEFT, expand=tk.YES, fill=tk.X)
+
         # Setup the label and entry fields that the user will see
         self.entries = []
         for i, field in enumerate(fields):
             row = tk.Frame(self)
-            lab = tk.Label(row, width=13, text=field, anchor='w')
-            ent = tk.Entry(row, width=13)
+            lab = tk.Label(row, width=12, text=field, anchor='w')
+            ent = tk.Entry(row)
             ent.insert(tk.END, field_values[i])
             row.pack(side=tk.TOP, fill=tk.X, padx=5, pady=5)
             lab.pack(side=tk.LEFT)
@@ -3486,10 +3508,10 @@ class RequestValueLabelWindow(tk.Toplevel):
         # Bind Return, OK and cancel buttons
         self.bind('<Return>', lambda event: self.ok())
         self.bind('<KP_Enter>', lambda event: self.ok()) # Keypad enter on linux
-        ok_button = tk.Button(self, text='OK', command=self.ok)
-        ok_button.pack(side=tk.LEFT, padx=5, pady=5)
+        ok_button = tk.Button(self, text='  OK  ', command=self.ok)
+        ok_button.pack(side=tk.RIGHT, padx=5, pady=5)
         cancel_button = tk.Button(self, text='Cancel', command=self.cancel)
-        cancel_button.pack(side=tk.LEFT, padx=5, pady=5)
+        cancel_button.pack(side=tk.RIGHT, padx=5, pady=5)
 
     def ok(self):
 
@@ -3508,7 +3530,7 @@ class RequestValueLabelWindow(tk.Toplevel):
                 v = float(value)
             except ValueError:
                 messagebox.showinfo(
-                    "Incorrect value", "Enter a python style float, for example: 1e-2 or 0.01")
+                    "Incorrect %s"%self.value_string.lower(), "%s should be a python style float, for example: 1e-2 or 0.01"%self.value_string)
                 self.focus_force()
                 return None
                 
@@ -3517,17 +3539,17 @@ class RequestValueLabelWindow(tk.Toplevel):
             # be interpreted as infinity (or zero)
             if v>max_float:
                 messagebox.showinfo(
-                    "Too large value", "Maximum allowed value is %.2e"%max_float)
+                    "Too large %s"%self.value_string.lower(), "Maximum allowed %s is %.2e"%(self.value_string.lower(),max_float))
                 self.focus_force()
                 return None
             elif v<0:
                 messagebox.showinfo(
-                    "Negative value", "Value should be a positive float")
+                    "Negative %s"%self.value_string.lower(), "%s should be a positive float"%self.value_string)
                 self.focus_force()
                 return None
             elif 0<=v<min_float:
                 messagebox.showinfo(
-                    "Too small value", "Minimum allowed value is %.2e"%min_float)
+                    "Too small %s"%self.value_string.lower(), "Minimum allowed %s is %.2e"%(self.value_string.lower(),min_float))
                 self.focus_force()
                 return None
 
@@ -3541,7 +3563,7 @@ class RequestValueLabelWindow(tk.Toplevel):
         # provided
         if l is None and v is None:
             messagebox.showinfo(
-                "No inputs", "Enter a value or a label or both")
+                "No inputs", "Enter a %s or a label or both"%self.value_string.lower())
             self.focus_force()
             return None
         else:
