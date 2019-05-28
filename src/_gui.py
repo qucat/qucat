@@ -454,8 +454,8 @@ class CircuitEditor(tk.Canvas):
         # The items appearing in the cascade menu that appears when 
         # clicking on File for example will have 15 characters width on the 
         # left where the name of the functionality is provided and
-        # 6 characters on the right where the keyboard shortcut is provided
-        label_template = "{:<15}{:>6}"
+        # 15 characters on the right where the keyboard shortcut is provided
+        label_template = "{:<15}{:>15}"
 
         # The font for the cascading items is defined
         # Note: for everything to be aligned the chosen font should 
@@ -532,7 +532,7 @@ class CircuitEditor(tk.Canvas):
             font=menu_font)
 
         menu.add_command(
-            label=label_template.format("Rotate", "Arrows"), 
+            label=label_template.format("Rotate", "Drag+Arrows"), 
             command=(lambda :self.event_generate('<Alt-r>')), 
             font=menu_font)
 
