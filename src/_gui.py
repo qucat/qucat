@@ -3706,7 +3706,13 @@ class GuiWindow(ttk.Frame):
         if _unittesting:
             self.update()
         else:
-            self.mainloop()
+            try:
+                self.mainloop()
+            except UnicodeDecodeError:
+                messagebox.showinfo("","Oops.. Circuit editor crashed.\n\n"+\
+                    "This can happen when scrolling on MacOS with an out-dated version of Python: you may want to upgrade to the latest Python version\n\n"+\
+                    "If that is not the source of error, please submit a bug report, and we will try and solve the problem as fast as possible:\n"+\
+                    "https://qucat.org/report_a_bug.html")
 
 if __name__ == '__main__':
     GuiWindow(sys.argv[1])
