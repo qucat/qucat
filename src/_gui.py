@@ -283,6 +283,8 @@ class CircuitEditor(tk.Canvas):
     def __init__(self, master, grid_unit, netlist_filename,
             track_events_to = None, unittesting = False,verbose = False,os_type = 'windows'):
 
+        self.os_type = os_type
+
         # Set font size depending on OS type
         if os_type == 'mac':
             self.font_size = 14
@@ -821,6 +823,11 @@ class CircuitEditor(tk.Canvas):
         '''To set before we start dragging
         '''
 
+        # reroute all mouse-movements (even outside of the editor)
+        # to the editor widget 
+        if self.os_type == 'mac':
+            self.grab_set()
+
         # unset nearly all bindings
         self.unset_temporary_bindings(exceptions = ["<Motion>"])
         self.unset_bindings(self.permenant_bindings)
@@ -852,6 +859,12 @@ class CircuitEditor(tk.Canvas):
 
         # Save the changes that have occured
         self.save()
+
+        # stop reroute all events (even outside of the editor)
+        # to the editor widget, this allows us to use the edit bar again for example
+        if self.os_type == 'mac':
+            self.grab_release()
+            self.grab_current()
 
         # Go back to state 0
         self.set_state(0)
@@ -903,6 +916,11 @@ class CircuitEditor(tk.Canvas):
         '''To set before we start creating somthing
         '''
 
+        # reroute all mouse-movements (even outside of the editor)
+        # to the editor widget 
+        if self.os_type == 'mac':
+            self.grab_set()
+
         # unset bindings
         self.unset_temporary_bindings()
         self.unset_bindings(self.permenant_bindings)
@@ -924,6 +942,12 @@ class CircuitEditor(tk.Canvas):
     def exit_state_4(self):
         '''When finished creating something
         '''
+
+        # stop reroute all events (even outside of the editor)
+        # to the editor widget, this allows us to use the edit bar again for example
+        if self.os_type == 'mac':
+            self.grab_release()
+            self.grab_current()
 
         # We just dragged and dropped a component
         # so we check if nodes of that component 
@@ -3230,6 +3254,7 @@ class Component(TwoNodeElement):
         '''
         Input given in canvas units
         '''
+
         self.canvas.move(self.image, dx, dy)
         if self.dot_minus is not None:
             self.canvas.delete(self.dot_minus)
@@ -3458,6 +3483,14 @@ class RequestValueLabelWindow(tk.Toplevel):
 
         # Determine values v(value) and l(label) fields
         v, l = self.component.prop
+
+        # if we are creating this component 
+        # we want to re-direct the events away from the editor and onto 
+        # this widget
+        # This will be cancelled upon exiting state 4
+        if v is None and l is None and self.component.canvas.os_type == 'mac':
+            self.grab_set()
+
         if v is None:
             v = ''
         else:
