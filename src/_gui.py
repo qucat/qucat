@@ -298,7 +298,7 @@ class CircuitEditor(tk.Canvas):
         # for old versions of mac OS, use jpg rather than png
         # And force events to be routed to the editor
         # when leaving the window by setting force_grab_set to True 
-        if os_type == 'mac':
+        if platform.system() == 'Darwin':
             if int(platform.mac_ver()[0].split('.')[0]) <= 10:
                 if int(platform.mac_ver()[0].split('.')[1]) <= 13:
                     self.graphics_extension = '.jpg'
