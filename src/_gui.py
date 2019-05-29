@@ -294,11 +294,15 @@ class CircuitEditor(tk.Canvas):
             self.font_size = 8
 
         self.graphics_extension = '.png'
+        self.force_grab_set = False
         # for old versions of mac OS, use jpg rather than png
+        # And force events to be routed to the editor
+        # when leaving the window by setting force_grab_set to True 
         if os_type == 'mac':
             if int(platform.mac_ver()[0].split('.')[0]) <= 10:
                 if int(platform.mac_ver()[0].split('.')[1]) <= 13:
                     self.graphics_extension = '.jpg'
+                    self.force_grab_set = True
 
         self.paired_sequences = []
         if os_type == 'mac':
@@ -825,7 +829,7 @@ class CircuitEditor(tk.Canvas):
 
         # reroute all mouse-movements (even outside of the editor)
         # to the editor widget 
-        if self.os_type == 'mac':
+        if self.force_grab_set:
             self.grab_set()
 
         # unset nearly all bindings
@@ -862,7 +866,7 @@ class CircuitEditor(tk.Canvas):
 
         # stop reroute all events (even outside of the editor)
         # to the editor widget, this allows us to use the edit bar again for example
-        if self.os_type == 'mac':
+        if self.force_grab_set:
             self.grab_release()
             self.grab_current()
 
@@ -918,7 +922,7 @@ class CircuitEditor(tk.Canvas):
 
         # reroute all mouse-movements (even outside of the editor)
         # to the editor widget 
-        if self.os_type == 'mac':
+        if self.force_grab_set:
             self.grab_set()
 
         # unset bindings
@@ -945,7 +949,7 @@ class CircuitEditor(tk.Canvas):
 
         # stop reroute all events (even outside of the editor)
         # to the editor widget, this allows us to use the edit bar again for example
-        if self.os_type == 'mac':
+        if self.force_grab_set:
             self.grab_release()
             self.grab_current()
 
@@ -3488,7 +3492,7 @@ class RequestValueLabelWindow(tk.Toplevel):
         # we want to re-direct the events away from the editor and onto 
         # this widget
         # This will be cancelled upon exiting state 4
-        if v is None and l is None and self.component.canvas.os_type == 'mac':
+        if v is None and l is None and self.component.canvas.force_grab_set:
             self.grab_set()
 
         if v is None:
