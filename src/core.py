@@ -72,6 +72,7 @@ class Qcircuit(object):
         self.capacitors = []
         self.junctions = []
         self.resistors = []
+        self.components = {}
         self._wire = []
         self._grounds = []
         self._no_value_components = []
@@ -1933,6 +1934,9 @@ class Component(Circuit):
         return sp.Symbol(self.label)
 
     def _set_component_lists(self):
+        if self.label not in ['', ' ', 'None', None]:
+            self._circuit.components[self.label] = self
+
         if self.value is None and self.label not in ['', ' ', 'None', None]:
             if self.label in self._circuit._no_value_components:
                 # raise ValueError(
