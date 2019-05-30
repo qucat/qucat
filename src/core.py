@@ -110,37 +110,41 @@ class Qcircuit(object):
 
     @timeit
     def _compute_inverse_of_dY(self):
+        # Compute a sympy expression for the admittance 
+        # at the nodes of the reference element
         Y = self._network.admittance(self.ref_elt.node_minus, self.ref_elt.node_plus)
-        Y_together = sp.together(Y)    # Puts everything on a single fraction with the numerator and denomenator as polynomials
-                                            # So it combines but also "de-nests"
 
+        # Write the expression as a single fraction 
+        # with the numerator and denomenator as polynomials
+        # (it combines but also "de-nests")
+        Y_together = sp.together(Y)    
+
+        # Extract denominator
+        v = sp.denom(Y_together)
+
+        # Symbol representing angular frequency
         w = sp.Symbol('w')
-        # Write numerator as polynomial in omega
+
+        # Write numerator as polynomial in 'w'
         Y_numer = sp.numer(Y_together)
         Y_numer_poly = sp.collect(sp.expand(Y_numer), w)
-        # Write numerator as polynomial in omega
-        Y_denom = sp.denom(Y_together)
-        Y_denom_poly = sp.collect(sp.expand(Y_denom), w)
+
+        # Obtain the order of the numerator 
         Y_numer_poly_order = sp.polys.polytools.degree(
-            Y_numer_poly, gen=w)  # Order of the polynomial
-        Y_denom_poly_order = sp.polys.polytools.degree(
-            Y_denom_poly, gen=w)  # Order of the polynomial
+            Y_numer_poly, gen=w) 
 
+        # Compute list of coefficients
         Y_numer_poly_coeffs_analytical = [Y_numer_poly.coeff(w, n) for n in range(
-            Y_numer_poly_order+1)[::-1]]  # Get polynomial coefficients
+            Y_numer_poly_order+1)[::-1]]
 
-        Y_denom_poly_coeffs_analytical = [Y_denom_poly.coeff(w, n) for n in range(
-            Y_denom_poly_order+1)[::-1]]  # Get polynomial coefficients
-
-        v = sum([a*w**(Y_denom_poly_order-n)
-                     for n, a in enumerate(Y_denom_poly_coeffs_analytical)])
+        # Express the derivative of the polynomial
         du = sum([(Y_numer_poly_order-n)*a*w**(Y_numer_poly_order-n-1)
                       for n, a in enumerate(Y_numer_poly_coeffs_analytical)])
         
-        self._inverse_of_dY_lambdified =  lambdify(
-                ['w']+self._no_value_components,
-                v/du, 
-                "numpy")
+        # Convert the sympy expression for v/du to a function
+        # Note the function arguments are the angular frequency 
+        # and component values that need to be specified
+        self._inverse_of_dY_lambdified =  lambdify(['w']+self._no_value_components, v/du, "numpy")
 
     @vectorize
     @safely_evaluate
