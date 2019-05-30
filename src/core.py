@@ -31,6 +31,11 @@ except ImportError:
 PROFILING = False
 
 def timeit(method):
+    '''
+    Decorator which prints the time 
+    a function took to execute.
+    Only works the global variable PROFILING is set to True.
+    '''
     def timed(*args, **kw):
         ts = time.time()
         result = method(*args, **kw)
@@ -42,6 +47,21 @@ def timeit(method):
     return timed
 
 def string_to_component(s, *arg, **kwarg):
+    '''
+    Allows the creation of a Component object using a string.
+
+    Parameters
+    ----------
+    s : string
+        One of 'W', 'R', 'L', 'J', 'C', 'G', dicatates the type 
+        of component to create
+    args, kwargs : 
+        Arguments needed for the component creation
+
+    Returns
+    -------
+    A component of type ``s``
+    '''
     if s == 'W':
         return W(*arg, **kwarg)
     elif s == 'R':
@@ -57,29 +77,58 @@ def string_to_component(s, *arg, **kwarg):
 
 class Qcircuit(object):
     """A class representing a quantum circuit.
-    '''
+
+    Attributes:
+        components (dict): Dictionary of components having a label, such that a component 
+            with label 'L_1' can be obtained by ``Qcircuit.components['L_1']``
+        Q_min (float): Modes with have a quality factor below Q_min will not ignored
+        inductors (list): List of inductor objects present in the circuit
+        resistors (list): List of inductor objects present in the circuit
+        junctions (list): List of junction objects present in the circuit
+        capacitors (list): List of capacitor objects present in the circuit
+        netlist (list): List of all components present in the circuit
+        ref_elt (J or L): Junction or inductor component used as a reference for the calculation 
+                        of zero-point fluctations
     """
 
     def __init__(self, netlist):
-        self.Q_min = 1
-        '''Doc for Q_min
-        '''
+        self.Q_min = 1 # Modes with have a quality factor below Q_min will not ignored
+        self._plotting_normal_mode = False # Used to keep track of which imported plotting_settings to use 
+                                            # only set to true when show_normal_mode is called
+        self.netlist = netlist # List of all components present in the circuit
 
-        self._plotting_normal_mode = False
-        self.netlist = netlist
-        self._network = _Network(netlist)
+        self._network = _Network(netlist) # Converts the list of components into a network object
+                # The Network object has methods to compute of the admittance between two nodes
+                # or the tranfer function between two nodes and two others
+        
+        # We construct (enpty) lists of all the different type of 
+        # components that could be present in the circuit
         self.inductors = []
         self.capacitors = []
         self.junctions = []
         self.resistors = []
-        self.components = {}
         self._wire = []
         self._grounds = []
+
+        # Initialize a dictionary of components having a label, such that a component 
+        # with label 'L_1' can be obtained by ``Qcircuit.components['L_1']``
+        self.components = {}
+
+        # Initialize a list which will contain the labels of the componentns which have
+        # no value (these will have to be specified in most methods as a kwarg)
         self._no_value_components = []
+
+        # For each component of the circuit....
         for elt in netlist:
+            # ...tell the component what circuit it belongs to
             elt._circuit = self
+            # ...and populate the empty lists/dictionaries initialized above with the element if appropriate
             elt._set_component_lists()
 
+
+        # Check that there is at least one inductive element in the circuit
+        # Set the first one found to be the reference element used 
+        # to compute zero-point-fluctuations 
         if len(self.junctions) > 0:
             self.ref_elt = self.junctions[0]
         elif len(self.inductors) > 0:
@@ -88,21 +137,37 @@ class Qcircuit(object):
             raise ValueError(
                 "There should be at least one junction or inductor in the circuit")
 
+        # Check that there is at least one capacitive element in the circuit
         if len(self.capacitors) == 0:
             raise ValueError(
                 "There should be at least one capacitor in the circuit")
 
+        # Initialize the flux transformation dictionary,
+        # where _flux_transformation_dict[node_plus][node_minus] 
+        # will be populated with a function which gives
+        # the voltage transfer function between the nodes surrounding
+        # the reference element and (node_plus,node_minus)
+        # this function takes as an argument an angular frequency
+        # and keyword arguments if component values need to be specified
         self._flux_transformation_dict = {}
         for node in self._network.nodes:
             self._flux_transformation_dict[node] = {}
 
+        # define the function which returns the inverse of dY
         self._compute_inverse_of_dY()
-        self._char_poly_coeffs = [lambdify(
-            self._no_value_components, c, 'numpy') for c in 
-            self._network.compute_char_poly_coeffs(is_lossy = (len(self.resistors)>0))]
+
+        # define the functions which returns the components of the characteristic polynomial
+        # (the roots of which are the eigen-frequencies)
+        self._char_poly_coeffs = [lambdify(self._no_value_components, c, 'numpy') 
+            for c in self._network.compute_char_poly_coeffs(is_lossy = (len(self.resistors)>0))]
 
     @property
     def _pp(self):
+        '''
+        Returns the plotting parameters used 
+            * in the Qcircuit.show method (if self._plotting_normal_mode is False)
+            * in the Qcircuit.show_normal_modes() method (if self._plotting_normal_mode is True)
+        '''
         if self._plotting_normal_mode:
             return plotting_parameters_normal_modes
         else:
@@ -110,6 +175,22 @@ class Qcircuit(object):
 
     @timeit
     def _compute_inverse_of_dY(self):
+        '''
+        Generate the Qcircuit._inverse_of_dY_lambdified function which
+        takes as an argument an angular frequency (and keyword arguments 
+        if component values need to be specified) and returns the inverse of the
+        derivative of the admittance evaluated at the nodes of the reference element.
+
+        Y will is a rational function Y = u/v, where u and v are polynomials.
+        So dY = (du*v-dv*u)/v**2.
+        We only need to evaluate dY at a eigen-frequencies of the ciruit, 
+        when Y=0  <=> u = 0
+        This simplifies the expression to be computed to dY = du/v
+        
+        This functon is called in Qcircuit._inverse_of_dY.
+        Where a wrapper ensures the function is "safely evaluated" to deal
+        with infinities, and accepts an array of frequencies as an input.
+        '''
         # Compute a sympy expression for the admittance 
         # at the nodes of the reference element
         Y = self._network.admittance(self.ref_elt.node_minus, self.ref_elt.node_plus)
@@ -149,9 +230,43 @@ class Qcircuit(object):
     @vectorize
     @safely_evaluate
     def _inverse_of_dY(self, w,**kwargs):
+        '''
+        This function wraps the Qcircuit._inverse_of_dY_lambdified
+        function defined in Qcircuit._compute_inverse_of_dY.
+        The function is now "safely evaluated" to deal
+        with infinities, and accepts an array of frequencies as an input.
+
+        
+        Parameters
+        ----------
+        w:          array
+                    Eigen-frequencies of the circuit
+        kwargs:     
+                    Values for un-specified circuit components, 
+                    ex: ``L=1e-9``.
+        
+        Returns
+        -------
+        1/dY        array
+                    inverse of the derivative of the admittance evaluated at 
+                    the nodes of the reference element.
+        '''
         return self._inverse_of_dY_lambdified(w,**kwargs)
   
     def _check_kwargs(self, **kwargs):
+        '''
+        Raises a ValueError 
+        * if one of the kwargs is not the label of a circuit element
+        * if a component without a value has not had its value specified in the kwargs 
+
+        Called in all functions accepting keyword arguments (for un-specified circuit components).
+        
+        Parameters
+        ----------
+        kwargs:     
+                    Values for un-specified circuit components, 
+                    ex: ``L=1e-9``.
+        '''
         for key in kwargs:
             if key in self._no_value_components:
                 pass
@@ -162,18 +277,36 @@ class Qcircuit(object):
         for label in self._no_value_components:
             try:
                 kwargs[label]
-            except Exception as e:
+            except Exception:
                 raise ValueError(
                     'The value of %s should be specified with the keyword argument %s=... ' % (label, label))
 
 
     @timeit
     def _set_w_cpx(self, **kwargs):
+        '''
+        Sets the Qcircuit.w_cpx to the circuit eigenfrequencies
+        (including the imaginary part due to losses).
+
+        Parameters
+        ----------
+        kwargs:     
+                    Values for un-specified circuit components, 
+                    ex: ``L=1e-9``.
+        '''
+        
+        # Check if the kwargs provided are correct
         self._check_kwargs(**kwargs)
+
+        # Compute the coefficients of the characteristic polynomial.
+        # The roots of this polynomial will provide the complex eigenfrequencies
         char_poly_coeffs = [complex(coeff(**kwargs)) for coeff in self._char_poly_coeffs]
+
         if len(self.resistors) == 0:
         
-            # The variable of the characteristic polynomial is w^2
+            # In this case, the variable of the characteristic polynomial is \omega^2
+            # And we can safely take the real part of the solution as there are no
+            # resistors in the circuit.
             w2 = np.real(np.roots(char_poly_coeffs))
 
             # Sometimes, when the circuits has vastly different
@@ -183,9 +316,20 @@ class Qcircuit(object):
             # negative solutions
             w2 = w2[np.nonzero(w2 > 0.)]
 
+            # Take the square root to get to the eigenfrequencies
             w_cpx = np.sqrt(w2)
+
         else:
+
             w_cpx = np.roots(char_poly_coeffs)
+
+            # For each solution, its complex conjugate
+            # is also a solution, we want to discard the negative
+            # imaginary part solutions which correspond to unphysical
+            # negative dissipation modes
+            w_cpx = w_cpx[np.nonzero(np.imag(w_cpx) > 0.)]
+
+            # Negative frequency modes are discarded
             w_cpx = w_cpx[np.nonzero(np.real(w_cpx) > 0.)]
 
         
@@ -198,9 +342,12 @@ class Qcircuit(object):
         w_cpx = w_cpx[np.nonzero(np.imag(-self._inverse_of_dY(np.real(w_cpx),**kwargs))>0)]
 
         # Only consider modes with Q>self.Q_min (=1 by default)
+        # The reason for this measure is that
         # 0-frequency solutions (with real parts close to 0)
         # tend to have frequencies which oscillate between positive and
-        # negative values which can make sweeps difficult
+        # negative values.
+        # The negative values are discarded which changes the number of modes
+        # and makes parameter sweeps difficult 
         w_cpx = w_cpx[np.nonzero(np.real(w_cpx) > self.Q_min*np.imag(w_cpx))]
 
         # Sort solutions with increasing frequency
@@ -220,7 +367,7 @@ class Qcircuit(object):
         Parameters
         ----------
         kwargs:     
-                    Values for un-specified circuit compoenents, 
+                    Values for un-specified circuit components, 
                     ex: ``L=1e-9``.
 
         Returns
@@ -264,7 +411,7 @@ class Qcircuit(object):
         Parameters
         ----------
         kwargs:     
-                    Values for un-specified circuit compoenents, 
+                    Values for un-specified circuit components, 
                     ex: ``L=1e-9``.
 
         Returns
@@ -309,7 +456,7 @@ class Qcircuit(object):
         Parameters
         ----------
         kwargs:     
-                    Values for un-specified circuit compoenents, 
+                    Values for un-specified circuit components, 
                     ex: ``L=1e-9``.
 
         Returns
@@ -370,7 +517,7 @@ class Qcircuit(object):
         Parameters
         ----------
         kwargs:     
-                    Values for un-specified circuit compoenents, 
+                    Values for un-specified circuit components, 
                     ex: ``L=1e-9``.
 
         Returns
@@ -461,7 +608,7 @@ class Qcircuit(object):
                         If set to True, this method will print a summary
                         of the system parameters as a table.
         kwargs:     
-                    Values for un-specified circuit compoenents, 
+                    Values for un-specified circuit components, 
                     ex: ``L=1e-9``.
 
         Returns
@@ -547,7 +694,7 @@ class Qcircuit(object):
                     where ``a_i`` is the annihilation operator of the
                     i-th considered mode, a QuTiP Qobj
         kwargs:     
-                    Values for un-specified circuit compoenents, 
+                    Values for un-specified circuit components, 
                     ex: ``L=1e-9``.
 
         Returns
@@ -2047,7 +2194,7 @@ class Component(Circuit):
         quantity:       string
                         One of 'current', 'flux', 'charge', 'voltage'
         kwargs:     
-                    Values for un-specified circuit compoenents, 
+                    Values for un-specified circuit components, 
                     ex: ``L=1e-9``.
 
         Returns
@@ -2327,7 +2474,7 @@ class J(L):
         Parameters
         ----------
         kwargs:     
-                    Values for un-specified circuit compoenents, 
+                    Values for un-specified circuit components, 
                     ex: ``L=1e-9``.
         
         mode:           integer
