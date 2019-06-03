@@ -637,8 +637,8 @@ class Qcircuit(object):
                 to_print += table_line % tuple([str(i)]+[pretty_value(
                     to_return[j][i], use_unicode=False)+'Hz' for j in range(3)])
 
-            to_print += "\nKerr coefficients\n(diagonal = Kerr, off-diagonal = cross-Kerr)\n"
-
+            to_print += "\nKerr coefficients (diagonal = Kerr, off-diagonal = cross-Kerr)\n"
+            
             table_line = ""
             for i in range(N_modes+1):
                 table_line += " %7s |"
