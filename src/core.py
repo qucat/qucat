@@ -355,6 +355,24 @@ class Qcircuit(object):
         self.w_cpx = w_cpx[order]
 
     def _anharmonicities_per_junction(self, **kwargs):
+        '''
+        Returns the contribution of each junction to the anharmonicity of each mode.
+        For more details, see the documentation of J.anharmonicity.
+
+        Anharmonicities are given in units of Hz (not angular frequency).
+
+        Parameters
+        ----------
+        kwargs:     
+                    Values for un-specified circuit components, 
+                    ex: ``L=1e-9``.
+
+        Returns
+        -------
+        anh_per_jun: ndarray
+            where ``anh_per_jun[j,m]`` corresponds to the contribution of junction ``j``
+            to the anharmonicity of mode ``m``
+        '''
         self._set_w_cpx(**kwargs)
         return [j._anharmonicity(self.w_cpx, **kwargs) for j in self.junctions]
 
@@ -558,19 +576,29 @@ class Qcircuit(object):
 
         is the contribution of junction j to the total anharmonicity of a mode m
         '''
+
+        # Compute anharmonicity per junction ``As``
+        # where ``As[j,m]`` corresponds to the contribution of junction ``j``
+        # to the anharmonicity of mode ``m``
         As = self._anharmonicities_per_junction(**kwargs)
+
+        # Number of modes in the circuit
         N_modes = len(self.w_cpx)
+
+        # Number of junctions in the circuit
         N_junctions = len(self.junctions)
 
+        # initialize the vector of Kerr coefficients
         Ks = np.zeros((N_modes, N_modes))
 
         for i in range(N_modes):
-            line = []
             for j in range(N_modes):
                 for k in range(N_junctions):
                     if i == j:
+                        # Add contribution to self-Kerr
                         Ks[i, i] += np.real(As[k][i])
                     else:
+                        # Add contribution to cross-Kerr
                         # Note that taking the square root here is fine
                         # since Ks[i, j]~phi_ki^2*phi_kj^2 is necessarily a positive real
                         # since phi_ki,phi_kj are real numbers
@@ -617,6 +645,8 @@ class Qcircuit(object):
             ``[[f_0,f_1,..],[k_0,k_1,..],[A_0,A_1,..],[[A_0,chi_01,..],[chi_10,A_1,..]..]]``
         '''
         
+        # Quantity to be returned: 
+        # eigenfrequency, loss-rates, anharmonicity, and Kerr parameters of the circuit
         to_return = self.eigenfrequencies(**kwargs),\
             self.loss_rates(**kwargs),\
             self.anharmonicities(**kwargs),\
@@ -625,28 +655,39 @@ class Qcircuit(object):
 
         if pretty_print:
 
+            # Number of modes in the circuit
             N_modes = len(to_return[0])
+
+            # Setup a template for the mode/frequency/dissipation/anharmonicity
+            # table row in the form `` 7 spaces | 7 spaces |  7 spaces | 7 spaces |``
             table_line = ""
             for i in range(4):
                 table_line += " %7s |"
             table_line += "\n"
 
+            # Top row for content of columns
             to_print = table_line % (
                 "mode", " freq. ", " diss. ", " anha. ")
+
+            # add all the other rows (each row is a mode)
             for i, w in enumerate(to_return[0]):
                 to_print += table_line % tuple([str(i)]+[pretty_value(
                     to_return[j][i], use_unicode=False)+'Hz' for j in range(3)])
 
             to_print += "\nKerr coefficients (diagonal = Kerr, off-diagonal = cross-Kerr)\n"
             
+            # Setup template for the rows of the Kerr coefficients table row
+            # in the form `` 7 spaces | 7 spaces | ...``
             table_line = ""
             for i in range(N_modes+1):
                 table_line += " %7s |"
             table_line += "\n"
 
+            # Top row indexing each column as a mode
             to_print += table_line % tuple(['mode'] +
                                             [str(i)+'   ' for i in range(N_modes)])
 
+            # Add other rows
             for i in range(N_modes):
                 line_elements = [str(i)]
                 for j in range(N_modes):
@@ -656,10 +697,11 @@ class Qcircuit(object):
                     else:
                         line_elements.append("")
                 to_print += table_line % tuple(line_elements)
+
+            # Print the two tables
             print(to_print)
 
         return to_return
-
 
     def hamiltonian(self, modes='all', taylor=4, excitations=6, return_ops = False, **kwargs):
         r'''Returns the circuits Hamiltonian for further analysis with QuTiP.
