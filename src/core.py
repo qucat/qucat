@@ -2229,8 +2229,7 @@ class Component(Circuit):
         else:
             return self._convert_flux(np.real(phi_zpf), w,quantity,**kwargs)
 
-    
-    @vectorize_kwargs(exclude = ['quantity'])
+    @vectorize_kwargs(exclude = 'quantity')
     def zpf(self, mode, quantity, **kwargs):
         r'''Returns contribution of a mode to the zero-point fluctuations of a quantity for this component.
 
@@ -2280,13 +2279,14 @@ class Component(Circuit):
 
         Where :math:`Z(\omega)` is this components impedance.
         '''
-        mode_w = self._circuit.eigenfrequencies(**kwargs)[mode]*2.*np.pi
+        self._circuit._set_w_cpx(**kwargs)
+        mode_w = np.real(self._circuit.w_cpx[mode])
         return self._zpf(mode_w, quantity, **kwargs)
     
-    @vectorize_kwargs(exclude = ['quantity'])
+    @vectorize_kwargs(exclude = 'quantity')
     def phasor(self, mode, quantity, **kwargs):
-
-        mode_w = self._circuit.eigenfrequencies(**kwargs)[mode]*2.*np.pi
+        self._circuit._set_w_cpx(**kwargs)
+        mode_w = np.real(self._circuit.w_cpx[mode])
         return self._convert_flux(self._flux(mode_w,**kwargs),mode_w,quantity,**kwargs)
 
 class W(Component):

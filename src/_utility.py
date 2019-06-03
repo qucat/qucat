@@ -134,7 +134,12 @@ def vectorize_kwargs(func_to_evaluate = None,*,exclude = []):
                     to_return_single = func(self,*args,**kwargs_single)
 
                     if i == 0:
-                        to_return = np.empty((*first_iterable.shape,*to_return_single.shape))
+                        try:
+                            iter(to_return_single)
+                            to_return = np.empty((*first_iterable.shape,*to_return_single.shape), dtype=np.complex128)
+                        except TypeError:
+                            # not an iterable
+                            to_return = np.empty(first_iterable.shape, dtype=np.complex128)
                         i+=1
 
                     to_return[index] = to_return_single

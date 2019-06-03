@@ -225,11 +225,11 @@ class ShuntedJosephsonRing(TestCaseAppended):
         w,k,A,chi = self.parameters(C,L)
         self.assertRelativelyClose(A[1],e**2/2./(8*C)/h)
 
-class CoupledTransmonRLC(TestCaseAppended):
+class SweepingParameters(TestCaseAppended):
     '''
     Coupled transmon/RLC
     '''
-    def test_sweeping_LJ_in_fkAchi(self):
+    def test_sweeping_LJ_forloop_in_fkAchi(self):
         cir = core.Network([
             core.C(0,1,100e-15),
             core.J(0,1,'L_J'),
@@ -239,6 +239,124 @@ class CoupledTransmonRLC(TestCaseAppended):
             core.R(2,0,1e6)
             ])
         [cir.f_k_A_chi(L_J=x) for x in [1e-9,2e-9]]
+
+    def test_sweeping_LJ_nparray_in_fkAchi(self):
+        cir = core.Network([
+            core.C(0,1,100e-15),
+            core.J(0,1,'L_J'),
+            core.C(1,2,1e-15),
+            core.C(2,0,100e-15),
+            core.L(2,0,10e-9),
+            core.R(2,0,1e6)
+            ])
+        f,k,A,chi = cir.f_k_A_chi(L_J=np.array([1e-9,2e-9]))
+        self.assertRelativelyClose(A[1,0],cir.anharmonicities(L_J=1e-9)[1])
+
+    def test_sweeping_LJ_array_in_fkAchi(self):
+        cir = core.Network([
+            core.C(0,1,100e-15),
+            core.J(0,1,'L_J'),
+            core.C(1,2,1e-15),
+            core.C(2,0,100e-15),
+            core.L(2,0,10e-9),
+            core.R(2,0,1e6)
+            ])
+        f,k,A,chi = cir.f_k_A_chi(L_J=[1e-9,2e-9])
+        self.assertRelativelyClose(chi[1,0,1],cir.kerr(L_J=2e-9)[1,0])
+
+    def test_sweeping_LJ_CJ_array_in_fkAchi(self):
+        cir = core.Network([
+            core.C(0,1,'C_J'),
+            core.J(0,1,'L_J'),
+            core.C(1,2,1e-15),
+            core.C(2,0,100e-15),
+            core.L(2,0,10e-9),
+            core.R(2,0,1e6)
+            ])
+        f,k,A,chi = cir.f_k_A_chi(L_J=[1e-9,2e-9],C_J=[1e-9,2e-9])
+        self.assertRelativelyClose(f[1,0],cir.eigenfrequencies(L_J=1e-9,C_J=1e-9)[1])
+    def test_sweeping_LJ_CJ_array_in_fkAchi_incompatible_sizes(self):
+        cir = core.Network([
+            core.C(0,1,'C_J'),
+            core.J(0,1,'L_J'),
+            core.C(1,2,1e-15),
+            core.C(2,0,100e-15),
+            core.L(2,0,10e-9),
+            core.R(2,0,1e6)
+            ])
+        with self.assertRaises(ValueError):
+            cir.f_k_A_chi(L_J=[1e-9,2e-9],C_J=[1e-9,2e-9,3e-9])
+    def test_sweeping_LJ_CJ_array_in_fkAchi_show(self):
+        cir = core.Network([
+            core.C(0,1,'C_J'),
+            core.J(0,1,'L_J'),
+            core.C(1,2,1e-15),
+            core.C(2,0,100e-15),
+            core.L(2,0,10e-9),
+            core.R(2,0,1e6)
+            ])
+        
+        with self.assertRaises(ValueError):
+            cir.show(L_J=[1e-9,2e-9],C_J=[1e-9,2e-9,3e-9])
+
+    def test_sweeping_LJ_CJ_array_in_fkAchi_show_normal_mode(self):
+        cir = core.Network([
+            core.C(0,1,'C_J'),
+            core.J(0,1,'L_J'),
+            core.C(1,2,1e-15),
+            core.C(2,0,100e-15),
+            core.L(2,0,10e-9),
+            core.R(2,0,1e6)
+            ])
+        
+        with self.assertRaises(ValueError):
+            cir.show(L_J=[1e-9,2e-9],C_J=[1e-9,2e-9,3e-9])
+
+    def test_sweeping_LJ_CJ_array_in_fkAchi_show_normal_mode(self):
+        cir = core.Network([
+            core.C(0,1,'C_J'),
+            core.J(0,1,'L_J'),
+            core.C(1,2,1e-15),
+            core.C(2,0,100e-15),
+            core.L(2,0,10e-9),
+            core.R(2,0,1e6)
+            ])
+        
+        with self.assertRaises(ValueError):
+            cir.show(L_J=[1e-9,2e-9],C_J=[1e-9,2e-9,3e-9])
+
+
+    def test_sweeping_CJ_array_in_phasor(self):
+        C_comp = core.C(0,1,'C_J')
+        cir = core.Network([
+            C_comp,
+            core.J(0,1,10e-9),
+            core.C(1,2,1e-15),
+            core.C(2,0,100e-15),
+            core.L(2,0,10e-9),
+            core.R(2,0,1e6)
+            ])
+        
+        self.assertRelativelyClose(
+            C_comp.zpf(mode = 0, quantity = 'voltage', C_J=[1e-9,2e-9,3e-9])[1],
+            C_comp.zpf(mode = 0, quantity = 'voltage', C_J=2e-9))
+
+        
+    def test_sweeping_CJ_array_in_zpf(self):
+        C_comp = core.C(0,1,'C_J')
+        cir = core.Network([
+            C_comp,
+            core.J(0,1,10e-9),
+            core.C(1,2,1e-15),
+            core.C(2,0,100e-15),
+            core.L(2,0,10e-9),
+            core.R(2,0,1e6)
+            ])
+        self.assertRelativelyClose(
+             C_comp.phasor(mode = 1, quantity = 'charge', C_J=1.5e-9),
+            C_comp.phasor(mode = 1, quantity = 'charge', C_J=[1e-9,1.5e-9,3e-9])[1])
+
+
 
 class TestGraphics(TestCaseAppended):   
 
