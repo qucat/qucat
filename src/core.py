@@ -16,7 +16,9 @@ try:
             shift,\
             to_string,\
             safely_evaluate,\
-            vectorize
+            vectorize_w,\
+            vectorize_kwargs,\
+            refuse_vectorize_kwargs
     from .plotting_settings import plotting_parameters_show,plotting_parameters_normal_modes
 except ImportError:
     # When running from source without pip installation
@@ -25,7 +27,9 @@ except ImportError:
             shift,\
             to_string,\
             safely_evaluate,\
-            vectorize
+            vectorize_w,\
+            vectorize_kwargs,\
+            refuse_vectorize_kwargs
     from plotting_settings import plotting_parameters_show,plotting_parameters_normal_modes
 
 PROFILING = False
@@ -227,7 +231,7 @@ class Qcircuit(object):
         # and component values that need to be specified
         self._inverse_of_dY_lambdified =  lambdify(['w']+self._no_value_components, v/du, "numpy")
 
-    @vectorize
+    @vectorize_w
     @safely_evaluate
     def _inverse_of_dY(self, w,**kwargs):
         '''
@@ -375,7 +379,8 @@ class Qcircuit(object):
         '''
         self._set_w_cpx(**kwargs)
         return [j._anharmonicity(self.w_cpx, **kwargs) for j in self.junctions]
-
+    
+    @vectorize_kwargs
     def eigenfrequencies(self, **kwargs):
         '''Returns the normal mode frequencies of the circuit.
 
@@ -417,7 +422,8 @@ class Qcircuit(object):
         '''
         self._set_w_cpx(**kwargs)
         return np.real(self.w_cpx)/2./pi
-
+    
+    @vectorize_kwargs
     def loss_rates(self, **kwargs):
         '''Returns the loss rates of the circuit normal modes.
 
@@ -461,7 +467,8 @@ class Qcircuit(object):
         '''
         self._set_w_cpx(**kwargs)
         return np.imag(self.w_cpx)/2./pi
-
+    
+    @vectorize_kwargs
     def anharmonicities(self, **kwargs):
         r'''Returns the anharmonicity of the circuit normal modes.
 
@@ -518,7 +525,8 @@ class Qcircuit(object):
         '''
         Ks = self.kerr(**kwargs)
         return np.array([Ks[i, i] for i in range(Ks.shape[0])])
-
+    
+    @vectorize_kwargs
     def kerr(self, **kwargs):
         r'''Returns the Kerr parameters for the circuit normal modes.
 
@@ -703,6 +711,7 @@ class Qcircuit(object):
 
         return to_return
 
+    @refuse_vectorize_kwargs(exclude = ['modes','taylor','excitations'])
     def hamiltonian(self, modes='all', taylor=4, excitations=6, return_ops = False, **kwargs):
         r'''Returns the circuits Hamiltonian for further analysis with QuTiP.
         The Hamiltonian is provided in units of frequency (not angular frequency), 
@@ -817,6 +826,7 @@ class Qcircuit(object):
             return H, operators
         return H
 
+    @refuse_vectorize_kwargs
     def show(self,
              plot=True,
              return_fig_ax=False):
@@ -891,6 +901,7 @@ class Qcircuit(object):
 
         plt.close()
 
+    @refuse_vectorize_kwargs(exclude = ['quantity'])
     def show_normal_mode(self, 
         mode, 
         quantity='current',
@@ -2147,12 +2158,12 @@ class Component(Circuit):
                 self._circuit.ref_elt.node_minus, self._circuit.ref_elt.node_plus, self.node_minus, self.node_plus)
             tr_undecorated = lambdify(['w']+self._circuit._no_value_components,tr_analytical, "numpy")
             
-            @vectorize
+            @vectorize_w
             @safely_evaluate
             def tr(self, w,**kwargs):
                 return tr_undecorated(w,**kwargs)
 
-            @vectorize
+            @vectorize_w
             @safely_evaluate
             def tr_minus(self, w,**kwargs):
                 return -tr_undecorated(w,**kwargs)
@@ -2218,7 +2229,8 @@ class Component(Circuit):
         else:
             return self._convert_flux(np.real(phi_zpf), w,quantity,**kwargs)
 
-
+    
+    @vectorize_kwargs(exclude = ['quantity'])
     def zpf(self, mode, quantity, **kwargs):
         r'''Returns contribution of a mode to the zero-point fluctuations of a quantity for this component.
 
@@ -2270,7 +2282,8 @@ class Component(Circuit):
         '''
         mode_w = self._circuit.eigenfrequencies(**kwargs)[mode]*2.*np.pi
         return self._zpf(mode_w, quantity, **kwargs)
-
+    
+    @vectorize_kwargs(exclude = ['quantity'])
     def phasor(self, mode, quantity, **kwargs):
 
         mode_w = self._circuit.eigenfrequencies(**kwargs)[mode]*2.*np.pi
@@ -2507,7 +2520,8 @@ class J(L):
 
     def _anharmonicity(self,w,**kwargs):
         return self._get_Ej(**kwargs)/2*self._zpf(w,'flux',**kwargs)**4
-
+    
+    @vectorize_kwargs
     def anharmonicity(self, mode, **kwargs):
         r'''Returns the contribution of this junction to the anharmonicity of a given normal mode.
 

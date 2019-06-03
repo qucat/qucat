@@ -51,7 +51,7 @@ def safely_evaluate(func_to_evaluate):
     return wrapper_safely_evaluate
 
 
-def vectorize(func_to_evaluate):
+def vectorize_w(func_to_evaluate):
     @functools.wraps(func_to_evaluate)
     def wrapper_vectorize(self,w, **kwargs):
         try:
@@ -63,6 +63,89 @@ def vectorize(func_to_evaluate):
             # iterable = True
             return np.vectorize(lambda w_single: func_to_evaluate(self,w_single,**kwargs))(w)
     return wrapper_vectorize
+
+
+def refuse_vectorize_kwargs(func_to_evaluate = None,*,exclude = []):
+    # Only works for functions which return a list
+
+    def _decorate(func):
+        @functools.wraps(func)
+        def wrapper_vectorize(self, *args,**kwargs):
+            non_iterables = {}
+            iterables = {}
+            for kw, arg in kwargs.items():
+                if kw not in exclude:
+                    try:
+                        iter(arg)
+                        raise ValueError("No iterables are allowed, use a single value for %s"%kw)
+                    except TypeError:
+                        # not an iterable
+                        pass
+            
+            return func(self,*args,**kwargs)
+        return wrapper_vectorize
+
+    if func_to_evaluate:
+        return _decorate(func_to_evaluate)
+    return _decorate
+
+def vectorize_kwargs(func_to_evaluate = None,*,exclude = []):
+    # Only works for functions which return a list
+
+    def _decorate(func):
+        @functools.wraps(func)
+        def wrapper_vectorize(self, *args,**kwargs):
+            non_iterables = {}
+            iterables = {}
+            for kw, arg in kwargs.items():
+                if kw in exclude:
+                    non_iterables[kw] = arg
+                else:
+                    try:
+                        iter(arg)
+                    except TypeError:
+                        # not an iterable
+                        non_iterables[kw] = arg
+                    else:
+                        # is an iterable
+                        # Make sure it has the same shape as other iterables
+                        if len(iterables)>0:
+                            first_iterable = iterables[list(iterables)[0]]
+                            if np.array(arg).shape != first_iterable.shape:
+                                raise ValueError("Keyword arguments have incompatible shapes: %s %s and %s %s"%(
+                                    list(iterables)[0],
+                                    first_iterable.shape,
+                                    kw,
+                                    np.array(arg).shape
+                                ))
+                        iterables[kw] = np.array(arg)
+            
+            if len(iterables)==0:
+                return func(self,*args,**kwargs)
+            else:
+                first_iterable = iterables[list(iterables)[0]]
+                kwargs_single = non_iterables
+                i = 0
+                for index,_ in np.ndenumerate(first_iterable):
+
+                    for kw, arg in iterables.items():
+                        kwargs_single[kw] = arg[index]
+
+                    to_return_single = func(self,*args,**kwargs_single)
+
+                    if i == 0:
+                        to_return = np.empty((*first_iterable.shape,*to_return_single.shape))
+                        i+=1
+
+                    to_return[index] = to_return_single
+                for i in range(len(first_iterable.shape)):
+                    to_return = np.moveaxis(to_return,0,-1)
+                return to_return
+        return wrapper_vectorize
+
+    if func_to_evaluate:
+        return _decorate(func_to_evaluate)
+    return _decorate
 
 def get_exponent_3(value):
     value = np.absolute(value)
