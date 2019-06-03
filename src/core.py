@@ -1311,7 +1311,7 @@ class GUI(Qcircuit):
 
     '''
 
-    def __init__(self, filename, edit=True, plot=True, print_network=True,_unittesting=False):
+    def __init__(self, filename, edit=True, plot=True, print_network=False,_unittesting=False):
 
         # Note: this will also give a valid path if filename was specified using 
         # an absolute path
