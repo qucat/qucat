@@ -10,7 +10,7 @@ from core import Network,GUI,J,L,C,R
 # circuit = Network([
 #     C(0,1,Cj),
 #     junction
-#     ])
+#     ]) 
 # circuit.f_k_A_chi(Lj=1)
 # junction.zpf(mode=0,quantity = 'flux')
 # H = circuit.hamiltonian(modes = [0],taylor = 4,excitations = [50])
