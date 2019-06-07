@@ -91,6 +91,23 @@ class Other(TestCaseAppended):
         f_expected = 1/np.sqrt(L*C)/2/np.pi
         self.assertRelativelyClose(f_expected,f)
         
+class TransmonResonator(TestCaseAppended):
+
+    def parameters(self,Cj,Lj,Cc,Cr,Lr):
+        circuit = core.Network([
+            core.C(0,1,Cj),
+            core.J(0,1,Lj),
+            core.C(1,2,Cc),
+            core.C(0,2,Cr),
+            core.L(0,2,Lr)
+        ])
+        return circuit.f_k_A_chi()
+    
+    def test_extremely_decoupled_case(self):
+        sys_params = {'Cc':0.0000001e-15,'Cj':100e-15,'Lj':10e-9,'Cr':165e-15,'Lr':2.7e-9}
+        w,k,A,chi = self.parameters(**sys_params)
+        self.assertNotEqual(0,np.absolute(A[1]))
+
 class Transmon(TestCaseAppended):
     '''
     Transmon circuit parameters
@@ -176,11 +193,11 @@ class ShuntedJosephsonRing(TestCaseAppended):
     def parameters(self,C,L):
         circuit = core.Network([
             core.C(0,2,C),
-            core.C(1,3,C),
+            core.C(1,3,C*2),
             core.J(0,1,L),
-            core.J(1,2,L),
-            core.J(2,3,L),
-            core.J(3,0,L)
+            core.J(1,2,L*3),
+            core.J(2,3,L*4),
+            core.J(3,0,L*5)
         ])
         return circuit.f_k_A_chi()
 
