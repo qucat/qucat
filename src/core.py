@@ -16,7 +16,6 @@ try:
     from ._utility import pretty_value,\
             shift,\
             to_string,\
-            safely_evaluate,\
             vectorize_w,\
             vectorize_kwargs,\
             refuse_vectorize_kwargs
@@ -27,7 +26,6 @@ except ImportError:
     from _utility import pretty_value,\
             shift,\
             to_string,\
-            safely_evaluate,\
             vectorize_w,\
             vectorize_kwargs,\
             refuse_vectorize_kwargs
