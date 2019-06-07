@@ -339,11 +339,17 @@ class Qcircuit(object):
             w2 = refine_roots(char_poly_coeffs,w2)
 
             # Sometimes, when the circuits has vastly different
-            # values for its circuit components, the symbolic 
+            # values for its circuit components or modes are too
+            # decoupled, the symbolic 
             # calculations can yield an incorrect char_poly_coeffs
             # We can easily discard some of these casese by throwing away
             # negative solutions
-            w2 = w2[np.nonzero(w2 > 0.)]
+            for w2_single in w2:
+                if np.real(w2_single) < 0:
+                    error_message = "Imaginary frequency mode f = 1j %f Hz mode found (and discarded).\n"%(np.sqrt(-w2_single)/2/np.pi)
+                    error_message += "Most likely the root finding algorithm failed to obtain a high enough precision frequency."
+                    warn(error_message)
+            w2 = w2[np.nonzero(w2 >= 0.)]
 
             # Take the square root to get to the eigenfrequencies
             w_cpx = np.sqrt(w2)
@@ -363,17 +369,17 @@ class Qcircuit(object):
             # negative dissipation modes
             w_cpx = w_cpx[np.nonzero(np.imag(w_cpx) > 0.)]
 
-            # Negative frequency modes are discarded
-            w_cpx = w_cpx[np.nonzero(np.real(w_cpx) > 0.)]
+        # Negative frequency modes are discarded
+        for w in w_cpx:
+            if np.real(w) < 0:
+                error_message = "Negative f = %f Hz mode found (and discarded).\n"%(np.real(w/2/np.pi))
+                error_message += "Most likely the root finding algorithm failed to obtain a high enough precision frequency."
+                warn(error_message)
+            if np.real(w) == 0:
+                error_message = "0 frequency soltion discarded"
+                warn(error_message)
+        w_cpx = w_cpx[np.nonzero(np.real(w_cpx) > 0.)]
 
-        
-        # Sometimes, when the circuits has vastly different
-        # values for its circuit components, the symbolic 
-        # calculations can yield an incorrect char_poly_coeffs
-        # We can easily discard some of these cases by throwing away
-        # any solutions with a complex impedance (ImY'<0)
-        # The minus sign is there since 1/Im(Y)  = -Im(1/Y)
-        w_cpx = w_cpx[np.nonzero(np.imag(-self._inverse_of_dY(np.real(w_cpx),**kwargs))>0)]
 
         # Only consider modes with Q>self.Q_min (=1 by default)
         # The reason for this measure is that
@@ -382,7 +388,29 @@ class Qcircuit(object):
         # negative values.
         # The negative values are discarded which changes the number of modes
         # and makes parameter sweeps difficult 
-        w_cpx = w_cpx[np.nonzero(np.real(w_cpx) > self.Q_min*np.imag(w_cpx))]
+        for w in w_cpx:
+            if np.real(w) < self.Q_min*np.imag(w):
+                error_message = "Discarding f = %f Hz mode "%(np.real(w/2/np.pi))
+                error_message += "since it has a too low quality factor Q = %f < %f"%(np.real(w)/np.imag(w),self.Q_min)
+                warn(error_message)
+        w_cpx = w_cpx[np.nonzero(np.real(w_cpx) >= self.Q_min*np.imag(w_cpx))]
+
+
+        # Sometimes, when the circuits has vastly different
+        # values for its circuit components or modes are too
+        # decoupled, the symbolic 
+        # calculations can yield an incorrect char_poly_coeffs
+        # We can easily discard some of these cases by throwing away
+        # any solutions with a complex impedance (ImY'<0)
+        # The minus sign is there since 1/Im(Y)  = -Im(1/Y)
+        for w in w_cpx:
+            if np.imag(-self._inverse_of_dY(np.real(w),**kwargs))<0:
+                error_message = "Discarding f = %f Hz mode.\n"%(np.real(w/2/np.pi))
+                error_message += "The root finding algorithm failed to obtain a high enough precision " 
+                error_message += "frequency to lead to an realistic estimation of the zero-point-fluctuations.\n"
+                error_message += "This typically occurs in circuits where two modes are nearly completely decoupled one from another."
+                warn(error_message)
+        w_cpx = w_cpx[np.nonzero(np.imag(-self._inverse_of_dY(np.real(w_cpx),**kwargs))>=0)]
 
         # Sort solutions with increasing frequency
         order = np.argsort(np.real(w_cpx))
