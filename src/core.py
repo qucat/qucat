@@ -1,6 +1,7 @@
 import sympy as sp
 from sympy.utilities.lambdify import lambdify
 import numpy as np
+from scipy.optimize import root_scalar
 from sympy.core.mul import Mul, Pow, Add
 from copy import deepcopy
 from numbers import Number
@@ -97,6 +98,13 @@ class Qcircuit(object):
 
     def __init__(self, netlist):
         self.Q_min = 1 # Modes with have a quality factor below Q_min will not ignored
+        
+        # After an initial estimation of the complex eigenfrequenceis using a diaglinalization
+        # of the companion matrix, the frequencies are refined to a tolerence
+        # self.rtol using a gradient based root finder, with a maximum number of iterations self.maxiter
+        self.maxiter = 1e5 
+        self.rtol = 1e-9
+
         self._plotting_normal_mode = False # Used to keep track of which imported plotting_settings to use 
                                             # only set to true when show_normal_mode is called
         self.netlist = netlist # List of all components present in the circuit
@@ -306,12 +314,31 @@ class Qcircuit(object):
         # The roots of this polynomial will provide the complex eigenfrequencies
         char_poly_coeffs = [complex(coeff(**kwargs)) for coeff in self._char_poly_coeffs]
 
+        def refine_roots(p,x):
+            dp = np.polyder(p)
+            ddp = np.polyder(dp)
+        
+            x_refined = []
+            for x0 in x:
+                x_refined.append(
+                    root_scalar(
+                        f = lambda x:np.polyval(p,x), 
+                        x0 = x0, 
+                        fprime = lambda x:np.polyval(dp,x), 
+                        fprime2 = lambda x:np.polyval(ddp,x),
+                        method = 'halley', 
+                        maxiter = int(self.maxiter), 
+                        rtol = self.rtol).root)
+            return np.array(x_refined)
+
+
         if len(self.resistors) == 0:
         
             # In this case, the variable of the characteristic polynomial is \omega^2
             # And we can safely take the real part of the solution as there are no
             # resistors in the circuit.
             w2 = np.real(np.roots(char_poly_coeffs))
+            w2 = refine_roots(char_poly_coeffs,w2)
 
             # Sometimes, when the circuits has vastly different
             # values for its circuit components, the symbolic 
@@ -326,6 +353,7 @@ class Qcircuit(object):
         else:
 
             w_cpx = np.roots(char_poly_coeffs)
+            w_cpx = refine_roots(char_poly_coeffs,w_cpx)
 
             # For each solution, its complex conjugate
             # is also a solution, we want to discard the negative
