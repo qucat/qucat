@@ -325,22 +325,6 @@ class SweepingParameters(TestCaseAppended):
         with self.assertRaises(ValueError):
             cir.show(L_J=[1e-9,2e-9],C_J=[1e-9,2e-9,3e-9])
 
-
-    def test_sweeping_CJ_array_in_phasor(self):
-        C_comp = core.C(0,1,'C_J')
-        cir = core.Network([
-            C_comp,
-            core.J(0,1,10e-9),
-            core.C(1,2,1e-15),
-            core.C(2,0,100e-15),
-            core.L(2,0,10e-9),
-            core.R(2,0,1e6)
-            ])
-        
-        self.assertRelativelyClose(
-            C_comp.zpf(mode = 0, quantity = 'voltage', C_J=[1e-9,2e-9,3e-9])[1],
-            C_comp.zpf(mode = 0, quantity = 'voltage', C_J=2e-9))
-
         
     def test_sweeping_CJ_array_in_zpf(self):
         C_comp = core.C(0,1,'C_J')
@@ -353,8 +337,8 @@ class SweepingParameters(TestCaseAppended):
             core.R(2,0,1e6)
             ])
         self.assertRelativelyClose(
-             C_comp.phasor(mode = 1, quantity = 'charge', C_J=1.5e-9),
-            C_comp.phasor(mode = 1, quantity = 'charge', C_J=[1e-9,1.5e-9,3e-9])[1])
+             C_comp.zpf(mode = 1, quantity = 'charge', C_J=1.5e-9),
+            C_comp.zpf(mode = 1, quantity = 'charge', C_J=[1e-9,1.5e-9,3e-9])[1])
 
 
 

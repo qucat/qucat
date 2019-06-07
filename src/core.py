@@ -549,7 +549,7 @@ class Qcircuit(object):
 
         Notes
         -----
-        The Hamiltonian of the circuit is
+        The Hamiltonian of the circuit in the limit of low-dissipation is
 
         :math:`\hat{H} = \sum_m hf_m\hat{a}_m^\dagger\hat{a}_m + \sum_j E_j[1-\cos{\hat{\varphi_j}}-\frac{\hat{\varphi_j}^2}{2}]`,
 
@@ -612,7 +612,7 @@ class Qcircuit(object):
         Notes
         -----
 
-        The Hamiltonian of the circuit is
+        The Hamiltonian of the circuit in the limit of low dissipation is
 
         :math:`\hat{H} = \sum_m hf_m\hat{a}_m^\dagger\hat{a}_m + \sum_j E_j[1-\cos{\hat{\varphi_j}}-\frac{\hat{\varphi_j}^2}{2}]`,
 
@@ -815,7 +815,7 @@ class Qcircuit(object):
         -----
         
         The Hamiltonian of the circuit, with the non-linearity of the Josephson junctions
-        Taylor-expanded, is given by
+        Taylor-expanded, is given in the limit of low dissipation by
 
         :math:`\hat{H} = \sum_{m\in\text{modes}} \hbar \omega_m\hat{a}_m^\dagger\hat{a}_m + \sum_j\sum_{2n\le\text{taylor}}E_j\frac{(-1)^{n+1}}{(2n)!}\left[\frac{\phi_{zpf,m,j}}{\phi_0}(\hat{a}_m^\dagger+\hat{a}_m)\right]^{2n}`,
         
@@ -871,7 +871,8 @@ class Qcircuit(object):
 
             for j, junction in enumerate(self.junctions):
                 # Note that zpf returns the flux in units of phi_0 = hbar/2./e
-                phi[j] += junction.zpf(quantity='flux',mode=i, **kwargs)*(a+a.dag()) 
+                phi[j] += np.real(junction.zpf(quantity='flux',mode=i, **kwargs))*(a+a.dag()) 
+                phi[j] += -1j*np.imag(junction.zpf(quantity='flux',mode=i, **kwargs))*(a-a.dag()) 
 
         for j, junction in enumerate(self.junctions):
             n = 2
@@ -1086,7 +1087,7 @@ class Qcircuit(object):
         all_values = []
         for el in self.netlist:
             if not isinstance(el,W):
-                all_values.append(el.phasor(mode = mode, quantity = quantity, **kwargs))
+                all_values.append(el.zpf(mode = mode, quantity = quantity, **kwargs))
         all_values = np.absolute(all_values)
         max_value = np.amax(all_values)
         min_value = np.amin(all_values)
@@ -1148,7 +1149,7 @@ class Qcircuit(object):
             if not isinstance(el,W):
 
                 # phasor for the quantity and for the current
-                value = el.phasor(mode = mode, quantity = quantity, **kwargs)
+                value = el.zpf(mode = mode, quantity = quantity, **kwargs)
 
                 # location of the element center
                 x = el.x_plot_center
@@ -2240,50 +2241,31 @@ class Component(Circuit):
         # Note that the flux defined here 
         phi = tr(self, w,**kwargs)*phi_zpf_r
         # is complex.
-        # This causes a problem for the quantization:
-        # the prefactor of a+a.dag will be complex
-        # making the flux operator non-hermitian
-        # This problem is adressed in the zpf method
 
         return phi
 
-    def _convert_flux(self,flux, w,quantity, **kwargs):
+    def _zpf(self, w,quantity, **kwargs):
         if quantity == 'flux':
             phi_0 = hbar/2./e
-            return flux/phi_0
+            return self._flux(w,**kwargs)/phi_0
         if quantity == 'voltage':
-            return flux*1j*w
+            return self._flux(w,**kwargs)*1j*w
         if quantity == 'current':
-            kwargs['w'] = w
+            kwargs_with_w = deepcopy(kwargs)
+            kwargs_with_w['w'] = w
             Y = self._admittance()
             if isinstance(Y, Number):
                 pass
             else:
-                Y = Y.evalf(subs=kwargs)
-            return complex(self._convert_flux(flux, w,'voltage')*Y)
+                Y = Y.evalf(subs=kwargs_with_w)
+            return complex(self._zpf(w,'voltage',**kwargs)*Y)
         if quantity == 'charge':
-            return self._convert_flux(flux, w,'current', **kwargs)/1j/w/e
+            return self._zpf(w,'current', **kwargs)/1j/w/e
 
 
     def _to_string(self, use_unicode=True):
         return to_string(self.unit, self.label, self.value, use_unicode=use_unicode)
 
-    def _zpf(self, w, quantity, **kwargs):
-        
-        # Note that the flux defined in _flux
-        phi_zpf = self._flux(w,**kwargs)
-        # is complex.
-        # This causes a problem for the quantization:
-        # the prefactor of a+a.dag will be complex
-        # making the flux operator non-hermitian
-        # In the high-Q limit we are assuming for quantization 
-        # phi_zpf = a+ib, where b<<a for inductors/junctions/capacitors
-        # phi_zpf = a+ib, where b>>a for resistors
-
-        if isinstance(self,R):
-            return self._convert_flux(1j*np.imag(phi_zpf), w,quantity,**kwargs)
-        else:
-            return self._convert_flux(np.real(phi_zpf), w,quantity,**kwargs)
 
     @vectorize_kwargs(exclude = 'quantity')
     def zpf(self, mode, quantity, **kwargs):
@@ -2337,13 +2319,7 @@ class Component(Circuit):
         '''
         self._circuit._set_w_cpx(**kwargs)
         mode_w = np.real(self._circuit.w_cpx[mode])
-        return self._zpf(mode_w, quantity, **kwargs)
-    
-    @vectorize_kwargs(exclude = 'quantity')
-    def phasor(self, mode, quantity, **kwargs):
-        self._circuit._set_w_cpx(**kwargs)
-        mode_w = np.real(self._circuit.w_cpx[mode])
-        return self._convert_flux(self._flux(mode_w,**kwargs),mode_w,quantity,**kwargs)
+        return self._zpf(mode_w,quantity,**kwargs)
 
 class W(Component):
     """docstring for Wire"""
@@ -2575,7 +2551,7 @@ class J(L):
         self._circuit.junctions.append(self)
 
     def _anharmonicity(self,w,**kwargs):
-        return self._get_Ej(**kwargs)/2*self._zpf(w,'flux',**kwargs)**4
+        return self._get_Ej(**kwargs)/2*np.absolute(self._zpf(w,quantity='flux',**kwargs))**4
     
     @vectorize_kwargs
     def anharmonicity(self, mode, **kwargs):
