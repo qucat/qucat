@@ -304,7 +304,7 @@ class Qcircuit(object):
 
         # Compute the coefficients of the characteristic polynomial.
         # The roots of this polynomial will provide the complex eigenfrequencies
-        char_poly_coeffs = [np.real(coeff(**kwargs)) for coeff in self._char_poly_coeffs]
+        char_poly_coeffs = [complex(coeff(**kwargs)) for coeff in self._char_poly_coeffs]
 
         if len(self.resistors) == 0:
         
@@ -318,7 +318,7 @@ class Qcircuit(object):
             # calculations can yield an incorrect char_poly_coeffs
             # We can easily discard some of these casese by throwing away
             # negative solutions
-            w2 = w2[np.nonzero(w2 >= 0.)]
+            w2 = w2[np.nonzero(w2 > 0.)]
 
             # Take the square root to get to the eigenfrequencies
             w_cpx = np.sqrt(w2)
@@ -331,10 +331,10 @@ class Qcircuit(object):
             # is also a solution, we want to discard the negative
             # imaginary part solutions which correspond to unphysical
             # negative dissipation modes
-            w_cpx = w_cpx[np.nonzero(np.imag(w_cpx) >= 0.)]
+            w_cpx = w_cpx[np.nonzero(np.imag(w_cpx) > 0.)]
 
             # Negative frequency modes are discarded
-            w_cpx = w_cpx[np.nonzero(np.real(w_cpx) >= 0.)]
+            w_cpx = w_cpx[np.nonzero(np.real(w_cpx) > 0.)]
 
         
         # Sometimes, when the circuits has vastly different
@@ -343,7 +343,7 @@ class Qcircuit(object):
         # We can easily discard some of these cases by throwing away
         # any solutions with a complex impedance (ImY'<0)
         # The minus sign is there since 1/Im(Y)  = -Im(1/Y)
-        w_cpx = w_cpx[np.nonzero(np.imag(-self._inverse_of_dY(np.real(w_cpx),**kwargs))>=0)]
+        w_cpx = w_cpx[np.nonzero(np.imag(-self._inverse_of_dY(np.real(w_cpx),**kwargs))>0)]
 
         # Only consider modes with Q>self.Q_min (=1 by default)
         # The reason for this measure is that
@@ -352,7 +352,7 @@ class Qcircuit(object):
         # negative values.
         # The negative values are discarded which changes the number of modes
         # and makes parameter sweeps difficult 
-        w_cpx = w_cpx[np.nonzero(np.real(w_cpx) >= self.Q_min*np.imag(w_cpx))]
+        w_cpx = w_cpx[np.nonzero(np.real(w_cpx) > self.Q_min*np.imag(w_cpx))]
 
         # Sort solutions with increasing frequency
         order = np.argsort(np.real(w_cpx))
