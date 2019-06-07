@@ -11,6 +11,7 @@ from subprocess import run
 import inspect
 import matplotlib.pyplot as plt
 import time
+from warnings import warn
 try:
     from ._constants import *
     from ._utility import pretty_value,\
