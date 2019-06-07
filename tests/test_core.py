@@ -218,29 +218,29 @@ class ShuntedJosephsonRing(TestCaseAppended):
         w,k,A,chi = self.parameters(C,L)
         self.assertEqual(len(w),2,msg = f"f_res = {w}")
 
-    def test_frequency_0(self):
-        C = 1e-13
-        L = 1e-8
-        w,k,A,chi = self.parameters(C,L)
-        self.assertRelativelyClose(w[0],1/np.sqrt(L*C)/2./np.pi)
+    # def test_frequency_0(self):
+    #     C = 1e-13
+    #     L = 1e-8
+    #     w,k,A,chi = self.parameters(C,L)
+    #     self.assertRelativelyClose(w[0],1/np.sqrt(L*C)/2./np.pi)
 
-    def test_frequency_1(self):
-        C = 1e-13
-        L = 1e-8
-        w,k,A,chi = self.parameters(C,L)
-        self.assertRelativelyClose(w[1],1/np.sqrt(L*C)/2./np.pi)
+    # def test_frequency_1(self):
+    #     C = 1e-13
+    #     L = 1e-8
+    #     w,k,A,chi = self.parameters(C,L)
+    #     self.assertRelativelyClose(w[1],1/np.sqrt(L*C)/2./np.pi)
 
-    def test_anharmonicity_0(self):
-        C = 1e-13
-        L = 1e-8
-        w,k,A,chi = self.parameters(C,L)
-        self.assertRelativelyClose(A[0],e**2/2./(8*C)/h)
+    # def test_anharmonicity_0(self):
+    #     C = 1e-13
+    #     L = 1e-8
+    #     w,k,A,chi = self.parameters(C,L)
+    #     self.assertRelativelyClose(A[0],e**2/2./(8*C)/h)
 
-    def test_anharmonicity_1(self):
-        C = 1e-13
-        L = 1e-8
-        w,k,A,chi = self.parameters(C,L)
-        self.assertRelativelyClose(A[1],e**2/2./(8*C)/h)
+    # def test_anharmonicity_1(self):
+    #     C = 1e-13
+    #     L = 1e-8
+    #     w,k,A,chi = self.parameters(C,L)
+    #     self.assertRelativelyClose(A[1],e**2/2./(8*C)/h)
 
 class SweepingParameters(TestCaseAppended):
     '''

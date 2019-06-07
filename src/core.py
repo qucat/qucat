@@ -17,7 +17,6 @@ try:
     from ._utility import pretty_value,\
             shift,\
             to_string,\
-            vectorize_w,\
             vectorize_kwargs,\
             refuse_vectorize_kwargs
     from .plotting_settings import plotting_parameters_show,plotting_parameters_normal_modes
@@ -27,7 +26,6 @@ except ImportError:
     from _utility import pretty_value,\
             shift,\
             to_string,\
-            vectorize_w,\
             vectorize_kwargs,\
             refuse_vectorize_kwargs
     from plotting_settings import plotting_parameters_show,plotting_parameters_normal_modes
@@ -238,7 +236,6 @@ class Qcircuit(object):
         # and component values that need to be specified
         self._inverse_of_dY_lambdified =  lambdify(['w']+self._no_value_components, v/du, "numpy")
 
-    @vectorize_w
     def _inverse_of_dY(self, w,**kwargs):
         '''
         This function wraps the Qcircuit._inverse_of_dY_lambdified
@@ -403,14 +400,18 @@ class Qcircuit(object):
         # We can easily discard some of these cases by throwing away
         # any solutions with a complex impedance (ImY'<0)
         # The minus sign is there since 1/Im(Y)  = -Im(1/Y)
-        for w in w_cpx:
+        to_iterate = deepcopy(w_cpx)
+        w_cpx = []
+        for w in to_iterate:
             if np.imag(-self._inverse_of_dY(np.real(w),**kwargs))<0:
                 error_message = "Discarding f = %f Hz mode.\n"%(np.real(w/2/np.pi))
                 error_message += "The root finding algorithm failed to obtain a high enough precision " 
                 error_message += "frequency to lead to an realistic estimation of the zero-point-fluctuations.\n"
                 error_message += "This typically occurs in circuits where two modes are nearly completely decoupled one from another."
                 warn(error_message)
-        w_cpx = w_cpx[np.nonzero(np.imag(-self._inverse_of_dY(np.real(w_cpx),**kwargs))>=0)]
+            else:
+                w_cpx.append(w)
+        w_cpx = np.array(w_cpx)
 
         # Sort solutions with increasing frequency
         order = np.argsort(np.real(w_cpx))
@@ -436,7 +437,7 @@ class Qcircuit(object):
             to the anharmonicity of mode ``m``
         '''
         self._set_w_cpx(**kwargs)
-        return [j._anharmonicity(self.w_cpx, **kwargs) for j in self.junctions]
+        return [[j.anharmonicity(mode, **kwargs) for mode in range(len(self.w_cpx))] for j in self.junctions]
     
     @vectorize_kwargs
     def eigenfrequencies(self, **kwargs):
@@ -2208,23 +2209,19 @@ class Component(Circuit):
             else:
                 self._circuit._no_value_components.append(self.label)
 
-    def _flux(self, w, **kwargs):
+    def _flux(self, mode, **kwargs):
+        self._circuit._set_w_cpx(**kwargs)
+        w = np.real(self._circuit.w_cpx)[mode]
         try:
             tr = self._circuit._flux_transformation_dict[self.node_minus,
                                                     self.node_plus]
         except KeyError:
             tr_analytical = self._circuit._network.transfer(
                 self._circuit.ref_elt.node_minus, self._circuit.ref_elt.node_plus, self.node_minus, self.node_plus)
-            tr_undecorated = lambdify(['w']+self._circuit._no_value_components,tr_analytical, "numpy")
+            tr = lambdify(['w']+self._circuit._no_value_components,tr_analytical, "numpy")
+            def tr_minus(w,**kwargs):
+                return -tr(w,**kwargs)
             
-            @vectorize_w
-            def tr(self, w,**kwargs):
-                return tr_undecorated(w,**kwargs)
-
-            @vectorize_w
-            def tr_minus(self, w,**kwargs):
-                return -tr_undecorated(w,**kwargs)
-
             self._circuit._flux_transformation_dict[self.node_minus,self.node_plus] = tr
             self._circuit._flux_transformation_dict[self.node_plus,self.node_minus] = tr_minus
 
@@ -2239,28 +2236,10 @@ class Component(Circuit):
         phi_zpf_r = np.sqrt(hbar/w*np.imag(-self._circuit._inverse_of_dY(w,**kwargs)))
 
         # Note that the flux defined here 
-        phi = tr(self, w,**kwargs)*phi_zpf_r
+        phi = tr(w,**kwargs)*phi_zpf_r
         # is complex.
 
         return phi
-
-    def _zpf(self, w,quantity, **kwargs):
-        if quantity == 'flux':
-            phi_0 = hbar/2./e
-            return self._flux(w,**kwargs)/phi_0
-        if quantity == 'voltage':
-            return self._flux(w,**kwargs)*1j*w
-        if quantity == 'current':
-            kwargs_with_w = deepcopy(kwargs)
-            kwargs_with_w['w'] = w
-            Y = self._admittance()
-            if isinstance(Y, Number):
-                pass
-            else:
-                Y = Y.evalf(subs=kwargs_with_w)
-            return complex(self._zpf(w,'voltage',**kwargs)*Y)
-        if quantity == 'charge':
-            return self._zpf(w,'current', **kwargs)/1j/w/e
 
 
     def _to_string(self, use_unicode=True):
@@ -2317,9 +2296,32 @@ class Component(Circuit):
 
         Where :math:`Z(\omega)` is this components impedance.
         '''
-        self._circuit._set_w_cpx(**kwargs)
-        mode_w = np.real(self._circuit.w_cpx[mode])
-        return self._zpf(mode_w,quantity,**kwargs)
+        if quantity == 'flux':
+            phi_0 = hbar/2./e
+            return self._flux(mode,**kwargs)/phi_0
+        if quantity == 'voltage':
+            phi_zpf = self._flux(mode,**kwargs)
+            # The above will set the eigenfrequencies
+            w=np.real(self._circuit.w_cpx)[mode]
+            
+            return phi_zpf*1j*w
+        if quantity == 'current':
+            Vzpf = self.zpf(mode,'voltage',**kwargs)
+            # The above will set the eigenfrequencies
+
+            kwargs_with_w = deepcopy(kwargs)
+            kwargs_with_w['w'] = np.real(self._circuit.w_cpx)[mode]
+            Y = self._admittance()
+            if isinstance(Y, Number):
+                pass
+            else:
+                Y = Y.evalf(subs=kwargs_with_w)
+            return complex(Vzpf*Y)
+        if quantity == 'charge':
+            Izpf = self.zpf(mode,'current', **kwargs)
+            # The above will set the eigenfrequencies
+            w = np.real(self._circuit.w_cpx)[mode]
+            return Izpf/1j/w/e
 
 class W(Component):
     """docstring for Wire"""
@@ -2549,9 +2551,6 @@ class J(L):
     def _set_component_lists(self):
         super(J, self)._set_component_lists()
         self._circuit.junctions.append(self)
-
-    def _anharmonicity(self,w,**kwargs):
-        return self._get_Ej(**kwargs)/2*np.absolute(self._zpf(w,quantity='flux',**kwargs))**4
     
     @vectorize_kwargs
     def anharmonicity(self, mode, **kwargs):
@@ -2592,8 +2591,8 @@ class J(L):
         Following first order perturbation, the total anharmonicity of a mode is obtained
         by summing these contribution over all modes.
         '''
-        mode_w = self._circuit.eigenfrequencies(**kwargs)[mode]*2.*np.pi
-        return _anharmonicity(self, mode_w, **kwargs)
+        return self._get_Ej(**kwargs)/2*np.absolute(self.zpf(mode,quantity='flux',**kwargs))**4
+
 
     def _draw(self):
         pp = self._circuit._pp
