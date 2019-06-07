@@ -32,25 +32,6 @@ exponent_to_letter_unicode = {
     12: 'T'
 }
 
-def safely_evaluate(func_to_evaluate):
-    @functools.wraps(func_to_evaluate)
-    def wrapper_safely_evaluate(self,w, **kwargs):
-        try:
-            return func_to_evaluate(self,w, **kwargs)
-        except FloatingPointError as e:
-            warn(str(e)+f"\n\tPerturbing f = {w/2./np.pi} to find finite value")
-            perturbation = 1e-14
-            while perturbation<0.01:
-                try:
-                    to_return = func_to_evaluate(self,w*(1.+perturbation), **kwargs)
-                    warn(f"Perturbed f = {w/2./np.pi}*(1+{perturbation:.1e}) to find finite value")
-                    return to_return
-                except FloatingPointError as e:
-                    perturbation *= 10
-            raise FloatingPointError("Even perturbing the frequency by a percent failed to produce finite value.")
-    return wrapper_safely_evaluate
-
-
 def vectorize_w(func_to_evaluate):
     @functools.wraps(func_to_evaluate)
     def wrapper_vectorize(self,w, **kwargs):

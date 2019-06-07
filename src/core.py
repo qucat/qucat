@@ -240,7 +240,6 @@ class Qcircuit(object):
         self._inverse_of_dY_lambdified =  lambdify(['w']+self._no_value_components, v/du, "numpy")
 
     @vectorize_w
-    @safely_evaluate
     def _inverse_of_dY(self, w,**kwargs):
         '''
         This function wraps the Qcircuit._inverse_of_dY_lambdified
@@ -2187,12 +2186,10 @@ class Component(Circuit):
             tr_undecorated = lambdify(['w']+self._circuit._no_value_components,tr_analytical, "numpy")
             
             @vectorize_w
-            @safely_evaluate
             def tr(self, w,**kwargs):
                 return tr_undecorated(w,**kwargs)
 
             @vectorize_w
-            @safely_evaluate
             def tr_minus(self, w,**kwargs):
                 return -tr_undecorated(w,**kwargs)
 
