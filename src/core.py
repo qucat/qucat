@@ -308,10 +308,6 @@ class Qcircuit(object):
         # Check if the kwargs provided are correct
         self._check_kwargs(**kwargs)
 
-        # Compute the coefficients of the characteristic polynomial.
-        # The roots of this polynomial will provide the complex eigenfrequencies
-        char_poly_coeffs = [complex(coeff(**kwargs)) for coeff in self._char_poly_coeffs]
-
         def refine_roots(p,x):
             dp = np.polyder(p)
             ddp = np.polyder(dp)
@@ -331,6 +327,10 @@ class Qcircuit(object):
 
 
         if len(self.resistors) == 0:
+
+            # Compute the coefficients of the characteristic polynomial.
+            # The roots of this polynomial will provide the complex eigenfrequencies
+            char_poly_coeffs = [np.real(coeff(**kwargs)) for coeff in self._char_poly_coeffs]
         
             # In this case, the variable of the characteristic polynomial is \omega^2
             # And we can safely take the real part of the solution as there are no
@@ -349,6 +349,10 @@ class Qcircuit(object):
             w_cpx = np.sqrt(w2)
 
         else:
+
+            # Compute the coefficients of the characteristic polynomial.
+            # The roots of this polynomial will provide the complex eigenfrequencies
+            char_poly_coeffs = [complex(coeff(**kwargs)) for coeff in self._char_poly_coeffs]
 
             w_cpx = np.roots(char_poly_coeffs)
             w_cpx = refine_roots(char_poly_coeffs,w_cpx)
