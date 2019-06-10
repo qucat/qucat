@@ -32,18 +32,6 @@ exponent_to_letter_unicode = {
     12: 'T'
 }
 
-def vectorize_w(func_to_evaluate):
-    @functools.wraps(func_to_evaluate)
-    def wrapper_vectorize(self,w, **kwargs):
-        try:
-            iter(w)
-        except TypeError:
-            # single
-            return func_to_evaluate(self,w,**kwargs)
-        else:
-            # iterable = True
-            return np.vectorize(lambda w_single: func_to_evaluate(self,w_single,**kwargs))(w)
-    return wrapper_vectorize
 
 
 def refuse_vectorize_kwargs(func_to_evaluate = None,*,exclude = []):
