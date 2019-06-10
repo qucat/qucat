@@ -837,7 +837,6 @@ class Qcircuit(object):
             return H, operators
         return H
 
-    @refuse_vectorize_kwargs(exclude = ['plot','return_fig_ax'])
     def show(self,
              plot=True,
              return_fig_ax=False):
@@ -912,7 +911,7 @@ class Qcircuit(object):
 
         plt.close()
 
-    @refuse_vectorize_kwargs()
+    @refuse_vectorize_kwargs(exclude = ['quantity'])
     def show_normal_mode(self, 
         mode, 
         quantity='current',
