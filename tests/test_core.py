@@ -104,9 +104,9 @@ class TransmonResonator(TestCaseAppended):
         return circuit.f_k_A_chi()
     
     def test_extremely_decoupled_case(self):
-        sys_params = {'Cc':0.0000001e-15,'Cj':100e-15,'Lj':10e-9,'Cr':165e-15,'Lr':2.7e-9}
+        sys_params = {'Cc':1e-50,'Cj':100e-15,'Lj':10e-9,'Cr':165e-15,'Lr':2.7e-9}
         w,k,A,chi = self.parameters(**sys_params)
-        self.assertNotEqual(0,np.absolute(A[1]))
+        self.assertArrayRelativelyClose(A[1],3.35280566e-140)
 
 class Transmon(TestCaseAppended):
     '''

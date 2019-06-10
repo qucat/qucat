@@ -89,8 +89,8 @@ class Qcircuit(object):
         junctions (list): List of junction objects present in the circuit
         capacitors (list): List of capacitor objects present in the circuit
         netlist (list): List of all components present in the circuit
-        ref_elt (J or L): Junction or inductor component used as a reference for the calculation 
-                        of zero-point fluctations
+        ref_elt (J or L): list of junction or inductor component used as a reference for the calculation 
+                        of zero-point fluctations, each index of the list corresponds to a different mode
     """
 
     def __init__(self, netlist):
@@ -136,13 +136,7 @@ class Qcircuit(object):
 
 
         # Check that there is at least one inductive element in the circuit
-        # Set the first one found to be the reference element used 
-        # to compute zero-point-fluctuations 
-        if len(self.junctions) > 0:
-            self.ref_elt = self.junctions[0]
-        elif len(self.inductors) > 0:
-            self.ref_elt = self.inductors[0]
-        else:
+        if len(self.junctions) == 0 and len(self.inductors) == 0:
             raise ValueError(
                 "There should be at least one junction or inductor in the circuit")
 
@@ -151,19 +145,20 @@ class Qcircuit(object):
             raise ValueError(
                 "There should be at least one capacitor in the circuit")
 
+                
+        # define the function which returns the inverse of dY
+        # where Y is the admittance at the nodes of an inductive element
+        for inductive_element in self.inductors+self.junctions:
+            inductive_element._compute_inverse_of_dY()
+
         # Initialize the flux transformation dictionary,
-        # where _flux_transformation_dict[node_plus][node_minus] 
+        # where _flux_transformation_dict[ref_node_minus,ref_node_plus,node_minus,node_plus] 
         # will be populated with a function which gives
         # the voltage transfer function between the nodes surrounding
         # the reference element and (node_plus,node_minus)
         # this function takes as an argument an angular frequency
         # and keyword arguments if component values need to be specified
         self._flux_transformation_dict = {}
-        for node in self._network.nodes:
-            self._flux_transformation_dict[node] = {}
-
-        # define the function which returns the inverse of dY
-        self._compute_inverse_of_dY()
 
         # define the functions which returns the components of the characteristic polynomial
         # (the roots of which are the eigen-frequencies)
@@ -182,83 +177,6 @@ class Qcircuit(object):
         else:
             return plotting_parameters_show
 
-    @timeit
-    def _compute_inverse_of_dY(self):
-        '''
-        Generate the Qcircuit._inverse_of_dY_lambdified function which
-        takes as an argument an angular frequency (and keyword arguments 
-        if component values need to be specified) and returns the inverse of the
-        derivative of the admittance evaluated at the nodes of the reference element.
-
-        Y will is a rational function Y = u/v, where u and v are polynomials.
-        So dY = (du*v-dv*u)/v**2.
-        We only need to evaluate dY at a eigen-frequencies of the ciruit, 
-        when Y=0  <=> u = 0
-        This simplifies the expression to be computed to dY = du/v
-        
-        This functon is called in Qcircuit._inverse_of_dY.
-        Where a wrapper ensures the function is "safely evaluated" to deal
-        with infinities, and accepts an array of frequencies as an input.
-        '''
-        # Compute a sympy expression for the admittance 
-        # at the nodes of the reference element
-        Y = self._network.admittance(self.ref_elt.node_minus, self.ref_elt.node_plus)
-
-        # Write the expression as a single fraction 
-        # with the numerator and denomenator as polynomials
-        # (it combines but also "de-nests")
-        Y_together = sp.together(Y)    
-
-        # Extract denominator
-        v = sp.denom(Y_together)
-
-        # Symbol representing angular frequency
-        w = sp.Symbol('w')
-
-        # Write numerator as polynomial in 'w'
-        Y_numer = sp.numer(Y_together)
-        Y_numer_poly = sp.collect(sp.expand(Y_numer), w)
-
-        # Obtain the order of the numerator 
-        Y_numer_poly_order = sp.polys.polytools.degree(
-            Y_numer_poly, gen=w) 
-
-        # Compute list of coefficients
-        Y_numer_poly_coeffs_analytical = [Y_numer_poly.coeff(w, n) for n in range(
-            Y_numer_poly_order+1)[::-1]]
-
-        # Express the derivative of the polynomial
-        du = sum([(Y_numer_poly_order-n)*a*w**(Y_numer_poly_order-n-1)
-                      for n, a in enumerate(Y_numer_poly_coeffs_analytical)])
-        
-        # Convert the sympy expression for v/du to a function
-        # Note the function arguments are the angular frequency 
-        # and component values that need to be specified
-        self._inverse_of_dY_lambdified =  lambdify(['w']+self._no_value_components, v/du, "numpy")
-
-    def _inverse_of_dY(self, w,**kwargs):
-        '''
-        This function wraps the Qcircuit._inverse_of_dY_lambdified
-        function defined in Qcircuit._compute_inverse_of_dY.
-        The function is now "safely evaluated" to deal
-        with infinities, and accepts an array of frequencies as an input.
-
-        
-        Parameters
-        ----------
-        w:          array
-                    Eigen-frequencies of the circuit
-        kwargs:     
-                    Values for un-specified circuit components, 
-                    ex: ``L=1e-9``.
-        
-        Returns
-        -------
-        1/dY        array
-                    inverse of the derivative of the admittance evaluated at 
-                    the nodes of the reference element.
-        '''
-        return self._inverse_of_dY_lambdified(w,**kwargs)
   
     def _check_kwargs(self, **kwargs):
         '''
@@ -351,6 +269,10 @@ class Qcircuit(object):
             # Take the square root to get to the eigenfrequencies
             w_cpx = np.sqrt(w2)
 
+            # Sort solutions with increasing frequency
+            order = np.argsort(np.real(w_cpx))
+            w_cpx = w_cpx[order]
+
         else:
 
             # Compute the coefficients of the characteristic polynomial.
@@ -359,6 +281,10 @@ class Qcircuit(object):
 
             w_cpx = np.roots(char_poly_coeffs)
             w_cpx = refine_roots(char_poly_coeffs,w_cpx)
+
+            # Sort solutions with increasing frequency
+            order = np.argsort(np.real(w_cpx))
+            w_cpx = w_cpx[order]
 
             # For each solution, its complex conjugate
             # is also a solution, we want to discard the negative
@@ -392,18 +318,43 @@ class Qcircuit(object):
                 warn(error_message)
         w_cpx = w_cpx[np.nonzero(np.real(w_cpx) >= self.Q_min*np.imag(w_cpx))]
 
+        # Choose reference elements for each mode which 
+        # maximize the inverse of dY: we want the reference 
+        # element to the element where zero-point fluctuations
+        # in flux are most localized.
+        # Note that close to resonance 1/dY is well approximated 
+        # by 1/C_eff/(w0^2/w^2 + 1) [= 1/2/C_eff on resonance]
+        # And the derivative [1/dY]' of this function of interest is
+        # 1/C*2w*w0^2/(w^2+w0^2) [ = -1/C/w0 on rsonance]
+        # So for a given mode (w0 is a constant) the reference
+        # element which maximizes dY is intuitively the best
+        # since it's the "main inductor" of the mode
+        # But also a more intelegent element for this calculation
+        # since it is the element which maximizes the derivative of the
+        # function of interest such that small imprecisions in the estimation
+        # of the resonance frequency will have only a small impact
+        # on the estimation of quantities such as the anharmonicity
 
-        # Sometimes, when the circuits has vastly different
-        # values for its circuit components or modes are too
-        # decoupled, the symbolic 
-        # calculations can yield an incorrect char_poly_coeffs
-        # We can easily discard some of these cases by throwing away
-        # any solutions with a complex impedance (ImY'<0)
-        # The minus sign is there since 1/Im(Y)  = -Im(1/Y)
-        to_iterate = deepcopy(w_cpx)
+        inductive_elements = self.junctions+self.inductors
+        ref_elt = []
+        w_cpx_copy = deepcopy(w_cpx)
         w_cpx = []
-        for w in to_iterate:
-            if np.imag(-self._inverse_of_dY(np.real(w),**kwargs))<0:
+        
+        for w in w_cpx_copy:
+            largest_dYm1 = 0
+            ref_elt_index = None
+            for ind_index,ind in enumerate(inductive_elements):
+                dYm1 = np.imag(-ind._inverse_of_dY(np.real(w),**kwargs))
+                if dYm1>largest_dYm1:
+                    ref_elt_index = ind_index
+
+            if ref_elt_index is None:
+                # Sometimes, when the circuits has vastly different
+                # values for its circuit components or modes are too
+                # decoupled, the symbolic 
+                # calculations can yield an incorrect char_poly_coeffs
+                # We can easily discard some of these cases by throwing away
+                # any solutions with a complex impedance (ImY'<0)
                 error_message = "Discarding f = %f Hz mode.\n"%(np.real(w/2/np.pi))
                 error_message += "The root finding algorithm failed to obtain a high enough precision " 
                 error_message += "frequency to lead to an realistic estimation of the zero-point-fluctuations.\n"
@@ -411,11 +362,11 @@ class Qcircuit(object):
                 warn(error_message)
             else:
                 w_cpx.append(w)
+                ref_elt.append(inductive_elements[ref_elt_index])
         w_cpx = np.array(w_cpx)
 
-        # Sort solutions with increasing frequency
-        order = np.argsort(np.real(w_cpx))
-        self.w_cpx = w_cpx[order]
+        self.w_cpx = w_cpx
+        self.ref_elt = ref_elt
 
     def _anharmonicities_per_junction(self, **kwargs):
         '''
@@ -2213,17 +2164,26 @@ class Component(Circuit):
         self._circuit._set_w_cpx(**kwargs)
         w = np.real(self._circuit.w_cpx)[mode]
         try:
-            tr = self._circuit._flux_transformation_dict[self.node_minus,
-                                                    self.node_plus]
+            tr = self._circuit._flux_transformation_dict[
+                                        self._circuit.ref_elt[mode].node_minus,
+                                        self._circuit.ref_elt[mode].node_plus,
+                                        self.node_minus,
+                                        self.node_plus]
         except KeyError:
             tr_analytical = self._circuit._network.transfer(
-                self._circuit.ref_elt.node_minus, self._circuit.ref_elt.node_plus, self.node_minus, self.node_plus)
+                self._circuit.ref_elt[mode].node_minus, self._circuit.ref_elt[mode].node_plus, self.node_minus, self.node_plus)
             tr = lambdify(['w']+self._circuit._no_value_components,tr_analytical, "numpy")
             def tr_minus(w,**kwargs):
                 return -tr(w,**kwargs)
             
-            self._circuit._flux_transformation_dict[self.node_minus,self.node_plus] = tr
-            self._circuit._flux_transformation_dict[self.node_plus,self.node_minus] = tr_minus
+            self._circuit._flux_transformation_dict[
+                                        self._circuit.ref_elt[mode].node_minus,
+                                        self._circuit.ref_elt[mode].node_plus,
+                                        self.node_minus,self.node_plus] = tr
+            self._circuit._flux_transformation_dict[
+                                        self._circuit.ref_elt[mode].node_minus,
+                                        self._circuit.ref_elt[mode].node_plus,
+                                        self.node_plus,self.node_minus] = tr_minus
 
         # Following Black-box quantization, 
         # we assume the losses to be neglegible by 
@@ -2233,7 +2193,7 @@ class Component(Circuit):
         # Calculation of phi_zpf of the reference junction/inductor
         #  = sqrt(hbar/w/ImdY[w])
         # The minus is there since 1/Im(Y)  = -Im(1/Y)
-        phi_zpf_r = np.sqrt(hbar/w*np.imag(-self._circuit._inverse_of_dY(w,**kwargs)))
+        phi_zpf_r = np.sqrt(hbar/w*np.imag(-self._circuit.ref_elt[mode]._inverse_of_dY(w,**kwargs)))
 
         # Note that the flux defined here 
         phi = tr(w,**kwargs)*phi_zpf_r
@@ -2320,6 +2280,7 @@ class Component(Circuit):
         if quantity == 'charge':
             Izpf = self.zpf(mode,'current', **kwargs)
             # The above will set the eigenfrequencies
+
             w = np.real(self._circuit.w_cpx)[mode]
             return Izpf/1j/w/e
 
@@ -2487,6 +2448,58 @@ class L(Component):
             'C':0
         }
 
+    @timeit
+    def _compute_inverse_of_dY(self):
+        '''
+        Generate the L._inverse_of_dY_lambdified function which
+        takes as an argument an angular frequency (and keyword arguments 
+        if component values need to be specified) and returns the inverse of the
+        derivative of the admittance evaluated at the nodes of the inductor.
+
+        Y will is a rational function Y = u/v, where u and v are polynomials.
+        So dY = (du*v-dv*u)/v**2.
+        We only need to evaluate dY at a eigen-frequencies of the ciruit, 
+        when Y=0  <=> u = 0
+        This simplifies the expression to be computed to dY = du/v
+        
+        '''
+        # Compute a sympy expression for the admittance 
+        # at the nodes of the reference element
+        Y = self._circuit._network.admittance(self.node_minus, self.node_plus)
+
+        # Write the expression as a single fraction 
+        # with the numerator and denomenator as polynomials
+        # (it combines but also "de-nests")
+        Y_together = sp.together(Y)    
+
+        # Extract denominator
+        v = sp.denom(Y_together)
+
+        # Symbol representing angular frequency
+        w = sp.Symbol('w')
+
+        # Write numerator as polynomial in 'w'
+        Y_numer = sp.numer(Y_together)
+        Y_numer_poly = sp.collect(sp.expand(Y_numer), w)
+
+        # Obtain the order of the numerator 
+        Y_numer_poly_order = sp.polys.polytools.degree(
+            Y_numer_poly, gen=w) 
+
+        # Compute list of coefficients
+        Y_numer_poly_coeffs_analytical = [Y_numer_poly.coeff(w, n) for n in range(
+            Y_numer_poly_order+1)[::-1]]
+
+        # Express the derivative of the polynomial
+        du = sum([(Y_numer_poly_order-n)*a*w**(Y_numer_poly_order-n-1)
+                      for n, a in enumerate(Y_numer_poly_coeffs_analytical)])
+        
+        # Convert the sympy expression for v/du to a function
+        # Note the function arguments are the angular frequency 
+        # and component values that need to be specified
+        self._inverse_of_dY =  lambdify(['w']+self._circuit._no_value_components, v/du, "numpy")
+
+
 class J(L):
     """A class representing an junction
     
@@ -2549,7 +2562,7 @@ class J(L):
         return (hbar/2./e)**2/(self._get_value(**kwargs)*h)
 
     def _set_component_lists(self):
-        super(J, self)._set_component_lists()
+        super(L, self)._set_component_lists()
         self._circuit.junctions.append(self)
     
     @vectorize_kwargs
