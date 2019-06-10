@@ -70,6 +70,8 @@ def vectorize_kwargs(func_to_evaluate = None,*,exclude = []):
                 if kw in exclude:
                     non_iterables[kw] = arg
                 else:
+                    if np.any(np.array([arg]) == 0):
+                        raise ValueError("Cannot set value of element %s to zero"%kw)
                     try:
                         iter(arg)
                     except TypeError:

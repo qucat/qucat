@@ -90,6 +90,20 @@ class Other(TestCaseAppended):
         f,k,A,chi = circuit.f_k_A_chi()
         f_expected = 1/np.sqrt(L*C)/2/np.pi
         self.assertRelativelyClose(f_expected,f)
+
+    def test_0_value_in_list_kw(self):
+        cir = core.Network([
+            core.C(0,1,'C'),
+            core.J(0,1,1e-9)])
+        with self.assertRaises(ValueError):
+            cir.f_k_A_chi(C = np.linspace(1,0,101))
+            
+    def test_0_value_in_single_kw(self):
+        cir = core.Network([
+            core.C(0,1,'C'),
+            core.J(0,1,1e-9)])
+        with self.assertRaises(ValueError):
+            cir.f_k_A_chi(C = 0)
         
 class TransmonResonator(TestCaseAppended):
 
