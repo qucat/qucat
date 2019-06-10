@@ -292,15 +292,7 @@ class Qcircuit(object):
             # negative dissipation modes
             w_cpx = w_cpx[np.nonzero(np.imag(w_cpx) > 0.)]
 
-        # Negative frequency modes are discarded
-        for w in w_cpx:
-            if np.real(w) < 0:
-                error_message = "Negative f = %f Hz mode found (and discarded).\n"%(np.real(w/2/np.pi))
-                error_message += "Most likely the root finding algorithm failed to obtain a high enough precision frequency."
-                warn(error_message)
-            if np.real(w) == 0:
-                error_message = "0 frequency soltion discarded"
-                warn(error_message)
+        # Negative and zero frequency modes are discarded
         w_cpx = w_cpx[np.nonzero(np.real(w_cpx) > 0.)]
 
 
@@ -358,7 +350,6 @@ class Qcircuit(object):
                 error_message = "Discarding f = %f Hz mode.\n"%(np.real(w/2/np.pi))
                 error_message += "The root finding algorithm failed to obtain a high enough precision " 
                 error_message += "frequency to lead to an realistic estimation of the zero-point-fluctuations.\n"
-                error_message += "This typically occurs in circuits where two modes are nearly completely decoupled one from another."
                 warn(error_message)
             else:
                 w_cpx.append(w)
