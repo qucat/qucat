@@ -721,7 +721,7 @@ class Qcircuit(object):
 
         return to_return
 
-    @refuse_vectorize_kwargs(exclude = ['modes','taylor','excitations'])
+    @refuse_vectorize_kwargs(exclude = ['modes','taylor','excitations','return_ops'])
     def hamiltonian(self, modes='all', taylor=4, excitations=6, return_ops = False, **kwargs):
         r'''Returns the circuits Hamiltonian for further analysis with QuTiP.
         The Hamiltonian is provided in units of frequency (not angular frequency), 
@@ -837,7 +837,7 @@ class Qcircuit(object):
             return H, operators
         return H
 
-    @refuse_vectorize_kwargs
+    @refuse_vectorize_kwargs(exclude = ['plot','return_fig_ax'])
     def show(self,
              plot=True,
              return_fig_ax=False):
@@ -912,7 +912,7 @@ class Qcircuit(object):
 
         plt.close()
 
-    @refuse_vectorize_kwargs(exclude = ['quantity'])
+    @refuse_vectorize_kwargs()
     def show_normal_mode(self, 
         mode, 
         quantity='current',
@@ -2206,7 +2206,7 @@ class Component(Circuit):
         return to_string(self.unit, self.label, self.value, use_unicode=use_unicode)
 
 
-    @vectorize_kwargs(exclude = 'quantity')
+    @vectorize_kwargs(exclude = ['quantity','mode'])
     def zpf(self, mode, quantity, **kwargs):
         r'''Returns contribution of a mode to the zero-point fluctuations of a quantity for this component.
 
@@ -2565,7 +2565,7 @@ class J(L):
         super(L, self)._set_component_lists()
         self._circuit.junctions.append(self)
     
-    @vectorize_kwargs
+    @vectorize_kwargs(exclude = ['mode'])
     def anharmonicity(self, mode, **kwargs):
         r'''Returns the contribution of this junction to the anharmonicity of a given normal mode.
 
