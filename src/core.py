@@ -1447,9 +1447,9 @@ class _Network(object):
         if not self.is_connected():
             raise ValueError("There are two sub-circuits which are not connected")
         if self.has_shorts():
-            raise ValueError("Your circuit appears to be shorted making the analysis impossible")
+            raise ValueError("Your circuit appears to be open or shorted making the analysis impossible")
         if self.has_opens():
-            raise ValueError("Your circuit appears to be open making the analysis impossible")
+            raise ValueError("Your circuit appears to be open or shorted making the analysis impossible")
 
     @timeit
     def is_connected(self, 
