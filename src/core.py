@@ -104,6 +104,9 @@ class Qcircuit(object):
 
         self._plotting_normal_mode = False # Used to keep track of which imported plotting_settings to use 
                                             # only set to true when show_normal_mode is called
+        self.plotting_parameters_normal_modes = plotting_parameters_normal_modes
+        self.plotting_parameters_show = plotting_parameters_show
+
         self.netlist = netlist # List of all components present in the circuit
 
         self._network = _Network(netlist) # Converts the list of components into a network object
@@ -173,9 +176,9 @@ class Qcircuit(object):
             * in the Qcircuit.show_normal_modes() method (if self._plotting_normal_mode is True)
         '''
         if self._plotting_normal_mode:
-            return plotting_parameters_normal_modes
+            return self.plotting_parameters_normal_modes
         else:
-            return plotting_parameters_show
+            return self.plotting_parameters_show
 
   
     def _check_kwargs(self, **kwargs):
