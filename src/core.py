@@ -342,6 +342,7 @@ class Qcircuit(object):
                 dYm1 = np.imag(-ind._inverse_of_dY(np.real(w),**kwargs))
                 if dYm1>largest_dYm1:
                     ref_elt_index = ind_index
+                    largest_dYm1 = dYm1
 
             if ref_elt_index is None:
                 # Sometimes, when the circuits has vastly different
