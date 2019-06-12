@@ -808,17 +808,17 @@ class Qcircuit(object):
         phi = [0 for junction in self.junctions]
         qeye_list = [qeye(n) for n in excitations]
 
-        for i in modes:
+        for index,mode in enumerate(modes):
             a_to_tensor = deepcopy(qeye_list)
-            a_to_tensor[i] = destroy(excitations[i])
+            a_to_tensor[index] = destroy(excitations[index])
             a = tensor(a_to_tensor)
             operators.append(a)
-            H += fs[i]*a.dag()*a
+            H += fs[mode]*a.dag()*a
 
             for j, junction in enumerate(self.junctions):
                 # Note that zpf returns the flux in units of phi_0 = hbar/2./e
-                phi[j] += np.real(junction.zpf(quantity='flux',mode=i, **kwargs))*(a+a.dag()) 
-                phi[j] += -1j*np.imag(junction.zpf(quantity='flux',mode=i, **kwargs))*(a-a.dag()) 
+                phi[j] += np.real(junction.zpf(quantity='flux',mode=mode, **kwargs))*(a+a.dag()) 
+                phi[j] += -1j*np.imag(junction.zpf(quantity='flux',mode=mode, **kwargs))*(a-a.dag()) 
 
         for j, junction in enumerate(self.junctions):
             n = 2
