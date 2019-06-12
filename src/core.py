@@ -1438,6 +1438,7 @@ class _Network(object):
         list of Component objects
     """
 
+    @timeit
     def __init__(self, netlist):
 
         self.netlist = netlist
@@ -1800,6 +1801,7 @@ class _Network(object):
         for mesh_branch in mesh_to_add:
             self.connect(*mesh_branch)
 
+    @timeit
     def admittance(self, node_minus, node_plus):
         '''
         Compute the admittance of the network between two nodes 
@@ -2462,8 +2464,13 @@ class L(Component):
 
         # Write the expression as a single fraction 
         # with the numerator and denomenator as polynomials
-        # (it combines but also "de-nests")
-        Y_together = sp.together(Y)    
+        # (it combines but also "de-nests")        
+        ts = time.time()  
+        Y_together = sp.together(Y)
+        te = time.time()
+        if PROFILING:
+            print('calling together took %2.2f ms' % \
+                    ((te - ts) * 1000))
 
         # Extract denominator
         v = sp.denom(Y_together)
@@ -2473,7 +2480,12 @@ class L(Component):
 
         # Write numerator as polynomial in 'w'
         Y_numer = sp.numer(Y_together)
+        ts = time.time()  
         Y_numer_poly = sp.collect(sp.expand(Y_numer), w)
+        te = time.time()
+        if PROFILING:
+            print('collecting/expanding took %2.2f ms' % \
+                    ((te - ts) * 1000))
 
         # Obtain the order of the numerator 
         Y_numer_poly_order = sp.polys.polytools.degree(
