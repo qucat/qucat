@@ -796,6 +796,16 @@ class Qcircuit(object):
 
         if modes == 'all':
             modes = range(len(fs))
+        for m in modes:
+            try:
+                fs[m]
+            except IndexError:
+                error_message ="There are only %d modes in the circuit, and you specified mode index %d "%(len(fs),m)
+                error_message +="corresponding to the %d-th mode."%(m+1)
+                # error_message +="\nNote that the numer of modes may change as one sweeps a parameter"
+                # error_message +=" for example if a 0 frequency, spurious mode becomes negative due to "
+                # error_message +="numerical imprecision. Adding a resistance to the circuit may help with this."
+                raise ValueError(error_message)
 
         if not isinstance(excitations,list):
             excitations = [int(excitations) for i in modes]
