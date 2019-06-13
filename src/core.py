@@ -675,7 +675,7 @@ class Qcircuit(object):
             # table row in the form `` 7 spaces | 7 spaces |  7 spaces | 7 spaces |``
             table_line = ""
             for i in range(4):
-                table_line += " %7s |"
+                table_line += " %12s |"
             table_line += "\n"
 
             # Top row for content of columns
@@ -693,7 +693,7 @@ class Qcircuit(object):
             # in the form `` 7 spaces | 7 spaces | ...``
             table_line = ""
             for i in range(N_modes+1):
-                table_line += " %7s |"
+                table_line += " %12s |"
             table_line += "\n"
 
             # Top row indexing each column as a mode
