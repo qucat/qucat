@@ -1220,27 +1220,27 @@ class Qcircuit(object):
                 value_text= "|Q|"
             value_text += u"exp(i\u03B8)"
         
-        x_legend = ax.get_xlim()[0]+0.4
-        y_legend = ax.get_ylim()[0]+0.25
+            x_legend = ax.get_xlim()[0]+0.4
+            y_legend = ax.get_ylim()[0]+0.25
 
-        legend_text_kwargs = {
-            'ha':'center',
-            'va':'center',
-            'fontsize':12, 
-            'weight':'normal'
-        }
-        
-        ax.text(x_legend, y_legend,
-            value_text,
-            **legend_text_kwargs)
+            legend_text_kwargs = {
+                'ha':'center',
+                'va':'center',
+                'fontsize':12, 
+                'weight':'normal'
+            }
+            
+            ax.text(x_legend, y_legend,
+                value_text,
+                **legend_text_kwargs)
 
-        v01 = 0.7
-        ax.arrow(x_legend-arrow_width(value_01 = v01)/2, 
-                y_legend-0.15,
-                arrow_width(value_01 = v01), 0,
-                fc=pp['normal_mode_arrow']['color'],
-                ec=pp['normal_mode_arrow']['color'], 
-                **arrow_kwargs(value_01 =v01))
+            v01 = 0.7
+            ax.arrow(x_legend-arrow_width(value_01 = v01)/2, 
+                    y_legend-0.15,
+                    arrow_width(value_01 = v01), 0,
+                    fc=pp['normal_mode_arrow']['color'],
+                    ec=pp['normal_mode_arrow']['color'], 
+                    **arrow_kwargs(value_01 =v01))
        
 
         if plot == True:
