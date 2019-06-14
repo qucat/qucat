@@ -339,7 +339,12 @@ class Qcircuit(object):
             largest_dYm1 = 0
             ref_elt_index = None
             for ind_index,ind in enumerate(inductive_elements):
-                dYm1 = np.imag(-ind._inverse_of_dY(np.real(w),**kwargs))
+                try:
+                    dYm1 = np.imag(-ind._inverse_of_dY(np.real(w),**kwargs))
+                except Exception:
+                    # Computation of dYm1 failed for some reason
+                    dYm1 = -1
+                    
                 if dYm1>largest_dYm1:
                     ref_elt_index = ind_index
                     largest_dYm1 = dYm1
