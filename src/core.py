@@ -838,7 +838,8 @@ class Qcircuit(object):
     @refuse_vectorize_kwargs(exclude = ['plot','return_fig_ax'])
     def show(self,
              plot=True,
-             return_fig_ax=False):
+             return_fig_ax=False,
+             **kwargs):
         '''Plots the circuit.
 
         Only works if the circuit was created using the GUI.
