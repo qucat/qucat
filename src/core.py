@@ -2478,37 +2478,43 @@ class L(Component):
             print('calling together took %2.2f ms' % \
                     ((te - ts) * 1000))
 
-        # Extract denominator
+        # Extract numerator and denominator
+        u = sp.numer(Y_together)
         v = sp.denom(Y_together)
 
         # Symbol representing angular frequency
         w = sp.Symbol('w')
 
-        # Write numerator as polynomial in 'w'
-        Y_numer = sp.numer(Y_together)
-        ts = time.time()  
-        Y_numer_poly = sp.collect(sp.expand(Y_numer), w)
-        te = time.time()
-        if PROFILING:
-            print('collecting/expanding took %2.2f ms' % \
-                    ((te - ts) * 1000))
+        # Calculate derivatives
+        derivatives = []
+        for P in [u,v]:
+            # Write as polynomial in 'w'
+            ts = time.time()  
+            P = sp.collect(sp.expand(P), w)
+            te = time.time()
+            if PROFILING:
+                print('collecting/expanding took %2.2f ms' % \
+                        ((te - ts) * 1000))
 
-        # Obtain the order of the numerator 
-        Y_numer_poly_order = sp.polys.polytools.degree(
-            Y_numer_poly, gen=w) 
+            # Obtain the order of the polynomial 
+            P_order = sp.polys.polytools.degree(P, gen=w) 
 
-        # Compute list of coefficients
-        Y_numer_poly_coeffs_analytical = [Y_numer_poly.coeff(w, n) for n in range(
-            Y_numer_poly_order+1)[::-1]]
+            # Compute list of coefficients
+            P_coeffs_analytical = [P.coeff(w, n) for n in range(P_order+1)[::-1]]
 
-        # Express the derivative of the polynomial
-        du = sum([(Y_numer_poly_order-n)*a*w**(Y_numer_poly_order-n-1)
-                      for n, a in enumerate(Y_numer_poly_coeffs_analytical)])
+            # Express the derivative of the polynomial
+            dP = sum([(P_order-n)*a*w**(P_order-n-1)
+                        for n, a in enumerate(P_coeffs_analytical)])
+
+            derivatives.append(dP)
+        
+        du = derivatives[0]
+        dv = derivatives[1]
         
         # Convert the sympy expression for v/du to a function
         # Note the function arguments are the angular frequency 
         # and component values that need to be specified
-        self._inverse_of_dY =  lambdify(['w']+self._circuit._no_value_components, v/du, "numpy")
+        self._inverse_of_dY =  lambdify(['w']+self._circuit._no_value_components, v**2/(du*v-dv*u), "numpy")
 
 
 class J(L):
