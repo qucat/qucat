@@ -317,19 +317,6 @@ class Qcircuit(object):
         # maximize the inverse of dY: we want the reference 
         # element to the element where zero-point fluctuations
         # in flux are most localized.
-        # Note that close to resonance 1/dY is well approximated 
-        # by 1/C_eff/(w0^2/w^2 + 1) [= 1/2/C_eff on resonance]
-        # And the derivative [1/dY]' of this function of interest is
-        # 1/C*2w*w0^2/(w^2+w0^2) [ = -1/C/w0 on rsonance]
-        # So for a given mode (w0 is a constant) the reference
-        # element which maximizes dY is intuitively the best
-        # since it's the "main inductor" of the mode
-        # But also a more intelegent element for this calculation
-        # since it is the element which maximizes the derivative of the
-        # function of interest such that small imprecisions in the estimation
-        # of the resonance frequency will have only a small impact
-        # on the estimation of quantities such as the anharmonicity
-
         inductive_elements = self.junctions+self.inductors
         ref_elt = []
         w_cpx_copy = deepcopy(w_cpx)
@@ -834,6 +821,7 @@ class Qcircuit(object):
             for j, junction in enumerate(self.junctions):
                 # Note that zpf returns the flux in units of phi_0 = hbar/2./e
                 phi[j] += np.real(junction.zpf(quantity='flux',mode=mode, **kwargs))*(a+a.dag()) 
+                # a = x+iy => -i*(a-a^) = -i(iy+iy) = --1
                 phi[j] += -1j*np.imag(junction.zpf(quantity='flux',mode=mode, **kwargs))*(a-a.dag()) 
 
         for j, junction in enumerate(self.junctions):
