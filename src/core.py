@@ -835,6 +835,7 @@ class Qcircuit(object):
             return H, operators
         return H
 
+    @refuse_vectorize_kwargs(exclude = ['plot','return_fig_ax'])
     def show(self,
              plot=True,
              return_fig_ax=False):
