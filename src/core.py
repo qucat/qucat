@@ -98,9 +98,9 @@ class Qcircuit(object):
         
         # After an initial estimation of the complex eigenfrequenceis using a diaglinalization
         # of the companion matrix, the frequencies are refined to a tolerence
-        # self.eigenfrequency_finder_relative_tolerance using a gradient based root finder, with a maximum number of iterations self.eigenfrequency_finder_max_iterations
-        self.eigenfrequency_finder_max_iterations = 1e5 
-        self.eigenfrequency_finder_relative_tolerance = 1e-9
+        # self.root_relative_tolerance using a gradient based root finder, with a maximum number of iterations self.root_max_iterations
+        self.root_max_iterations = 1e5 
+        self.root_relative_tolerance = 1e-9
 
         self._plotting_normal_mode = False # Used to keep track of which imported plotting_settings to use 
                                             # only set to true when show_normal_mode is called
@@ -239,8 +239,8 @@ class Qcircuit(object):
                         fprime = lambda x:np.polyval(dp,x), 
                         fprime2 = lambda x:np.polyval(ddp,x),
                         method = 'halley', 
-                        maxiter = int(self.eigenfrequency_finder_max_iterations), 
-                        rtol = self.eigenfrequency_finder_relative_tolerance).root)
+                        maxiter = int(self.root_max_iterations), 
+                        rtol = self.root_relative_tolerance).root)
             return np.array(x_refined)
 
 
