@@ -372,10 +372,14 @@ class Polynomial(object):
 
         if self.coefFormat:
             # If there is a user-supplied floating point format, use it.
-            if isinstance(coef, (mpf,float)):
+            # ------ clnum features disabled for now
+            # if isinstance(coef, (mpf,float)):
+            if isinstance(coef, float):
                 s = self.coefFormat % coef
 
-            elif isinstance(coef, (cmpf,complex)):
+            # ------ clnum features disabled for now
+            # elif isinstance(coef, (cmpf,complex)):
+            elif isinstance(coef, complex):
                 s1 = self.coefFormat % coef.real
                 s2 = self.coefFormat % coef.imag
                 if s2.startswith('-'):
@@ -478,24 +482,25 @@ class Polynomial(object):
         return poly
 
 
-    def mpf(self, prec=0):
-        '''Return a new polynomial with all of the coefficients forced to
-        extended precision floating point.  The optional precision parameter
-        allows selection of the precision of all the coefficients.
-        '''
-        poly = object.__new__(Polynomial)
-        poly._coef = tuple([mpf(c, prec) for c in self._coef])
-        return poly
+    # ------ clnum features disabled for now
+    # def mpf(self, prec=0):
+    #     '''Return a new polynomial with all of the coefficients forced to
+    #     extended precision floating point.  The optional precision parameter
+    #     allows selection of the precision of all the coefficients.
+    #     '''
+    #     poly = object.__new__(Polynomial)
+    #     poly._coef = tuple([mpf(c, prec) for c in self._coef])
+    #     return poly
 
-
-    def cmpf(self, prec=0):
-        '''Return a new polynomial with all of the coefficients forced to
-        extended precision complex.  The optional precision parameter allows
-        selection of the precision of all the coefficients.
-        '''
-        poly = object.__new__(Polynomial)
-        poly._coef = tuple([cmpf(c, prec=prec) for c in self._coef])
-        return poly
+    # ------ clnum features disabled for now
+    # def cmpf(self, prec=0):
+    #     '''Return a new polynomial with all of the coefficients forced to
+    #     extended precision complex.  The optional precision parameter allows
+    #     selection of the precision of all the coefficients.
+    #     '''
+    #     poly = object.__new__(Polynomial)
+    #     poly._coef = tuple([cmpf(c, prec=prec) for c in self._coef])
+    #     return poly
 
 
     def roots(self, eps=1e-16, start=0):
@@ -509,8 +514,10 @@ class Polynomial(object):
         ddq = ddp
 
         # Allow the user to specify a starting point since guessing the first
-        # root can improve the convergence of the process.
-        r0 = cmpf(start, prec=prec2)
+        # root can improve the convergence of the process. 
+        # ------ clnum features disabled for now
+        # r0 = cmpf(start, prec=prec2)
+        r0 = start
 
         while q.deg > 0:
             r = _improveRoot(r0, q, dq, ddq, eps)[1]
@@ -537,7 +544,9 @@ class Polynomial(object):
         # accumulation of errors.
         for i,r in enumerate(roots):
             r = _improveRoot(r, p, dp, ddp, eps)[1]
-            r = cmpf(r, prec=prec)
+            
+            # ------ clnum features disabled for now
+            # r = cmpf(r, prec=prec)
             if r.imag == 0:
                 r = r.real
             roots[i] = r
@@ -643,7 +652,6 @@ class RationalFunction(object):
 
         return fun
 
-
     def __eq__(self, other):
         other = RationalFunction(other)
         return (self._numer == other._numer and self._denom == other._denom)
@@ -651,17 +659,14 @@ class RationalFunction(object):
     def __ne__(self, other):
         return not self.__eq__(other)
 
-
     def __nonzero__(self):
         return bool(self._numer)
-
 
     def __pos__(self):
         return self
 
     def __neg__(self):
         return RationalFunction(-self._numer, self._denom)
-
 
     def __add__(self, other):
         other = RationalFunction(other)
@@ -688,13 +693,11 @@ class RationalFunction(object):
     def __radd__(self, other):
         return RationalFunction(other).__add__(self)
 
-
     def __sub__(self, other):
         return self.__add__(-RationalFunction(other))
 
     def __rsub__(self, other):
         return RationalFunction(other).__add__(-self)
-
 
     def __mul__(self, other):
         other = RationalFunction(other)
@@ -724,7 +727,6 @@ class RationalFunction(object):
     def __rmul__(self, other):
         return RationalFunction(other).__mul__(self)
 
-
     def __div__(self, other):
         other = RationalFunction(other)
         return self.__mul__(RationalFunction(other._denom, other._numer))
@@ -742,7 +744,6 @@ class RationalFunction(object):
     def __rtruediv__(self, other):
         other = RationalFunction(other)
         return other.__mul__(RationalFunction(self._denom, self._numer))
-
 
     def __pow__(self, n):
         if not isinstance(n, (int,long)):
@@ -768,7 +769,6 @@ class RationalFunction(object):
             z *= z
         return y
 
-
     def __call__(self, x):
         '''Evaluate the function at the point x.  Where x can also be a numpy
         array.  In that case the function is sampled at the points in x.
@@ -783,10 +783,8 @@ class RationalFunction(object):
         # Otherwise the divide should work correctly.
         return a / b
 
-
     def __repr__(self):
         return 'RationalFunction(%r, %r)' % (self._numer, self._denom)
-
 
     def __str__(self):
         if self._denom.deg == 0:
@@ -803,7 +801,6 @@ class RationalFunction(object):
         else:
             return '(%s) / (%s)' % (n, d)
 
-
     # Note: These operations perform the same as the corresponding attributes
     # of mpq.
     def numer(self):
@@ -814,7 +811,6 @@ class RationalFunction(object):
         return self._denom
     denom = property(denom)
 
-
     def deriv(self):
         '''Return the derivative of the rational function.
         '''
@@ -823,11 +819,9 @@ class RationalFunction(object):
         return a - self*b
     deriv = property(deriv)
 
-
     # Note: integration of a rational function gives a rational function only
     # in some special cases.  Consequently, the integration method is not
     # implemented.
-
 
     def sample(self, a, b, n):
         '''Evaluate the function at n sample points.
@@ -849,13 +843,11 @@ class RationalFunction(object):
             x = a + i*d
             yield x, self(x)
 
-
     def float(self):
         '''Return a new function with all of the coefficients forced to
         float.
         '''
         return RationalFunction(self._numer.float(), self._denom.float())
-
 
     def complex(self):
         '''Return a new function with all of the coefficients forced to
@@ -863,19 +855,19 @@ class RationalFunction(object):
         '''
         return RationalFunction(self._numer.complex(), self._denom.complex())
 
+    # ------ clnum features disabled for now
+    # def mpf(self, prec=0):
+    #     '''Return a new function with all of the coefficients forced to
+    #     extended precision float.
+    #     '''
+    #     return RationalFunction(self._numer.mpf(prec), self._denom.mpf(prec))
 
-    def mpf(self, prec=0):
-        '''Return a new function with all of the coefficients forced to
-        extended precision float.
-        '''
-        return RationalFunction(self._numer.mpf(prec), self._denom.mpf(prec))
-
-
-    def cmpf(self, prec=0):
-        '''Return a new function with all of the coefficients forced to
-        extended precision complex.
-        '''
-        return RationalFunction(self._numer.cmpf(prec), self._denom.cmpf(prec))
+    # ------ clnum features disabled for now
+    # def cmpf(self, prec=0):
+    #     '''Return a new function with all of the coefficients forced to
+    #     extended precision complex.
+    #     '''
+    #     return RationalFunction(self._numer.cmpf(prec), self._denom.cmpf(prec))
 
 #-----------------------------------------------------------------------------
 def gcd(u, v):
@@ -934,12 +926,17 @@ def improveRoot(root, p, eps=1e-16):
     eps - error tolerance
     '''
     p, dp, ddp, prec, prec2 = _laguerreInputs(p, eps)
-    z = cmpf(root, prec=prec2)
+    
+    # ------ clnum features disabled for now
+    # z = cmpf(root, prec=prec2)
+    z = root
     err, z = _improveRoot(z, p, dp, ddp, eps)
 
     # The precision should reflect the requested tolerance.
     prec = max(prec, 16)
-    z = cmpf(z, prec=prec)
+    
+    # ------ clnum features disabled for now
+    # z = cmpf(z, prec=prec)
     if z.imag == 0:
         z = z.real
     return err, z
@@ -1058,10 +1055,13 @@ def _coefFromSeq(seq):
 
         # Floats and complex do not mix with rationals so convert them
         # to the corresponding clnum type.
-        if isinstance(x, float):
-            x = mpf(x)
-        elif isinstance(x, complex):
-            x = cmpf(x)
+        
+        # ------ clnum features disabled for now
+        # if isinstance(x, float):
+        #     x = mpf(x)
+        # elif isinstance(x, complex):
+        #     x = cmpf(x)
+
         lst.append(x)
     seq = lst
 
@@ -1091,10 +1091,12 @@ def _coefFromPairs(seq):
 
         # Floats and complex do not mix with rationals so convert them
         # to the corresponding clnum type.
-        if isinstance(coef, float):
-            coef = mpf(coef)
-        elif isinstance(coef, complex):
-            coef = cmpf(coef)
+        
+        # ------ clnum features disabled for now
+        # if isinstance(coef, float):
+        #     coef = mpf(coef)
+        # elif isinstance(coef, complex):
+        #     coef = cmpf(coef)
 
         # Accumulate the pairs in a dictionary
         pairs[exp] = coef
