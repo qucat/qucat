@@ -32,96 +32,37 @@ exponent_to_letter_unicode = {
     12: 'T'
 }
 
+def safely_evaluate(func_to_evaluate):
+    @functools.wraps(func_to_evaluate)
+    def wrapper_safely_evaluate(self,w, **kwargs):
+        try:
+            return func_to_evaluate(self,w, **kwargs)
+        except FloatingPointError as e:
+            warn(str(e)+f"\n\tPerturbing f = {w/2./np.pi} to find finite value")
+            perturbation = 1e-14
+            while perturbation<0.01:
+                try:
+                    to_return = func_to_evaluate(self,w*(1.+perturbation), **kwargs)
+                    warn(f"Perturbed f = {w/2./np.pi}*(1+{perturbation:.1e}) to find finite value")
+                    return to_return
+                except FloatingPointError as e:
+                    perturbation *= 10
+            raise FloatingPointError("Even perturbing the frequency by a percent failed to produce finite value.")
+    return wrapper_safely_evaluate
 
 
-def refuse_vectorize_kwargs(func_to_evaluate = None,*,exclude = []):
-    # Only works for functions which return a list
-
-    def _decorate(func):
-        @functools.wraps(func)
-        def wrapper_vectorize(self, *args,**kwargs):
-            non_iterables = {}
-            iterables = {}
-            for kw, arg in kwargs.items():
-                if kw not in exclude:
-                    try:
-                        iter(arg)
-                        raise ValueError("No iterables are allowed, use a single value for %s"%kw)
-                    except TypeError:
-                        # not an iterable
-                        pass
-            
-            return func(self,*args,**kwargs)
-        return wrapper_vectorize
-
-    if func_to_evaluate:
-        return _decorate(func_to_evaluate)
-    return _decorate
-
-def vectorize_kwargs(func_to_evaluate = None,*,exclude = []):
-    # Only works for functions which return a list
-
-    def _decorate(func):
-        @functools.wraps(func)
-        def wrapper_vectorize(self, *args,**kwargs):
-            non_iterables = {}
-            iterables = {}
-            for kw, arg in kwargs.items():
-                if kw in exclude:
-                    non_iterables[kw] = arg
-                else:
-                    if np.any(np.array([arg]) == 0):
-                        raise ValueError("Cannot set value of element %s to zero"%kw)
-                    try:
-                        iter(arg)
-                    except TypeError:
-                        # not an iterable
-                        non_iterables[kw] = arg
-                    else:
-                        # is an iterable
-                        # Make sure it has the same shape as other iterables
-                        if len(iterables)>0:
-                            first_iterable = iterables[list(iterables)[0]]
-                            if np.array(arg).shape != first_iterable.shape:
-                                raise ValueError("Keyword arguments have incompatible shapes: %s %s and %s %s"%(
-                                    list(iterables)[0],
-                                    first_iterable.shape,
-                                    kw,
-                                    np.array(arg).shape
-                                ))
-                        iterables[kw] = np.array(arg)
-            
-            if len(iterables)==0:
-                return func(self,*args,**kwargs)
-            else:
-                first_iterable = iterables[list(iterables)[0]]
-                kwargs_single = non_iterables
-                i = 0
-                for index,_ in np.ndenumerate(first_iterable):
-
-                    for kw, arg in iterables.items():
-                        kwargs_single[kw] = arg[index]
-
-                    to_return_single = func(self,*args,**kwargs_single)
-
-                    if i == 0:
-                        try:
-                            iter(to_return_single)
-                            to_return = np.empty((*first_iterable.shape,*to_return_single.shape), dtype=np.complex128)
-                        except TypeError:
-                            # not an iterable
-                            to_return = np.empty(first_iterable.shape, dtype=np.complex128)
-                        i+=1
-
-                    to_return[index] = to_return_single
-                for i in range(len(first_iterable.shape)):
-                    to_return = np.moveaxis(to_return,0,-1)
-                return to_return
-        return wrapper_vectorize
-
-    if func_to_evaluate:
-        return _decorate(func_to_evaluate)
-    return _decorate
+def vectorize(func_to_evaluate):
+    @functools.wraps(func_to_evaluate)
+    def wrapper_vectorize(self,w, **kwargs):
+        try:
+            iter(w)
+        except TypeError:
+            # single
+            return func_to_evaluate(self,w,**kwargs)
+        else:
+            # iterable = True
+            return np.vectorize(lambda w_single: func_to_evaluate(self,w_single,**kwargs))(w)
+    return wrapper_vectorize
 
 def get_exponent_3(value):
     value = np.absolute(value)
@@ -193,12 +134,6 @@ def pretty_value(v,is_complex = True, use_power_10=False, use_unicode=True, maxi
 
         sign_r, numbers_r = get_float_part(np.real(v),exp3,maximum_info)
         sign_i, numbers_i = get_float_part(np.imag(v),exp3,maximum_info)
-
-        if numbers_i.replace('0','').replace('.','')!='' and numbers_r.replace('0','').replace('.','')!='':
-            if float(numbers_r)>100*float(numbers_i):
-                numbers_i = ''
-            elif float(numbers_i)>100*float(numbers_r):
-                numbers_r = ''
 
         to_return = ''
         if numbers_r.replace('0','').replace('.','')!='':

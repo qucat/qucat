@@ -90,38 +90,7 @@ class Other(TestCaseAppended):
         f,k,A,chi = circuit.f_k_A_chi()
         f_expected = 1/np.sqrt(L*C)/2/np.pi
         self.assertRelativelyClose(f_expected,f)
-
-    def test_0_value_in_list_kw(self):
-        cir = core.Network([
-            core.C(0,1,'C'),
-            core.J(0,1,1e-9)])
-        with self.assertRaises(ValueError):
-            cir.f_k_A_chi(C = np.linspace(1,0,101))
-            
-    def test_0_value_in_single_kw(self):
-        cir = core.Network([
-            core.C(0,1,'C'),
-            core.J(0,1,1e-9)])
-        with self.assertRaises(ValueError):
-            cir.f_k_A_chi(C = 0)
         
-class TransmonResonator(TestCaseAppended):
-
-    def parameters(self,Cj,Lj,Cc,Cr,Lr):
-        circuit = core.Network([
-            core.C(0,1,Cj),
-            core.J(0,1,Lj),
-            core.C(1,2,Cc),
-            core.C(0,2,Cr),
-            core.L(0,2,Lr)
-        ])
-        return circuit.f_k_A_chi()
-    
-    def test_extremely_decoupled_case(self):
-        sys_params = {'Cc':1e-50,'Cj':100e-15,'Lj':10e-9,'Cr':165e-15,'Lr':2.7e-9}
-        w,k,A,chi = self.parameters(**sys_params)
-        self.assertArrayRelativelyClose(A[1],3.35280566e-140)
-
 class Transmon(TestCaseAppended):
     '''
     Transmon circuit parameters
@@ -207,11 +176,11 @@ class ShuntedJosephsonRing(TestCaseAppended):
     def parameters(self,C,L):
         circuit = core.Network([
             core.C(0,2,C),
-            core.C(1,3,C*2),
+            core.C(1,3,C),
             core.J(0,1,L),
-            core.J(1,2,L*3),
-            core.J(2,3,L*4),
-            core.J(3,0,L*5)
+            core.J(1,2,L),
+            core.J(2,3,L),
+            core.J(3,0,L)
         ])
         return circuit.f_k_A_chi()
 
@@ -232,35 +201,35 @@ class ShuntedJosephsonRing(TestCaseAppended):
         w,k,A,chi = self.parameters(C,L)
         self.assertEqual(len(w),2,msg = f"f_res = {w}")
 
-    # def test_frequency_0(self):
-    #     C = 1e-13
-    #     L = 1e-8
-    #     w,k,A,chi = self.parameters(C,L)
-    #     self.assertRelativelyClose(w[0],1/np.sqrt(L*C)/2./np.pi)
+    def test_frequency_0(self):
+        C = 1e-13
+        L = 1e-8
+        w,k,A,chi = self.parameters(C,L)
+        self.assertRelativelyClose(w[0],1/np.sqrt(L*C)/2./np.pi)
 
-    # def test_frequency_1(self):
-    #     C = 1e-13
-    #     L = 1e-8
-    #     w,k,A,chi = self.parameters(C,L)
-    #     self.assertRelativelyClose(w[1],1/np.sqrt(L*C)/2./np.pi)
+    def test_frequency_1(self):
+        C = 1e-13
+        L = 1e-8
+        w,k,A,chi = self.parameters(C,L)
+        self.assertRelativelyClose(w[1],1/np.sqrt(L*C)/2./np.pi)
 
-    # def test_anharmonicity_0(self):
-    #     C = 1e-13
-    #     L = 1e-8
-    #     w,k,A,chi = self.parameters(C,L)
-    #     self.assertRelativelyClose(A[0],e**2/2./(8*C)/h)
+    def test_anharmonicity_0(self):
+        C = 1e-13
+        L = 1e-8
+        w,k,A,chi = self.parameters(C,L)
+        self.assertRelativelyClose(A[0],e**2/2./(8*C)/h)
 
-    # def test_anharmonicity_1(self):
-    #     C = 1e-13
-    #     L = 1e-8
-    #     w,k,A,chi = self.parameters(C,L)
-    #     self.assertRelativelyClose(A[1],e**2/2./(8*C)/h)
+    def test_anharmonicity_1(self):
+        C = 1e-13
+        L = 1e-8
+        w,k,A,chi = self.parameters(C,L)
+        self.assertRelativelyClose(A[1],e**2/2./(8*C)/h)
 
-class SweepingParameters(TestCaseAppended):
+class CoupledTransmonRLC(TestCaseAppended):
     '''
     Coupled transmon/RLC
     '''
-    def test_sweeping_LJ_forloop_in_fkAchi(self):
+    def test_sweeping_LJ_in_fkAchi(self):
         cir = core.Network([
             core.C(0,1,100e-15),
             core.J(0,1,'L_J'),
@@ -271,107 +240,35 @@ class SweepingParameters(TestCaseAppended):
             ])
         [cir.f_k_A_chi(L_J=x) for x in [1e-9,2e-9]]
 
-    def test_sweeping_LJ_nparray_in_fkAchi(self):
-        cir = core.Network([
-            core.C(0,1,100e-15),
-            core.J(0,1,'L_J'),
-            core.C(1,2,1e-15),
-            core.C(2,0,100e-15),
-            core.L(2,0,10e-9),
-            core.R(2,0,1e6)
-            ])
-        f,k,A,chi = cir.f_k_A_chi(L_J=np.array([1e-9,2e-9]))
-        self.assertRelativelyClose(A[1,0],cir.anharmonicities(L_J=1e-9)[1])
+class TestGraphics(TestCaseAppended):   
 
-    def test_sweeping_LJ_array_in_fkAchi(self):
-        cir = core.Network([
-            core.C(0,1,100e-15),
-            core.J(0,1,'L_J'),
-            core.C(1,2,1e-15),
-            core.C(2,0,100e-15),
-            core.L(2,0,10e-9),
-            core.R(2,0,1e6)
-            ])
-        f,k,A,chi = cir.f_k_A_chi(L_J=[1e-9,2e-9])
-        self.assertRelativelyClose(chi[1,0,1],cir.kerr(L_J=2e-9)[1,0])
-
-    def test_sweeping_LJ_CJ_array_in_fkAchi(self):
-        cir = core.Network([
-            core.C(0,1,'C_J'),
-            core.J(0,1,'L_J'),
-            core.C(1,2,1e-15),
-            core.C(2,0,100e-15),
-            core.L(2,0,10e-9),
-            core.R(2,0,1e6)
-            ])
-        f,k,A,chi = cir.f_k_A_chi(L_J=[1e-9,2e-9],C_J=[1e-9,2e-9])
-        self.assertRelativelyClose(f[1,0],cir.eigenfrequencies(L_J=1e-9,C_J=1e-9)[1])
-    def test_sweeping_LJ_CJ_array_in_fkAchi_incompatible_sizes(self):
-        cir = core.Network([
-            core.C(0,1,'C_J'),
-            core.J(0,1,'L_J'),
-            core.C(1,2,1e-15),
-            core.C(2,0,100e-15),
-            core.L(2,0,10e-9),
-            core.R(2,0,1e6)
-            ])
-        with self.assertRaises(ValueError):
-            cir.f_k_A_chi(L_J=[1e-9,2e-9],C_J=[1e-9,2e-9,3e-9])
-    def test_sweeping_LJ_CJ_array_in_fkAchi_show(self):
-        cir = core.Network([
-            core.C(0,1,'C_J'),
-            core.J(0,1,'L_J'),
-            core.C(1,2,1e-15),
-            core.C(2,0,100e-15),
-            core.L(2,0,10e-9),
-            core.R(2,0,1e6)
-            ])
+    def test_error_when_trying_to_plot_from_Network_show(self):
+        circuit = core.Network([
+            core.C(0,1,'C'),
+            core.J(0,1,'Lj')
+        ])
+        with self.assertRaises(TypeError):
+            circuit.show()
+            
+    def test_error_when_trying_to_plot_from_Network_show_normal_modes(self):
+        circuit = core.Network([
+            core.C(0,1,'C'),
+            core.J(0,1,'Lj')
+        ])
+        with self.assertRaises(TypeError):
+            circuit.show_normal_mode()
         
-        with self.assertRaises(ValueError):
-            cir.show(L_J=[1e-9,2e-9],C_J=[1e-9,2e-9,3e-9])
+    def test_generate_graphics(self):
+        import _generate_graphics
+    
+    def test_show_transmon_RLC(self):
+        cir=self.open_gui_file('show_normal_mode_transmon_RLC_Lj_as_parameter.txt')
+        cir.show()
 
-    def test_sweeping_LJ_CJ_array_in_fkAchi_show_normal_mode(self):
-        cir = core.Network([
-            core.C(0,1,'C_J'),
-            core.J(0,1,'L_J'),
-            core.C(1,2,1e-15),
-            core.C(2,0,100e-15),
-            core.L(2,0,10e-9),
-            core.R(2,0,1e6)
-            ])
-        
-        with self.assertRaises(ValueError):
-            cir.show(L_J=[1e-9,2e-9],C_J=[1e-9,2e-9,3e-9])
-
-    def test_sweeping_LJ_CJ_array_in_fkAchi_show_normal_mode(self):
-        cir = core.Network([
-            core.C(0,1,'C_J'),
-            core.J(0,1,'L_J'),
-            core.C(1,2,1e-15),
-            core.C(2,0,100e-15),
-            core.L(2,0,10e-9),
-            core.R(2,0,1e6)
-            ])
-        
-        with self.assertRaises(ValueError):
-            cir.show(L_J=[1e-9,2e-9],C_J=[1e-9,2e-9,3e-9])
-
-        
-    def test_sweeping_CJ_array_in_zpf(self):
-        C_comp = core.C(0,1,'C_J')
-        cir = core.Network([
-            C_comp,
-            core.J(0,1,10e-9),
-            core.C(1,2,1e-15),
-            core.C(2,0,100e-15),
-            core.L(2,0,10e-9),
-            core.R(2,0,1e6)
-            ])
-        self.assertRelativelyClose(
-             C_comp.zpf(mode = 1, quantity = 'charge', C_J=1.5e-9),
-            C_comp.zpf(mode = 1, quantity = 'charge', C_J=[1e-9,1.5e-9,3e-9])[1])
-
-
+    def test_show_normal_mode_transmon_RLC_Lj_as_parameter(self):
+        cir=self.open_gui_file('show_normal_mode_transmon_RLC_Lj_as_parameter.txt')
+        for quantity in ['flux','voltage','charge','current']:
+            cir.show_normal_mode(0,quantity,Lj=1e-9)
 
 class TestNetworkAnalysis(TestCaseAppended):
 

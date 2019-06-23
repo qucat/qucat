@@ -112,4 +112,3 @@ venv.bak/
 # mypy
 .mypy_cache/
 upload_to_test_PyPi.bat
-test.py
