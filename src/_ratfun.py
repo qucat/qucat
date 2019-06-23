@@ -20,13 +20,16 @@
 # ratfun; if not, write to the Free Software Foundation, Inc., 59 Temple Place,
 # Suite 330, Boston, MA  02111-1307  USA
 #-----------------------------------------------------------------------------
+
+
 __all__ = '''Polynomial RationalFunction gcd polyFromRoots sortRoots
 improveRoot improveRoots
-Pn Tn Un Hn Ln_s Jn_pq
 '''.split()
 
 import operator, math
-from clnum import mpf, mpq, cmpf, sqrt
+import numpy as np
+# ------ clnum features disabled for now
+# from clnum import mpf, mpq, cmpf, sqrt
 
 #-----------------------------------------------------------------------------
 class Polynomial(object):
@@ -82,12 +85,13 @@ class Polynomial(object):
                 if not val:
                     return Polynomial._zero
 
-                # Floats and complex do not mix with rationals so convert them
-                # to the corresponding clnum type.
-                if isinstance(val, float):
-                    val = mpf(val)
-                elif isinstance(val, complex):
-                    val = cmpf(val)
+                # ------ clnum features disabled for now
+                # # Floats and complex do not mix with rationals so convert them
+                # # to the corresponding clnum type.
+                # if isinstance(val, float):
+                #     val = mpf(val)
+                # elif isinstance(val, complex):
+                #     val = cmpf(val)
 
                 coef = (val,)
         else:
@@ -232,7 +236,7 @@ class Polynomial(object):
         m = len(u)
         n = len(v)
 
-        if n == 0: raise ZeroDivisionError, 'polynomial division by zero'
+        if n == 0: raise ZeroDivisionError('polynomial division by zero')
 
         # The following can only happen if u is the zero polynomial.
         if m == 0: return self, self
@@ -433,25 +437,6 @@ class Polynomial(object):
 
         return Polynomial(lst)
     deriv = property(deriv)
-
-
-    def integ(self):
-        '''Return the integral of the polynomial.
-        '''
-        # Set the constant of integration to zero.  The user can always add a
-        # constant to the result if desired.
-        lst = []
-        for coef,exp in self.coefAsPairs():
-            n = exp+1
-            # This convoluted logic is to avoid errors when operating on
-            # integers.
-            if isinstance(coef, (int,long)):
-                lst.append((coef*mpq(1,n), n))
-            else:
-                lst.append((coef/n, n))
-
-        return Polynomial(lst)
-    integ = property(integ)
 
 
     def sample(self, a, b, n):
@@ -1022,7 +1007,7 @@ def _laguerreStep(z, p, dp, ddp):
     H = G*G - ddpz/pz
 
     n = p.deg
-    s = sqrt((n-1)*(n*H - G*G))
+    s = np.sqrt((n-1)*(n*H - G*G))
     d1 = G + s
     d2 = G - s
 
@@ -1032,159 +1017,6 @@ def _laguerreStep(z, p, dp, ddp):
     else:
         return n/d1
 
-#-----------------------------------------------------------------------------
-# This section contains a collection of functions for generating common
-# orthogonal polynomials.
-#-----------------------------------------------------------------------------
-
-#-----------------------------------------------------------------------------
-# Name: Legendre
-# Interval: [-1,1]
-# Weight: 1
-
-def Pn(n):
-    if n < 0:
-        raise ValueError('n must be greater than or equal to zero.')
-
-    pnm1 = Polynomial(1)
-    if n == 0:
-        return pnm1
-
-    pn = x = Polynomial(0,1)
-    if n == 1:
-        return pn
-
-    # Use the recursion relation to compute the higher order polynomials.
-    for n in xrange(1, n):
-        pn, pnm1 = ((2*n+1)*x*pn - n*pnm1)/(n+1), pn
-    return pn
-
-#-----------------------------------------------------------------------------
-# Name: Chebyshev, first kind
-# Interval: [-1,1]
-# Weight: (1-x**2)**(-1/2)
-
-def Tn(n):
-    if n < 0:
-        raise ValueError('n must be greater than or equal to zero.')
-
-    tnm1 = Polynomial(1)
-    if n == 0:
-        return tnm1
-
-    tn = x = Polynomial(0,1)
-    if n == 1:
-        return tn
-
-    # Use the recursion relation to compute the higher order polynomials.
-    while n > 1:
-        tn, tnm1 = 2*x*tn - tnm1, tn
-        n -= 1
-    return tn
-
-#-----------------------------------------------------------------------------
-# Name: Chebyshev, second kind
-# Interval: [-1,1]
-# Weight: (1-x**2)**(1/2)
-
-def Un(n):
-    if n < 0:
-        raise ValueError('n must be greater than or equal to zero.')
-
-    unm1 = Polynomial(1)
-    if n == 0:
-        return unm1
-
-    x = Polynomial(0,1)
-    un = 2*x
-    if n == 1:
-        return un
-
-    # Use the recursion relation to compute the higher order polynomials.
-    while n > 1:
-        un, unm1 = 2*x*un - unm1, un
-        n -= 1
-    return un
-
-#-----------------------------------------------------------------------------
-# Name: Hermite
-# Interval: [-inf,inf]
-# Weight: exp(-x**2)
-
-def Hn(n):
-    if n < 0:
-        raise ValueError('n must be greater than or equal to zero.')
-
-    hnm1 = Polynomial(1)
-    if n == 0:
-        return hnm1
-
-    x = Polynomial(0,1)
-    hn = 2*x
-    if n == 1:
-        return hn
-
-    # Use the recursion relation to compute the higher order polynomials.
-    for n in xrange(1, n):
-        hn, hnm1 = 2*(x*hn - n*hnm1), hn
-    return hn
-
-#-----------------------------------------------------------------------------
-# Name: Associated Laguerre
-# Interval: [0,inf]
-# Weight: (x**s)*exp(-x), s > -1
-
-def Ln_s(n, s):
-    if n < 0:
-        raise ValueError('n must be greater than or equal to zero.')
-
-    if s <= -1:
-        raise ValueError('Must have s > -1')
-
-    lnm1 = Polynomial(1)
-    if n == 0:
-        return lnm1
-
-    x = Polynomial(0,1)
-    ln = 1+s-x
-    if n == 1:
-        return ln
-
-    # Use the recursion relation to compute the higher order polynomials.
-    for n in xrange(1, n):
-        ln, lnm1 = ((2*n+s+1-x)*ln - (n+s)*lnm1)/(n+1), ln
-    return ln
-
-#-----------------------------------------------------------------------------
-# Name: Jacobi
-# Interval: [-1,1]
-# Weight: (1-x)**p * (1+x)**q
-
-def Jn_pq(n, p, q):
-    if n < 0:
-        raise ValueError('n must be greater than or equal to zero.')
-
-    if p <= -1 or q <= -1:
-        raise ValueError('p and q must be greater than -1')
-
-    jnm1 = Polynomial(1)
-    if n == 0:
-        return jnm1
-
-    x = Polynomial(0,1)
-    jn = (p-q + (2+p+q)*x)/2
-    if n == 1:
-        return jn
-
-    # Use the recursion relation to compute the higher order polynomials.
-    for n in xrange(1, n):
-        a = 2*n + p + q
-        c = 2*(n + 1)*(n + p + q + 1)*a
-        d = (a + 1)*(p*p - q*q)
-        e = a*(a + 1)*(a + 2)
-        f = 2*(n + p)*(n + q)*(a + 2)
-        jn, jnm1 = ((d + e*x)*jn - f*jnm1)/c, jn
-    return jn
 
 #-----------------------------------------------------------------------------
 # This section contains some helper functions that are not part of the user
