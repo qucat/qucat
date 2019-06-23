@@ -222,6 +222,14 @@ class Qcircuit(object):
                     Values for un-specified circuit components, 
                     ex: ``L=1e-9``.
         '''
+        try:
+            if kwargs == self._kwargs_previous:
+                # Avoid doing the same thing two
+                # times in a row
+                return
+        except AttributeError:
+            pass
+        self._kwargs_previous = kwargs
         
         # Check if the kwargs provided are correct
         self._check_kwargs(**kwargs)
