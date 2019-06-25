@@ -1,12 +1,12 @@
 import numpy as np
-from copy import deepcopy
+from copy import copy,deepcopy
 from numbers import Number
 from math import floor, factorial
 import os
+from warnings import warn
 from subprocess import run
 import matplotlib.pyplot as plt
 import time
-from pyratfun import Polynomial as poly, RationalFunction as rat
 try:
     from ._constants import *
     from ._utility import pretty_value,\
@@ -15,6 +15,7 @@ try:
             vectorize_kwargs,\
             refuse_vectorize_kwargs
     from .plotting_settings import plotting_parameters_show,plotting_parameters_normal_modes
+    from ._ratfun import Polynomial as poly, RationalFunction as rat
 except ImportError:
     # When running from source without pip installation
     from _constants import *
@@ -23,6 +24,7 @@ except ImportError:
             to_string,\
             vectorize_kwargs,\
             refuse_vectorize_kwargs
+    from _ratfun import Polynomial as poly, RationalFunction as rat
     from plotting_settings import plotting_parameters_show,plotting_parameters_normal_modes
 
 PROFILING = False
@@ -126,18 +128,12 @@ class Qcircuit(object):
         for elt in netlist:
             # ...tell the component what circuit it belongs to
             elt._circuit = self
-            # provide it with a copy of the network
-            elt._network = deepcopy(self._network)
             # ...and populate the empty lists/dictionaries initialized above with the element if appropriate
             elt._set_component_lists()
 
         # Set the first one found to be the reference element used 
         # to compute zero-point-fluctuations 
-        if len(self.junctions) > 0:
-            self.ref_elt = self.junctions[0]
-        elif len(self.inductors) > 0:
-            self.ref_elt = self.inductors[0]
-        else:
+        if not len(self.junctions + self.inductors) > 0:
             raise ValueError(
                 "There should be at least one junction or inductor in the circuit")
 
@@ -219,19 +215,68 @@ class Qcircuit(object):
 
         # Compute the coefficients of the characteristic polynomial.
         # The roots of this polynomial will provide the complex eigenfrequencies
-        Y = self.ref_elt._admittance()
-        zeta = Y.numer.roots_laguerre(eps = self.root_eps)
+        Y = list(self.junctions+self.inductors)[0]._admittance()
+        self.zeta = Y.numer.roots(method = "companion", unique = True, eps = self.root_eps)
+
+        self.zeta = np.array(self.zeta)
 
         # For each solution, its complex conjugate
         # is also a solution, we want to discard the negative
         # imaginary part solutions which correspond to unphysical
         # negative dissipation modes
-        zeta = np.array(zeta)[np.nonzero(np.imag(zeta) >= 0.)]
+        if len(self.resistors):
+            self.zeta = self.zeta[np.nonzero(np.imag(self.zeta) >= 0.)]
+        else:
+            self.zeta = np.real(self.zeta)
 
         # Negative and zero frequency modes are discarded
-        zeta = zeta[np.nonzero(np.real(zeta) > 0.)]
+        self.zeta = self.zeta[np.nonzero(np.real(self.zeta) > 0.)]
 
-        self.zeta = zeta
+        modes_to_keep = []
+        for mode, _ in enumerate(self.zeta):
+            try:
+                self._ref_elt(mode)
+                modes_to_keep.append(mode)
+            except FloatingPointError as e:
+                warn(str(e))
+        self.zeta = self.zeta[modes_to_keep]
+
+
+    def _ref_elt(self,mode):
+        # Choose reference elements for each mode which 
+        # maximize the inverse of dY: we want the reference 
+        # element to the element where zero-point fluctuations
+        # in flux are most localized.
+        inductive_elements = self.junctions+self.inductors
+        w = np.real(self.zeta)[mode]
+
+        largest_dYm1 = 0
+        ref_elt_index = None
+        for ind_index,ind in enumerate(inductive_elements):
+            try:
+                dYm1 = 1/np.imag(ind._admittance().deriv()(w))
+            except Exception:
+                # Computation of dYm1 failed for some reason
+                dYm1 = -1
+                
+            if dYm1>largest_dYm1:
+                ref_elt_index = ind_index
+                largest_dYm1 = dYm1
+
+        if ref_elt_index is None:
+            # Sometimes, when the circuits has vastly different
+            # values for its circuit components or modes are too
+            # decoupled, the symbolic 
+            # calculations can yield an incorrect char_poly_coeffs
+            # We can easily discard some of these cases by throwing away
+            # any solutions with a complex impedance (ImY'<0)
+            error_message = "Discarding f = %f Hz mode.\n"%(np.real(w/2/np.pi))
+            error_message += "The root finding algorithm failed to obtain a high enough precision " 
+            error_message += "frequency to lead to an realistic estimation of the zero-point-fluctuations.\n"
+            raise FloatingPointError(error_message)
+        else:
+            return inductive_elements[ref_elt_index]
+
 
     def _anharmonicities_per_junction(self, **kwargs):
         '''
@@ -1322,21 +1367,28 @@ class _Network(object):
         list of Component objects
     """
 
-    @timeit
     def __init__(self, netlist):
+        # parsing
+        if isinstance(netlist,_Network):
+            # shallow copies
+            network_to_parse = netlist
+            self.netlist = copy(network_to_parse.netlist)
+            self.net_dict = {key: copy(value) for key, value in network_to_parse.net_dict.items()}
+        else:
+            self.netlist = netlist
+            self.net_dict = self.parse_netlist()
+            if len(self.net_dict) == 0:
+                raise ValueError("There are no components in the circuit")
+            if not self.is_connected():
+                raise ValueError("There are two sub-circuits which are not connected")
+            if self.has_shorts():
+                raise ValueError("Your circuit appears to be open or shorted making the analysis impossible")
+            if self.has_opens():
+                raise ValueError("Your circuit appears to be open or shorted making the analysis impossible")
+                
+    def __copy__(self):
+        return _Network(self)
 
-        self.netlist = netlist
-        self.parse_netlist()
-        if len(self.net_dict) == 0:
-            raise ValueError("There are no components in the circuit")
-        if not self.is_connected():
-            raise ValueError("There are two sub-circuits which are not connected")
-        if self.has_shorts():
-            raise ValueError("Your circuit appears to be open or shorted making the analysis impossible")
-        if self.has_opens():
-            raise ValueError("Your circuit appears to be open or shorted making the analysis impossible")
-
-    @timeit
     def is_connected(self, 
         nodes_encountered = None, 
         start_node = None):
@@ -1370,7 +1422,7 @@ class _Network(object):
             return False
         else:
             return True
-
+    
     def has_shorts(self):
         '''
         Determines if there is an short circuit. 
@@ -1384,7 +1436,7 @@ class _Network(object):
         '''
         for node_to_remove in range(len(self.net_dict)):
             # create a copy of the network
-            partial_network = deepcopy(self)
+            partial_network = copy(self)
 
             # remove the node_to_remove from the network
             for other_node in partial_network.net_dict[node_to_remove]:
@@ -1416,6 +1468,7 @@ class _Network(object):
                 return True
         return False
 
+    @timeit
     def parse_netlist(self):
 
         def merge_chains(chains, i, j):
@@ -1547,6 +1600,8 @@ class _Network(object):
         for el in self.netlist:
             if not isinstance(el,W):
                 self.connect(el, el.node_minus, el.node_plus)
+        
+        return self.net_dict
 
     def connect(self, element, node_minus, node_plus):
         '''
@@ -1622,6 +1677,7 @@ class _Network(object):
         for mesh_branch in mesh_to_add:
             self.connect(*mesh_branch)
 
+    # @timeit
     def remove_nodes(self,nodes_to_leave):
 
         # # order nodes from the node with the least amount of connections
@@ -1636,7 +1692,7 @@ class _Network(object):
             if node not in nodes_to_leave:
                 self.remove_node(node)
 
-    @timeit
+    # @timeit
     def admittance(self, node_minus, node_plus):
         '''
         Compute the admittance of the network between two nodes 
@@ -1651,9 +1707,12 @@ class _Network(object):
         if node_minus == node_plus:
             raise ValueError('node_minus == node_plus')
 
-        # Create a temporary copy of the network which will be reduced
-        ntr = deepcopy(self) # ntr stands for Network To Reduce
-        ntr.remove_nodes(nodes_to_leave = [node_minus, node_plus])
+        if set(self.net_dict) == set([node_minus,node_plus]):
+            ntr = self # already reduced
+        else:
+            # Create a temporary copy of the network which will be reduced
+            ntr = copy(self) # ntr stands for Network To Reduce
+            ntr.remove_nodes(nodes_to_leave = [node_minus, node_plus])
 
         # Compute the admittance between the two remaining nodes: 
         # node_minus and node_plus
@@ -1681,6 +1740,7 @@ class _Network(object):
         except KeyError:
             return 0.
 
+    @timeit
     def transfer(self, node_left_minus, node_left_plus, node_right_minus, node_right_plus):
         '''
         Returns the transfer function V_right/V_left relating the voltage on 
@@ -1704,19 +1764,23 @@ class _Network(object):
         # Case where the left an right port are identical
         if (node_left_minus == node_right_minus)\
             and (node_left_plus == node_right_plus):
-            return 1.
+            return rat(1.)
 
         # Case where the left an right port are identical, but inverted
         elif (node_left_plus == node_right_minus)\
             and (node_left_minus == node_right_plus):
-            return -1.
+            return rat(-1.)
 
         # If the ports are not identical, reduce the network such that only
         # the nodes provided as arguments remain
 
-        # Create a temporary copy of the network which will be reduced        
-        ntr = deepcopy(self) # ntr stands for Network To Reduce
-        ntr.remove_nodes(nodes_to_leave =[node_left_minus, node_left_plus, node_right_minus, node_right_plus])
+
+        if set(self.net_dict) == set([node_left_minus, node_left_plus, node_right_minus, node_right_plus]):
+            ntr = self # already reduced
+        else:
+            # Create a temporary copy of the network which will be reduced
+            ntr = copy(self) # ntr stands for Network To Reduce
+            ntr.remove_nodes(nodes_to_leave =[node_left_minus, node_left_plus, node_right_minus, node_right_plus])
 
         if (node_left_minus in [node_right_plus, node_right_minus]) or\
             (node_left_plus in [node_right_plus, node_right_minus]):
@@ -1893,9 +1957,10 @@ class Parallel(Circuit):
         # sets the two children circuit elements
         self.left = left
         self.right = right
+        self.Y = self.left._branch_admittance()+self.right._branch_admittance()
 
     def _branch_admittance(self):
-        return self.left._branch_admittance()+self.right._branch_admittance()
+        return self.Y
  
 class Component(Circuit):
 
@@ -1903,7 +1968,7 @@ class Component(Circuit):
         super(Component, self).__init__(node_minus, node_plus)
         self.label = None
         self.value = None
-        self.transfer_networks = {}
+        self._transfer_networks = {}
 
         if len(args)==0:
             raise ValueError("Specify either a value or a label")
@@ -1957,43 +2022,52 @@ class Component(Circuit):
 
     def _flux_zpf(self, mode, **kwargs):
         self._circuit._set_zeta(**kwargs)
-        w = np.real(self._circuit.zeta)[mode]
 
         # Following Black-box quantization, 
         # we assume the losses to be neglegible by 
         # removing the imaginary part of the eigenfrequency
-        w = np.real(w)
+        w = np.real(self._circuit.zeta)[mode]
+
+        ref_elt = self._circuit._ref_elt(mode)
         
         # Calculation of phi_zpf of the reference junction/inductor
         #  = sqrt(hbar/w/ImdY[w])
         # The minus is there since 1/Im(Y)  = -Im(1/Y)
-        phi_zpf_r = np.sqrt(hbar/w/np.imag(self._circuit.ref_elt._admittance().deriv()(w,**kwargs)))
+        phi_zpf_r = np.sqrt(hbar/w/np.imag(ref_elt._admittance().deriv()(w,**kwargs)))
 
         # Note that the flux defined here 
-        phi = self._circuit.ref_elt._transfer_function(self,w,**kwargs)*phi_zpf_r
+        phi = ref_elt._transfer_function(self,**kwargs)(w)*phi_zpf_r
         # is complex.
 
         return phi
 
-    def _transfer_function(self,comp,w):
+    @timeit
+    def _transfer_function(self,comp):
         # TODO: avoid reducing networks for n,m and m,n
         try:
-            net = self.transfer_networks[comp.node_minus,comp.node_plus]
+            net = self._transfer_networks[comp.node_minus,comp.node_plus]
             return net.transfer(self.node_minus, self.node_plus,
                 comp.node_minus,comp.node_plus)
         except KeyError:
-            ntr = deepcopy(self._circuit._network)
+            ntr = copy(self._circuit._network)
             ntr.remove_nodes([self.node_minus, self.node_plus,
                 comp.node_minus,comp.node_plus])
-            self.transfer_networks[comp.node_minus,comp.node_plus] = ntr
-            return self._transfer_function(comp,w)
+            self._transfer_networks[comp.node_minus,comp.node_plus] = ntr
+            return self._transfer_function(comp)
 
     def _to_string(self, use_unicode=True):
         return to_string(self.unit, self.label, self.value, use_unicode=use_unicode)
 
+    @timeit
     def _admittance(self):
-        # This will be done only once, the following times, there will be no nodes to remove
-        self._network.remove_nodes(nodes_to_leave = [self.node_minus,self.node_plus])
+        try:
+            self._network.admittance(self.node_minus,self.node_plus)
+        except AttributeError:
+            ntr = copy(self._circuit._network)
+            ntr.remove_nodes([self.node_minus,self.node_plus])
+            self._network = ntr
+            return self._admittance()
+
 
         return self._network.admittance(self.node_minus,self.node_plus)
 
@@ -2059,14 +2133,8 @@ class Component(Circuit):
         if quantity == 'current':
             Vzpf = self.zpf(mode,'voltage',**kwargs)
             # The above will set the eigenfrequencies
-
-            kwargs_with_w = deepcopy(kwargs)
-            kwargs_with_w['w'] = np.real(self._circuit.zeta)[mode]
             Y = self._branch_admittance()
-            if isinstance(Y, Number):
-                pass
-            else:
-                Y = Y.evalf(subs=kwargs_with_w)
+            Y = Y(np.real(self._circuit.zeta)[mode])
             return complex(Vzpf*Y)
         if quantity == 'charge':
             Izpf = self.zpf(mode,'current', **kwargs)
