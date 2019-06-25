@@ -1,17 +1,12 @@
-import sympy as sp
-from sympy.utilities.lambdify import lambdify
 import numpy as np
-from scipy.optimize import root_scalar
-from sympy.core.mul import Mul, Pow, Add
 from copy import deepcopy
 from numbers import Number
 from math import floor, factorial
 import os
 from subprocess import run
-import inspect
 import matplotlib.pyplot as plt
 import time
-from warnings import warn
+from pyratfun import Polynomial as poly, RationalFunction as rat
 try:
     from ._constants import *
     from ._utility import pretty_value,\
@@ -95,15 +90,12 @@ class Qcircuit(object):
 
     def __init__(self, netlist):
         self.Q_min = 1 # Modes with have a quality factor below Q_min will not ignored
-        
-        # After an initial estimation of the complex eigenfrequenceis using a diaglinalization
-        # of the companion matrix, the frequencies are refined to a tolerence
-        # self.root_relative_tolerance using a gradient based root finder, with a maximum number of iterations self.root_max_iterations
-        self.root_max_iterations = 1e5 
-        self.root_relative_tolerance = 1e-9
+     
+        self.root_eps = 1e-16
 
         self._plotting_normal_mode = False # Used to keep track of which imported plotting_settings to use 
                                             # only set to true when show_normal_mode is called
+
         self.plotting_parameters_normal_modes = plotting_parameters_normal_modes
         self.plotting_parameters_show = plotting_parameters_show
 
@@ -134,12 +126,18 @@ class Qcircuit(object):
         for elt in netlist:
             # ...tell the component what circuit it belongs to
             elt._circuit = self
+            # provide it with a copy of the network
+            elt._network = deepcopy(self._network)
             # ...and populate the empty lists/dictionaries initialized above with the element if appropriate
             elt._set_component_lists()
 
-
-        # Check that there is at least one inductive element in the circuit
-        if len(self.junctions) == 0 and len(self.inductors) == 0:
+        # Set the first one found to be the reference element used 
+        # to compute zero-point-fluctuations 
+        if len(self.junctions) > 0:
+            self.ref_elt = self.junctions[0]
+        elif len(self.inductors) > 0:
+            self.ref_elt = self.inductors[0]
+        else:
             raise ValueError(
                 "There should be at least one junction or inductor in the circuit")
 
@@ -147,26 +145,6 @@ class Qcircuit(object):
         if len(self.capacitors) == 0:
             raise ValueError(
                 "There should be at least one capacitor in the circuit")
-
-                
-        # define the function which returns the inverse of dY
-        # where Y is the admittance at the nodes of an inductive element
-        for inductive_element in self.inductors+self.junctions:
-            inductive_element._compute_inverse_of_dY()
-
-        # Initialize the flux transformation dictionary,
-        # where _flux_transformation_dict[ref_node_minus,ref_node_plus,node_minus,node_plus] 
-        # will be populated with a function which gives
-        # the voltage transfer function between the nodes surrounding
-        # the reference element and (node_plus,node_minus)
-        # this function takes as an argument an angular frequency
-        # and keyword arguments if component values need to be specified
-        self._flux_transformation_dict = {}
-
-        # define the functions which returns the components of the characteristic polynomial
-        # (the roots of which are the eigen-frequencies)
-        self._char_poly_coeffs = [lambdify(self._no_value_components, c, 'numpy') 
-            for c in self._network.compute_char_poly_coeffs(is_lossy = (len(self.resistors)>0))]
 
     @property
     def _pp(self):
@@ -180,7 +158,6 @@ class Qcircuit(object):
         else:
             return self.plotting_parameters_show
 
-  
     def _check_kwargs(self, **kwargs):
         '''
         Raises a ValueError 
@@ -209,11 +186,10 @@ class Qcircuit(object):
                 raise ValueError(
                     'The value of %s should be specified with the keyword argument %s=... ' % (label, label))
 
-
     @timeit
-    def _set_w_cpx(self, **kwargs):
+    def _set_zeta(self, **kwargs):
         '''
-        Sets the Qcircuit.w_cpx to the circuit eigenfrequencies
+        Sets the Qcircuit.zeta to the circuit eigenfrequencies
         (including the imaginary part due to losses).
 
         Parameters
@@ -224,8 +200,8 @@ class Qcircuit(object):
         '''
         try:
             if kwargs == self._kwargs_previous:
-                # Avoid doing the same thing two
-                # times in a row
+                # Avoid calculating the eigenfrequencies
+                # twice in a row
                 return
         except AttributeError:
             pass
@@ -234,134 +210,28 @@ class Qcircuit(object):
         # Check if the kwargs provided are correct
         self._check_kwargs(**kwargs)
 
-        def refine_roots(p,x):
-            dp = np.polyder(p)
-            ddp = np.polyder(dp)
-        
-            x_refined = []
-            for x0 in x:
-                x_refined.append(
-                    root_scalar(
-                        f = lambda x:np.polyval(p,x), 
-                        x0 = x0, 
-                        fprime = lambda x:np.polyval(dp,x), 
-                        fprime2 = lambda x:np.polyval(ddp,x),
-                        method = 'halley', 
-                        maxiter = int(self.root_max_iterations), 
-                        rtol = self.root_relative_tolerance).root)
-            return np.array(x_refined)
+        # TODO
+        # if len(self.resistors) == 0:
+            # when there are no resistors we know a bit more:
+            # that there should be no complex roots or coefficients
+            # that there should be no odd polynomial coefficients
 
 
-        if len(self.resistors) == 0:
+        # Compute the coefficients of the characteristic polynomial.
+        # The roots of this polynomial will provide the complex eigenfrequencies
+        Y = self.ref_elt._admittance()
+        zeta = Y.numer.roots_laguerre(eps = self.root_eps)
 
-            # Compute the coefficients of the characteristic polynomial.
-            # The roots of this polynomial will provide the complex eigenfrequencies
-            char_poly_coeffs = [np.real(coeff(**kwargs)) for coeff in self._char_poly_coeffs]
-        
-            # In this case, the variable of the characteristic polynomial is \omega^2
-            # And we can safely take the real part of the solution as there are no
-            # resistors in the circuit.
-            w2 = np.real(np.roots(char_poly_coeffs))
-            w2 = refine_roots(char_poly_coeffs,w2)
-
-            # Sometimes, when the circuits has vastly different
-            # values for its circuit components or modes are too
-            # decoupled, the symbolic 
-            # calculations can yield an incorrect char_poly_coeffs
-            # We can easily discard some of these casese by throwing away
-            # negative solutions
-            for w2_single in w2:
-                if np.real(w2_single) < 0:
-                    error_message = "Imaginary frequency mode f = 1j %f Hz mode found (and discarded).\n"%(np.sqrt(-w2_single)/2/np.pi)
-                    error_message += "Most likely the root finding algorithm failed to obtain a high enough precision frequency."
-                    warn(error_message)
-            w2 = w2[np.nonzero(w2 >= 0.)]
-
-            # Take the square root to get to the eigenfrequencies
-            w_cpx = np.sqrt(w2)
-
-            # Sort solutions with increasing frequency
-            order = np.argsort(np.real(w_cpx))
-            w_cpx = w_cpx[order]
-
-        else:
-
-            # Compute the coefficients of the characteristic polynomial.
-            # The roots of this polynomial will provide the complex eigenfrequencies
-            char_poly_coeffs = [complex(coeff(**kwargs)) for coeff in self._char_poly_coeffs]
-
-            w_cpx = np.roots(char_poly_coeffs)
-            w_cpx = refine_roots(char_poly_coeffs,w_cpx)
-
-            # Sort solutions with increasing frequency
-            order = np.argsort(np.real(w_cpx))
-            w_cpx = w_cpx[order]
-
-            # For each solution, its complex conjugate
-            # is also a solution, we want to discard the negative
-            # imaginary part solutions which correspond to unphysical
-            # negative dissipation modes
-            w_cpx = w_cpx[np.nonzero(np.imag(w_cpx) > 0.)]
+        # For each solution, its complex conjugate
+        # is also a solution, we want to discard the negative
+        # imaginary part solutions which correspond to unphysical
+        # negative dissipation modes
+        zeta = np.array(zeta)[np.nonzero(np.imag(zeta) >= 0.)]
 
         # Negative and zero frequency modes are discarded
-        w_cpx = w_cpx[np.nonzero(np.real(w_cpx) > 0.)]
+        zeta = zeta[np.nonzero(np.real(zeta) > 0.)]
 
-
-        # Only consider modes with Q>self.Q_min (=1 by default)
-        # The reason for this measure is that
-        # 0-frequency solutions (with real parts close to 0)
-        # tend to have frequencies which oscillate between positive and
-        # negative values.
-        # The negative values are discarded which changes the number of modes
-        # and makes parameter sweeps difficult 
-        for w in w_cpx:
-            if np.real(w) < self.Q_min*np.imag(w):
-                error_message = "Discarding f = %f Hz mode "%(np.real(w/2/np.pi))
-                error_message += "since it has a too low quality factor Q = %f < %f"%(np.real(w)/np.imag(w),self.Q_min)
-                warn(error_message)
-        w_cpx = w_cpx[np.nonzero(np.real(w_cpx) >= self.Q_min*np.imag(w_cpx))]
-
-        # Choose reference elements for each mode which 
-        # maximize the inverse of dY: we want the reference 
-        # element to the element where zero-point fluctuations
-        # in flux are most localized.
-        inductive_elements = self.junctions+self.inductors
-        ref_elt = []
-        w_cpx_copy = deepcopy(w_cpx)
-        w_cpx = []
-        
-        for w in w_cpx_copy:
-            largest_dYm1 = 0
-            ref_elt_index = None
-            for ind_index,ind in enumerate(inductive_elements):
-                try:
-                    dYm1 = np.imag(-ind._inverse_of_dY(np.real(w),**kwargs))
-                except Exception:
-                    # Computation of dYm1 failed for some reason
-                    dYm1 = -1
-                    
-                if dYm1>largest_dYm1:
-                    ref_elt_index = ind_index
-                    largest_dYm1 = dYm1
-
-            if ref_elt_index is None:
-                # Sometimes, when the circuits has vastly different
-                # values for its circuit components or modes are too
-                # decoupled, the symbolic 
-                # calculations can yield an incorrect char_poly_coeffs
-                # We can easily discard some of these cases by throwing away
-                # any solutions with a complex impedance (ImY'<0)
-                error_message = "Discarding f = %f Hz mode.\n"%(np.real(w/2/np.pi))
-                error_message += "The root finding algorithm failed to obtain a high enough precision " 
-                error_message += "frequency to lead to an realistic estimation of the zero-point-fluctuations.\n"
-                warn(error_message)
-            else:
-                w_cpx.append(w)
-                ref_elt.append(inductive_elements[ref_elt_index])
-        w_cpx = np.array(w_cpx)
-
-        self.w_cpx = w_cpx
-        self.ref_elt = ref_elt
+        self.zeta = zeta
 
     def _anharmonicities_per_junction(self, **kwargs):
         '''
@@ -382,8 +252,8 @@ class Qcircuit(object):
             where ``anh_per_jun[j,m]`` corresponds to the contribution of junction ``j``
             to the anharmonicity of mode ``m``
         '''
-        self._set_w_cpx(**kwargs)
-        return [[j.anharmonicity(mode, **kwargs) for mode in range(len(self.w_cpx))] for j in self.junctions]
+        self._set_zeta(**kwargs)
+        return [[j.anharmonicity(mode, **kwargs) for mode in range(len(self.zeta))] for j in self.junctions]
     
     @vectorize_kwargs
     def eigenfrequencies(self, **kwargs):
@@ -425,8 +295,8 @@ class Qcircuit(object):
         non-linear part of the Hamiltonian :math:`\hat{U}`, 
         originating in the junction non-linearity, would be 0.
         '''
-        self._set_w_cpx(**kwargs)
-        return np.real(self.w_cpx)/2./pi
+        self._set_zeta(**kwargs)
+        return np.real(self.zeta)/2./pi
     
     @vectorize_kwargs
     def loss_rates(self, **kwargs):
@@ -470,8 +340,8 @@ class Qcircuit(object):
         the entire hamiltonian by :math:`2\pi` when performing time-dependant 
         simulations.
         '''
-        self._set_w_cpx(**kwargs)
-        return np.imag(self.w_cpx)/2./pi
+        self._set_zeta(**kwargs)
+        return np.imag(self.zeta)/2./pi
     
     @vectorize_kwargs
     def anharmonicities(self, **kwargs):
@@ -596,7 +466,7 @@ class Qcircuit(object):
         As = self._anharmonicities_per_junction(**kwargs)
 
         # Number of modes in the circuit
-        N_modes = len(self.w_cpx)
+        N_modes = len(self.zeta)
 
         # Number of junctions in the circuit
         N_junctions = len(self.junctions)
@@ -1678,69 +1548,6 @@ class _Network(object):
             if not isinstance(el,W):
                 self.connect(el, el.node_minus, el.node_plus)
 
-    @timeit
-    def compute_char_poly_coeffs(self, is_lossy = True):
-        
-        @timeit
-        def determinant(matrix):
-            return matrix.berkowitz_det()
-
-        self.is_lossy = is_lossy
-        ntr = deepcopy(self) # ntr stands for Network To Reduce
-
-        # compute conductance matrix
-        ntr.compute_RLC_matrices()
-
-        if self.is_lossy:
-            w = sp.Symbol('w')
-            char_poly = determinant((ntr.RLC_matrices['L']+1j*w*ntr.RLC_matrices['R']-w**2*ntr.RLC_matrices['C']))
-            char_poly = sp.collect(sp.expand(char_poly), w)
-            self.char_poly_order = sp.polys.polytools.degree(
-                char_poly, gen=w)  # Order of the polynomial
-            # Get polynomial coefficients, index 0 = highest order term
-            self.char_poly_coeffs_analytical =\
-                [char_poly.coeff(w, n) for n in range(self.char_poly_order+1)[::-1]] 
-        else:
-            w2 = sp.Symbol('w2')
-            char_poly = determinant((-ntr.RLC_matrices['L']+w2*ntr.RLC_matrices['C']))
-            char_poly = sp.collect(sp.expand(char_poly), w2)
-            self.char_poly_order = sp.polys.polytools.degree(char_poly, gen=w2)  # Order of the polynomial
-            # Get polynomial coefficients, index 0 = highest order term
-            self.char_poly_coeffs_analytical =\
-                [char_poly.coeff(w2, n) for n in range(self.char_poly_order+1)[::-1]]  
-                
-        
-        # Divide by w if possible
-        n=1
-        while self.char_poly_coeffs_analytical[-n]==0:
-            n+=1
-        self.char_poly_coeffs_analytical = self.char_poly_coeffs_analytical[:self.char_poly_order+2-n]
-        return self.char_poly_coeffs_analytical
-
-    def compute_RLC_matrices(self):
-        N_nodes = len(self.net_dict)
-        self.RLC_matrices = {
-            'R':sp.zeros(N_nodes),
-            'L':sp.zeros(N_nodes),
-            'C':sp.zeros(N_nodes)
-        }
-
-        for i in range(N_nodes):
-            for j, el in self.net_dict[i].items():
-                if j>i:
-                    RLC_matrix_components = el._get_RLC_matrix_components()
-                    for k in self.RLC_matrices:
-                        self.RLC_matrices[k][i,j] = -RLC_matrix_components[k]
-                        self.RLC_matrices[k][j,i] = -RLC_matrix_components[k]
-                        self.RLC_matrices[k][i,i] += RLC_matrix_components[k]
-                        self.RLC_matrices[k][j,j] += RLC_matrix_components[k]
-
-
-        # set a ground 
-        for k in self.RLC_matrices:
-            self.RLC_matrices[k].row_del(0)
-            self.RLC_matrices[k].col_del(0)
-
     def connect(self, element, node_minus, node_plus):
         '''
         Modifies the ``net_dict`` variable such that ``node_minus``
@@ -1793,7 +1600,7 @@ class _Network(object):
         connections = [x for x in self.net_dict[node_to_remove].items()]
 
         # Sum of admittances of connecting_components
-        sum_Y = sum([elt._admittance() for _, elt in connections])
+        sum_Y = sum([elt._branch_admittance() for _, elt in connections])
 
         # Go through all pairs of connecting nodes
         # and calculate the admittance Y_XY that will connect them 
@@ -1801,7 +1608,7 @@ class _Network(object):
         mesh_to_add = []
         for i, (node_A, elt_A) in enumerate(connections):
             for node_B, elt_B in connections[i+1:]:
-                Y = elt_A._admittance()*elt_B._admittance()/sum_Y
+                Y = elt_A._branch_admittance()*elt_B._branch_admittance()/sum_Y
                 mesh_to_add.append([Admittance(node_A, node_B, Y), node_A, node_B])
 
         # Remove the node_to_remove from the net_dict, along with all
@@ -1814,6 +1621,20 @@ class _Network(object):
         # the removed node
         for mesh_branch in mesh_to_add:
             self.connect(*mesh_branch)
+
+    def remove_nodes(self,nodes_to_leave):
+
+        # # order nodes from the node with the least amount of connections
+        # # to the one with the most
+        nodes = [key for key in self.net_dict]
+        nodes_order = np.argsort([len(self.net_dict[key]) for key in nodes])
+        nodes_sorted = [nodes[i] for i in nodes_order]
+        
+        # Remove all nodes except from node_minus, node_plus
+        # through star-mesh transforms with the remove_node function
+        for node in nodes_sorted:
+            if node not in nodes_to_leave:
+                self.remove_node(node)
 
     @timeit
     def admittance(self, node_minus, node_plus):
@@ -1832,22 +1653,11 @@ class _Network(object):
 
         # Create a temporary copy of the network which will be reduced
         ntr = deepcopy(self) # ntr stands for Network To Reduce
-
-        # # order nodes from the node with the least amount of connections
-        # # to the one with the most
-        nodes = [key for key in ntr.net_dict]
-        nodes_order = np.argsort([len(ntr.net_dict[key]) for key in nodes])
-        nodes_sorted = [nodes[i] for i in nodes_order]
-        
-        # Remove all nodes except from node_minus, node_plus
-        # through star-mesh transforms with the remove_node function
-        for node in nodes_sorted:
-            if node not in [node_minus, node_plus]:
-                ntr.remove_node(node)
+        ntr.remove_nodes(nodes_to_leave = [node_minus, node_plus])
 
         # Compute the admittance between the two remaining nodes: 
         # node_minus and node_plus
-        Y = ntr.net_dict[node_minus][node_plus]._admittance()
+        Y = ntr.net_dict[node_minus][node_plus]._branch_admittance()
         return Y
 
     def branch_admittance(self, node_1, node_2):
@@ -1867,7 +1677,7 @@ class _Network(object):
             raise ValueError('node_1 == node_2')
 
         try:
-            return self.net_dict[node_1][node_2]._admittance()
+            return self.net_dict[node_1][node_2]._branch_admittance()
         except KeyError:
             return 0.
 
@@ -1906,17 +1716,7 @@ class _Network(object):
 
         # Create a temporary copy of the network which will be reduced        
         ntr = deepcopy(self) # ntr stands for Network To Reduce
-        
-        # # order nodes from the node with the least amount of connections
-        # # to the one with the most
-        nodes = [key for key in ntr.net_dict]
-        nodes_order = np.argsort([len(ntr.net_dict[key]) for key in nodes])
-        nodes_sorted = [nodes[i] for i in nodes_order]
-
-        # Remove nodes using the star-mesh relation
-        for node in nodes_sorted:
-            if node not in [node_left_minus, node_left_plus, node_right_minus, node_right_plus]:
-                ntr.remove_node(node)
+        ntr.remove_nodes(nodes_to_leave =[node_left_minus, node_left_plus, node_right_minus, node_right_plus])
 
         if (node_left_minus in [node_right_plus, node_right_minus]) or\
             (node_left_plus in [node_right_plus, node_right_minus]):
@@ -2094,30 +1894,16 @@ class Parallel(Circuit):
         self.left = left
         self.right = right
 
-    def _admittance(self):
-        return Add(
-            self.left._admittance(),
-            self.right._admittance())
-    
-    def _get_RLC_matrix_components(self):
-        RLC_matrix_components = {
-            'R':0,
-            'L':0,
-            'C':0
-        }
-        for el in [self.left,self.right]:
-            values_to_add = el._get_RLC_matrix_components()
-            for k in RLC_matrix_components:
-                RLC_matrix_components[k] += values_to_add[k]
-        return RLC_matrix_components
-
+    def _branch_admittance(self):
+        return self.left._branch_admittance()+self.right._branch_admittance()
+ 
 class Component(Circuit):
 
     def __init__(self, node_minus, node_plus, *args):
         super(Component, self).__init__(node_minus, node_plus)
         self.label = None
         self.value = None
-        self.__flux = None
+        self.transfer_networks = {}
 
         if len(args)==0:
             raise ValueError("Specify either a value or a label")
@@ -2169,30 +1955,9 @@ class Component(Circuit):
             else:
                 self._circuit._no_value_components.append(self.label)
 
-    def _flux(self, mode, **kwargs):
-        self._circuit._set_w_cpx(**kwargs)
-        w = np.real(self._circuit.w_cpx)[mode]
-        try:
-            tr = self._circuit._flux_transformation_dict[
-                                        self._circuit.ref_elt[mode].node_minus,
-                                        self._circuit.ref_elt[mode].node_plus,
-                                        self.node_minus,
-                                        self.node_plus]
-        except KeyError:
-            tr_analytical = self._circuit._network.transfer(
-                self._circuit.ref_elt[mode].node_minus, self._circuit.ref_elt[mode].node_plus, self.node_minus, self.node_plus)
-            tr = lambdify(['w']+self._circuit._no_value_components,tr_analytical, "numpy")
-            def tr_minus(w,**kwargs):
-                return -tr(w,**kwargs)
-            
-            self._circuit._flux_transformation_dict[
-                                        self._circuit.ref_elt[mode].node_minus,
-                                        self._circuit.ref_elt[mode].node_plus,
-                                        self.node_minus,self.node_plus] = tr
-            self._circuit._flux_transformation_dict[
-                                        self._circuit.ref_elt[mode].node_minus,
-                                        self._circuit.ref_elt[mode].node_plus,
-                                        self.node_plus,self.node_minus] = tr_minus
+    def _flux_zpf(self, mode, **kwargs):
+        self._circuit._set_zeta(**kwargs)
+        w = np.real(self._circuit.zeta)[mode]
 
         # Following Black-box quantization, 
         # we assume the losses to be neglegible by 
@@ -2202,18 +1967,35 @@ class Component(Circuit):
         # Calculation of phi_zpf of the reference junction/inductor
         #  = sqrt(hbar/w/ImdY[w])
         # The minus is there since 1/Im(Y)  = -Im(1/Y)
-        phi_zpf_r = np.sqrt(hbar/w*np.imag(-self._circuit.ref_elt[mode]._inverse_of_dY(w,**kwargs)))
+        phi_zpf_r = np.sqrt(hbar/w/np.imag(self._circuit.ref_elt._admittance().deriv()(w,**kwargs)))
 
         # Note that the flux defined here 
-        phi = tr(w,**kwargs)*phi_zpf_r
+        phi = self._circuit.ref_elt._transfer_function(self,w,**kwargs)*phi_zpf_r
         # is complex.
 
         return phi
 
+    def _transfer_function(self,comp,w):
+        # TODO: avoid reducing networks for n,m and m,n
+        try:
+            net = self.transfer_networks[comp.node_minus,comp.node_plus]
+            return net.transfer(self.node_minus, self.node_plus,
+                comp.node_minus,comp.node_plus)
+        except KeyError:
+            ntr = deepcopy(self._circuit._network)
+            ntr.remove_nodes([self.node_minus, self.node_plus,
+                comp.node_minus,comp.node_plus])
+            self.transfer_networks[comp.node_minus,comp.node_plus] = ntr
+            return self._transfer_function(comp,w)
 
     def _to_string(self, use_unicode=True):
         return to_string(self.unit, self.label, self.value, use_unicode=use_unicode)
 
+    def _admittance(self):
+        # This will be done only once, the following times, there will be no nodes to remove
+        self._network.remove_nodes(nodes_to_leave = [self.node_minus,self.node_plus])
+
+        return self._network.admittance(self.node_minus,self.node_plus)
 
     @vectorize_kwargs(exclude = ['quantity','mode'])
     def zpf(self, mode, quantity, **kwargs):
@@ -2267,11 +2049,11 @@ class Component(Circuit):
         '''
         if quantity == 'flux':
             phi_0 = hbar/2./e
-            return self._flux(mode,**kwargs)/phi_0
+            return self._flux_zpf(mode,**kwargs)/phi_0
         if quantity == 'voltage':
-            phi_zpf = self._flux(mode,**kwargs)
+            phi_zpf = self._flux_zpf(mode,**kwargs)
             # The above will set the eigenfrequencies
-            w=np.real(self._circuit.w_cpx)[mode]
+            w=np.real(self._circuit.zeta)[mode]
             
             return phi_zpf*1j*w
         if quantity == 'current':
@@ -2279,8 +2061,8 @@ class Component(Circuit):
             # The above will set the eigenfrequencies
 
             kwargs_with_w = deepcopy(kwargs)
-            kwargs_with_w['w'] = np.real(self._circuit.w_cpx)[mode]
-            Y = self._admittance()
+            kwargs_with_w['w'] = np.real(self._circuit.zeta)[mode]
+            Y = self._branch_admittance()
             if isinstance(Y, Number):
                 pass
             else:
@@ -2290,7 +2072,7 @@ class Component(Circuit):
             Izpf = self.zpf(mode,'current', **kwargs)
             # The above will set the eigenfrequencies
 
-            w = np.real(self._circuit.w_cpx)[mode]
+            w = np.real(self._circuit.zeta)[mode]
             return Izpf/1j/w/e
 
 class W(Component):
@@ -2395,8 +2177,8 @@ class L(Component):
         super(L, self).__init__(node_minus, node_plus, *args)
         self.unit = 'H'
 
-    def _admittance(self):
-        return -sp.I*Mul(1/sp.Symbol('w'), 1/self._get_value())
+    def _branch_admittance(self):
+        return rat((1),(0,1j*self._get_value()))
 
     def _set_component_lists(self):
         super(L, self)._set_component_lists()
@@ -2449,81 +2231,6 @@ class L(Component):
             return shift(x_list, self.x_plot_center), shift(y_list, self.y_plot_center), line_type
         if self.angle%180. == 90.:
             return shift(y_list, self.x_plot_center), shift(x_list, self.y_plot_center), line_type
-
-    def _get_RLC_matrix_components(self):
-        return {
-            'R':0,
-            'L':1/self._get_value(),
-            'C':0
-        }
-
-    @timeit
-    def _compute_inverse_of_dY(self):
-        '''
-        Generate the L._inverse_of_dY_lambdified function which
-        takes as an argument an angular frequency (and keyword arguments 
-        if component values need to be specified) and returns the inverse of the
-        derivative of the admittance evaluated at the nodes of the inductor.
-
-        Y will is a rational function Y = u/v, where u and v are polynomials.
-        So dY = (du*v-dv*u)/v**2.
-        We only need to evaluate dY at a eigen-frequencies of the ciruit, 
-        when Y=0  <=> u = 0
-        This simplifies the expression to be computed to dY = du/v
-        
-        '''
-        # Compute a sympy expression for the admittance 
-        # at the nodes of the reference element
-        Y = self._circuit._network.admittance(self.node_minus, self.node_plus)
-
-        # Write the expression as a single fraction 
-        # with the numerator and denomenator as polynomials
-        # (it combines but also "de-nests")        
-        ts = time.time()  
-        Y_together = sp.together(Y)
-        te = time.time()
-        if PROFILING:
-            print('calling together took %2.2f ms' % \
-                    ((te - ts) * 1000))
-
-        # Extract numerator and denominator
-        u = sp.numer(Y_together)
-        v = sp.denom(Y_together)
-
-        # Symbol representing angular frequency
-        w = sp.Symbol('w')
-
-        # Calculate derivatives
-        derivatives = []
-        for P in [u,v]:
-            # Write as polynomial in 'w'
-            ts = time.time()  
-            P = sp.collect(sp.expand(P), w)
-            te = time.time()
-            if PROFILING:
-                print('collecting/expanding took %2.2f ms' % \
-                        ((te - ts) * 1000))
-
-            # Obtain the order of the polynomial 
-            P_order = sp.polys.polytools.degree(P, gen=w) 
-
-            # Compute list of coefficients
-            P_coeffs_analytical = [P.coeff(w, n) for n in range(P_order+1)[::-1]]
-
-            # Express the derivative of the polynomial
-            dP = sum([(P_order-n)*a*w**(P_order-n-1)
-                        for n, a in enumerate(P_coeffs_analytical)])
-
-            derivatives.append(dP)
-        
-        du = derivatives[0]
-        dv = derivatives[1]
-        
-        # Convert the sympy expression for v/du to a function
-        # Note the function arguments are the angular frequency 
-        # and component values that need to be specified
-        self._inverse_of_dY =  lambdify(['w']+self._circuit._no_value_components, v**2/(du*v-dv*u), "numpy")
-
 
 class J(L):
     """A class representing an junction
@@ -2687,19 +2394,12 @@ class R(Component):
         super(R, self).__init__(node_minus, node_plus, *args)
         self.unit = u"\u03A9"
 
-    def _admittance(self):
-        return 1/self._get_value()
+    def _branch_admittance(self):
+        return rat((1),(self._get_value()))
     
     def _set_component_lists(self):
         super(R, self)._set_component_lists()
         self._circuit.resistors.append(self)
-    
-    def _get_RLC_matrix_components(self):
-        return {
-            'R':1/self._get_value(),
-            'L':0,
-            'C':0
-        }
     
     def _draw(self):
         pp = self._circuit._pp
@@ -2778,8 +2478,8 @@ class C(Component):
         super(C, self).__init__(node_minus, node_plus, *args)
         self.unit = 'F'
 
-    def _admittance(self):
-        return sp.I*Mul(sp.Symbol('w'), self._get_value())
+    def _branch_admittance(self):
+        return rat((0,1j*self._get_value()),(1))
 
     def _set_component_lists(self):
         super(C, self)._set_component_lists()
@@ -2816,18 +2516,11 @@ class C(Component):
         if self.angle%180. == 90.:
             return shift(y, self.x_plot_center), shift(x, self.y_plot_center), line_type
 
-    def _get_RLC_matrix_components(self):
-        return {
-            'R':0,
-            'L':0,
-            'C':self._get_value()
-        }
-
 class Admittance(Component):
     def __init__(self, node_minus, node_plus, Y):
         self.node_minus = node_minus
         self.node_plus = node_plus
         self.Y = Y
 
-    def _admittance(self):
+    def _branch_admittance(self):
         return self.Y
