@@ -3,6 +3,8 @@ import numpy as np
 import functools
 from warnings import warn
 import sys
+from scipy.optimize import root_scalar
+from numpy.polynomial.polynomial import Polynomial as npPoly
 
 exponent_to_letter = {
     -18: 'a',
@@ -30,6 +32,47 @@ exponent_to_letter_unicode = {
     9: 'G',
     12: 'T'
 }
+
+def polish_roots(p,roots, maxiter, rtol):        
+    roots_refined = []
+    for r0 in roots:
+        r = root_scalar(
+                f = p, 
+                x0 = r0, 
+                fprime = p.deriv(), 
+                fprime2 = p.deriv(2),
+                method = 'halley', 
+                maxiter = int(maxiter), 
+                rtol = rtol).root
+        if not True in np.isclose(r,roots_refined, rtol = rtol):
+            roots_refined.append(r)
+    return np.array(roots_refined)
+
+
+def remove_multiplicity(p):
+    g = gcd(p, p.deriv())
+    if g.degree() >= 1:
+        return p // g
+    else:
+        # There are no multiple roots so use the original polynomial.
+        return p
+
+def gcd(u, v):
+    '''gcd(u,v) returns the greatest common divisor of u and v.
+    Where u and v are integers or polynomials.
+    '''
+    # If something other than an integer or a polynomial is fed in, the
+    # algorithm may fail to converge.  In that case we want an exception
+    # instead of an infinite loop.
+    iterations = 0
+    max_iterations = 1000
+    while v != npPoly(0):
+        u, v = v, u % v
+        iterations += 1
+        if iterations >= max_iterations:
+            raise ValueError('gcd(u,v) failed to converge')
+
+    return u
 
 def dfridr(f, x, h):
     max_iter = 10
