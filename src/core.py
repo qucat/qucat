@@ -1712,8 +1712,17 @@ class _Network(object):
                         self.RLC_matrices[k][i,i] += RLC_matrix_components[k]
                         self.RLC_matrices[k][j,j] += RLC_matrix_components[k]
 
+        # count the number of coefficients in each row
+        number_coefficients = np.zeros((N_nodes))
+        for k in self.RLC_matrices:
+            for i in range(N_nodes):
+                for j in range(N_nodes):
+                    if self.RLC_matrices[k][i,j] != 0:
+                        number_coefficients[i]+=1
+
 
         # set a ground 
+        ground_node = np.argmax(number_coefficients)
         for k in self.RLC_matrices:
             self.RLC_matrices[k].row_del(0)
             self.RLC_matrices[k].col_del(0)
