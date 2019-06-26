@@ -203,9 +203,9 @@ class Qcircuit(object):
 
 
     @timeit
-    def _set_w_cpx(self, **kwargs):
+    def _set_zeta(self, **kwargs):
         '''
-        Sets the Qcircuit.w_cpx to the circuit eigenfrequencies
+        Sets the Qcircuit.zeta to the circuit eigenfrequencies
         (including the imaginary part due to losses).
 
         Parameters
@@ -270,11 +270,11 @@ class Qcircuit(object):
             w2 = w2[np.nonzero(w2 >= 0.)]
 
             # Take the square root to get to the eigenfrequencies
-            w_cpx = np.sqrt(w2)
+            zeta = np.sqrt(w2)
 
             # Sort solutions with increasing frequency
-            order = np.argsort(np.real(w_cpx))
-            w_cpx = w_cpx[order]
+            order = np.argsort(np.real(zeta))
+            zeta = zeta[order]
 
         else:
 
@@ -282,21 +282,21 @@ class Qcircuit(object):
             # The roots of this polynomial will provide the complex eigenfrequencies
             char_poly_coeffs = [complex(coeff(**kwargs)) for coeff in self._char_poly_coeffs]
 
-            w_cpx = np.roots(char_poly_coeffs)
-            w_cpx = refine_roots(char_poly_coeffs,w_cpx)
+            zeta = np.roots(char_poly_coeffs)
+            zeta = refine_roots(char_poly_coeffs,zeta)
 
             # Sort solutions with increasing frequency
-            order = np.argsort(np.real(w_cpx))
-            w_cpx = w_cpx[order]
+            order = np.argsort(np.real(zeta))
+            zeta = zeta[order]
 
             # For each solution, its complex conjugate
             # is also a solution, we want to discard the negative
             # imaginary part solutions which correspond to unphysical
             # negative dissipation modes
-            w_cpx = w_cpx[np.nonzero(np.imag(w_cpx) > 0.)]
+            zeta = zeta[np.nonzero(np.imag(zeta) > 0.)]
 
         # Negative and zero frequency modes are discarded
-        w_cpx = w_cpx[np.nonzero(np.real(w_cpx) > 0.)]
+        zeta = zeta[np.nonzero(np.real(zeta) > 0.)]
 
 
         # Only consider modes with Q>self.Q_min (=1 by default)
@@ -306,12 +306,12 @@ class Qcircuit(object):
         # negative values.
         # The negative values are discarded which changes the number of modes
         # and makes parameter sweeps difficult 
-        for w in w_cpx:
+        for w in zeta:
             if np.real(w) < self.Q_min*np.imag(w):
                 error_message = "Discarding f = %f Hz mode "%(np.real(w/2/np.pi))
                 error_message += "since it has a too low quality factor Q = %f < %f"%(np.real(w)/np.imag(w),self.Q_min)
                 warn(error_message)
-        w_cpx = w_cpx[np.nonzero(np.real(w_cpx) >= self.Q_min*np.imag(w_cpx))]
+        zeta = zeta[np.nonzero(np.real(zeta) >= self.Q_min*np.imag(zeta))]
 
         # Choose reference elements for each mode which 
         # maximize the inverse of dY: we want the reference 
@@ -319,10 +319,10 @@ class Qcircuit(object):
         # in flux are most localized.
         inductive_elements = self.junctions+self.inductors
         ref_elt = []
-        w_cpx_copy = deepcopy(w_cpx)
-        w_cpx = []
+        zeta_copy = deepcopy(zeta)
+        zeta = []
         
-        for w in w_cpx_copy:
+        for w in zeta_copy:
             largest_dYm1 = 0
             ref_elt_index = None
             for ind_index,ind in enumerate(inductive_elements):
@@ -348,11 +348,11 @@ class Qcircuit(object):
                 error_message += "frequency to lead to an realistic estimation of the zero-point-fluctuations.\n"
                 warn(error_message)
             else:
-                w_cpx.append(w)
+                zeta.append(w)
                 ref_elt.append(inductive_elements[ref_elt_index])
-        w_cpx = np.array(w_cpx)
+        zeta = np.array(zeta)
 
-        self.w_cpx = w_cpx
+        self.zeta = zeta
         self.ref_elt = ref_elt
 
     def _anharmonicities_per_junction(self, **kwargs):
@@ -374,8 +374,8 @@ class Qcircuit(object):
             where ``anh_per_jun[j,m]`` corresponds to the contribution of junction ``j``
             to the anharmonicity of mode ``m``
         '''
-        self._set_w_cpx(**kwargs)
-        return [[j.anharmonicity(mode, **kwargs) for mode in range(len(self.w_cpx))] for j in self.junctions]
+        self._set_zeta(**kwargs)
+        return [[j.anharmonicity(mode, **kwargs) for mode in range(len(self.zeta))] for j in self.junctions]
     
     @vectorize_kwargs
     def eigenfrequencies(self, **kwargs):
@@ -417,8 +417,8 @@ class Qcircuit(object):
         non-linear part of the Hamiltonian :math:`\hat{U}`, 
         originating in the junction non-linearity, would be 0.
         '''
-        self._set_w_cpx(**kwargs)
-        return np.real(self.w_cpx)/2./pi
+        self._set_zeta(**kwargs)
+        return np.real(self.zeta)/2./pi
     
     @vectorize_kwargs
     def loss_rates(self, **kwargs):
@@ -462,8 +462,8 @@ class Qcircuit(object):
         the entire hamiltonian by :math:`2\pi` when performing time-dependant 
         simulations.
         '''
-        self._set_w_cpx(**kwargs)
-        return np.imag(self.w_cpx)/2./pi
+        self._set_zeta(**kwargs)
+        return np.imag(self.zeta)/2./pi
     
     @vectorize_kwargs
     def anharmonicities(self, **kwargs):
@@ -588,7 +588,7 @@ class Qcircuit(object):
         As = self._anharmonicities_per_junction(**kwargs)
 
         # Number of modes in the circuit
-        N_modes = len(self.w_cpx)
+        N_modes = len(self.zeta)
 
         # Number of junctions in the circuit
         N_junctions = len(self.junctions)
@@ -2162,8 +2162,8 @@ class Component(Circuit):
                 self._circuit._no_value_components.append(self.label)
 
     def _flux(self, mode, **kwargs):
-        self._circuit._set_w_cpx(**kwargs)
-        w = np.real(self._circuit.w_cpx)[mode]
+        self._circuit._set_zeta(**kwargs)
+        w = np.real(self._circuit.zeta)[mode]
         try:
             tr = self._circuit._flux_transformation_dict[
                                         self._circuit.ref_elt[mode].node_minus,
@@ -2263,7 +2263,7 @@ class Component(Circuit):
         if quantity == 'voltage':
             phi_zpf = self._flux(mode,**kwargs)
             # The above will set the eigenfrequencies
-            w=np.real(self._circuit.w_cpx)[mode]
+            w=np.real(self._circuit.zeta)[mode]
             
             return phi_zpf*1j*w
         if quantity == 'current':
@@ -2271,7 +2271,7 @@ class Component(Circuit):
             # The above will set the eigenfrequencies
 
             kwargs_with_w = deepcopy(kwargs)
-            kwargs_with_w['w'] = np.real(self._circuit.w_cpx)[mode]
+            kwargs_with_w['w'] = np.real(self._circuit.zeta)[mode]
             Y = self._admittance()
             if isinstance(Y, Number):
                 pass
@@ -2282,7 +2282,7 @@ class Component(Circuit):
             Izpf = self.zpf(mode,'current', **kwargs)
             # The above will set the eigenfrequencies
 
-            w = np.real(self._circuit.w_cpx)[mode]
+            w = np.real(self._circuit.zeta)[mode]
             return Izpf/1j/w/e
 
 class W(Component):
