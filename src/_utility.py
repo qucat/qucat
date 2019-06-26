@@ -3,6 +3,7 @@ import numpy as np
 import functools
 from warnings import warn
 import sys
+from scipy.optimize import root_scalar
 
 exponent_to_letter = {
     -18: 'a',
@@ -30,6 +31,20 @@ exponent_to_letter_unicode = {
     9: 'G',
     12: 'T'
 }
+
+def refine_roots(p,roots, maxiter, rtol):        
+    roots_refined = []
+    for r0 in roots:
+        roots_refined.append(
+            root_scalar(
+                f = p, 
+                x0 = r0, 
+                fprime = p.deriv(), 
+                fprime2 = p.deriv(2),
+                method = 'halley', 
+                maxiter = int(maxiter), 
+                rtol = rtol).root)
+    return np.array(roots_refined)
 
 def dfridr(f, x, h):
     max_iter = 10

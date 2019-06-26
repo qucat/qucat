@@ -1,7 +1,7 @@
 import sympy as sp
 from sympy.utilities.lambdify import lambdify
 import numpy as np
-from scipy.optimize import root_scalar
+from numpy.polynomial.polynomial import Polynomial as npPoly
 from sympy.core.mul import Mul, Pow, Add
 from copy import deepcopy
 from numbers import Number
@@ -226,40 +226,22 @@ class Qcircuit(object):
         # Check if the kwargs provided are correct
         self._check_kwargs(**kwargs)
 
-        def refine_roots(p,x):
-            dp = np.polyder(p)
-            ddp = np.polyder(dp)
-        
-            x_refined = []
-            for x0 in x:
-                x_refined.append(
-                    root_scalar(
-                        f = lambda x:np.polyval(p,x), 
-                        x0 = x0, 
-                        fprime = lambda x:np.polyval(dp,x), 
-                        fprime2 = lambda x:np.polyval(ddp,x),
-                        method = 'halley', 
-                        maxiter = int(self.root_max_iterations), 
-                        rtol = self.root_relative_tolerance).root)
-            return np.array(x_refined)
-
-
         if len(self.resistors) == 0:
 
             # Compute the coefficients of the characteristic polynomial.
             # The roots of this polynomial will provide the complex eigenfrequencies
-            char_poly_coeffs = [np.real(coeff(**kwargs)) for coeff in self._char_poly_coeffs]
+            char_poly = npPoly([np.real(coeff(**kwargs)) for coeff in self._char_poly_coeffs])
         
             # In this case, the variable of the characteristic polynomial is \omega^2
             # And we can safely take the real part of the solution as there are no
             # resistors in the circuit.
-            w2 = np.real(np.roots(char_poly_coeffs))
-            w2 = refine_roots(char_poly_coeffs,w2)
+            w2 = np.real(char_poly.roots())
+            w2 = refine_roots(char_poly,w2, self.root_max_iterations,np.sqrt(self.root_relative_tolerance))
 
             # Sometimes, when the circuits has vastly different
             # values for its circuit components or modes are too
             # decoupled, the symbolic 
-            # calculations can yield an incorrect char_poly_coeffs
+            # calculations can yield an incorrect char_poly
             # We can easily discard some of these casese by throwing away
             # negative solutions
             for w2_single in w2:
@@ -280,10 +262,10 @@ class Qcircuit(object):
 
             # Compute the coefficients of the characteristic polynomial.
             # The roots of this polynomial will provide the complex eigenfrequencies
-            char_poly_coeffs = [complex(coeff(**kwargs)) for coeff in self._char_poly_coeffs]
+            char_poly = npPoly([complex(coeff(**kwargs)) for coeff in self._char_poly_coeffs])
 
-            zeta = np.roots(char_poly_coeffs)
-            zeta = refine_roots(char_poly_coeffs,zeta)
+            zeta = char_poly.roots()
+            zeta = refine_roots(char_poly,zeta, self.root_max_iterations,self.root_relative_tolerance)
 
             # Sort solutions with increasing frequency
             order = np.argsort(np.real(zeta))
@@ -340,7 +322,7 @@ class Qcircuit(object):
                 # Sometimes, when the circuits has vastly different
                 # values for its circuit components or modes are too
                 # decoupled, the symbolic 
-                # calculations can yield an incorrect char_poly_coeffs
+                # calculations can yield an incorrect char_poly
                 # We can easily discard some of these cases by throwing away
                 # any solutions with a complex impedance (ImY'<0)
                 error_message = "Discarding f = %f Hz mode.\n"%(np.real(w/2/np.pi))
@@ -1689,24 +1671,25 @@ class _Network(object):
             char_poly = sp.collect(sp.expand(char_poly), w)
             self.char_poly_order = sp.polys.polytools.degree(
                 char_poly, gen=w)  # Order of the polynomial
-            # Get polynomial coefficients, index 0 = highest order term
+            # Get polynomial coefficients, index 0 = lowest order term
             self.char_poly_coeffs_analytical =\
-                [char_poly.coeff(w, n) for n in range(self.char_poly_order+1)[::-1]] 
+                [char_poly.coeff(w, n) for n in range(self.char_poly_order+1)] 
         else:
             w2 = sp.Symbol('w2')
             char_poly = determinant((-ntr.RLC_matrices['L']+w2*ntr.RLC_matrices['C']))
             char_poly = sp.collect(sp.expand(char_poly), w2)
             self.char_poly_order = sp.polys.polytools.degree(char_poly, gen=w2)  # Order of the polynomial
-            # Get polynomial coefficients, index 0 = highest order term
+            # Get polynomial coefficients, index 0 = lowest order term
             self.char_poly_coeffs_analytical =\
-                [char_poly.coeff(w2, n) for n in range(self.char_poly_order+1)[::-1]]  
+                [char_poly.coeff(w2, n) for n in range(self.char_poly_order+1)]  
                 
         
         # Divide by w if possible
-        n=1
-        while self.char_poly_coeffs_analytical[-n]==0:
+        n=0
+        while self.char_poly_coeffs_analytical[n]==0:
             n+=1
-        self.char_poly_coeffs_analytical = self.char_poly_coeffs_analytical[:self.char_poly_order+2-n]
+        self.char_poly_coeffs_analytical = self.char_poly_coeffs_analytical[n:]
+
         return self.char_poly_coeffs_analytical
 
     def compute_RLC_matrices(self):
@@ -2466,7 +2449,6 @@ class L(Component):
             # Ridders algorithm from numerical methods
             return dfridr(lambda x: np.imag(Y_lambdified(x,**kwargs)), w, w/1e10)
         self._Ceff = _Ceff
-
 
 class J(L):
     """A class representing an junction
