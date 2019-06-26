@@ -2450,8 +2450,9 @@ class L(Component):
         Y_symbolic = self._circuit._network.admittance(self.node_minus, self.node_plus)
         Y_lambdified = lambdify(['w']+self._circuit._no_value_components, Y_symbolic, "numpy")
         def _Ceff(w,**kwargs):
-            dw = w*1e-9
-            return np.imag((Y_lambdified(w+dw/2,**kwargs)-Y_lambdified(w-dw/2,**kwargs))/(dw))
+            # w = np.real(w)
+            # Ridders algorithm from numerical methods
+            return dfridr(lambda x: np.imag(Y_lambdified(x,**kwargs)), w, w/1e6)
         self._Ceff = _Ceff
 
 class J(L):
