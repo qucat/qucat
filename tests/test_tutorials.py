@@ -1,8 +1,7 @@
 import sys
 import os
 sys.path.append(os.path.join(os.path.join(os.path.dirname(os.path.dirname(__file__)),'src')))
-from utils_test_tutorials import run_notebook
-from test_core import TestCaseAppended
+from utils import run_notebook, TestCaseAppended
 import unittest
 from shutil import rmtree
 

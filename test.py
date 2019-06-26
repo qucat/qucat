@@ -5,7 +5,8 @@ import numpy as np
 
 from core import Network,GUI,J,L,C,R
 from time import time
-# circuit = GUI(filename = 'test.txt',edit=True,plot=False)
+# circuit = GUI(filename = 'test.txt',edit=False,plot=False)
+# circuit.f_k_A_chi(pretty_print = True)
 # circuit.show_normal_mode(0,quantity='flux')
 f0 = 4.603e9
 Z0 = 50
@@ -21,7 +22,7 @@ mmusc_circuits = []
 dissipationless_time = []
 dissipative_time = []
 bare_mode_frequency = []
-for N in range(4):
+for N in range(8):
     netlist = [
         J(0,1,Ej,use_E=True),
         C(0,1,Cj),

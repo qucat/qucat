@@ -2,8 +2,7 @@ from math import floor
 import numpy as np
 import functools
 from warnings import warn
-np.seterr(divide='raise', invalid='raise')
-
+import sys
 
 exponent_to_letter = {
     -18: 'a',
@@ -32,6 +31,32 @@ exponent_to_letter_unicode = {
     12: 'T'
 }
 
+def dfridr(f, x, h):
+    max_iter = 10
+    step_size_decrease = 1.4
+    safe = 2
+
+    a  = np.zeros((max_iter,max_iter))
+    a[0,0] = (f(x+h)-f(x-h))/2/h
+    err = sys.float_info.max 
+    for i in range(1,max_iter):
+        h /= step_size_decrease
+        a[0,i] = (f(x+h)-f(x-h))/2/h # try new, smaller stepsize
+        fac = step_size_decrease**2
+        for j in range(1,i+1):
+            # Compute extrapolations of various orders, requiring
+            # no new function evaluations.
+            a[j,i]=(a[j-1,i]*fac-a[j-1,i-1])/(fac-1.0)
+            fac=step_size_decrease**2*fac
+            errt = max(abs(a[j,i]-a[j-1,i]),abs(a[j,i]-a[j-1,i-1]))
+            # The error strategy is to compare each new extrapolation to one order lower, both
+            # at the present stepsize and the previous one.
+            if errt <= err: # If error is decreased, save the improved answer.
+                err=errt
+                ans=a[j][i]
+        if (abs(a[i,i]-a[i-1,i-1]) >= safe*err): break
+        # If higher order is worse by a significant factor SAFE, then quit early.
+    return ans
 
 
 def refuse_vectorize_kwargs(func_to_evaluate = None,*,exclude = []):
@@ -242,3 +267,7 @@ def to_string(unit,label,value, use_unicode=True, maximum_info = False):
         if unit is not None:
             s+=unit
     return s
+
+if __name__ == "__main__":
+    print(dfridr(lambda x:np.exp(x), 0,0.1))
+    print(np.exp(0))

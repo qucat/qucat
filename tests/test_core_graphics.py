@@ -6,7 +6,7 @@ import core
 from math import isclose
 import numpy as np
 from _constants import e, pi, h, hbar
-from test_core import TestCaseAppended
+from utils import TestCaseAppended
 
 # Run plt.ion() to avoid hanging on plt.show() calls
 import matplotlib.pyplot as plt

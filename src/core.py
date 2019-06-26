@@ -14,20 +14,12 @@ import time
 from warnings import warn
 try:
     from ._constants import *
-    from ._utility import pretty_value,\
-            shift,\
-            to_string,\
-            vectorize_kwargs,\
-            refuse_vectorize_kwargs
+    from ._utility import *
     from .plotting_settings import plotting_parameters_show,plotting_parameters_normal_modes
 except ImportError:
     # When running from source without pip installation
     from _constants import *
-    from _utility import pretty_value,\
-            shift,\
-            to_string,\
-            vectorize_kwargs,\
-            refuse_vectorize_kwargs
+    from _utility import *
     from plotting_settings import plotting_parameters_show,plotting_parameters_normal_modes
 
 PROFILING = False
@@ -152,7 +144,7 @@ class Qcircuit(object):
         # define the function which returns the inverse of dY
         # where Y is the admittance at the nodes of an inductive element
         for inductive_element in self.inductors+self.junctions:
-            inductive_element._compute_inverse_of_dY()
+            inductive_element._compute_Ceff()
 
         # Initialize the flux transformation dictionary,
         # where _flux_transformation_dict[ref_node_minus,ref_node_plus,node_minus,node_plus] 
@@ -335,7 +327,7 @@ class Qcircuit(object):
             ref_elt_index = None
             for ind_index,ind in enumerate(inductive_elements):
                 try:
-                    dYm1 = np.imag(-ind._inverse_of_dY(np.real(w),**kwargs))
+                    dYm1 = 1/ind._Ceff(np.real(w),**kwargs)
                 except Exception:
                     # Computation of dYm1 failed for some reason
                     dYm1 = -1
@@ -2202,7 +2194,7 @@ class Component(Circuit):
         # Calculation of phi_zpf of the reference junction/inductor
         #  = sqrt(hbar/w/ImdY[w])
         # The minus is there since 1/Im(Y)  = -Im(1/Y)
-        phi_zpf_r = np.sqrt(hbar/w*np.imag(-self._circuit.ref_elt[mode]._inverse_of_dY(w,**kwargs)))
+        phi_zpf_r = np.sqrt(hbar/w/self._circuit.ref_elt[mode]._Ceff(w,**kwargs))
 
         # Note that the flux defined here 
         phi = tr(w,**kwargs)*phi_zpf_r
@@ -2458,71 +2450,22 @@ class L(Component):
         }
 
     @timeit
-    def _compute_inverse_of_dY(self):
+    def _compute_Ceff(self):
         '''
-        Generate the L._inverse_of_dY_lambdified function which
+        Generate the L._Ceff function which
         takes as an argument an angular frequency (and keyword arguments 
-        if component values need to be specified) and returns the inverse of the
-        derivative of the admittance evaluated at the nodes of the inductor.
-
-        Y will is a rational function Y = u/v, where u and v are polynomials.
-        So dY = (du*v-dv*u)/v**2.
-        We only need to evaluate dY at a eigen-frequencies of the ciruit, 
-        when Y=0  <=> u = 0
-        This simplifies the expression to be computed to dY = du/v
-        
+        if component values need to be specified) and returns the 
+        derivative of the admittance evaluated at the nodes of the inductor, 
+        which is effective capacitance at that frequency.         
         '''
         # Compute a sympy expression for the admittance 
         # at the nodes of the reference element
-        Y = self._circuit._network.admittance(self.node_minus, self.node_plus)
-
-        # Write the expression as a single fraction 
-        # with the numerator and denomenator as polynomials
-        # (it combines but also "de-nests")        
-        ts = time.time()  
-        Y_together = sp.together(Y)
-        te = time.time()
-        if PROFILING:
-            print('calling together took %2.2f ms' % \
-                    ((te - ts) * 1000))
-
-        # Extract numerator and denominator
-        u = sp.numer(Y_together)
-        v = sp.denom(Y_together)
-
-        # Symbol representing angular frequency
-        w = sp.Symbol('w')
-
-        # Calculate derivatives
-        derivatives = []
-        for P in [u,v]:
-            # Write as polynomial in 'w'
-            ts = time.time()  
-            P = sp.collect(sp.expand(P), w)
-            te = time.time()
-            if PROFILING:
-                print('collecting/expanding took %2.2f ms' % \
-                        ((te - ts) * 1000))
-
-            # Obtain the order of the polynomial 
-            P_order = sp.polys.polytools.degree(P, gen=w) 
-
-            # Compute list of coefficients
-            P_coeffs_analytical = [P.coeff(w, n) for n in range(P_order+1)[::-1]]
-
-            # Express the derivative of the polynomial
-            dP = sum([(P_order-n)*a*w**(P_order-n-1)
-                        for n, a in enumerate(P_coeffs_analytical)])
-
-            derivatives.append(dP)
-        
-        du = derivatives[0]
-        dv = derivatives[1]
-        
-        # Convert the sympy expression for v/du to a function
-        # Note the function arguments are the angular frequency 
-        # and component values that need to be specified
-        self._inverse_of_dY =  lambdify(['w']+self._circuit._no_value_components, v**2/(du*v-dv*u), "numpy")
+        Y_symbolic = self._circuit._network.admittance(self.node_minus, self.node_plus)
+        Y_lambdified = lambdify(['w']+self._circuit._no_value_components, Y_symbolic, "numpy")
+        def _Ceff(w,**kwargs):
+            # Ridders algorithm from numerical methods
+            return dfridr(lambda x: np.imag(Y_lambdified(x,**kwargs)), w, w/1e10)
+        self._Ceff = _Ceff
 
 
 class J(L):
