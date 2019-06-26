@@ -6,38 +6,11 @@ import core
 from math import isclose
 import numpy as np
 from _constants import e, pi, h, hbar
+from utils import TestCaseAppended
 
 # Run plt.ion() to avoid hanging on plt.show() calls
 import matplotlib.pyplot as plt
 plt.ion()
-
-def cutoff_digits(f,digits):
-    float_format = '%%.%de'%digits
-    return float(float_format%(np.real(f))) + 1j*float(float_format%(np.imag(f)))
-
-class TestCaseAppended(unittest.TestCase):
-
-    def assertRelativelyClose(self,a,b,digits = 6):
-        a = cutoff_digits(a,digits)
-        b = cutoff_digits(b,digits)
-        self.assertEqual(a,b)
-
-    def assertArrayRelativelyClose(self,a,b,digits = 6):
-        a = np.array(a)
-        b = np.array(b)
-        self.assertTrue(a.shape==b.shape,msg = f'Arrays do not have the same dimension {a.shape}!={b.shape}')
-        for index,_ in np.ndenumerate(a):
-            a_comp = cutoff_digits(a[index],digits)
-            b_comp = cutoff_digits(b[index],digits)
-            self.assertEqual(a_comp,b_comp,
-                    msg = f'Components with index {index} do not match {a_comp}!={b_comp}')
-    
-    def open_gui_file(self,filename, edit = False, print_network=False,plot=False):
-        return core.GUI(os.path.join(
-            os.path.dirname(__file__),
-            'gui_testing_files',
-            filename),
-            edit = edit, print_network=print_network,plot=plot)
 
 class SeriesRLC(TestCaseAppended):
     '''
@@ -116,11 +89,6 @@ class TransmonResonator(TestCaseAppended):
             core.L(0,2,Lr)
         ])
         return circuit.f_k_A_chi()
-    
-    def test_extremely_decoupled_case(self):
-        sys_params = {'Cc':1e-50,'Cj':100e-15,'Lj':10e-9,'Cr':165e-15,'Lr':2.7e-9}
-        w,k,A,chi = self.parameters(**sys_params)
-        self.assertArrayRelativelyClose(A[1],3.35280566e-140)
 
 class Transmon(TestCaseAppended):
     '''
@@ -198,63 +166,6 @@ class Transmon(TestCaseAppended):
         ])
         f,k,A,chi = circuit.f_k_A_chi()
         self.assertArrayRelativelyClose([e**2/2./C/h,1/(np.sqrt(C*Lj)*2.*pi)],[A[0],f[0]])
-
-class ShuntedJosephsonRing(TestCaseAppended):
-    '''
-    Shunted Josephson ring
-    '''
-    
-    def parameters(self,C,L):
-        circuit = core.Network([
-            core.C(0,2,C),
-            core.C(1,3,C*2),
-            core.J(0,1,L),
-            core.J(1,2,L*3),
-            core.J(2,3,L*4),
-            core.J(3,0,L*5)
-        ])
-        return circuit.f_k_A_chi()
-
-    def test_number_of_modes_nHz(self):
-        C = 2.e9
-        L = 3.e11
-        w,k,A,chi = self.parameters(C,L)
-        self.assertEqual(len(w),2,msg = f"f_res = {w}")
-    def test_number_of_modes_Hz(self):
-        C = 2.
-        L = 3. 
-        w,k,A,chi = self.parameters(C,L)
-        self.assertEqual(len(w),2,msg = f"f_res = {w}")
-
-    def test_number_of_modes_GHz(self):
-        C = 1e-13
-        L = 1e-8
-        w,k,A,chi = self.parameters(C,L)
-        self.assertEqual(len(w),2,msg = f"f_res = {w}")
-
-    # def test_frequency_0(self):
-    #     C = 1e-13
-    #     L = 1e-8
-    #     w,k,A,chi = self.parameters(C,L)
-    #     self.assertRelativelyClose(w[0],1/np.sqrt(L*C)/2./np.pi)
-
-    # def test_frequency_1(self):
-    #     C = 1e-13
-    #     L = 1e-8
-    #     w,k,A,chi = self.parameters(C,L)
-    #     self.assertRelativelyClose(w[1],1/np.sqrt(L*C)/2./np.pi)
-
-    # def test_anharmonicity_0(self):
-    #     C = 1e-13
-    #     L = 1e-8
-    #     w,k,A,chi = self.parameters(C,L)
-    #     self.assertRelativelyClose(A[0],e**2/2./(8*C)/h)
-
-    # def test_anharmonicity_1(self):
-    #     C = 1e-13
-    #     L = 1e-8
-    #     w,k,A,chi = self.parameters(C,L)
-    #     self.assertRelativelyClose(A[1],e**2/2./(8*C)/h)
 
 class SweepingParameters(TestCaseAppended):
     '''
@@ -370,8 +281,6 @@ class SweepingParameters(TestCaseAppended):
         self.assertRelativelyClose(
              C_comp.zpf(mode = 1, quantity = 'charge', C_J=1.5e-9),
             C_comp.zpf(mode = 1, quantity = 'charge', C_J=[1e-9,1.5e-9,3e-9])[1])
-
-
 
 class TestNetworkAnalysis(TestCaseAppended):
 

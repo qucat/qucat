@@ -3,10 +3,41 @@ import nbformat # to convert the notebook into an array of cells
 from os.path import join, dirname
 from os import devnull
 import sys
-
+import unittest
+import numpy as np
 # Run plt.ion() to avoid hanging on plt.show() calls
 import matplotlib.pyplot as plt
 plt.ion()
+
+
+def cutoff_digits(f,digits):
+    float_format = '%%.%de'%digits
+    return float(float_format%(np.real(f))) + 1j*float(float_format%(np.imag(f)))
+
+class TestCaseAppended(unittest.TestCase):
+
+    def assertRelativelyClose(self,a,b,digits = 6):
+        a = cutoff_digits(a,digits)
+        b = cutoff_digits(b,digits)
+        self.assertEqual(a,b)
+
+    def assertArrayRelativelyClose(self,a,b,digits = 6):
+        a = np.array(a)
+        b = np.array(b)
+        self.assertTrue(a.shape==b.shape,msg = f'Arrays do not have the same dimension {a.shape}!={b.shape}')
+        for index,_ in np.ndenumerate(a):
+            a_comp = cutoff_digits(a[index],digits)
+            b_comp = cutoff_digits(b[index],digits)
+            self.assertEqual(a_comp,b_comp,
+                    msg = f'Components with index {index} do not match {a_comp}!={b_comp}')
+    
+    def open_gui_file(self,filename, edit = False, print_network=False,plot=False):
+        return core.GUI(os.path.join(
+            os.path.dirname(__file__),
+            'gui_testing_files',
+            filename),
+            edit = edit, print_network=print_network,plot=plot)
+
 
 def parse_cell(code):
     lines = code.split('\n')
@@ -23,8 +54,6 @@ def parse_cell(code):
 
         valid_lines = valid_lines.replace('qucat.','').replace('from qucat ','from core ')
     return valid_lines
-
-
 
 def run_notebook(notebook_name):
     import sys
