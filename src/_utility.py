@@ -79,7 +79,7 @@ def dfridr(f, x, h):
     step_size_decrease = 1.4
     safe = 2
 
-    a  = np.zeros((max_iter,max_iter))
+    a  = np.zeros((max_iter,max_iter), dtype = complex)
     a[0,0] = (f(x+h)-f(x-h))/2/h
     err = sys.float_info.max 
     for i in range(1,max_iter):

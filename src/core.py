@@ -92,7 +92,7 @@ class Qcircuit(object):
         # of the companion matrix, the frequencies are polishd to a tolerence
         # self.root_relative_tolerance using a gradient based root finder, with a maximum number of iterations self.root_max_iterations
         self.root_max_iterations = 1e5 
-        self.root_relative_tolerance = 1e-9
+        self.root_relative_tolerance = 1e-9 # 5 GHz modes will have ~ 5 Hz errors
 
         self._plotting_normal_mode = False # Used to keep track of which imported plotting_settings to use 
                                             # only set to true when show_normal_mode is called
@@ -313,7 +313,7 @@ class Qcircuit(object):
             ref_elt_index = None
             for ind_index,ind in enumerate(inductive_elements):
                 try:
-                    dYm1 = 1/ind._Ceff(np.real(w),**kwargs)
+                    dYm1 = 1/ind._Ceff(w,**kwargs)
                 except Exception:
                     # Computation of dYm1 failed for some reason
                     dYm1 = -1
@@ -2450,8 +2450,9 @@ class L(Component):
         Y_symbolic = self._circuit._network.admittance(self.node_minus, self.node_plus)
         Y_lambdified = lambdify(['w']+self._circuit._no_value_components, Y_symbolic, "numpy")
         def _Ceff(w,**kwargs):
+            # w = np.real(w)
             # Ridders algorithm from numerical methods
-            return dfridr(lambda x: np.imag(Y_lambdified(x,**kwargs)), w, w/1e10)
+            return dfridr(lambda x: np.imag(Y_lambdified(x,**kwargs)), w, w/1e6)
         self._Ceff = _Ceff
 
 class J(L):
