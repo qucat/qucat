@@ -89,7 +89,7 @@ class Qcircuit(object):
         self.Q_min = 1 # Modes with have a quality factor below Q_min will not ignored
         
         # After an initial estimation of the complex eigenfrequenceis using a diaglinalization
-        # of the companion matrix, the frequencies are refined to a tolerence
+        # of the companion matrix, the frequencies are polishd to a tolerence
         # self.root_relative_tolerance using a gradient based root finder, with a maximum number of iterations self.root_max_iterations
         self.root_max_iterations = 1e5 
         self.root_relative_tolerance = 1e-9
@@ -231,12 +231,14 @@ class Qcircuit(object):
             # Compute the coefficients of the characteristic polynomial.
             # The roots of this polynomial will provide the complex eigenfrequencies
             char_poly = npPoly([np.real(coeff(**kwargs)) for coeff in self._char_poly_coeffs])
+            
+            # char_poly = remove_multiplicity(char_poly)
         
             # In this case, the variable of the characteristic polynomial is \omega^2
             # And we can safely take the real part of the solution as there are no
             # resistors in the circuit.
             w2 = np.real(char_poly.roots())
-            w2 = refine_roots(char_poly,w2, self.root_max_iterations,np.sqrt(self.root_relative_tolerance))
+            w2 = polish_roots(char_poly,w2, self.root_max_iterations,np.sqrt(self.root_relative_tolerance))
 
             # Sometimes, when the circuits has vastly different
             # values for its circuit components or modes are too
@@ -263,9 +265,11 @@ class Qcircuit(object):
             # Compute the coefficients of the characteristic polynomial.
             # The roots of this polynomial will provide the complex eigenfrequencies
             char_poly = npPoly([complex(coeff(**kwargs)) for coeff in self._char_poly_coeffs])
+            
+            # char_poly = remove_multiplicity(char_poly)
 
             zeta = char_poly.roots()
-            zeta = refine_roots(char_poly,zeta, self.root_max_iterations,self.root_relative_tolerance)
+            zeta = polish_roots(char_poly,zeta, self.root_max_iterations,self.root_relative_tolerance)
 
             # Sort solutions with increasing frequency
             order = np.argsort(np.real(zeta))

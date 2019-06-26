@@ -3,7 +3,9 @@ import nbformat # to convert the notebook into an array of cells
 from os.path import join, dirname
 from os import devnull
 import sys
+sys.path.append(join(join(dirname(dirname(__file__)),'src')))
 import unittest
+import core
 import numpy as np
 # Run plt.ion() to avoid hanging on plt.show() calls
 import matplotlib.pyplot as plt
@@ -32,8 +34,8 @@ class TestCaseAppended(unittest.TestCase):
                     msg = f'Components with index {index} do not match {a_comp}!={b_comp}')
     
     def open_gui_file(self,filename, edit = False, print_network=False,plot=False):
-        return core.GUI(os.path.join(
-            os.path.dirname(__file__),
+        return core.GUI(join(
+            dirname(__file__),
             'gui_testing_files',
             filename),
             edit = edit, print_network=print_network,plot=plot)
@@ -58,7 +60,7 @@ def parse_cell(code):
 def run_notebook(notebook_name):
     import sys
     import os
-    sys.path.append(os.path.join(os.path.join(os.path.dirname(os.path.dirname(__file__)),'src')))
+    sys.path.append(join(join(dirname(dirname(__file__)),'src')))
     tutorials_folder = join(dirname(dirname(__file__)),'docs_src','source','tutorials')
     nb = nbformat.read(join(tutorials_folder,notebook_name), 4)
     sys.stdout = open(devnull, "w")

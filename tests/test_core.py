@@ -51,6 +51,12 @@ class SeriesRLC(TestCaseAppended):
         self.assertRelativelyClose(np.imag(cpx_w)/2/np.pi,k)
 
 class Other(TestCaseAppended):
+
+    def multiplicity_removal(self):
+        circuit = self.open_gui_file('multiple_roots.txt')
+        freqs = circuit.eigenfrequencies(Cd = 25e-15)
+        self.assertEqual(2,len(freqs))
+
     def test_LC_double_series_L_double_series_C(self):
         C = 1e-8
         L = 3
