@@ -256,7 +256,6 @@ class Qcircuit(object):
         for ind_index,ind in enumerate(inductive_elements):
             try:
                 Y = ind._admittance()
-                Y.simplify()
                 dYm1 = 1/np.imag(Y.deriv()(w))
             except Exception:
                 # Computation of dYm1 failed for some reason
@@ -2037,7 +2036,6 @@ class Component(Circuit):
         #  = sqrt(hbar/w/ImdY[w])
         # The minus is there since 1/Im(Y)  = -Im(1/Y)
         Y = ref_elt._admittance()
-        Y.simplify()
         phi_zpf_r = np.sqrt(hbar/w/np.imag(Y.deriv()(w,**kwargs)))
 
         # Note that the flux defined here 

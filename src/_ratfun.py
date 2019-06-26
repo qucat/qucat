@@ -5,8 +5,15 @@ from numpy.polynomial.polynomial import Polynomial as NumpyPolynomial
 class Polynomial(NumpyPolynomial):
     '''
     Coefficients [1,2,3] will correspond to 
-    p = 1 + 2x + 3x^2
+    p = 1 + 2x/x0 + 3(x/x0)^2
+    where x0 is the polynomial base
     '''
+    def __init__(self, coef, *args, base = 1, **kwargs):
+        super(Polynomial, self).__init__(coef, *args, **kwargs)
+        # self.set_base(base)
+
+    def set_base(self, base):
+        self.coef = [c*base**n for n,c in enumerate(self.coef)]
 
     def roots(self,method = "companion_laguerre", eps = 1e-16, r0 = None, unique = False):
         if unique:
@@ -199,7 +206,6 @@ def gcd(u, v):
     # return a monic polynomial
     return u/u.coef[-1]
 
-
 class RationalFunction(object):
     '''Rational function data type that can mix with ordinary numbers and
     polynomials.
@@ -237,15 +243,14 @@ class RationalFunction(object):
         self.denom = denom
 
         # self.simplify()
-        # self.monic()
+        self.monic()
 
 
     def monic(self):
-        c = self.denom.coef[-1]
-        if c != 1:
+        c = np.amax(self.numer.coef)
+        if c != 0:
             self.numer /= c
             self.denom /= c
-
 
     def simplify(self):
         # Remove any common factors.  Avoid numeric only common factors since
