@@ -216,6 +216,7 @@ class Qcircuit(object):
         # Compute the coefficients of the characteristic polynomial.
         # The roots of this polynomial will provide the complex eigenfrequencies
         Y = list(self.junctions+self.inductors)[0]._admittance()
+        Y.simplify()
         self.zeta = Y.numer.roots(method = "companion", unique = True, eps = self.root_eps)
 
         self.zeta = np.array(self.zeta)
@@ -254,7 +255,9 @@ class Qcircuit(object):
         ref_elt_index = None
         for ind_index,ind in enumerate(inductive_elements):
             try:
-                dYm1 = 1/np.imag(ind._admittance().deriv()(w))
+                Y = ind._admittance()
+                Y.simplify()
+                dYm1 = 1/np.imag(Y.deriv()(w))
             except Exception:
                 # Computation of dYm1 failed for some reason
                 dYm1 = -1
@@ -2033,7 +2036,9 @@ class Component(Circuit):
         # Calculation of phi_zpf of the reference junction/inductor
         #  = sqrt(hbar/w/ImdY[w])
         # The minus is there since 1/Im(Y)  = -Im(1/Y)
-        phi_zpf_r = np.sqrt(hbar/w/np.imag(ref_elt._admittance().deriv()(w,**kwargs)))
+        Y = ref_elt._admittance()
+        Y.simplify()
+        phi_zpf_r = np.sqrt(hbar/w/np.imag(Y.deriv()(w,**kwargs)))
 
         # Note that the flux defined here 
         phi = ref_elt._transfer_function(self,**kwargs)(w)*phi_zpf_r

@@ -15,11 +15,11 @@ from core import Network,GUI,J,L,C,R
 # junction.zpf(mode=0,quantity = 'flux')
 # H = circuit.hamiltonian(modes = [0],taylor = 4,excitations = [50])
 # print(H)
-circuit = GUI(filename = 'test.txt',edit=False,plot=False)
-# circuit.show_normal_mode(0,quantity='current')
+circuit = GUI(filename = 'test.txt',edit=True,plot=False)
+circuit.show_normal_mode(0,quantity='flux')
 # circuit.show_normal_mode(1,quantity='current')
 # print(circuit.f_k_A_chi(Lj=np.linspace(1e-8,1e-8,2)))
-print(circuit.components['Lj'].zpf(mode=0,quantity='charge',Lj=np.linspace(1e-8,1e-8,2)))
+# print(circuit.f_k_A_chi(pretty_print = True))
 # print(circuit.resistors[0].phasor(0,'voltage'))
 # circuit.hamiltonian(L_J = 1e-9,modes=[0],excitations=[5],return_ops=True,taylor=4)
 # circuit.eigenfrequencies(L_J = np.linspace(1e-9,2e-9,4))
@@ -27,5 +27,10 @@ print(circuit.components['Lj'].zpf(mode=0,quantity='charge',Lj=np.linspace(1e-8,
 # print(circuit.Y)
 # print(sp.together(circuit.Y))
 # print(circuit.eigenfrequencies())
-
+    
+#     ts = time()
+#     Network(netlist+[R(2+m,(2+m+1)%(2+N),1e6) for m in range(N)])
+#     te = time()
+#     dissipative_time.append(te - ts)
+# np.savetxt("dissipative_time.txt",dissipative_time)
 

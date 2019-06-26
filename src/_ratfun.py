@@ -233,24 +233,28 @@ class RationalFunction(object):
         if denom == Polynomial(0):
             raise ZeroDivisionError('Rational function denominator is zero')
 
-        # Remove any common factors.  Avoid numeric only common factors since
-        # the rational function needs to be normalied below.
-        if numer.degree() > 0 and denom.degree() > 0:
-            d = gcd(numer, denom)
-            if d.degree() > 0:
-                numer //= d
-                denom //= d
-
-        # Force the denominator to be monic so that equality of rational
-        # functions can be evaluated.
-        c = denom.coef[-1]
-        if c != 1:
-            numer /= c
-            denom /= c
-
         self.numer = numer
         self.denom = denom
 
+        # self.simplify()
+        # self.monic()
+
+
+    def monic(self):
+        c = self.denom.coef[-1]
+        if c != 1:
+            self.numer /= c
+            self.denom /= c
+
+
+    def simplify(self):
+        # Remove any common factors.  Avoid numeric only common factors since
+        # the rational function needs to be normalied below.
+        if self.numer.degree() > 0 and self.denom.degree() > 0:
+            d = gcd(self.numer, self.denom)
+            if d.degree() > 0:
+                self.numer //= d
+                self.denom //= d
 
     def __eq__(self, other):
         return (self.numer == other.numer and self.denom == other.denom)
