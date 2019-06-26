@@ -249,7 +249,6 @@ class Qcircuit(object):
             for w2_single in w2:
                 if np.real(w2_single) < 0:
                     error_message = "Imaginary frequency mode f = 1j %f Hz mode found (and discarded).\n"%(np.sqrt(-w2_single)/2/np.pi)
-                    error_message += "Most likely the root finding algorithm failed to obtain a high enough precision frequency."
                     warn(error_message)
             w2 = w2[np.nonzero(w2 >= 0.)]
 
@@ -330,8 +329,7 @@ class Qcircuit(object):
                 # We can easily discard some of these cases by throwing away
                 # any solutions with a complex impedance (ImY'<0)
                 error_message = "Discarding f = %f Hz mode.\n"%(np.real(w/2/np.pi))
-                error_message += "The root finding algorithm failed to obtain a high enough precision " 
-                error_message += "frequency to lead to an realistic estimation of the zero-point-fluctuations.\n"
+                error_message += "since the calculation of zero-point-fluctuations was unsuccesful.\n"
                 warn(error_message)
             else:
                 zeta.append(w)
@@ -2451,7 +2449,9 @@ class L(Component):
         Y_lambdified = lambdify(['w']+self._circuit._no_value_components, Y_symbolic, "numpy")
         def _Ceff(w,**kwargs):
             # Ridders algorithm from numerical methods
-            return dfridr(lambda x: np.imag(Y_lambdified(x,**kwargs)), w, w/1e10)
+            #TODO make use of err
+            der, err = dfridr(lambda x: np.imag(Y_lambdified(x,**kwargs)), w, w/1e6)
+            return der
         self._Ceff = _Ceff
 
 class J(L):

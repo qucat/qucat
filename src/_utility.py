@@ -79,7 +79,7 @@ def dfridr(f, x, h):
     step_size_decrease = 1.4
     safe = 2
 
-    a  = np.zeros((max_iter,max_iter))
+    a  = np.zeros((max_iter,max_iter), dtype = complex)
     a[0,0] = (f(x+h)-f(x-h))/2/h
     err = sys.float_info.max 
     for i in range(1,max_iter):
@@ -99,7 +99,7 @@ def dfridr(f, x, h):
                 ans=a[j][i]
         if (abs(a[i,i]-a[i-1,i-1]) >= safe*err): break
         # If higher order is worse by a significant factor SAFE, then quit early.
-    return ans
+    return ans,err
 
 
 def refuse_vectorize_kwargs(func_to_evaluate = None,*,exclude = []):
