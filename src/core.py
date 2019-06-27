@@ -2459,8 +2459,21 @@ class L(Component):
         def _Ceff(w,**kwargs):
             # Ridders algorithm from numerical methods
             #TODO make use of err
-            der, err = dfridr(lambda x: np.imag(Y_lambdified(x,**kwargs)), w, w/1e6)
-            return der
+            dw = w
+            iterations = 0
+            max_iterations = 50
+            ders = []
+            errs = []
+            while iterations<max_iterations:
+                iterations+=1
+                dw/=5
+                der, err = dfridr(lambda x: np.imag(Y_lambdified(x,**kwargs)), w, dw)
+                if  err/der < 1e-8:
+                    return der
+                else:
+                    ders.append(der)
+                    errs.append(err)
+            return ders[np.argmin(errs)]
         self._Ceff = _Ceff
 
 class J(L):
