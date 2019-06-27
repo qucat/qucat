@@ -34,7 +34,7 @@ def timeit(method):
         ts = time.time()
         result = method(*args, **kw)
         te = time.time()
-        if PROFILING:
+        if PROFILING and ('%2.2f' % ((te - ts) * 1000))!='0.00':
             print('calling %r took %2.2f ms' % \
                     (method.__name__, (te - ts) * 1000))
         return result
@@ -284,44 +284,47 @@ class Qcircuit(object):
                 warn(error_message)
         zeta = zeta[np.nonzero(np.real(zeta) >= self.Q_min*np.imag(zeta))]
 
-        # Choose reference elements for each mode which 
-        # maximize the inverse of dY: we want the reference 
-        # element to the element where zero-point fluctuations
-        # in flux are most localized.
-        inductive_elements = self.junctions+self.inductors
-        zeta_copy = deepcopy(zeta)
-        zeta = []
-        flux_zpf_vector_list = []
+        ind = list(self.junctions+self.inductors)[0]
+        flux_zpf_vector_list = [ind._get_flux_zpf(z) for z in zeta]
+
+        # # Choose reference elements for each mode which 
+        # # maximize the inverse of dY: we want the reference 
+        # # element to the element where zero-point fluctuations
+        # # in flux are most localized.
+        # inductive_elements = self.junctions+self.inductors
+        # zeta_copy = deepcopy(zeta)
+        # zeta = []
+        # flux_zpf_vector_list = []
         
-        for z in zeta_copy:
-            largest_flux_zpf = 0
-            for ind_index,ind in enumerate(inductive_elements):
+        # for z in zeta_copy:
+        #     largest_flux_zpf = 0
+        #     for ind_index,ind in enumerate(inductive_elements):
 
-                try:
-                    flux_zpf_vector = ind._get_flux_zpf(z,**kwargs)
-                    flux_zpf = np.absolute(flux_zpf_vector[ind.node_plus])
+        #         try:
+        #             flux_zpf_vector = ind._get_flux_zpf(z,**kwargs)
+        #             flux_zpf = np.absolute(flux_zpf_vector[ind.node_plus])
 
-                    if flux_zpf>largest_flux_zpf:
-                        largest_flux_zpf = flux_zpf
-                        flux_zpf_vector_list.append(flux_zpf_vector)
+        #             if flux_zpf>largest_flux_zpf:
+        #                 largest_flux_zpf = flux_zpf
+        #                 flux_zpf_vector_list.append(flux_zpf_vector)
 
-                except Exception as e:
-                    # Computation of flux_zpf failed for some reason
-                    raise e
-                    pass
+        #         except Exception as e:
+        #             # Computation of flux_zpf failed for some reason
+        #             raise e
+        #             pass
                     
-            if largest_flux_zpf == 0:
-                # Sometimes, when the circuits has vastly different
-                # values for its circuit components or modes are too
-                # decoupled, the symbolic 
-                # calculations can yield an incorrect char_poly
-                # We can easily discard some of these cases by throwing away
-                # any solutions with a complex impedance (ImY'<0)
-                error_message = "Discarding f = %f Hz mode.\n"%(np.real(z/2/np.pi))
-                error_message += "since the calculation of zero-point-fluctuations was unsuccesful.\n"
-                warn(error_message)
-            else:
-                zeta.append(z)
+        #     if largest_flux_zpf == 0:
+        #         # Sometimes, when the circuits has vastly different
+        #         # values for its circuit components or modes are too
+        #         # decoupled, the symbolic 
+        #         # calculations can yield an incorrect char_poly
+        #         # We can easily discard some of these cases by throwing away
+        #         # any solutions with a complex impedance (ImY'<0)
+        #         error_message = "Discarding f = %f Hz mode.\n"%(np.real(z/2/np.pi))
+        #         error_message += "since the calculation of zero-point-fluctuations was unsuccesful.\n"
+        #         warn(error_message)
+        #     else:
+        #         zeta.append(z)
 
         self.zeta = np.array(zeta)
         self.flux_zpf_vector = flux_zpf_vector_list
@@ -2141,9 +2144,10 @@ class L(Component):
 
         RLC_matrices_num = {k:M(w=z,**kwargs) for k,M in self._circuit._RLC_matrices.items()}
 
-        # setup Gv=i 
-        G = RLC_matrices_num['L']+1j*z*RLC_matrices_num['R']-z**2*RLC_matrices_num['C']
-        I_plus = 1/self._get_value(**kwargs)
+        # setup Gv=i
+        def G(z):
+            return 1/z*RLC_matrices_num['L']+1j*RLC_matrices_num['R']-z*RLC_matrices_num['C']
+        I_plus = 1/self._get_value(**kwargs)/z
         I_vector = np.zeros(len(G))
         I_vector[self.node_plus] = I_plus
 
@@ -2158,9 +2162,9 @@ class L(Component):
         V_vector = np.insert(V_vector,self.node_minus,0)
 
         # Calculation of phi_zpf of the reference junction/inductor
-        Zeff = V_vector[self.node_plus]/I_plus
+        Zeff = np.absolute(V_vector[self.node_plus]/I_plus) # we will be setting the phase of this node as reference later anyway
         phi_zpf_plus = np.sqrt(hbar/2*np.sqrt(Zeff))
-        return V_vector/V_vector[self.node_plus]*phi_zpf_plus
+        return V_vector/V_vector[self.node_plus]*phi_zpf_plus # phase of node plus is reference
 
 class J(L):
     """A class representing an junction
