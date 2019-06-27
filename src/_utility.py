@@ -33,18 +33,34 @@ exponent_to_letter_unicode = {
     12: 'T'
 }
 
+def ridders_derivative(f,z):
+    dz = z/10
+    iterations = 0
+    max_iterations = 30
+    ders = []
+    errs = []
+    while iterations<max_iterations:
+        iterations+=1
+        dz/=10
+        der, err = dfridr(f, z, dz)
+        if  np.absolute(err/der) < 1e-8:
+            return der
+        else:
+            ders.append(der)
+            errs.append(err)
+    return ders[np.argmin(errs)]
 
-def dfridr(f, x, h):
+def dfridr(f, z, dz):
     max_iter = 10
     step_size_decrease = 1.4
     safe = 2
 
     a  = np.zeros((max_iter,max_iter), dtype = complex)
-    a[0,0] = (f(x+h)-f(x-h))/2/h
+    a[0,0] = (f(z+dz)-f(z-dz))/2/dz
     err = sys.float_info.max 
     for i in range(1,max_iter):
-        h /= step_size_decrease
-        a[0,i] = (f(x+h)-f(x-h))/2/h # try new, smaller stepsize
+        dz /= step_size_decrease
+        a[0,i] = (f(z+dz)-f(z-dz))/2/dz # try new, smaller stepsize
         fac = step_size_decrease**2
         for j in range(1,i+1):
             # Compute extrapolations of various orders, requiring
@@ -313,5 +329,4 @@ def to_string(unit,label,value, use_unicode=True, maximum_info = False):
     return s
 
 if __name__ == "__main__":
-    print(dfridr(lambda x:np.exp(x), 0,0.1))
-    print(np.exp(0))
+    print(ridders_derivative(lambda x:x**2, 0),0)

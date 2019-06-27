@@ -285,7 +285,7 @@ class Qcircuit(object):
         zeta = zeta[np.nonzero(np.real(zeta) >= self.Q_min*np.imag(zeta))]
 
         ind = list(self.junctions+self.inductors)[0]
-        flux_zpf_vector_list = [ind._get_flux_zpf(z) for z in zeta]
+        flux_zpf_vector_list = [ind._get_flux_zpf(z,**kwargs) for z in zeta]
 
         # # Choose reference elements for each mode which 
         # # maximize the inverse of dY: we want the reference 
@@ -2157,24 +2157,29 @@ class L(Component):
         I_vector[self.node_plus] = I_plus
         I_vector = np.delete(I_vector, (self.node_minus), axis=0)
 
+        # if node plus is 1 and minus is 0, then removing minus means 
+        # that plus is now the new 0
+        node_plus_reduced = self.node_plus
+        if self.node_plus>self.node_minus:
+            node_plus_reduced -= 1
+
         def Y(z):
             V_vector = np.linalg.solve(G(z),I_vector)
-            return I_plus/V_vector[self.node_plus]
+            # Negative sign since current is defined as leaving 
+            return I_plus/V_vector[node_plus_reduced]
 
-        dz = z/1e6
-        dYdz = (Y(z+dz/2)-Y(z-dz/2))/dz
-        phi_zpf_plus = np.sqrt(hbar/np.real(z)/np.absolute(dYdz))
+        phi_zpf_plus = np.sqrt(hbar/np.real(z)/(np.imag(ridders_derivative(Y,z))))
 
         A = G(z)
-        b = A[:,self.node_plus]
+        b = A[:,node_plus_reduced]
 
-        A = np.delete(A, (self.node_plus), axis=0)
-        A = np.delete(A, (self.node_plus), axis=1)
-        b = np.delete(b, (self.node_plus), axis=0)
+        A = np.delete(A, (node_plus_reduced), axis=0)
+        A = np.delete(A, (node_plus_reduced), axis=1)
+        b = np.delete(b, (node_plus_reduced), axis=0)
 
         phi_zpf_vector = np.linalg.solve(A,phi_zpf_plus*b)
         # add in the same order as was removed
-        phi_zpf_vector = np.insert(phi_zpf_vector, self.node_plus, phi_zpf_plus)
+        phi_zpf_vector = np.insert(phi_zpf_vector, node_plus_reduced, phi_zpf_plus)
         phi_zpf_vector = np.insert(phi_zpf_vector, self.node_minus, 0)
         
         return phi_zpf_vector
