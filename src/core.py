@@ -22,7 +22,7 @@ except ImportError:
     from _utility import *
     from plotting_settings import plotting_parameters_show,plotting_parameters_normal_modes
 
-PROFILING = False
+PROFILING = True
 
 def timeit(method):
     '''
@@ -140,25 +140,13 @@ class Qcircuit(object):
             raise ValueError(
                 "There should be at least one capacitor in the circuit")
 
-                
-        # define the function which returns the inverse of dY
-        # where Y is the admittance at the nodes of an inductive element
-        for inductive_element in self.inductors+self.junctions:
-            inductive_element._compute_Ceff()
-
-        # Initialize the flux transformation dictionary,
-        # where _flux_transformation_dict[ref_node_minus,ref_node_plus,node_minus,node_plus] 
-        # will be populated with a function which gives
-        # the voltage transfer function between the nodes surrounding
-        # the reference element and (node_plus,node_minus)
-        # this function takes as an argument an angular frequency
-        # and keyword arguments if component values need to be specified
-        self._flux_transformation_dict = {}
-
         # define the functions which returns the components of the characteristic polynomial
         # (the roots of which are the eigen-frequencies)
         self._char_poly_coeffs = [lambdify(self._no_value_components, c, 'numpy') 
             for c in self._network.compute_char_poly_coeffs(is_lossy = (len(self.resistors)>0))]
+        self._RLC_matrices = {}
+        for k,M in self._network.RLC_matrices.items():
+            self._RLC_matrices[k] = lambdify(['w']+self._no_value_components, M, 'numpy') 
 
     @property
     def _pp(self):
@@ -172,7 +160,6 @@ class Qcircuit(object):
         else:
             return self.plotting_parameters_show
 
-  
     def _check_kwargs(self, **kwargs):
         '''
         Raises a ValueError 
@@ -200,7 +187,6 @@ class Qcircuit(object):
             except Exception:
                 raise ValueError(
                     'The value of %s should be specified with the keyword argument %s=... ' % (label, label))
-
 
     @timeit
     def _set_zeta(self, **kwargs):
@@ -291,10 +277,10 @@ class Qcircuit(object):
         # negative values.
         # The negative values are discarded which changes the number of modes
         # and makes parameter sweeps difficult 
-        for w in zeta:
-            if np.real(w) < self.Q_min*np.imag(w):
-                error_message = "Discarding f = %f Hz mode "%(np.real(w/2/np.pi))
-                error_message += "since it has a too low quality factor Q = %f < %f"%(np.real(w)/np.imag(w),self.Q_min)
+        for z in zeta:
+            if np.real(z) < self.Q_min*np.imag(z):
+                error_message = "Discarding f = %f Hz mode "%(np.real(z/2/np.pi))
+                error_message += "since it has a too low quality factor Q = %f < %f"%(np.real(z)/np.imag(z),self.Q_min)
                 warn(error_message)
         zeta = zeta[np.nonzero(np.real(zeta) >= self.Q_min*np.imag(zeta))]
 
@@ -303,41 +289,42 @@ class Qcircuit(object):
         # element to the element where zero-point fluctuations
         # in flux are most localized.
         inductive_elements = self.junctions+self.inductors
-        ref_elt = []
         zeta_copy = deepcopy(zeta)
         zeta = []
+        flux_zpf_vector_list = []
         
-        for w in zeta_copy:
-            largest_dYm1 = 0
-            ref_elt_index = None
+        for z in zeta_copy:
+            largest_flux_zpf = 0
             for ind_index,ind in enumerate(inductive_elements):
-                try:
-                    dYm1 = 1/ind._Ceff(np.real(w),**kwargs)
-                except Exception:
-                    # Computation of dYm1 failed for some reason
-                    dYm1 = -1
-                    
-                if dYm1>largest_dYm1:
-                    ref_elt_index = ind_index
-                    largest_dYm1 = dYm1
 
-            if ref_elt_index is None:
+                try:
+                    flux_zpf_vector = ind._get_flux_zpf(z,**kwargs)
+                    flux_zpf = np.absolute(flux_zpf_vector[ind.node_plus])
+
+                    if flux_zpf>largest_flux_zpf:
+                        largest_flux_zpf = flux_zpf
+                        flux_zpf_vector_list.append(flux_zpf_vector)
+
+                except Exception as e:
+                    # Computation of flux_zpf failed for some reason
+                    raise e
+                    pass
+                    
+            if largest_flux_zpf == 0:
                 # Sometimes, when the circuits has vastly different
                 # values for its circuit components or modes are too
                 # decoupled, the symbolic 
                 # calculations can yield an incorrect char_poly
                 # We can easily discard some of these cases by throwing away
                 # any solutions with a complex impedance (ImY'<0)
-                error_message = "Discarding f = %f Hz mode.\n"%(np.real(w/2/np.pi))
+                error_message = "Discarding f = %f Hz mode.\n"%(np.real(z/2/np.pi))
                 error_message += "since the calculation of zero-point-fluctuations was unsuccesful.\n"
                 warn(error_message)
             else:
-                zeta.append(w)
-                ref_elt.append(inductive_elements[ref_elt_index])
-        zeta = np.array(zeta)
+                zeta.append(z)
 
-        self.zeta = zeta
-        self.ref_elt = ref_elt
+        self.zeta = np.array(zeta)
+        self.flux_zpf_vector = flux_zpf_vector_list
 
     def _anharmonicities_per_junction(self, **kwargs):
         '''
@@ -1662,14 +1649,31 @@ class _Network(object):
             return matrix.berkowitz_det()
 
         self.is_lossy = is_lossy
-        ntr = deepcopy(self) # ntr stands for Network To Reduce
 
         # compute conductance matrix
-        ntr.compute_RLC_matrices()
+        self.compute_RLC_matrices()
+        grounded_RLC_matrices = deepcopy(self.RLC_matrices)
+
+        # ground the symbolic
+        # count the number of coefficients in each row
+        N_nodes = len(self.net_dict)
+        number_coefficients = np.zeros((N_nodes))
+        for k in grounded_RLC_matrices:
+            for i in range(N_nodes):
+                for j in range(N_nodes):
+                    if grounded_RLC_matrices[k][i,j] != 0:
+                        number_coefficients[i]+=1
+
+        # set a ground 
+        ground_node = np.argmax(number_coefficients)
+        for k in grounded_RLC_matrices:
+            grounded_RLC_matrices[k].row_del(ground_node)
+            grounded_RLC_matrices[k].col_del(ground_node)
+
 
         if self.is_lossy:
             w = sp.Symbol('w')
-            char_poly = determinant((ntr.RLC_matrices['L']+1j*w*ntr.RLC_matrices['R']-w**2*ntr.RLC_matrices['C']))
+            char_poly = determinant((grounded_RLC_matrices['L']+1j*w*grounded_RLC_matrices['R']-w**2*grounded_RLC_matrices['C']))
             char_poly = sp.collect(sp.expand(char_poly), w)
             self.char_poly_order = sp.polys.polytools.degree(
                 char_poly, gen=w)  # Order of the polynomial
@@ -1678,7 +1682,7 @@ class _Network(object):
                 [char_poly.coeff(w, n) for n in range(self.char_poly_order+1)] 
         else:
             w2 = sp.Symbol('w2')
-            char_poly = determinant((-ntr.RLC_matrices['L']+w2*ntr.RLC_matrices['C']))
+            char_poly = determinant((-grounded_RLC_matrices['L']+w2*grounded_RLC_matrices['C']))
             char_poly = sp.collect(sp.expand(char_poly), w2)
             self.char_poly_order = sp.polys.polytools.degree(char_poly, gen=w2)  # Order of the polynomial
             # Get polynomial coefficients, index 0 = lowest order term
@@ -1712,20 +1716,6 @@ class _Network(object):
                         self.RLC_matrices[k][i,i] += RLC_matrix_components[k]
                         self.RLC_matrices[k][j,j] += RLC_matrix_components[k]
 
-        # count the number of coefficients in each row
-        number_coefficients = np.zeros((N_nodes))
-        for k in self.RLC_matrices:
-            for i in range(N_nodes):
-                for j in range(N_nodes):
-                    if self.RLC_matrices[k][i,j] != 0:
-                        number_coefficients[i]+=1
-
-
-        # set a ground 
-        ground_node = np.argmax(number_coefficients)
-        for k in self.RLC_matrices:
-            self.RLC_matrices[k].row_del(0)
-            self.RLC_matrices[k].col_del(0)
 
     def connect(self, element, node_minus, node_plus):
         '''
@@ -1759,265 +1749,6 @@ class _Network(object):
             self.net_dict[node_plus][node_minus] = self.net_dict[node_plus][node_minus] | element
         except KeyError:
             self.net_dict[node_plus][node_minus] = element
-
-    def remove_node(self, node_to_remove):
-        '''
-        Makes use of the star-mesh transform to remove the ``node_to_remove`` from the network.
-        A node N=``node_to_remove`` connected to nodes A,B,C,.. through impedances 
-        Z_A,Z_B,... (the star) can be eliminated 
-        if we interconnect nodes A,B,C,.. with impedances Z_{AB},Z_{AC},Z_{BC},...
-        given by Z_{XY} = Z_XZ_Y\sum_M1/Z_M. 
-        The resulting network is called the mesh.
-
-        Parameters
-        ----------
-        node: integer, node to be removed of the network stored in ``net_dict`` 
-        '''
-
-        # List of (connecting_nodes, connecting_components) connecting the 
-        # node_to_remove to (nearest neighbour) connecting_nodes
-        connections = [x for x in self.net_dict[node_to_remove].items()]
-
-        # Sum of admittances of connecting_components
-        sum_Y = sum([elt._admittance() for _, elt in connections])
-
-        # Go through all pairs of connecting nodes
-        # and calculate the admittance Y_XY that will connect them 
-        # in the mesh
-        mesh_to_add = []
-        for i, (node_A, elt_A) in enumerate(connections):
-            for node_B, elt_B in connections[i+1:]:
-                Y = elt_A._admittance()*elt_B._admittance()/sum_Y
-                mesh_to_add.append([Admittance(node_A, node_B, Y), node_A, node_B])
-
-        # Remove the node_to_remove from the net_dict, along with all
-        # the connecting components
-        for other_node in self.net_dict[node_to_remove]:
-            del self.net_dict[other_node][node_to_remove]
-        del self.net_dict[node_to_remove]
-
-        # Add admittances Y_XY connecting nodes X,Y directly adjascent to 
-        # the removed node
-        for mesh_branch in mesh_to_add:
-            self.connect(*mesh_branch)
-
-    @timeit
-    def admittance(self, node_minus, node_plus):
-        '''
-        Compute the admittance of the network between two nodes 
-        ``node_plus`` and ``node_minus`` 
-        by removing all other nodes through star-mesh transformations.
-
-        Parameters
-        ----------
-        node_minus: integer 
-        node_plus: integer
-        '''
-        if node_minus == node_plus:
-            raise ValueError('node_minus == node_plus')
-
-        # Create a temporary copy of the network which will be reduced
-        ntr = deepcopy(self) # ntr stands for Network To Reduce
-
-        # # order nodes from the node with the least amount of connections
-        # # to the one with the most
-        nodes = [key for key in ntr.net_dict]
-        nodes_order = np.argsort([len(ntr.net_dict[key]) for key in nodes])
-        nodes_sorted = [nodes[i] for i in nodes_order]
-        
-        # Remove all nodes except from node_minus, node_plus
-        # through star-mesh transforms with the remove_node function
-        for node in nodes_sorted:
-            if node not in [node_minus, node_plus]:
-                ntr.remove_node(node)
-
-        # Compute the admittance between the two remaining nodes: 
-        # node_minus and node_plus
-        Y = ntr.net_dict[node_minus][node_plus]._admittance()
-        return Y
-
-    def branch_admittance(self, node_1, node_2):
-        '''
-        Returns the admittance in the branch connecting ``node_1`` and ``node_2``.
-        If they are not directly connected through a single Component, this function
-        returns 0 (i.e. the admittnce of an open circuit).
-        This function is written to avoid calling try/except clauses repetitivly
-        to verify if ``self.net_dict[node_1][node_2]`` is an existing key
-
-        Parameters
-        ----------
-        node_1: integer 
-        node_2: integer
-        '''
-        if node_1 == node_2:
-            raise ValueError('node_1 == node_2')
-
-        try:
-            return self.net_dict[node_1][node_2]._admittance()
-        except KeyError:
-            return 0.
-
-    def transfer(self, node_left_minus, node_left_plus, node_right_minus, node_right_plus):
-        '''
-        Returns the transfer function V_right/V_left relating the voltage on 
-        a port 'right' defined by ``node_right_minus`` and ``node_right_plus``
-        and a port 'left' defined by ``node_left_minus`` and ``node_left_plus``
-        We proceed by constructing an ABCD matrix and returning V_right/V_left = 1/A
-
-        Parameters
-        ----------
-        node_left_minus: integer 
-        node_left_plus: integer
-        node_right_minus: integer
-        node_right_plus: integer
-        '''
-
-        if node_left_minus == node_left_plus:
-            raise ValueError('node_left_minus == node_left_plus')
-        elif node_right_minus == node_right_plus:
-            raise ValueError('node_right_minus == node_right_plus')
-
-        # Case where the left an right port are identical
-        if (node_left_minus == node_right_minus)\
-            and (node_left_plus == node_right_plus):
-            return 1.
-
-        # Case where the left an right port are identical, but inverted
-        elif (node_left_plus == node_right_minus)\
-            and (node_left_minus == node_right_plus):
-            return -1.
-
-        # If the ports are not identical, reduce the network such that only
-        # the nodes provided as arguments remain
-
-        # Create a temporary copy of the network which will be reduced        
-        ntr = deepcopy(self) # ntr stands for Network To Reduce
-        
-        # # order nodes from the node with the least amount of connections
-        # # to the one with the most
-        nodes = [key for key in ntr.net_dict]
-        nodes_order = np.argsort([len(ntr.net_dict[key]) for key in nodes])
-        nodes_sorted = [nodes[i] for i in nodes_order]
-
-        # Remove nodes using the star-mesh relation
-        for node in nodes_sorted:
-            if node not in [node_left_minus, node_left_plus, node_right_minus, node_right_plus]:
-                ntr.remove_node(node)
-
-        if (node_left_minus in [node_right_plus, node_right_minus]) or\
-            (node_left_plus in [node_right_plus, node_right_minus]):
-
-        # Case where there are two of the nodes provided as arguments 
-        # are identical. 
-        # The circuit has then three distinct nodes connected by
-        # three components.
-        # For this case, the ABCD matrix can be constructed following 
-        # the before last case of Table 4.1 in Microwave Engineering (Pozar)
-        # Indeed, all these cases are equivelant to the network below:
-        #
-        #  p1   --------- Y_3 ---------- p2 
-        #           |               |
-        #          Y_1             Y_2
-        #           |               |
-        #  gr   ------------------------ gr
-        # Note that the transfer function is independant of Y_1, this in essence 
-        # a voltage divider (see https://en.wikipedia.org/wiki/Voltage_divider)
-        # where the voltage at p2 is entirely determined by Y_2,Y_3 and the voltage at p1
-
-
-            if node_left_minus == node_right_minus:
-                p1 = node_left_plus
-                p2 = node_right_plus
-                gr = node_left_minus #= node_right_minus
-                # Y_1 = ntr.branch_admittance(p1,gr)
-                Y_2 = ntr.branch_admittance(p2,gr)
-                Y_3 = ntr.branch_admittance(p1,p2)
-
-                # A component of the ABCD matrix
-                A = 1+Y_2/Y_3 # node Y_3 cannot be 0 in theory
-                return 1/A
-
-            elif node_left_plus == node_right_plus:
-                # Ports 1 and 2 are the wrong way round, minuses cancel out
-                p1 = node_left_minus
-                p2 = node_right_minus
-                gr = node_left_plus #= node_right_plus
-
-                # Y_1 = ntr.branch_admittance(p1,gr)
-                Y_2 = ntr.branch_admittance(p2,gr)
-                Y_3 = ntr.branch_admittance(p1,p2)
-
-                # A component of the ABCD matrix
-                A = 1+Y_2/Y_3 # node Y_3 cannot be 0 in theory
-                return 1/A
-
-            elif node_left_minus == node_right_plus:
-                # Port 2 is the wrong way round, transfer function gets a minus
-                p1 = node_left_plus
-                p2 = node_right_minus
-                gr = node_left_minus #= node_right_plus
-                # Y_1 = ntr.branch_admittance(p1,gr)
-                Y_2 = ntr.branch_admittance(p2,gr)
-                Y_3 = ntr.branch_admittance(p1,p2)
-
-                # A component of the ABCD matrix
-                A = 1+Y_2/Y_3 # node Y_3 cannot be 0 in theory
-                return -1/A
-
-            elif node_left_plus == node_right_minus:
-                # Port 2 is the wrong way round, transfer function gets a minus
-                p1 = node_left_minus
-                p2 = node_right_plus
-                gr = node_left_plus #= node_right_minus
-                # Y_1 = ntr.branch_admittance(p1,gr)
-                Y_2 = ntr.branch_admittance(p2,gr)
-                Y_3 = ntr.branch_admittance(p1,p2)
-
-                # A component of the ABCD matrix
-                A = 1+Y_2/Y_3 # node Y_3 cannot be 0 in theory
-                return -1/A
-
-        else:
-            # Most complex case (discussed in the paper)
-            # First, compute the impence matrix of the lattice network following notations in 
-            # https://www.globalspec.com/reference/71734/203279/10-11-lattice-networks
-            # excerpt of Network Analysis & Circuit (By M. Arshad) section 10.11: LATTICE NETWORKS
-            Ya = ntr.branch_admittance(node_left_plus, node_right_plus)
-            Yb = ntr.branch_admittance(node_left_minus, node_right_plus)
-            Yc = ntr.branch_admittance(node_left_plus, node_right_minus)
-            Yd = ntr.branch_admittance(node_left_minus, node_right_minus)
-
-            # The book provides formulas with impedance:
-            # sum_Z = Za + Zb + Zc + Zd
-            # Z11 is V1/I1 (with V2=0)
-            # Z11 = (Za+Zb)*(Zd+Zc)/sum_Z
-            # Z21 is V1/I2 (with V2=0)
-            # Z21 = (Zb*Zc-Za*Zd)/sum_Z
-            # Z22 is V2/I2 (with V1=0)
-            # Z22 = (Za+Zc)*(Zd+Zb)/sum_Z
-
-            # From Pozar, we obtain the A and B components of the ABCD matrix of the lattice
-            # The C and D components play no role in determining the transfer function
-            # A_lattice = Z11/Z21
-            # B_lattice = Z11*Z22/Z21-Z21
-
-            # We will work with admittances, to deal in an easier
-            # way with Yx = 0 (otherwise we would have to 
-            # distinguish many more cases)
-
-            # Using Mathematica, we compute simplify the expressions for 
-            # A_lattice and B_lattice to:
-            
-            A_lattice = (Ya + Yb)*(Yd + Yc)/(Ya*Yd-Yb*Yc)
-            B_lattice = (Ya + Yb + Yc + Yd)/(Ya*Yd-Yb*Yc)
-
-            # The admittance accross the left port plays no role
-            # The admittance accross the right port comes into play to yield the A component
-            # of the total ABCD matrix:
-
-            A = A_lattice + B_lattice*ntr.branch_admittance(node_right_minus,node_right_plus)
-
-            return  1/A
 
 class Circuit(object):
     """docstring for Circuit"""
@@ -2103,7 +1834,6 @@ class Component(Circuit):
         super(Component, self).__init__(node_minus, node_plus)
         self.label = None
         self.value = None
-        self.__flux = None
 
         if len(args)==0:
             raise ValueError("Specify either a value or a label")
@@ -2155,51 +1885,8 @@ class Component(Circuit):
             else:
                 self._circuit._no_value_components.append(self.label)
 
-    def _flux(self, mode, **kwargs):
-        self._circuit._set_zeta(**kwargs)
-        w = np.real(self._circuit.zeta)[mode]
-        try:
-            tr = self._circuit._flux_transformation_dict[
-                                        self._circuit.ref_elt[mode].node_minus,
-                                        self._circuit.ref_elt[mode].node_plus,
-                                        self.node_minus,
-                                        self.node_plus]
-        except KeyError:
-            tr_analytical = self._circuit._network.transfer(
-                self._circuit.ref_elt[mode].node_minus, self._circuit.ref_elt[mode].node_plus, self.node_minus, self.node_plus)
-            tr = lambdify(['w']+self._circuit._no_value_components,tr_analytical, "numpy")
-            def tr_minus(w,**kwargs):
-                return -tr(w,**kwargs)
-            
-            self._circuit._flux_transformation_dict[
-                                        self._circuit.ref_elt[mode].node_minus,
-                                        self._circuit.ref_elt[mode].node_plus,
-                                        self.node_minus,self.node_plus] = tr
-            self._circuit._flux_transformation_dict[
-                                        self._circuit.ref_elt[mode].node_minus,
-                                        self._circuit.ref_elt[mode].node_plus,
-                                        self.node_plus,self.node_minus] = tr_minus
-
-        # Following Black-box quantization, 
-        # we assume the losses to be neglegible by 
-        # removing the imaginary part of the eigenfrequency
-        w = np.real(w)
-        
-        # Calculation of phi_zpf of the reference junction/inductor
-        #  = sqrt(hbar/w/ImdY[w])
-        # The minus is there since 1/Im(Y)  = -Im(1/Y)
-        phi_zpf_r = np.sqrt(hbar/w/self._circuit.ref_elt[mode]._Ceff(w,**kwargs))
-
-        # Note that the flux defined here 
-        phi = tr(w,**kwargs)*phi_zpf_r
-        # is complex.
-
-        return phi
-
-
     def _to_string(self, use_unicode=True):
         return to_string(self.unit, self.label, self.value, use_unicode=use_unicode)
-
 
     @vectorize_kwargs(exclude = ['quantity','mode'])
     def zpf(self, mode, quantity, **kwargs):
@@ -2253,9 +1940,9 @@ class Component(Circuit):
         '''
         if quantity == 'flux':
             phi_0 = hbar/2./e
-            return self._flux(mode,**kwargs)/phi_0
+            return self._flux_zpf(mode,**kwargs)/phi_0
         if quantity == 'voltage':
-            phi_zpf = self._flux(mode,**kwargs)
+            phi_zpf = self._flux_zpf(mode,**kwargs)
             # The above will set the eigenfrequencies
             w=np.real(self._circuit.zeta)[mode]
             
@@ -2278,6 +1965,11 @@ class Component(Circuit):
 
             w = np.real(self._circuit.zeta)[mode]
             return Izpf/1j/w/e
+
+    def _flux_zpf(self, mode, **kwargs):
+        self._circuit._set_zeta(**kwargs)
+        flux_zpfs = self._circuit.flux_zpf_vector[mode]
+        return flux_zpfs[self.node_plus]-flux_zpfs[self.node_minus]
 
 class W(Component):
     """docstring for Wire"""
@@ -2444,37 +2136,31 @@ class L(Component):
         }
 
     @timeit
-    def _compute_Ceff(self):
-        '''
-        Generate the L._Ceff function which
-        takes as an argument an angular frequency (and keyword arguments 
-        if component values need to be specified) and returns the 
-        derivative of the admittance evaluated at the nodes of the inductor, 
-        which is effective capacitance at that frequency.         
-        '''
-        # Compute a sympy expression for the admittance 
-        # at the nodes of the reference element
-        Y_symbolic = self._circuit._network.admittance(self.node_minus, self.node_plus)
-        Y_lambdified = lambdify(['w']+self._circuit._no_value_components, Y_symbolic, "numpy")
-        def _Ceff(w,**kwargs):
-            # Ridders algorithm from numerical methods
-            #TODO make use of err
-            dw = w
-            iterations = 0
-            max_iterations = 50
-            ders = []
-            errs = []
-            while iterations<max_iterations:
-                iterations+=1
-                dw/=5
-                der, err = dfridr(lambda x: np.imag(Y_lambdified(x,**kwargs)), w, dw)
-                if  err/der < 1e-8:
-                    return der
-                else:
-                    ders.append(der)
-                    errs.append(err)
-            return ders[np.argmin(errs)]
-        self._Ceff = _Ceff
+    def _get_flux_zpf(self, z, **kwargs):
+        # Only called in _set_zeta
+
+        RLC_matrices_num = {k:M(w=z,**kwargs) for k,M in self._circuit._RLC_matrices.items()}
+
+        # setup Gv=i 
+        G = RLC_matrices_num['L']+1j*z*RLC_matrices_num['R']-z**2*RLC_matrices_num['C']
+        I_plus = 1/self._get_value(**kwargs)
+        I_vector = np.zeros(len(G))
+        I_vector[self.node_plus] = I_plus
+
+        # set negative node as ground 
+        G = np.delete(G, (self.node_minus), axis=0)
+        G = np.delete(G, (self.node_minus), axis=1)
+        I_vector = np.delete(I_vector, (self.node_minus), axis=0)
+
+        V_vector = np.linalg.solve(G,I_vector)
+
+        # add ground
+        V_vector = np.insert(V_vector,self.node_minus,0)
+
+        # Calculation of phi_zpf of the reference junction/inductor
+        Zeff = V_vector[self.node_plus]/I_plus
+        phi_zpf_plus = np.sqrt(hbar/2*np.sqrt(Zeff))
+        return V_vector/V_vector[self.node_plus]*phi_zpf_plus
 
 class J(L):
     """A class representing an junction
