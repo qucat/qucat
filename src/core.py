@@ -2142,29 +2142,42 @@ class L(Component):
     def _get_flux_zpf(self, z, **kwargs):
         # Only called in _set_zeta
 
-        RLC_matrices_num = {k:M(w=z,**kwargs) for k,M in self._circuit._RLC_matrices.items()}
-
-        # setup Gv=i
         def G(z):
-            return 1/z*RLC_matrices_num['L']+1j*RLC_matrices_num['R']-z*RLC_matrices_num['C']
-        I_plus = 1/self._get_value(**kwargs)/z
-        I_vector = np.zeros(len(G))
-        I_vector[self.node_plus] = I_plus
+            RLC_matrices_num = {k:M(w=z,**kwargs) for k,M in self._circuit._RLC_matrices.items()}
 
-        # set negative node as ground 
-        G = np.delete(G, (self.node_minus), axis=0)
-        G = np.delete(G, (self.node_minus), axis=1)
+            # set negative node as ground 
+            for k in RLC_matrices_num:
+                RLC_matrices_num[k] = np.delete(RLC_matrices_num[k], (self.node_minus), axis=0)
+                RLC_matrices_num[k] = np.delete(RLC_matrices_num[k], (self.node_minus), axis=1)
+
+            return 1/1j/z*RLC_matrices_num['L']+RLC_matrices_num['R']+1j*z*RLC_matrices_num['C']
+
+        I_plus = 1/self._get_value(**kwargs)/z
+        I_vector = np.zeros(len(G(z))+1)
+        I_vector[self.node_plus] = I_plus
         I_vector = np.delete(I_vector, (self.node_minus), axis=0)
 
-        V_vector = np.linalg.solve(G,I_vector)
+        def Y(z):
+            V_vector = np.linalg.solve(G(z),I_vector)
+            return I_plus/V_vector[self.node_plus]
 
-        # add ground
-        V_vector = np.insert(V_vector,self.node_minus,0)
+        dz = z/1e6
+        dYdz = (Y(z+dz/2)-Y(z-dz/2))/dz
+        phi_zpf_plus = np.sqrt(hbar/np.real(z)/np.absolute(dYdz))
 
-        # Calculation of phi_zpf of the reference junction/inductor
-        Zeff = np.absolute(V_vector[self.node_plus]/I_plus) # we will be setting the phase of this node as reference later anyway
-        phi_zpf_plus = np.sqrt(hbar/2*np.sqrt(Zeff))
-        return V_vector/V_vector[self.node_plus]*phi_zpf_plus # phase of node plus is reference
+        A = G(z)
+        b = A[:,self.node_plus]
+
+        A = np.delete(A, (self.node_plus), axis=0)
+        A = np.delete(A, (self.node_plus), axis=1)
+        b = np.delete(b, (self.node_plus), axis=0)
+
+        phi_zpf_vector = np.linalg.solve(A,phi_zpf_plus*b)
+        # add in the same order as was removed
+        phi_zpf_vector = np.insert(phi_zpf_vector, self.node_plus, phi_zpf_plus)
+        phi_zpf_vector = np.insert(phi_zpf_vector, self.node_minus, 0)
+        
+        return phi_zpf_vector
 
 class J(L):
     """A class representing an junction
