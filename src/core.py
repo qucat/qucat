@@ -172,8 +172,7 @@ class Qcircuit(object):
         else:
             return self.plotting_parameters_show
 
-  
-    def _check_kwargs(self, **kwargs):
+    def _parse_kwargs(self, **kwargs):
         '''
         Raises a ValueError 
         * if one of the kwargs is not the label of a circuit element
@@ -189,7 +188,7 @@ class Qcircuit(object):
         '''
         for key in kwargs:
             if key in self._no_value_components:
-                pass
+                kwargs[key]  = kwargs[key]
             else:
                 raise ValueError(
                     '%s is not the label of a circuit element' % key)
@@ -200,7 +199,6 @@ class Qcircuit(object):
             except Exception:
                 raise ValueError(
                     'The value of %s should be specified with the keyword argument %s=... ' % (label, label))
-
 
     @timeit
     def _set_zeta(self, **kwargs):
@@ -224,7 +222,7 @@ class Qcircuit(object):
         self._kwargs_previous = kwargs
         
         # Check if the kwargs provided are correct
-        self._check_kwargs(**kwargs)
+        self._parse_kwargs(**kwargs)
 
         if len(self.resistors) == 0:
 
@@ -264,11 +262,12 @@ class Qcircuit(object):
             # Compute the coefficients of the characteristic polynomial.
             # The roots of this polynomial will provide the complex eigenfrequencies
             char_poly = npPoly([complex(coeff(**kwargs)) for coeff in self._char_poly_coeffs])
-            
             # char_poly = remove_multiplicity(char_poly)
 
             zeta = char_poly.roots()
+            print(zeta)
             zeta = polish_roots(char_poly,zeta, self.root_max_iterations,self.root_relative_tolerance)
+            print (zeta)
 
             # Sort solutions with increasing frequency
             order = np.argsort(np.real(zeta))
@@ -2115,7 +2114,7 @@ class Component(Circuit):
             elif type(a) is str:
                 self.label = a
             else:
-                self.value = float(a)
+                self.value = a
 
                 # Check its not too big, too small, or negative
                 # Note that values above max(min)_float would then
@@ -2456,27 +2455,46 @@ class L(Component):
         '''
         # Compute a sympy expression for the admittance 
         # at the nodes of the reference element
-        Y_symbolic = self._circuit._network.admittance(self.node_minus, self.node_plus)
-        Y_lambdified = lambdify(['w']+self._circuit._no_value_components, Y_symbolic, "numpy")
-        def _Ceff(w,**kwargs):
-            # Ridders algorithm from numerical methods
-            #TODO make use of err
-            dw = w
-            iterations = 0
-            max_iterations = 50
-            ders = []
-            errs = []
-            while iterations<max_iterations:
-                iterations+=1
-                dw/=5
-                der, err = dfridr(lambda x: np.imag(Y_lambdified(x,**kwargs)), w, dw)
-                if  err/der < 1e-8:
-                    return der
-                else:
-                    ders.append(der)
-                    errs.append(err)
-            return ders[np.argmin(errs)]
-        self._Ceff = _Ceff
+        Y = self._circuit._network.admittance(self.node_minus, self.node_plus)
+
+        # Write the expression as a single fraction 
+        # with the numerator and denomenator as polynomials
+        # (it combines but also "de-nests")      
+        Y_together = sp.together(Y)
+
+        # Extract numerator and denominator
+        u = sp.numer(Y_together)
+        v = sp.denom(Y_together)
+
+        # Symbol representing angular frequency
+        w = sp.Symbol('w')
+
+        # Calculate derivatives
+        derivatives = []
+        for P in [u,v]:
+            # Write as polynomial in 'w'
+            P = sp.collect(sp.expand(P), w)
+
+            # Obtain the order of the polynomial 
+            P_order = sp.polys.polytools.degree(P, gen=w) 
+
+            # Compute list of coefficients
+            P_coeffs_analytical = [P.coeff(w, n) for n in range(P_order+1)[::-1]]
+
+            # Express the derivative of the polynomial
+            dP = sum([(P_order-n)*a*w**(P_order-n-1)
+                        for n, a in enumerate(P_coeffs_analytical)])
+
+            derivatives.append(dP)
+        
+        du = derivatives[0]
+        dv = derivatives[1]
+        
+        # Convert the sympy expression for v/du to a function
+        # Note the function arguments are the angular frequency 
+        # and component values that need to be specified
+        self._Ceff =  lambdify(['w']+self._circuit._no_value_components, sp.im(du/v), "numpy")
+
 
 class J(L):
     """A class representing an junction
