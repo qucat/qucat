@@ -2,12 +2,18 @@ import sys,os
 sys.path.append(os.path.join(os.path.dirname(__file__),'src'))
 
 import numpy as np
+import matplotlib.pyplot as plt
 
 from core import Network,GUI,J,L,C,R
 from time import time
-circuit = GUI(filename = 'test.txt',edit=False,plot=False)
-circuit.f_k_A_chi(pretty_print = True)
+circuit = Network([C(0,1,1e-13),J(0,1,10e-9),C(1,2,'C'),C(0,2,1e-13),L(0,2,8e-9),R(0,2,1e6)])
+# C_list = np.logspace(-15,-30,16)
+# plt.loglog(C_list,circuit.anharmonicities(C=C_list)[1])
+# plt.show()
+# circuit = GUI(filename = 'test.txt',edit=False,plot=False)
+circuit.f_k_A_chi(pretty_print = True, C = 1e-30)
 # circuit.show_normal_mode(0,quantity='flux')
+# circuit.show_normal_mode(1,quantity='flux')
 # f0 = 4.603e9
 # Z0 = 50
 # Ej = 36.3e9/2

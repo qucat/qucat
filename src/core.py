@@ -22,7 +22,7 @@ except ImportError:
     from _utility import *
     from plotting_settings import plotting_parameters_show,plotting_parameters_normal_modes
 
-PROFILING = True
+PROFILING = False
 
 def timeit(method):
     '''
@@ -243,7 +243,7 @@ class Qcircuit(object):
 
             # Sort solutions with increasing frequency
             order = np.argsort(np.real(zeta))
-            zeta = zeta[order]
+            self.zeta = zeta[order]
 
         else:
 
@@ -264,11 +264,12 @@ class Qcircuit(object):
             # is also a solution, we want to discard the negative
             # imaginary part solutions which correspond to unphysical
             # negative dissipation modes
-            zeta = zeta[np.nonzero(np.imag(zeta) > 0.)]
+            self.zeta = zeta[np.nonzero(np.imag(zeta) > 0.)]
 
         # Negative and zero frequency modes are discarded
-        zeta = zeta[np.nonzero(np.real(zeta) > 0.)]
-
+        # (negative frequency solution are only possible for a poly
+        # with complex coefficients)
+        self.zeta = self.zeta[np.nonzero(np.real(self.zeta) > 0.)]
 
         # Only consider modes with Q>self.Q_min (=1 by default)
         # The reason for this measure is that
@@ -277,54 +278,53 @@ class Qcircuit(object):
         # negative values.
         # The negative values are discarded which changes the number of modes
         # and makes parameter sweeps difficult 
-        for z in zeta:
+        for z in self.zeta:
             if np.real(z) < self.Q_min*np.imag(z):
                 error_message = "Discarding f = %f Hz mode "%(np.real(z/2/np.pi))
                 error_message += "since it has a too low quality factor Q = %f < %f"%(np.real(z)/np.imag(z),self.Q_min)
                 warn(error_message)
-        zeta = zeta[np.nonzero(np.real(zeta) >= self.Q_min*np.imag(zeta))]
+        self.zeta = self.zeta[np.nonzero(np.real(self.zeta) >= self.Q_min*np.imag(self.zeta))]
 
-        ind = list(self.junctions+self.inductors)[0]
-        flux_zpf_vector_list = [ind._get_flux_zpf(z,**kwargs) for z in zeta]
+        # ind = list(self.junctions+self.inductors)[0]
+        # flux_zpf_vector_list = [ind._get_flux_zpf(z,**kwargs) for z in self.zeta]
 
-        # # Choose reference elements for each mode which 
-        # # maximize the inverse of dY: we want the reference 
-        # # element to the element where zero-point fluctuations
-        # # in flux are most localized.
-        # inductive_elements = self.junctions+self.inductors
-        # zeta_copy = deepcopy(zeta)
-        # zeta = []
-        # flux_zpf_vector_list = []
+        # Choose reference elements for each mode which 
+        # maximize the inverse of dY: we want the reference 
+        # element to the element where zero-point fluctuations
+        # in flux are most localized.
+        inductive_elements = self.junctions+self.inductors
+        zeta_copy = deepcopy(self.zeta)
+        zeta = []
+        flux_zpf_vector_list = []
         
-        # for z in zeta_copy:
-        #     largest_flux_zpf = 0
-        #     for ind_index,ind in enumerate(inductive_elements):
+        for z in zeta_copy:
+            largest_flux_zpf = 0
+            for ind in inductive_elements:
 
-        #         try:
-        #             flux_zpf_vector = ind._get_flux_zpf(z,**kwargs)
-        #             flux_zpf = np.absolute(flux_zpf_vector[ind.node_plus])
+                try:
+                    flux_zpf_vector = ind._get_flux_zpf(z,**kwargs)
+                    flux_zpf = np.absolute(flux_zpf_vector[ind.node_plus])
 
-        #             if flux_zpf>largest_flux_zpf:
-        #                 largest_flux_zpf = flux_zpf
-        #                 flux_zpf_vector_list.append(flux_zpf_vector)
+                    if flux_zpf>largest_flux_zpf:
+                        largest_flux_zpf = flux_zpf
+                        flux_zpf_vector_list.append(flux_zpf_vector)
 
-        #         except Exception as e:
-        #             # Computation of flux_zpf failed for some reason
-        #             raise e
-        #             pass
+                except Exception as e:
+                    # Computation of flux_zpf failed for some reason
+                    raise e
                     
-        #     if largest_flux_zpf == 0:
-        #         # Sometimes, when the circuits has vastly different
-        #         # values for its circuit components or modes are too
-        #         # decoupled, the symbolic 
-        #         # calculations can yield an incorrect char_poly
-        #         # We can easily discard some of these cases by throwing away
-        #         # any solutions with a complex impedance (ImY'<0)
-        #         error_message = "Discarding f = %f Hz mode.\n"%(np.real(z/2/np.pi))
-        #         error_message += "since the calculation of zero-point-fluctuations was unsuccesful.\n"
-        #         warn(error_message)
-        #     else:
-        #         zeta.append(z)
+            if largest_flux_zpf == 0:
+                # Sometimes, when the circuits has vastly different
+                # values for its circuit components or modes are too
+                # decoupled, the symbolic 
+                # calculations can yield an incorrect char_poly
+                # We can easily discard some of these cases by throwing away
+                # any solutions with a complex impedance (ImY'<0)
+                error_message = "Discarding f = %f Hz mode.\n"%(np.real(z/2/np.pi))
+                error_message += "since the calculation of zero-point-fluctuations was unsuccesful.\n"
+                warn(error_message)
+            else:
+                zeta.append(z)
 
         self.zeta = np.array(zeta)
         self.flux_zpf_vector = flux_zpf_vector_list
@@ -1965,7 +1965,6 @@ class Component(Circuit):
         if quantity == 'charge':
             Izpf = self.zpf(mode,'current', **kwargs)
             # The above will set the eigenfrequencies
-
             w = np.real(self._circuit.zeta)[mode]
             return Izpf/1j/w/e
 
@@ -2152,7 +2151,7 @@ class L(Component):
 
             return 1/1j/z*RLC_matrices_num['L']+RLC_matrices_num['R']+1j*z*RLC_matrices_num['C']
 
-        I_plus = 1/self._get_value(**kwargs)/z
+        I_plus = 1#np.absolute(1/self._get_value(**kwargs)/z)
         I_vector = np.zeros(len(G(z))+1)
         I_vector[self.node_plus] = I_plus
         I_vector = np.delete(I_vector, (self.node_minus), axis=0)
@@ -2168,7 +2167,8 @@ class L(Component):
             # Negative sign since current is defined as leaving 
             return I_plus/V_vector[node_plus_reduced]
 
-        phi_zpf_plus = np.sqrt(hbar/np.real(z)/(np.imag(ridders_derivative(Y,z))))
+        dY, err = ridders_derivative(Y,z)
+        phi_zpf_plus = np.sqrt(hbar/np.real(z)/(np.imag(dY)))
 
         A = G(z)
         b = A[:,node_plus_reduced]

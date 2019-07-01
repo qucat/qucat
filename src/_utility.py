@@ -41,14 +41,14 @@ def ridders_derivative(f,z):
     errs = []
     while iterations<max_iterations:
         iterations+=1
-        dz/=10
+        dz/=10 # as advised in numerical recipes
         der, err = dfridr(f, z, dz)
         if  np.absolute(err/der) < 1e-8:
-            return der
+            return der, err
         else:
             ders.append(der)
             errs.append(err)
-    return ders[np.argmin(errs)]
+    return ders[np.argmin(errs)],np.amin(errs)
 
 def dfridr(f, z, dz):
     max_iter = 10
