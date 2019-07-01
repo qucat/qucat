@@ -1724,8 +1724,8 @@ class _Network(object):
         # set a ground 
         ground_node = np.argmax(number_coefficients)
         for k in self.RLC_matrices:
-            self.RLC_matrices[k].row_del(0)
-            self.RLC_matrices[k].col_del(0)
+            self.RLC_matrices[k].row_del(ground_node)
+            self.RLC_matrices[k].col_del(ground_node)
 
     def connect(self, element, node_minus, node_plus):
         '''
