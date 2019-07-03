@@ -45,7 +45,7 @@ class SeriesRLC(TestCaseAppended):
     def test_dissipation(self):
         C = 100e-15
         L = 10e-9
-        R = 100e-9
+        R = 1e-3
         w,k,A,chi = self.parameters(R,L,C)
         cpx_w = (1j*C*R + np.sqrt(4*C*L - C**2*R**2))/(2.*C*L)
         self.assertRelativelyClose(np.imag(cpx_w)/2/np.pi,k)
