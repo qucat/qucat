@@ -273,14 +273,14 @@ class Qcircuit(object):
             order = np.argsort(np.real(zeta))
             zeta = zeta[order]
 
-            # Negative and zero frequency modes are discarded
+            # Negative modes are discarded
             zeta = zeta[np.nonzero(np.real(zeta) >= 0.)]
 
             # For each solution, its complex conjugate
             # is also a solution, we want to discard the negative
             # imaginary part solutions which correspond to unphysical
             # negative dissipation modes
-            zeta = zeta[np.nonzero(np.imag(zeta) > 0.)]
+            zeta = zeta[np.nonzero(np.imag(zeta) >= 0.)]
 
         # zero frequency modes are discarded
         zeta = zeta[np.nonzero(np.logical_not(np.isclose(np.real(zeta),0*zeta, rtol = self.root_relative_tolerance)))]

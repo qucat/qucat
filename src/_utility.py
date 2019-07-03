@@ -44,6 +44,8 @@ def polish_roots(p,roots, maxiter, rtol):
                 method = 'halley', 
                 maxiter = int(maxiter), 
                 rtol = rtol).root
+        if np.absolute(np.imag(r)/np.real(r))<rtol:
+            r = np.real(r)
         if not True in np.isclose(r,roots_refined, rtol = rtol):
             roots_refined.append(r)
     return np.array(roots_refined)
@@ -220,7 +222,6 @@ def get_float_part(v,exponent_3,maximum_info):
                 float_part = float_part[:-1]
     return [sign,float_part]
 
-
 def pretty_value(v,is_complex = True, use_power_10=False, use_unicode=True, maximum_info = False):
 
     if v == 0:
@@ -282,7 +283,3 @@ def to_string(unit,label,value, use_unicode=True, maximum_info = False):
         if unit is not None:
             s+=unit
     return s
-
-if __name__ == "__main__":
-    print(dfridr(lambda x:np.exp(x), 0,0.1))
-    print(np.exp(0))
