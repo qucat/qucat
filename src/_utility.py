@@ -44,7 +44,7 @@ def polish_roots(p,roots, maxiter, rtol):
                 method = 'halley', 
                 maxiter = int(maxiter), 
                 rtol = rtol).root
-        if np.absolute(np.imag(r)/np.real(r))<rtol:
+        if np.absolute(np.imag(r))<np.absolute(rtol*np.real(r)):
             r = np.real(r)
         if not True in np.isclose(r,roots_refined, rtol = rtol):
             roots_refined.append(r)
