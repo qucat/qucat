@@ -144,7 +144,7 @@ class Qcircuit(object):
         # define the function which returns the inverse of dY
         # where Y is the admittance at the nodes of an inductive element
         for inductive_element in self.inductors+self.junctions:
-            inductive_element._compute_Ceff()
+            inductive_element._compute_flux_zpf_r()
 
         # Initialize the flux transformation dictionary,
         # where _flux_transformation_dict[ref_node_minus,ref_node_plus,node_minus,node_plus] 
@@ -311,7 +311,7 @@ class Qcircuit(object):
             ref_elt_index = None
             for ind_index,ind in enumerate(inductive_elements):
                 try:
-                    dYm1 = 1/ind._Ceff(w,**kwargs)
+                    dYm1 = ind._flux_zpf_r(w,**kwargs)
                 except Exception:
                     # Computation of dYm1 failed for some reason
                     dYm1 = -1
@@ -2154,7 +2154,7 @@ class Component(Circuit):
             else:
                 self._circuit._no_value_components.append(self.label)
 
-    def _flux(self, mode, **kwargs):
+    def _flux_zpf(self, mode, **kwargs):
         self._circuit._set_zeta(**kwargs)
         w = self._circuit.zeta[mode]
         try:
@@ -2187,7 +2187,7 @@ class Component(Circuit):
         # Calculation of phi_zpf of the reference junction/inductor
         #  = sqrt(hbar/w/ImdY[w])
         # The minus is there since 1/Im(Y)  = -Im(1/Y)
-        phi_zpf_r = np.sqrt(hbar/w/self._circuit.ref_elt[mode]._Ceff(w,**kwargs))
+        phi_zpf_r = self._circuit.ref_elt[mode]._flux_zpf_r(w,**kwargs)
 
         # Note that the flux defined here 
         phi = tr(w,**kwargs)*phi_zpf_r
@@ -2252,9 +2252,9 @@ class Component(Circuit):
         '''
         if quantity == 'flux':
             phi_0 = hbar/2./e
-            return self._flux(mode,**kwargs)/phi_0
+            return self._flux_zpf(mode,**kwargs)/phi_0
         if quantity == 'voltage':
-            phi_zpf = self._flux(mode,**kwargs)
+            phi_zpf = self._flux_zpf(mode,**kwargs)
             # The above will set the eigenfrequencies
             w=np.real(self._circuit.zeta)[mode]
             
@@ -2443,9 +2443,9 @@ class L(Component):
         }
 
     @timeit
-    def _compute_Ceff(self):
+    def _compute_flux_zpf_r(self):
         '''
-        Generate the L._Ceff function which
+        Generate the L._flux_zpf_r function which
         takes as an argument an angular frequency (and keyword arguments 
         if component values need to be specified) and returns the 
         derivative of the admittance evaluated at the nodes of the inductor, 
@@ -2491,8 +2491,8 @@ class L(Component):
         # Convert the sympy expression for v/du to a function
         # Note the function arguments are the angular frequency 
         # and component values that need to be specified
-        # self._Ceff =  lambdify(['w']+self._circuit._no_value_components, sp.im((du*v-dv*u)/v**2), "numpy")
-        self._Ceff =  lambdify(['w']+self._circuit._no_value_components, sp.im(du/v), "numpy")
+        self._flux_zpf_r = lambdify(['w']+self._circuit._no_value_components, 
+            sp.sqrt(hbar/sp.re(w)/sp.im(du/v)), "numpy")
 
 
 class J(L):
