@@ -265,9 +265,7 @@ class Qcircuit(object):
             # char_poly = remove_multiplicity(char_poly)
 
             zeta = char_poly.roots()
-            print(zeta)
             zeta = polish_roots(char_poly,zeta, self.root_max_iterations,self.root_relative_tolerance)
-            print (zeta)
 
             # Sort solutions with increasing frequency
             order = np.argsort(np.real(zeta))
