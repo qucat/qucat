@@ -313,7 +313,7 @@ class Qcircuit(object):
             ref_elt_index = None
             for ind_index,ind in enumerate(inductive_elements):
                 try:
-                    dYm1 = 1/ind._Ceff(np.real(w),**kwargs)
+                    dYm1 = 1/ind._Ceff(w,**kwargs)
                 except Exception:
                     # Computation of dYm1 failed for some reason
                     dYm1 = -1
@@ -2158,7 +2158,7 @@ class Component(Circuit):
 
     def _flux(self, mode, **kwargs):
         self._circuit._set_zeta(**kwargs)
-        w = np.real(self._circuit.zeta)[mode]
+        w = self._circuit.zeta[mode]
         try:
             tr = self._circuit._flux_transformation_dict[
                                         self._circuit.ref_elt[mode].node_minus,
@@ -2184,7 +2184,7 @@ class Component(Circuit):
         # Following Black-box quantization, 
         # we assume the losses to be neglegible by 
         # removing the imaginary part of the eigenfrequency
-        w = np.real(w)
+        # w = np.real(w)
         
         # Calculation of phi_zpf of the reference junction/inductor
         #  = sqrt(hbar/w/ImdY[w])
@@ -2493,6 +2493,7 @@ class L(Component):
         # Convert the sympy expression for v/du to a function
         # Note the function arguments are the angular frequency 
         # and component values that need to be specified
+        # self._Ceff =  lambdify(['w']+self._circuit._no_value_components, sp.im((du*v-dv*u)/v**2), "numpy")
         self._Ceff =  lambdify(['w']+self._circuit._no_value_components, sp.im(du/v), "numpy")
 
 
