@@ -91,8 +91,8 @@ class Qcircuit(object):
         # After an initial estimation of the complex eigenfrequenceis using a diaglinalization
         # of the companion matrix, the frequencies are polishd to a tolerence
         # self.root_relative_tolerance using a gradient based root finder, with a maximum number of iterations self.root_max_iterations
-        self.root_max_iterations = 1e5 
-        self.root_relative_tolerance = 1e-9
+        self.root_max_iterations = 1e4 
+        self.root_relative_tolerance = 1e-12
 
         self._plotting_normal_mode = False # Used to keep track of which imported plotting_settings to use 
                                             # only set to true when show_normal_mode is called
@@ -2469,7 +2469,7 @@ class L(Component):
 
         # Calculate derivatives
         derivatives = []
-        for P in [u,v]:
+        for P in [u]:#[u,v]:
             # Write as polynomial in 'w'
             P = sp.collect(sp.expand(P), w)
 
@@ -2486,13 +2486,17 @@ class L(Component):
             derivatives.append(dP)
         
         du = derivatives[0]
-        dv = derivatives[1]
+        # dv = derivatives[1]
         
         # Convert the sympy expression for v/du to a function
         # Note the function arguments are the angular frequency 
         # and component values that need to be specified
-        self._flux_zpf_r = lambdify(['w']+self._circuit._no_value_components, 
-            sp.sqrt(hbar/sp.re(w)/sp.im(du/v)), "numpy")
+        dY = lambdify(['w']+self._circuit._no_value_components,du/v, "numpy")
+
+        def _flux_zpf_r(z,**kwargs):
+            return np.sqrt(hbar/np.real(z)/np.imag(dY(z,**kwargs)))
+
+        self._flux_zpf_r = _flux_zpf_r
 
 
 class J(L):
