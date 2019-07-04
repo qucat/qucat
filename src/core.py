@@ -196,7 +196,7 @@ class Qcircuit(object):
         # 0-frequency solutions (with real parts close to 0)
         # tend to have frequencies which oscillate between positive and
         # negative values which can make sweeps difficult
-        w_cpx = w_cpx[np.nonzero(np.real(w_cpx) > self.Q_min*np.imag(w_cpx))]
+        w_cpx = w_cpx[np.nonzero(np.real(w_cpx) > self.Q_min*2*np.imag(w_cpx))]
 
         # Sort solutions with increasing frequency
         order = np.argsort(np.real(w_cpx))
@@ -270,7 +270,7 @@ class Qcircuit(object):
         Notes
         -----
 
-        These loss rates :math:`\kappa_m` correspond to the imaginary parts
+        These loss rates :math:`\kappa_m` correspond to twice the imaginary parts
         of the complex frequencies which make the conductance matrix
         singular, or equivalently the imaginary parts of the poles of the impedance
         calculated between the nodes of an inductor or josephon junction.
@@ -290,7 +290,7 @@ class Qcircuit(object):
         simulations.
         '''
         self._set_w_cpx(**kwargs)
-        return np.imag(self.w_cpx)/2./pi
+        return 2*np.imag(self.w_cpx)/2./pi
 
     def anharmonicities(self, **kwargs):
         r'''Returns the anharmonicity of the circuit normal modes.
