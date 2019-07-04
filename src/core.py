@@ -291,11 +291,11 @@ class Qcircuit(object):
         # The negative values are discarded which changes the number of modes
         # and makes parameter sweeps difficult 
         for w in zeta:
-            if np.real(w) < self.Q_min*np.imag(w):
+            if np.real(w) < self.Q_min*2*np.imag(w):
                 error_message = "Discarding f = %f Hz mode "%(np.real(w/2/np.pi))
-                error_message += "since it has a too low quality factor Q = %f < %f"%(np.real(w)/np.imag(w),self.Q_min)
+                error_message += "since it has a too low quality factor Q = %f < %f"%(np.real(w)/2/np.imag(w),self.Q_min)
                 warn(error_message)
-        zeta = zeta[np.nonzero(np.real(zeta) >= self.Q_min*np.imag(zeta))]
+        zeta = zeta[np.nonzero(np.real(zeta) >= self.Q_min*2*np.imag(zeta))]
 
         # Choose reference elements for each mode which 
         # maximize the inverse of dY: we want the reference 
@@ -446,7 +446,7 @@ class Qcircuit(object):
         simulations.
         '''
         self._set_zeta(**kwargs)
-        return np.imag(self.zeta)/2./pi
+        return 2*np.imag(self.zeta)/2./pi
     
     @vectorize_kwargs
     def anharmonicities(self, **kwargs):
