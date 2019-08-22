@@ -25,7 +25,7 @@ processing in QuTiP.
 
     installation
     Tutorials <tutorials/tutorials>
-    Documentation <API/API>
+    List of functions <API/API>
     contact
     report_a_bug
 

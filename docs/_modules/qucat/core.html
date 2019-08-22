@@ -85,7 +85,7 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../tutorials/tutorials.html">Tutorials</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../API/API.html">Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../API/API.html">List of functions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../contact.html">Contact</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../report_a_bug.html">Report a bug</a></li>
 </ul>
@@ -154,7 +154,7 @@
 <span></span><span class="kn">import</span> <span class="nn">sympy</span> <span class="k">as</span> <span class="nn">sp</span>
 <span class="kn">from</span> <span class="nn">sympy.utilities.lambdify</span> <span class="k">import</span> <span class="n">lambdify</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">from</span> <span class="nn">scipy.constants</span> <span class="k">import</span> <span class="n">e</span><span class="p">,</span> <span class="n">pi</span><span class="p">,</span> <span class="n">h</span><span class="p">,</span> <span class="n">hbar</span>
+<span class="kn">from</span> <span class="nn">numpy.polynomial.polynomial</span> <span class="k">import</span> <span class="n">Polynomial</span> <span class="k">as</span> <span class="n">npPoly</span>
 <span class="kn">from</span> <span class="nn">sympy.core.mul</span> <span class="k">import</span> <span class="n">Mul</span><span class="p">,</span> <span class="n">Pow</span><span class="p">,</span> <span class="n">Add</span>
 <span class="kn">from</span> <span class="nn">copy</span> <span class="k">import</span> <span class="n">deepcopy</span>
 <span class="kn">from</span> <span class="nn">numbers</span> <span class="k">import</span> <span class="n">Number</span>
@@ -164,28 +164,25 @@
 <span class="kn">import</span> <span class="nn">inspect</span>
 <span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
 <span class="kn">import</span> <span class="nn">time</span>
+<span class="kn">from</span> <span class="nn">warnings</span> <span class="k">import</span> <span class="n">warn</span>
 <span class="k">try</span><span class="p">:</span>
-    
     <span class="kn">from</span> <span class="nn">._constants</span> <span class="k">import</span> <span class="o">*</span>
-    <span class="kn">from</span> <span class="nn">._utility</span> <span class="k">import</span> <span class="n">pretty_value</span><span class="p">,</span>\
-            <span class="n">shift</span><span class="p">,</span>\
-            <span class="n">to_string</span><span class="p">,</span>\
-            <span class="n">safely_evaluate</span><span class="p">,</span>\
-            <span class="n">vectorize</span>
+    <span class="kn">from</span> <span class="nn">._utility</span> <span class="k">import</span> <span class="o">*</span>
     <span class="kn">from</span> <span class="nn">.plotting_settings</span> <span class="k">import</span> <span class="n">plotting_parameters_show</span><span class="p">,</span><span class="n">plotting_parameters_normal_modes</span>
 <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
     <span class="c1"># When running from source without pip installation</span>
     <span class="kn">from</span> <span class="nn">_constants</span> <span class="k">import</span> <span class="o">*</span>
-    <span class="kn">from</span> <span class="nn">_utility</span> <span class="k">import</span> <span class="n">pretty_value</span><span class="p">,</span>\
-            <span class="n">shift</span><span class="p">,</span>\
-            <span class="n">to_string</span><span class="p">,</span>\
-            <span class="n">safely_evaluate</span><span class="p">,</span>\
-            <span class="n">vectorize</span>
+    <span class="kn">from</span> <span class="nn">_utility</span> <span class="k">import</span> <span class="o">*</span>
     <span class="kn">from</span> <span class="nn">plotting_settings</span> <span class="k">import</span> <span class="n">plotting_parameters_show</span><span class="p">,</span><span class="n">plotting_parameters_normal_modes</span>
 
 <span class="n">PROFILING</span> <span class="o">=</span> <span class="kc">False</span>
 
 <span class="k">def</span> <span class="nf">timeit</span><span class="p">(</span><span class="n">method</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Decorator which prints the time </span>
+<span class="sd">    a function took to execute.</span>
+<span class="sd">    Only works the global variable PROFILING is set to True.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
     <span class="k">def</span> <span class="nf">timed</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">):</span>
         <span class="n">ts</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
         <span class="n">result</span> <span class="o">=</span> <span class="n">method</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">)</span>
@@ -197,6 +194,21 @@
     <span class="k">return</span> <span class="n">timed</span>
 
 <span class="k">def</span> <span class="nf">string_to_component</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="o">*</span><span class="n">arg</span><span class="p">,</span> <span class="o">**</span><span class="n">kwarg</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Allows the creation of a Component object using a string.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    s : string</span>
+<span class="sd">        One of &#39;W&#39;, &#39;R&#39;, &#39;L&#39;, &#39;J&#39;, &#39;C&#39;, &#39;G&#39;, dicatates the type </span>
+<span class="sd">        of component to create</span>
+<span class="sd">    args, kwargs : </span>
+<span class="sd">        Arguments needed for the component creation</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    A component of type ``s``</span>
+<span class="sd">    &#39;&#39;&#39;</span>
     <span class="k">if</span> <span class="n">s</span> <span class="o">==</span> <span class="s1">&#39;W&#39;</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">W</span><span class="p">(</span><span class="o">*</span><span class="n">arg</span><span class="p">,</span> <span class="o">**</span><span class="n">kwarg</span><span class="p">)</span>
     <span class="k">elif</span> <span class="n">s</span> <span class="o">==</span> <span class="s1">&#39;R&#39;</span><span class="p">:</span>
@@ -212,99 +224,124 @@
 
 <span class="k">class</span> <span class="nc">Qcircuit</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;A class representing a quantum circuit.</span>
-<span class="sd">    &#39;&#39;&#39;</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        components (dict): Dictionary of components having a label, such that a component </span>
+<span class="sd">            with label &#39;L_1&#39; can be obtained by ``Qcircuit.components[&#39;L_1&#39;]``</span>
+<span class="sd">        Q_min (float): Modes with have a quality factor below Q_min will not ignored</span>
+<span class="sd">        inductors (list): List of inductor objects present in the circuit</span>
+<span class="sd">        resistors (list): List of inductor objects present in the circuit</span>
+<span class="sd">        junctions (list): List of junction objects present in the circuit</span>
+<span class="sd">        capacitors (list): List of capacitor objects present in the circuit</span>
+<span class="sd">        netlist (list): List of all components present in the circuit</span>
+<span class="sd">        ref_elt (J or L): list of junction or inductor component used as a reference for the calculation </span>
+<span class="sd">                        of zero-point fluctations, each index of the list corresponds to a different mode</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">netlist</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">Q_min</span> <span class="o">=</span> <span class="mi">1</span>
-        <span class="sd">&#39;&#39;&#39;Doc for Q_min</span>
-<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">Q_min</span> <span class="o">=</span> <span class="mi">1</span> <span class="c1"># Modes with have a quality factor below Q_min will not ignored</span>
+        
+        <span class="c1"># After an initial estimation of the complex eigenfrequenceis using a diaglinalization</span>
+        <span class="c1"># of the companion matrix, the frequencies are polishd to a tolerence</span>
+        <span class="c1"># self.root_relative_tolerance using a gradient based root finder, with a maximum number of iterations self.root_max_iterations</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">root_max_iterations</span> <span class="o">=</span> <span class="mf">1e4</span> 
+        <span class="bp">self</span><span class="o">.</span><span class="n">root_relative_tolerance</span> <span class="o">=</span> <span class="mf">1e-12</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">_plotting_normal_mode</span> <span class="o">=</span> <span class="kc">False</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">netlist</span> <span class="o">=</span> <span class="n">netlist</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_network</span> <span class="o">=</span> <span class="n">_Network</span><span class="p">(</span><span class="n">netlist</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_plotting_normal_mode</span> <span class="o">=</span> <span class="kc">False</span> <span class="c1"># Used to keep track of which imported plotting_settings to use </span>
+                                            <span class="c1"># only set to true when show_normal_mode is called</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">plotting_parameters_normal_modes</span> <span class="o">=</span> <span class="n">plotting_parameters_normal_modes</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">plotting_parameters_show</span> <span class="o">=</span> <span class="n">plotting_parameters_show</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">netlist</span> <span class="o">=</span> <span class="n">netlist</span> <span class="c1"># List of all components present in the circuit</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_network</span> <span class="o">=</span> <span class="n">_Network</span><span class="p">(</span><span class="n">netlist</span><span class="p">)</span> <span class="c1"># Converts the list of components into a network object</span>
+                <span class="c1"># The Network object has methods to compute of the admittance between two nodes</span>
+                <span class="c1"># or the tranfer function between two nodes and two others</span>
+        
+        <span class="c1"># We construct (enpty) lists of all the different type of </span>
+        <span class="c1"># components that could be present in the circuit</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">inductors</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">capacitors</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">junctions</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">resistors</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_wire</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_grounds</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="c1"># Initialize a dictionary of components having a label, such that a component </span>
+        <span class="c1"># with label &#39;L_1&#39; can be obtained by ``Qcircuit.components[&#39;L_1&#39;]``</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">components</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="c1"># Initialize a list which will contain the labels of the componentns which have</span>
+        <span class="c1"># no value (these will have to be specified in most methods as a kwarg)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_no_value_components</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="c1"># For each component of the circuit....</span>
         <span class="k">for</span> <span class="n">elt</span> <span class="ow">in</span> <span class="n">netlist</span><span class="p">:</span>
+            <span class="c1"># ...tell the component what circuit it belongs to</span>
             <span class="n">elt</span><span class="o">.</span><span class="n">_circuit</span> <span class="o">=</span> <span class="bp">self</span>
+            <span class="c1"># ...and populate the empty lists/dictionaries initialized above with the element if appropriate</span>
             <span class="n">elt</span><span class="o">.</span><span class="n">_set_component_lists</span><span class="p">()</span>
 
-        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">junctions</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">ref_elt</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">junctions</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-        <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">inductors</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">ref_elt</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">inductors</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-        <span class="k">else</span><span class="p">:</span>
+
+        <span class="c1"># Check that there is at least one inductive element in the circuit</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">junctions</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">inductors</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
                 <span class="s2">&quot;There should be at least one junction or inductor in the circuit&quot;</span><span class="p">)</span>
 
+        <span class="c1"># Check that there is at least one capacitive element in the circuit</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">capacitors</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
                 <span class="s2">&quot;There should be at least one capacitor in the circuit&quot;</span><span class="p">)</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">_flux_transformation_dict</span> <span class="o">=</span> <span class="p">{}</span>
-        <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_network</span><span class="o">.</span><span class="n">nodes</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_flux_transformation_dict</span><span class="p">[</span><span class="n">node</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+                
+        <span class="c1"># define the function which returns the inverse of dY</span>
+        <span class="c1"># where Y is the admittance at the nodes of an inductive element</span>
+        <span class="k">for</span> <span class="n">inductive_element</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">inductors</span><span class="o">+</span><span class="bp">self</span><span class="o">.</span><span class="n">junctions</span><span class="p">:</span>
+            <span class="n">inductive_element</span><span class="o">.</span><span class="n">_compute_flux_zpf_r</span><span class="p">()</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">_compute_inverse_of_dY</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_char_poly_coeffs</span> <span class="o">=</span> <span class="p">[</span><span class="n">lambdify</span><span class="p">(</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_no_value_components</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="s1">&#39;numpy&#39;</span><span class="p">)</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> 
-            <span class="bp">self</span><span class="o">.</span><span class="n">_network</span><span class="o">.</span><span class="n">compute_char_poly_coeffs</span><span class="p">(</span><span class="n">is_lossy</span> <span class="o">=</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">resistors</span><span class="p">)</span><span class="o">&gt;</span><span class="mi">0</span><span class="p">))]</span>
+        <span class="c1"># Initialize the flux transformation dictionary,</span>
+        <span class="c1"># where _flux_transformation_dict[ref_node_minus,ref_node_plus,node_minus,node_plus] </span>
+        <span class="c1"># will be populated with a function which gives</span>
+        <span class="c1"># the voltage transfer function between the nodes surrounding</span>
+        <span class="c1"># the reference element and (node_plus,node_minus)</span>
+        <span class="c1"># this function takes as an argument an angular frequency</span>
+        <span class="c1"># and keyword arguments if component values need to be specified</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_flux_transformation_dict</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="c1"># define the functions which returns the components of the characteristic polynomial</span>
+        <span class="c1"># (the roots of which are the eigen-frequencies)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_char_poly_coeffs</span> <span class="o">=</span> <span class="p">[</span><span class="n">lambdify</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_no_value_components</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="s1">&#39;numpy&#39;</span><span class="p">)</span> 
+            <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_network</span><span class="o">.</span><span class="n">compute_char_poly_coeffs</span><span class="p">(</span><span class="n">is_lossy</span> <span class="o">=</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">resistors</span><span class="p">)</span><span class="o">&gt;</span><span class="mi">0</span><span class="p">))]</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">_pp</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Returns the plotting parameters used </span>
+<span class="sd">            * in the Qcircuit.show method (if self._plotting_normal_mode is False)</span>
+<span class="sd">            * in the Qcircuit.show_normal_modes() method (if self._plotting_normal_mode is True)</span>
+<span class="sd">        &#39;&#39;&#39;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_plotting_normal_mode</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">plotting_parameters_normal_modes</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">plotting_parameters_normal_modes</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">plotting_parameters_show</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">plotting_parameters_show</span>
 
-    <span class="nd">@timeit</span>
-    <span class="k">def</span> <span class="nf">_compute_inverse_of_dY</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="n">Y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_network</span><span class="o">.</span><span class="n">admittance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ref_elt</span><span class="o">.</span><span class="n">node_minus</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ref_elt</span><span class="o">.</span><span class="n">node_plus</span><span class="p">)</span>
-        <span class="n">Y_together</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">together</span><span class="p">(</span><span class="n">Y</span><span class="p">)</span>    <span class="c1"># Puts everything on a single fraction with the numerator and denomenator as polynomials</span>
-                                            <span class="c1"># So it combines but also &quot;de-nests&quot;</span>
+    <span class="k">def</span> <span class="nf">_parse_kwargs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Raises a ValueError </span>
+<span class="sd">        * if one of the kwargs is not the label of a circuit element</span>
+<span class="sd">        * if a component without a value has not had its value specified in the kwargs </span>
 
-        <span class="n">w</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">Symbol</span><span class="p">(</span><span class="s1">&#39;w&#39;</span><span class="p">)</span>
-        <span class="c1"># Write numerator as polynomial in omega</span>
-        <span class="n">Y_numer</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">numer</span><span class="p">(</span><span class="n">Y_together</span><span class="p">)</span>
-        <span class="n">Y_numer_poly</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">collect</span><span class="p">(</span><span class="n">sp</span><span class="o">.</span><span class="n">expand</span><span class="p">(</span><span class="n">Y_numer</span><span class="p">),</span> <span class="n">w</span><span class="p">)</span>
-        <span class="c1"># Write numerator as polynomial in omega</span>
-        <span class="n">Y_denom</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">denom</span><span class="p">(</span><span class="n">Y_together</span><span class="p">)</span>
-        <span class="n">Y_denom_poly</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">collect</span><span class="p">(</span><span class="n">sp</span><span class="o">.</span><span class="n">expand</span><span class="p">(</span><span class="n">Y_denom</span><span class="p">),</span> <span class="n">w</span><span class="p">)</span>
-        <span class="n">Y_numer_poly_order</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">polys</span><span class="o">.</span><span class="n">polytools</span><span class="o">.</span><span class="n">degree</span><span class="p">(</span>
-            <span class="n">Y_numer_poly</span><span class="p">,</span> <span class="n">gen</span><span class="o">=</span><span class="n">w</span><span class="p">)</span>  <span class="c1"># Order of the polynomial</span>
-        <span class="n">Y_denom_poly_order</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">polys</span><span class="o">.</span><span class="n">polytools</span><span class="o">.</span><span class="n">degree</span><span class="p">(</span>
-            <span class="n">Y_denom_poly</span><span class="p">,</span> <span class="n">gen</span><span class="o">=</span><span class="n">w</span><span class="p">)</span>  <span class="c1"># Order of the polynomial</span>
-
-        <span class="n">Y_numer_poly_coeffs_analytical</span> <span class="o">=</span> <span class="p">[</span><span class="n">Y_numer_poly</span><span class="o">.</span><span class="n">coeff</span><span class="p">(</span><span class="n">w</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span>
-            <span class="n">Y_numer_poly_order</span><span class="o">+</span><span class="mi">1</span><span class="p">)[::</span><span class="o">-</span><span class="mi">1</span><span class="p">]]</span>  <span class="c1"># Get polynomial coefficients</span>
-
-        <span class="n">Y_denom_poly_coeffs_analytical</span> <span class="o">=</span> <span class="p">[</span><span class="n">Y_denom_poly</span><span class="o">.</span><span class="n">coeff</span><span class="p">(</span><span class="n">w</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span>
-            <span class="n">Y_denom_poly_order</span><span class="o">+</span><span class="mi">1</span><span class="p">)[::</span><span class="o">-</span><span class="mi">1</span><span class="p">]]</span>  <span class="c1"># Get polynomial coefficients</span>
-
-        <span class="n">v</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">([</span><span class="n">a</span><span class="o">*</span><span class="n">w</span><span class="o">**</span><span class="p">(</span><span class="n">Y_denom_poly_order</span><span class="o">-</span><span class="n">n</span><span class="p">)</span>
-                     <span class="k">for</span> <span class="n">n</span><span class="p">,</span> <span class="n">a</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">Y_denom_poly_coeffs_analytical</span><span class="p">)])</span>
-        <span class="n">du</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">([(</span><span class="n">Y_numer_poly_order</span><span class="o">-</span><span class="n">n</span><span class="p">)</span><span class="o">*</span><span class="n">a</span><span class="o">*</span><span class="n">w</span><span class="o">**</span><span class="p">(</span><span class="n">Y_numer_poly_order</span><span class="o">-</span><span class="n">n</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
-                      <span class="k">for</span> <span class="n">n</span><span class="p">,</span> <span class="n">a</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">Y_numer_poly_coeffs_analytical</span><span class="p">)])</span>
-        
-        <span class="bp">self</span><span class="o">.</span><span class="n">_inverse_of_dY_lambdified</span> <span class="o">=</span>  <span class="n">lambdify</span><span class="p">(</span>
-                <span class="p">[</span><span class="s1">&#39;w&#39;</span><span class="p">]</span><span class="o">+</span><span class="bp">self</span><span class="o">.</span><span class="n">_no_value_components</span><span class="p">,</span>
-                <span class="n">v</span><span class="o">/</span><span class="n">du</span><span class="p">,</span> 
-                <span class="s2">&quot;numpy&quot;</span><span class="p">)</span>
-
-    <span class="nd">@vectorize</span>
-    <span class="nd">@safely_evaluate</span>
-    <span class="k">def</span> <span class="nf">_inverse_of_dY</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">w</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_inverse_of_dY_lambdified</span><span class="p">(</span><span class="n">w</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-  
-    <span class="k">def</span> <span class="nf">_check_kwargs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="sd">        Called in all functions accepting keyword arguments (for un-specified circuit components).</span>
+<span class="sd">        </span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        kwargs:     </span>
+<span class="sd">                    Values for un-specified circuit components, </span>
+<span class="sd">                    ex: ``L=1e-9``.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
         <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_no_value_components</span><span class="p">:</span>
-                <span class="k">pass</span>
+                <span class="n">kwargs</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>  <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
                     <span class="s1">&#39;</span><span class="si">%s</span><span class="s1"> is not the label of a circuit element&#39;</span> <span class="o">%</span> <span class="n">key</span><span class="p">)</span>
@@ -312,37 +349,172 @@
         <span class="k">for</span> <span class="n">label</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_no_value_components</span><span class="p">:</span>
             <span class="k">try</span><span class="p">:</span>
                 <span class="n">kwargs</span><span class="p">[</span><span class="n">label</span><span class="p">]</span>
-            <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
                     <span class="s1">&#39;The value of </span><span class="si">%s</span><span class="s1"> should be specified with the keyword argument </span><span class="si">%s</span><span class="s1">=... &#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">label</span><span class="p">,</span> <span class="n">label</span><span class="p">))</span>
 
-
     <span class="nd">@timeit</span>
-    <span class="k">def</span> <span class="nf">_set_w_cpx</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_check_kwargs</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-        <span class="n">char_poly_coeffs</span> <span class="o">=</span> <span class="p">[</span><span class="nb">complex</span><span class="p">(</span><span class="n">coeff</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">))</span> <span class="k">for</span> <span class="n">coeff</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_char_poly_coeffs</span><span class="p">]</span>
+    <span class="k">def</span> <span class="nf">_set_zeta</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Sets the Qcircuit.zeta to the circuit eigenfrequencies</span>
+<span class="sd">        (including the imaginary part due to losses).</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        kwargs:     </span>
+<span class="sd">                    Values for un-specified circuit components, </span>
+<span class="sd">                    ex: ``L=1e-9``.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">kwargs</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">_kwargs_previous</span><span class="p">:</span>
+                <span class="c1"># Avoid doing the same thing two</span>
+                <span class="c1"># times in a row</span>
+                <span class="k">return</span>
+        <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+            <span class="k">pass</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_kwargs_previous</span> <span class="o">=</span> <span class="n">kwargs</span>
+        
+        <span class="c1"># Check if the kwargs provided are correct</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_parse_kwargs</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">resistors</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="c1"># The variable of the characteristic polynomial is w^2</span>
-            <span class="n">w_cpx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">roots</span><span class="p">(</span><span class="n">char_poly_coeffs</span><span class="p">)))</span>
+
+            <span class="c1"># Compute the coefficients of the characteristic polynomial.</span>
+            <span class="c1"># The roots of this polynomial will provide the complex eigenfrequencies</span>
+            <span class="n">char_poly</span> <span class="o">=</span> <span class="n">npPoly</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">coeff</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">))</span> <span class="k">for</span> <span class="n">coeff</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_char_poly_coeffs</span><span class="p">])</span>
+            
+            <span class="c1"># char_poly = remove_multiplicity(char_poly)</span>
+        
+            <span class="c1"># In this case, the variable of the characteristic polynomial is \omega^2</span>
+            <span class="c1"># And we can safely take the real part of the solution as there are no</span>
+            <span class="c1"># resistors in the circuit.</span>
+            <span class="n">w2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">char_poly</span><span class="o">.</span><span class="n">roots</span><span class="p">())</span>
+            <span class="n">w2</span> <span class="o">=</span> <span class="n">polish_roots</span><span class="p">(</span><span class="n">char_poly</span><span class="p">,</span><span class="n">w2</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">root_max_iterations</span><span class="p">,</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">root_relative_tolerance</span><span class="p">))</span>
+
+            <span class="c1"># Sometimes, when the circuits has vastly different</span>
+            <span class="c1"># values for its circuit components or modes are too</span>
+            <span class="c1"># decoupled, the symbolic </span>
+            <span class="c1"># calculations can yield an incorrect char_poly</span>
+            <span class="c1"># We can easily discard some of these casese by throwing away</span>
+            <span class="c1"># negative solutions</span>
+            <span class="k">for</span> <span class="n">w2_single</span> <span class="ow">in</span> <span class="n">w2</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">w2_single</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="n">error_message</span> <span class="o">=</span> <span class="s2">&quot;Imaginary frequency mode f = 1j </span><span class="si">%f</span><span class="s2"> Hz mode found (and discarded).</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">%</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="o">-</span><span class="n">w2_single</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">)</span>
+                    <span class="n">warn</span><span class="p">(</span><span class="n">error_message</span><span class="p">)</span>
+            <span class="n">w2</span> <span class="o">=</span> <span class="n">w2</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">nonzero</span><span class="p">(</span><span class="n">w2</span> <span class="o">&gt;=</span> <span class="mf">0.</span><span class="p">)]</span>
+
+            <span class="c1"># Take the square root to get to the eigenfrequencies</span>
+            <span class="n">zeta</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">w2</span><span class="p">)</span>
+
+            <span class="c1"># Sort solutions with increasing frequency</span>
+            <span class="n">order</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">zeta</span><span class="p">))</span>
+            <span class="n">zeta</span> <span class="o">=</span> <span class="n">zeta</span><span class="p">[</span><span class="n">order</span><span class="p">]</span>
+
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">w_cpx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">roots</span><span class="p">(</span><span class="n">char_poly_coeffs</span><span class="p">)</span>
-            <span class="n">w_cpx</span> <span class="o">=</span> <span class="n">w_cpx</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">nonzero</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">w_cpx</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mf">0.</span><span class="p">)]</span>
+
+            <span class="c1"># Compute the coefficients of the characteristic polynomial.</span>
+            <span class="c1"># The roots of this polynomial will provide the complex eigenfrequencies</span>
+            <span class="n">char_poly</span> <span class="o">=</span> <span class="n">npPoly</span><span class="p">([</span><span class="nb">complex</span><span class="p">(</span><span class="n">coeff</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">))</span> <span class="k">for</span> <span class="n">coeff</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_char_poly_coeffs</span><span class="p">])</span>
+            <span class="c1"># char_poly = remove_multiplicity(char_poly)</span>
+
+            <span class="n">zeta</span> <span class="o">=</span> <span class="n">char_poly</span><span class="o">.</span><span class="n">roots</span><span class="p">()</span>
+            <span class="n">zeta</span> <span class="o">=</span> <span class="n">polish_roots</span><span class="p">(</span><span class="n">char_poly</span><span class="p">,</span><span class="n">zeta</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">root_max_iterations</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">root_relative_tolerance</span><span class="p">)</span>
+
+            <span class="c1"># Sort solutions with increasing frequency</span>
+            <span class="n">order</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">zeta</span><span class="p">))</span>
+            <span class="n">zeta</span> <span class="o">=</span> <span class="n">zeta</span><span class="p">[</span><span class="n">order</span><span class="p">]</span>
+
+            <span class="c1"># Negative modes are discarded</span>
+            <span class="n">zeta</span> <span class="o">=</span> <span class="n">zeta</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">nonzero</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">zeta</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mf">0.</span><span class="p">)]</span>
+
+            <span class="c1"># For each solution, its complex conjugate</span>
+            <span class="c1"># is also a solution, we want to discard the negative</span>
+            <span class="c1"># imaginary part solutions which correspond to unphysical</span>
+            <span class="c1"># negative dissipation modes</span>
+            <span class="n">zeta</span> <span class="o">=</span> <span class="n">zeta</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">nonzero</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">imag</span><span class="p">(</span><span class="n">zeta</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mf">0.</span><span class="p">)]</span>
+
+        <span class="c1"># zero frequency modes are discarded</span>
+        <span class="n">zeta</span> <span class="o">=</span> <span class="n">zeta</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">nonzero</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">logical_not</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">zeta</span><span class="p">),</span><span class="mi">0</span><span class="o">*</span><span class="n">zeta</span><span class="p">,</span> <span class="n">rtol</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">root_relative_tolerance</span><span class="p">)))]</span>
 
         <span class="c1"># Only consider modes with Q&gt;self.Q_min (=1 by default)</span>
+        <span class="c1"># The reason for this measure is that</span>
         <span class="c1"># 0-frequency solutions (with real parts close to 0)</span>
         <span class="c1"># tend to have frequencies which oscillate between positive and</span>
-        <span class="c1"># negative values which can make sweeps difficult</span>
-        <span class="n">w_cpx</span> <span class="o">=</span> <span class="n">w_cpx</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">nonzero</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">w_cpx</span><span class="p">)</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">Q_min</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">imag</span><span class="p">(</span><span class="n">w_cpx</span><span class="p">))]</span>
+        <span class="c1"># negative values.</span>
+        <span class="c1"># The negative values are discarded which changes the number of modes</span>
+        <span class="c1"># and makes parameter sweeps difficult </span>
+        <span class="k">for</span> <span class="n">w</span> <span class="ow">in</span> <span class="n">zeta</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">w</span><span class="p">)</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">Q_min</span><span class="o">*</span><span class="mi">2</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">imag</span><span class="p">(</span><span class="n">w</span><span class="p">):</span>
+                <span class="n">error_message</span> <span class="o">=</span> <span class="s2">&quot;Discarding f = </span><span class="si">%f</span><span class="s2"> Hz mode &quot;</span><span class="o">%</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">w</span><span class="o">/</span><span class="mi">2</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">))</span>
+                <span class="n">error_message</span> <span class="o">+=</span> <span class="s2">&quot;since it has a too low quality factor Q = </span><span class="si">%f</span><span class="s2"> &lt; </span><span class="si">%f</span><span class="s2">&quot;</span><span class="o">%</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">w</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">imag</span><span class="p">(</span><span class="n">w</span><span class="p">),</span><span class="bp">self</span><span class="o">.</span><span class="n">Q_min</span><span class="p">)</span>
+                <span class="n">warn</span><span class="p">(</span><span class="n">error_message</span><span class="p">)</span>
+        <span class="n">zeta</span> <span class="o">=</span> <span class="n">zeta</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">nonzero</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">zeta</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">Q_min</span><span class="o">*</span><span class="mi">2</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">imag</span><span class="p">(</span><span class="n">zeta</span><span class="p">))]</span>
 
-        <span class="c1"># Sort solutions with increasing frequency</span>
-        <span class="n">order</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">w_cpx</span><span class="p">))</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">w_cpx</span> <span class="o">=</span> <span class="n">w_cpx</span><span class="p">[</span><span class="n">order</span><span class="p">]</span>
+        <span class="c1"># Choose reference elements for each mode which </span>
+        <span class="c1"># maximize the inverse of dY: we want the reference </span>
+        <span class="c1"># element to the element where zero-point fluctuations</span>
+        <span class="c1"># in flux are most localized.</span>
+        <span class="n">inductive_elements</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">junctions</span><span class="o">+</span><span class="bp">self</span><span class="o">.</span><span class="n">inductors</span>
+        <span class="n">ref_elt</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">zeta_copy</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">zeta</span><span class="p">)</span>
+        <span class="n">zeta</span> <span class="o">=</span> <span class="p">[]</span>
+        
+        <span class="k">for</span> <span class="n">w</span> <span class="ow">in</span> <span class="n">zeta_copy</span><span class="p">:</span>
+            <span class="n">largest_dYm1</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="n">ref_elt_index</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="k">for</span> <span class="n">ind_index</span><span class="p">,</span><span class="n">ind</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">inductive_elements</span><span class="p">):</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">dYm1</span> <span class="o">=</span> <span class="n">ind</span><span class="o">.</span><span class="n">_flux_zpf_r</span><span class="p">(</span><span class="n">w</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+                <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+                    <span class="c1"># Computation of dYm1 failed for some reason</span>
+                    <span class="n">dYm1</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+                    
+                <span class="k">if</span> <span class="n">dYm1</span><span class="o">&gt;</span><span class="n">largest_dYm1</span><span class="p">:</span>
+                    <span class="n">ref_elt_index</span> <span class="o">=</span> <span class="n">ind_index</span>
+                    <span class="n">largest_dYm1</span> <span class="o">=</span> <span class="n">dYm1</span>
+
+            <span class="k">if</span> <span class="n">ref_elt_index</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="c1"># Sometimes, when the circuits has vastly different</span>
+                <span class="c1"># values for its circuit components or modes are too</span>
+                <span class="c1"># decoupled, the symbolic </span>
+                <span class="c1"># calculations can yield an incorrect char_poly</span>
+                <span class="c1"># We can easily discard some of these cases by throwing away</span>
+                <span class="c1"># any solutions with a complex impedance (ImY&#39;&lt;0)</span>
+                <span class="n">error_message</span> <span class="o">=</span> <span class="s2">&quot;Discarding f = </span><span class="si">%f</span><span class="s2"> Hz mode.</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">%</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">w</span><span class="o">/</span><span class="mi">2</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">))</span>
+                <span class="n">error_message</span> <span class="o">+=</span> <span class="s2">&quot;since the calculation of zero-point-fluctuations was unsuccesful.</span><span class="se">\n</span><span class="s2">&quot;</span>
+                <span class="n">warn</span><span class="p">(</span><span class="n">error_message</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">zeta</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">w</span><span class="p">)</span>
+                <span class="n">ref_elt</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">inductive_elements</span><span class="p">[</span><span class="n">ref_elt_index</span><span class="p">])</span>
+        <span class="n">zeta</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">zeta</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">zeta</span> <span class="o">=</span> <span class="n">zeta</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ref_elt</span> <span class="o">=</span> <span class="n">ref_elt</span>
 
     <span class="k">def</span> <span class="nf">_anharmonicities_per_junction</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_set_w_cpx</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-        <span class="k">return</span> <span class="p">[</span><span class="n">j</span><span class="o">.</span><span class="n">_anharmonicity</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">w_cpx</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">junctions</span><span class="p">]</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Returns the contribution of each junction to the anharmonicity of each mode.</span>
+<span class="sd">        For more details, see the documentation of J.anharmonicity.</span>
 
-<div class="viewcode-block" id="Qcircuit.eigenfrequencies"><a class="viewcode-back" href="../../API/circuit_functions/eigenfrequencies.html#qucat.Qcircuit.eigenfrequencies">[docs]</a>    <span class="k">def</span> <span class="nf">eigenfrequencies</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="sd">        Anharmonicities are given in units of Hz (not angular frequency).</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        kwargs:     </span>
+<span class="sd">                    Values for un-specified circuit components, </span>
+<span class="sd">                    ex: ``L=1e-9``.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        anh_per_jun: ndarray</span>
+<span class="sd">            where ``anh_per_jun[j,m]`` corresponds to the contribution of junction ``j``</span>
+<span class="sd">            to the anharmonicity of mode ``m``</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_set_zeta</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">[[</span><span class="n">j</span><span class="o">.</span><span class="n">anharmonicity</span><span class="p">(</span><span class="n">mode</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="k">for</span> <span class="n">mode</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">zeta</span><span class="p">))]</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">junctions</span><span class="p">]</span>
+    
+<div class="viewcode-block" id="Qcircuit.eigenfrequencies"><a class="viewcode-back" href="../../API/circuit_functions/eigenfrequencies.html#qucat.Qcircuit.eigenfrequencies">[docs]</a>    <span class="nd">@vectorize_kwargs</span>
+    <span class="k">def</span> <span class="nf">eigenfrequencies</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="sd">&#39;&#39;&#39;Returns the normal mode frequencies of the circuit.</span>
 
 <span class="sd">        Frequencies are provided in units of Hertz, </span>
@@ -351,7 +523,7 @@
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
 <span class="sd">        kwargs:     </span>
-<span class="sd">                    Values for un-specified circuit compoenents, </span>
+<span class="sd">                    Values for un-specified circuit components, </span>
 <span class="sd">                    ex: ``L=1e-9``.</span>
 
 <span class="sd">        Returns</span>
@@ -381,10 +553,11 @@
 <span class="sd">        non-linear part of the Hamiltonian :math:`\hat{U}`, </span>
 <span class="sd">        originating in the junction non-linearity, would be 0.</span>
 <span class="sd">        &#39;&#39;&#39;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_set_w_cpx</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">w_cpx</span><span class="p">)</span><span class="o">/</span><span class="mf">2.</span><span class="o">/</span><span class="n">pi</span></div>
-
-<div class="viewcode-block" id="Qcircuit.loss_rates"><a class="viewcode-back" href="../../API/circuit_functions/loss_rates.html#qucat.Qcircuit.loss_rates">[docs]</a>    <span class="k">def</span> <span class="nf">loss_rates</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_set_zeta</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">zeta</span><span class="p">)</span><span class="o">/</span><span class="mf">2.</span><span class="o">/</span><span class="n">pi</span></div>
+    
+<div class="viewcode-block" id="Qcircuit.loss_rates"><a class="viewcode-back" href="../../API/circuit_functions/loss_rates.html#qucat.Qcircuit.loss_rates">[docs]</a>    <span class="nd">@vectorize_kwargs</span>
+    <span class="k">def</span> <span class="nf">loss_rates</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="sd">&#39;&#39;&#39;Returns the loss rates of the circuit normal modes.</span>
 
 <span class="sd">        The array is ordered ordered with increasing normal mode frequencies.</span>
@@ -395,7 +568,7 @@
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
 <span class="sd">        kwargs:     </span>
-<span class="sd">                    Values for un-specified circuit compoenents, </span>
+<span class="sd">                    Values for un-specified circuit components, </span>
 <span class="sd">                    ex: ``L=1e-9``.</span>
 
 <span class="sd">        Returns</span>
@@ -425,10 +598,11 @@
 <span class="sd">        the entire hamiltonian by :math:`2\pi` when performing time-dependant </span>
 <span class="sd">        simulations.</span>
 <span class="sd">        &#39;&#39;&#39;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_set_w_cpx</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">imag</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">w_cpx</span><span class="p">)</span><span class="o">/</span><span class="mf">2.</span><span class="o">/</span><span class="n">pi</span></div>
-
-<div class="viewcode-block" id="Qcircuit.anharmonicities"><a class="viewcode-back" href="../../API/circuit_functions/anharmonicities.html#qucat.Qcircuit.anharmonicities">[docs]</a>    <span class="k">def</span> <span class="nf">anharmonicities</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_set_zeta</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">return</span> <span class="mi">2</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">imag</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">zeta</span><span class="p">)</span><span class="o">/</span><span class="mf">2.</span><span class="o">/</span><span class="n">pi</span></div>
+    
+<div class="viewcode-block" id="Qcircuit.anharmonicities"><a class="viewcode-back" href="../../API/circuit_functions/anharmonicities.html#qucat.Qcircuit.anharmonicities">[docs]</a>    <span class="nd">@vectorize_kwargs</span>
+    <span class="k">def</span> <span class="nf">anharmonicities</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="sa">r</span><span class="sd">&#39;&#39;&#39;Returns the anharmonicity of the circuit normal modes.</span>
 
 <span class="sd">        The array is ordered ordered with increasing normal mode frequencies.</span>
@@ -440,7 +614,7 @@
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
 <span class="sd">        kwargs:     </span>
-<span class="sd">                    Values for un-specified circuit compoenents, </span>
+<span class="sd">                    Values for un-specified circuit components, </span>
 <span class="sd">                    ex: ``L=1e-9``.</span>
 
 <span class="sd">        Returns</span>
@@ -450,7 +624,7 @@
 
 <span class="sd">        Notes</span>
 <span class="sd">        -----</span>
-<span class="sd">        The Hamiltonian of the circuit is</span>
+<span class="sd">        The Hamiltonian of the circuit in the limit of low-dissipation is</span>
 
 <span class="sd">        :math:`\hat{H} = \sum_m hf_m\hat{a}_m^\dagger\hat{a}_m + \sum_j E_j[1-\cos{\hat{\varphi_j}}-\frac{\hat{\varphi_j}^2}{2}]`,</span>
 
@@ -484,8 +658,9 @@
 <span class="sd">        &#39;&#39;&#39;</span>
         <span class="n">Ks</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">kerr</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">Ks</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">Ks</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])])</span></div>
-
-<div class="viewcode-block" id="Qcircuit.kerr"><a class="viewcode-back" href="../../API/circuit_functions/kerr.html#qucat.Qcircuit.kerr">[docs]</a>    <span class="k">def</span> <span class="nf">kerr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    
+<div class="viewcode-block" id="Qcircuit.kerr"><a class="viewcode-back" href="../../API/circuit_functions/kerr.html#qucat.Qcircuit.kerr">[docs]</a>    <span class="nd">@vectorize_kwargs</span>
+    <span class="k">def</span> <span class="nf">kerr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="sa">r</span><span class="sd">&#39;&#39;&#39;Returns the Kerr parameters for the circuit normal modes.</span>
 
 <span class="sd">        The diagonal component ``K[m,m]`` of the returned matrix correspond to the</span>
@@ -501,7 +676,7 @@
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
 <span class="sd">        kwargs:     </span>
-<span class="sd">                    Values for un-specified circuit compoenents, </span>
+<span class="sd">                    Values for un-specified circuit components, </span>
 <span class="sd">                    ex: ``L=1e-9``.</span>
 
 <span class="sd">        Returns</span>
@@ -512,7 +687,7 @@
 <span class="sd">        Notes</span>
 <span class="sd">        -----</span>
 
-<span class="sd">        The Hamiltonian of the circuit is</span>
+<span class="sd">        The Hamiltonian of the circuit in the limit of low dissipation is</span>
 
 <span class="sd">        :math:`\hat{H} = \sum_m hf_m\hat{a}_m^\dagger\hat{a}_m + \sum_j E_j[1-\cos{\hat{\varphi_j}}-\frac{\hat{\varphi_j}^2}{2}]`,</span>
 
@@ -542,19 +717,29 @@
 
 <span class="sd">        is the contribution of junction j to the total anharmonicity of a mode m</span>
 <span class="sd">        &#39;&#39;&#39;</span>
+
+        <span class="c1"># Compute anharmonicity per junction ``As``</span>
+        <span class="c1"># where ``As[j,m]`` corresponds to the contribution of junction ``j``</span>
+        <span class="c1"># to the anharmonicity of mode ``m``</span>
         <span class="n">As</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_anharmonicities_per_junction</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-        <span class="n">N_modes</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">w_cpx</span><span class="p">)</span>
+
+        <span class="c1"># Number of modes in the circuit</span>
+        <span class="n">N_modes</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">zeta</span><span class="p">)</span>
+
+        <span class="c1"># Number of junctions in the circuit</span>
         <span class="n">N_junctions</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">junctions</span><span class="p">)</span>
 
+        <span class="c1"># initialize the vector of Kerr coefficients</span>
         <span class="n">Ks</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">N_modes</span><span class="p">,</span> <span class="n">N_modes</span><span class="p">))</span>
 
         <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">N_modes</span><span class="p">):</span>
-            <span class="n">line</span> <span class="o">=</span> <span class="p">[]</span>
             <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">N_modes</span><span class="p">):</span>
                 <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">N_junctions</span><span class="p">):</span>
                     <span class="k">if</span> <span class="n">i</span> <span class="o">==</span> <span class="n">j</span><span class="p">:</span>
+                        <span class="c1"># Add contribution to self-Kerr</span>
                         <span class="n">Ks</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">i</span><span class="p">]</span> <span class="o">+=</span> <span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">As</span><span class="p">[</span><span class="n">k</span><span class="p">][</span><span class="n">i</span><span class="p">])</span>
                     <span class="k">else</span><span class="p">:</span>
+                        <span class="c1"># Add contribution to cross-Kerr</span>
                         <span class="c1"># Note that taking the square root here is fine</span>
                         <span class="c1"># since Ks[i, j]~phi_ki^2*phi_kj^2 is necessarily a positive real</span>
                         <span class="c1"># since phi_ki,phi_kj are real numbers</span>
@@ -592,7 +777,7 @@
 <span class="sd">                        If set to True, this method will print a summary</span>
 <span class="sd">                        of the system parameters as a table.</span>
 <span class="sd">        kwargs:     </span>
-<span class="sd">                    Values for un-specified circuit compoenents, </span>
+<span class="sd">                    Values for un-specified circuit components, </span>
 <span class="sd">                    ex: ``L=1e-9``.</span>
 
 <span class="sd">        Returns</span>
@@ -601,6 +786,8 @@
 <span class="sd">            ``[[f_0,f_1,..],[k_0,k_1,..],[A_0,A_1,..],[[A_0,chi_01,..],[chi_10,A_1,..]..]]``</span>
 <span class="sd">        &#39;&#39;&#39;</span>
         
+        <span class="c1"># Quantity to be returned: </span>
+        <span class="c1"># eigenfrequency, loss-rates, anharmonicity, and Kerr parameters of the circuit</span>
         <span class="n">to_return</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">eigenfrequencies</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">),</span>\
             <span class="bp">self</span><span class="o">.</span><span class="n">loss_rates</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">),</span>\
             <span class="bp">self</span><span class="o">.</span><span class="n">anharmonicities</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">),</span>\
@@ -609,28 +796,39 @@
 
         <span class="k">if</span> <span class="n">pretty_print</span><span class="p">:</span>
 
+            <span class="c1"># Number of modes in the circuit</span>
             <span class="n">N_modes</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">to_return</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+
+            <span class="c1"># Setup a template for the mode/frequency/dissipation/anharmonicity</span>
+            <span class="c1"># table row in the form `` 7 spaces | 7 spaces |  7 spaces | 7 spaces |``</span>
             <span class="n">table_line</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
             <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">4</span><span class="p">):</span>
-                <span class="n">table_line</span> <span class="o">+=</span> <span class="s2">&quot; </span><span class="si">%7s</span><span class="s2"> |&quot;</span>
+                <span class="n">table_line</span> <span class="o">+=</span> <span class="s2">&quot; </span><span class="si">%12s</span><span class="s2"> |&quot;</span>
             <span class="n">table_line</span> <span class="o">+=</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span>
 
+            <span class="c1"># Top row for content of columns</span>
             <span class="n">to_print</span> <span class="o">=</span> <span class="n">table_line</span> <span class="o">%</span> <span class="p">(</span>
                 <span class="s2">&quot;mode&quot;</span><span class="p">,</span> <span class="s2">&quot; freq. &quot;</span><span class="p">,</span> <span class="s2">&quot; diss. &quot;</span><span class="p">,</span> <span class="s2">&quot; anha. &quot;</span><span class="p">)</span>
+
+            <span class="c1"># add all the other rows (each row is a mode)</span>
             <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">w</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">to_return</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
                 <span class="n">to_print</span> <span class="o">+=</span> <span class="n">table_line</span> <span class="o">%</span> <span class="nb">tuple</span><span class="p">([</span><span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">)]</span><span class="o">+</span><span class="p">[</span><span class="n">pretty_value</span><span class="p">(</span>
                     <span class="n">to_return</span><span class="p">[</span><span class="n">j</span><span class="p">][</span><span class="n">i</span><span class="p">],</span> <span class="n">use_unicode</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span><span class="o">+</span><span class="s1">&#39;Hz&#39;</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">3</span><span class="p">)])</span>
 
-            <span class="n">to_print</span> <span class="o">+=</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Kerr coefficients</span><span class="se">\n</span><span class="s2">(diagonal = Kerr, off-diagonal = cross-Kerr)</span><span class="se">\n</span><span class="s2">&quot;</span>
-
+            <span class="n">to_print</span> <span class="o">+=</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Kerr coefficients (diagonal = Kerr, off-diagonal = cross-Kerr)</span><span class="se">\n</span><span class="s2">&quot;</span>
+            
+            <span class="c1"># Setup template for the rows of the Kerr coefficients table row</span>
+            <span class="c1"># in the form `` 7 spaces | 7 spaces | ...``</span>
             <span class="n">table_line</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
             <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">N_modes</span><span class="o">+</span><span class="mi">1</span><span class="p">):</span>
-                <span class="n">table_line</span> <span class="o">+=</span> <span class="s2">&quot; </span><span class="si">%7s</span><span class="s2"> |&quot;</span>
+                <span class="n">table_line</span> <span class="o">+=</span> <span class="s2">&quot; </span><span class="si">%12s</span><span class="s2"> |&quot;</span>
             <span class="n">table_line</span> <span class="o">+=</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span>
 
+            <span class="c1"># Top row indexing each column as a mode</span>
             <span class="n">to_print</span> <span class="o">+=</span> <span class="n">table_line</span> <span class="o">%</span> <span class="nb">tuple</span><span class="p">([</span><span class="s1">&#39;mode&#39;</span><span class="p">]</span> <span class="o">+</span>
                                             <span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">)</span><span class="o">+</span><span class="s1">&#39;   &#39;</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">N_modes</span><span class="p">)])</span>
 
+            <span class="c1"># Add other rows</span>
             <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">N_modes</span><span class="p">):</span>
                 <span class="n">line_elements</span> <span class="o">=</span> <span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">)]</span>
                 <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">N_modes</span><span class="p">):</span>
@@ -640,12 +838,14 @@
                     <span class="k">else</span><span class="p">:</span>
                         <span class="n">line_elements</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
                 <span class="n">to_print</span> <span class="o">+=</span> <span class="n">table_line</span> <span class="o">%</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">line_elements</span><span class="p">)</span>
+
+            <span class="c1"># Print the two tables</span>
             <span class="nb">print</span><span class="p">(</span><span class="n">to_print</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="n">to_return</span></div>
 
-
-<div class="viewcode-block" id="Qcircuit.hamiltonian"><a class="viewcode-back" href="../../API/circuit_functions/hamiltonian.html#qucat.Qcircuit.hamiltonian">[docs]</a>    <span class="k">def</span> <span class="nf">hamiltonian</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">modes</span><span class="o">=</span><span class="s1">&#39;all&#39;</span><span class="p">,</span> <span class="n">taylor</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">excitations</span><span class="o">=</span><span class="mi">6</span><span class="p">,</span> <span class="n">return_ops</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<div class="viewcode-block" id="Qcircuit.hamiltonian"><a class="viewcode-back" href="../../API/circuit_functions/hamiltonian.html#qucat.Qcircuit.hamiltonian">[docs]</a>    <span class="nd">@refuse_vectorize_kwargs</span><span class="p">(</span><span class="n">exclude</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;modes&#39;</span><span class="p">,</span><span class="s1">&#39;taylor&#39;</span><span class="p">,</span><span class="s1">&#39;excitations&#39;</span><span class="p">,</span><span class="s1">&#39;return_ops&#39;</span><span class="p">])</span>
+    <span class="k">def</span> <span class="nf">hamiltonian</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">modes</span><span class="o">=</span><span class="s1">&#39;all&#39;</span><span class="p">,</span> <span class="n">taylor</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">excitations</span><span class="o">=</span><span class="mi">6</span><span class="p">,</span> <span class="n">return_ops</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="sa">r</span><span class="sd">&#39;&#39;&#39;Returns the circuits Hamiltonian for further analysis with QuTiP.</span>
 <span class="sd">        The Hamiltonian is provided in units of frequency (not angular frequency), </span>
 <span class="sd">        such that :math:`h=1`.</span>
@@ -678,7 +878,7 @@
 <span class="sd">                    where ``a_i`` is the annihilation operator of the</span>
 <span class="sd">                    i-th considered mode, a QuTiP Qobj</span>
 <span class="sd">        kwargs:     </span>
-<span class="sd">                    Values for un-specified circuit compoenents, </span>
+<span class="sd">                    Values for un-specified circuit components, </span>
 <span class="sd">                    ex: ``L=1e-9``.</span>
 
 <span class="sd">        Returns</span>
@@ -690,7 +890,7 @@
 <span class="sd">        -----</span>
 <span class="sd">        </span>
 <span class="sd">        The Hamiltonian of the circuit, with the non-linearity of the Josephson junctions</span>
-<span class="sd">        Taylor-expanded, is given by</span>
+<span class="sd">        Taylor-expanded, is given in the limit of low dissipation by</span>
 
 <span class="sd">        :math:`\hat{H} = \sum_{m\in\text{modes}} \hbar \omega_m\hat{a}_m^\dagger\hat{a}_m + \sum_j\sum_{2n\le\text{taylor}}E_j\frac{(-1)^{n+1}}{(2n)!}\left[\frac{\phi_{zpf,m,j}}{\phi_0}(\hat{a}_m^\dagger+\hat{a}_m)\right]^{2n}`,</span>
 <span class="sd">        </span>
@@ -724,6 +924,16 @@
 
         <span class="k">if</span> <span class="n">modes</span> <span class="o">==</span> <span class="s1">&#39;all&#39;</span><span class="p">:</span>
             <span class="n">modes</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">fs</span><span class="p">))</span>
+        <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">modes</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">fs</span><span class="p">[</span><span class="n">m</span><span class="p">]</span>
+            <span class="k">except</span> <span class="ne">IndexError</span><span class="p">:</span>
+                <span class="n">error_message</span> <span class="o">=</span><span class="s2">&quot;There are only </span><span class="si">%d</span><span class="s2"> modes in the circuit, and you specified mode index </span><span class="si">%d</span><span class="s2"> &quot;</span><span class="o">%</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">fs</span><span class="p">),</span><span class="n">m</span><span class="p">)</span>
+                <span class="n">error_message</span> <span class="o">+=</span><span class="s2">&quot;corresponding to the </span><span class="si">%d</span><span class="s2">-th mode.&quot;</span><span class="o">%</span><span class="p">(</span><span class="n">m</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span>
+                <span class="c1"># error_message +=&quot;\nNote that the numer of modes may change as one sweeps a parameter&quot;</span>
+                <span class="c1"># error_message +=&quot; for example if a 0 frequency, spurious mode becomes negative due to &quot;</span>
+                <span class="c1"># error_message +=&quot;numerical imprecision. Adding a resistance to the circuit may help with this.&quot;</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">error_message</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">excitations</span><span class="p">,</span><span class="nb">list</span><span class="p">):</span>
             <span class="n">excitations</span> <span class="o">=</span> <span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">excitations</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">modes</span><span class="p">]</span>
@@ -737,16 +947,18 @@
         <span class="n">phi</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span> <span class="k">for</span> <span class="n">junction</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">junctions</span><span class="p">]</span>
         <span class="n">qeye_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">qeye</span><span class="p">(</span><span class="n">n</span><span class="p">)</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">excitations</span><span class="p">]</span>
 
-        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">modes</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">index</span><span class="p">,</span><span class="n">mode</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">modes</span><span class="p">):</span>
             <span class="n">a_to_tensor</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">qeye_list</span><span class="p">)</span>
-            <span class="n">a_to_tensor</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">destroy</span><span class="p">(</span><span class="n">excitations</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+            <span class="n">a_to_tensor</span><span class="p">[</span><span class="n">index</span><span class="p">]</span> <span class="o">=</span> <span class="n">destroy</span><span class="p">(</span><span class="n">excitations</span><span class="p">[</span><span class="n">index</span><span class="p">])</span>
             <span class="n">a</span> <span class="o">=</span> <span class="n">tensor</span><span class="p">(</span><span class="n">a_to_tensor</span><span class="p">)</span>
             <span class="n">operators</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
-            <span class="n">H</span> <span class="o">+=</span> <span class="n">fs</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">*</span><span class="n">a</span><span class="o">.</span><span class="n">dag</span><span class="p">()</span><span class="o">*</span><span class="n">a</span>
+            <span class="n">H</span> <span class="o">+=</span> <span class="n">fs</span><span class="p">[</span><span class="n">mode</span><span class="p">]</span><span class="o">*</span><span class="n">a</span><span class="o">.</span><span class="n">dag</span><span class="p">()</span><span class="o">*</span><span class="n">a</span>
 
             <span class="k">for</span> <span class="n">j</span><span class="p">,</span> <span class="n">junction</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">junctions</span><span class="p">):</span>
                 <span class="c1"># Note that zpf returns the flux in units of phi_0 = hbar/2./e</span>
-                <span class="n">phi</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">+=</span> <span class="n">junction</span><span class="o">.</span><span class="n">zpf</span><span class="p">(</span><span class="n">quantity</span><span class="o">=</span><span class="s1">&#39;flux&#39;</span><span class="p">,</span><span class="n">mode</span><span class="o">=</span><span class="n">i</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="n">a</span><span class="o">+</span><span class="n">a</span><span class="o">.</span><span class="n">dag</span><span class="p">())</span> 
+                <span class="n">phi</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">+=</span> <span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">junction</span><span class="o">.</span><span class="n">zpf</span><span class="p">(</span><span class="n">quantity</span><span class="o">=</span><span class="s1">&#39;flux&#39;</span><span class="p">,</span><span class="n">mode</span><span class="o">=</span><span class="n">mode</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">))</span><span class="o">*</span><span class="p">(</span><span class="n">a</span><span class="o">+</span><span class="n">a</span><span class="o">.</span><span class="n">dag</span><span class="p">())</span> 
+                <span class="c1"># a = x+iy =&gt; -i*(a-a^) = -i(iy+iy) = --1</span>
+                <span class="n">phi</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">+=</span> <span class="o">-</span><span class="mi">1</span><span class="n">j</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">imag</span><span class="p">(</span><span class="n">junction</span><span class="o">.</span><span class="n">zpf</span><span class="p">(</span><span class="n">quantity</span><span class="o">=</span><span class="s1">&#39;flux&#39;</span><span class="p">,</span><span class="n">mode</span><span class="o">=</span><span class="n">mode</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">))</span><span class="o">*</span><span class="p">(</span><span class="n">a</span><span class="o">-</span><span class="n">a</span><span class="o">.</span><span class="n">dag</span><span class="p">())</span> 
 
         <span class="k">for</span> <span class="n">j</span><span class="p">,</span> <span class="n">junction</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">junctions</span><span class="p">):</span>
             <span class="n">n</span> <span class="o">=</span> <span class="mi">2</span>
@@ -759,9 +971,11 @@
             <span class="k">return</span> <span class="n">H</span><span class="p">,</span> <span class="n">operators</span>
         <span class="k">return</span> <span class="n">H</span></div>
 
-<div class="viewcode-block" id="Qcircuit.show"><a class="viewcode-back" href="../../API/circuit_functions/show.html#qucat.Qcircuit.show">[docs]</a>    <span class="k">def</span> <span class="nf">show</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+<div class="viewcode-block" id="Qcircuit.show"><a class="viewcode-back" href="../../API/circuit_functions/show.html#qucat.Qcircuit.show">[docs]</a>    <span class="nd">@refuse_vectorize_kwargs</span><span class="p">(</span><span class="n">exclude</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;plot&#39;</span><span class="p">,</span><span class="s1">&#39;return_fig_ax&#39;</span><span class="p">])</span>
+    <span class="k">def</span> <span class="nf">show</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
              <span class="n">plot</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-             <span class="n">return_fig_ax</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+             <span class="n">return_fig_ax</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+             <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="sd">&#39;&#39;&#39;Plots the circuit.</span>
 
 <span class="sd">        Only works if the circuit was created using the GUI.</span>
@@ -833,7 +1047,8 @@
 
         <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">()</span></div>
 
-<div class="viewcode-block" id="Qcircuit.show_normal_mode"><a class="viewcode-back" href="../../API/circuit_functions/show_normal_mode.html#qucat.Qcircuit.show_normal_mode">[docs]</a>    <span class="k">def</span> <span class="nf">show_normal_mode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> 
+<div class="viewcode-block" id="Qcircuit.show_normal_mode"><a class="viewcode-back" href="../../API/circuit_functions/show_normal_mode.html#qucat.Qcircuit.show_normal_mode">[docs]</a>    <span class="nd">@refuse_vectorize_kwargs</span><span class="p">(</span><span class="n">exclude</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;quantity&#39;</span><span class="p">])</span>
+    <span class="k">def</span> <span class="nf">show_normal_mode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> 
         <span class="n">mode</span><span class="p">,</span> 
         <span class="n">quantity</span><span class="o">=</span><span class="s1">&#39;current&#39;</span><span class="p">,</span>
         <span class="n">plot</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
@@ -959,7 +1174,7 @@
         <span class="n">all_values</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">for</span> <span class="n">el</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">netlist</span><span class="p">:</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">el</span><span class="p">,</span><span class="n">W</span><span class="p">):</span>
-                <span class="n">all_values</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">el</span><span class="o">.</span><span class="n">phasor</span><span class="p">(</span><span class="n">mode</span> <span class="o">=</span> <span class="n">mode</span><span class="p">,</span> <span class="n">quantity</span> <span class="o">=</span> <span class="n">quantity</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">))</span>
+                <span class="n">all_values</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">el</span><span class="o">.</span><span class="n">zpf</span><span class="p">(</span><span class="n">mode</span> <span class="o">=</span> <span class="n">mode</span><span class="p">,</span> <span class="n">quantity</span> <span class="o">=</span> <span class="n">quantity</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">))</span>
         <span class="n">all_values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">absolute</span><span class="p">(</span><span class="n">all_values</span><span class="p">)</span>
         <span class="n">max_value</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">amax</span><span class="p">(</span><span class="n">all_values</span><span class="p">)</span>
         <span class="n">min_value</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">amin</span><span class="p">(</span><span class="n">all_values</span><span class="p">)</span>
@@ -1021,7 +1236,7 @@
             <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">el</span><span class="p">,</span><span class="n">W</span><span class="p">):</span>
 
                 <span class="c1"># phasor for the quantity and for the current</span>
-                <span class="n">value</span> <span class="o">=</span> <span class="n">el</span><span class="o">.</span><span class="n">phasor</span><span class="p">(</span><span class="n">mode</span> <span class="o">=</span> <span class="n">mode</span><span class="p">,</span> <span class="n">quantity</span> <span class="o">=</span> <span class="n">quantity</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+                <span class="n">value</span> <span class="o">=</span> <span class="n">el</span><span class="o">.</span><span class="n">zpf</span><span class="p">(</span><span class="n">mode</span> <span class="o">=</span> <span class="n">mode</span><span class="p">,</span> <span class="n">quantity</span> <span class="o">=</span> <span class="n">quantity</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
                 <span class="c1"># location of the element center</span>
                 <span class="n">x</span> <span class="o">=</span> <span class="n">el</span><span class="o">.</span><span class="n">x_plot_center</span>
@@ -1043,10 +1258,16 @@
                     <span class="n">dy_arrow</span> <span class="o">=</span> <span class="mf">0.</span>
 
                     <span class="c1"># Arrow position in x</span>
-                    <span class="c1"># Define the direction for positive values</span>
-                    <span class="n">x_arrow</span> <span class="o">=</span> <span class="n">x</span><span class="o">-</span><span class="n">arrow_width</span><span class="p">(</span><span class="n">value</span><span class="p">)</span><span class="o">/</span><span class="mf">2.</span>
-                    <span class="n">dx_arrow</span> <span class="o">=</span> <span class="n">arrow_width</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
-
+                    <span class="k">if</span> <span class="n">el</span><span class="o">.</span><span class="n">angle</span> <span class="o">==</span> <span class="n">EAST</span><span class="p">:</span>
+                        <span class="c1"># Define the direction for positive values</span>
+                        <span class="c1"># and the positive node on the east</span>
+                        <span class="n">x_arrow</span> <span class="o">=</span> <span class="n">x</span><span class="o">-</span><span class="n">arrow_width</span><span class="p">(</span><span class="n">value</span><span class="p">)</span><span class="o">/</span><span class="mf">2.</span>
+                        <span class="n">dx_arrow</span> <span class="o">=</span> <span class="n">arrow_width</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+                    <span class="k">elif</span> <span class="n">el</span><span class="o">.</span><span class="n">angle</span> <span class="o">==</span> <span class="n">WEST</span><span class="p">:</span>
+                        <span class="c1"># Define the direction for positive values</span>
+                        <span class="c1"># and the positive node on the west</span>
+                        <span class="n">x_arrow</span> <span class="o">=</span> <span class="n">x</span><span class="o">+</span><span class="n">arrow_width</span><span class="p">(</span><span class="n">value</span><span class="p">)</span><span class="o">/</span><span class="mf">2.</span>
+                        <span class="n">dx_arrow</span> <span class="o">=</span> <span class="o">-</span><span class="n">arrow_width</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
 
                 <span class="k">if</span> <span class="n">el</span><span class="o">.</span><span class="n">angle</span><span class="o">==</span><span class="n">NORTH</span> <span class="ow">or</span> <span class="n">el</span><span class="o">.</span><span class="n">angle</span><span class="o">==</span><span class="n">SOUTH</span><span class="p">:</span>
                     <span class="c1"># Case of vertical element</span>
@@ -1063,10 +1284,18 @@
                     <span class="n">x_arrow</span> <span class="o">=</span> <span class="n">x</span><span class="o">-</span><span class="n">pp</span><span class="p">[</span><span class="s2">&quot;normal_mode_label&quot;</span><span class="p">][</span><span class="s2">&quot;y_arrow&quot;</span><span class="p">]</span>
                     <span class="n">dx_arrow</span> <span class="o">=</span> <span class="mf">0.</span>
                     
-                    <span class="c1"># Arrow position in x</span>
-                    <span class="c1"># Define the direction for positive values</span>
-                    <span class="n">y_arrow</span> <span class="o">=</span> <span class="n">y</span><span class="o">-</span><span class="n">arrow_width</span><span class="p">(</span><span class="n">value</span><span class="p">)</span><span class="o">/</span><span class="mf">2.</span>
-                    <span class="n">dy_arrow</span> <span class="o">=</span> <span class="n">arrow_width</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+                    
+                    <span class="c1"># Arrow position in y</span>
+                    <span class="k">if</span> <span class="n">el</span><span class="o">.</span><span class="n">angle</span><span class="o">==</span><span class="n">NORTH</span><span class="p">:</span>
+                        <span class="c1"># Define the direction for positive values</span>
+                        <span class="c1"># and the positive node on the north</span>
+                        <span class="n">y_arrow</span> <span class="o">=</span> <span class="n">y</span><span class="o">-</span><span class="n">arrow_width</span><span class="p">(</span><span class="n">value</span><span class="p">)</span><span class="o">/</span><span class="mf">2.</span>
+                        <span class="n">dy_arrow</span> <span class="o">=</span> <span class="n">arrow_width</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+                    <span class="k">elif</span> <span class="n">el</span><span class="o">.</span><span class="n">angle</span><span class="o">==</span><span class="n">SOUTH</span><span class="p">:</span>
+                        <span class="c1"># Define the direction for positive values</span>
+                        <span class="c1"># and the positive node on the south</span>
+                        <span class="n">y_arrow</span> <span class="o">=</span> <span class="n">y</span><span class="o">+</span><span class="n">arrow_width</span><span class="p">(</span><span class="n">value</span><span class="p">)</span><span class="o">/</span><span class="mf">2.</span>
+                        <span class="n">dy_arrow</span> <span class="o">=</span> <span class="o">-</span><span class="n">arrow_width</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
 
 
                 <span class="c1"># Add the arrow</span>
@@ -1122,37 +1351,27 @@
                 <span class="n">value_text</span><span class="o">=</span> <span class="s2">&quot;|Q|&quot;</span>
             <span class="n">value_text</span> <span class="o">+=</span> <span class="sa">u</span><span class="s2">&quot;exp(i</span><span class="se">\u03B8</span><span class="s2">)&quot;</span>
         
-        <span class="n">x_legend</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">get_xlim</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span><span class="o">+</span><span class="mf">0.4</span>
-        <span class="n">y_legend</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">get_ylim</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span><span class="o">+</span><span class="mf">0.25</span>
+            <span class="n">x_legend</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">get_xlim</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span><span class="o">+</span><span class="mf">0.4</span>
+            <span class="n">y_legend</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">get_ylim</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span><span class="o">+</span><span class="mf">0.25</span>
 
-        <span class="n">legend_text_kwargs</span> <span class="o">=</span> <span class="p">{</span>
-            <span class="s1">&#39;ha&#39;</span><span class="p">:</span><span class="s1">&#39;center&#39;</span><span class="p">,</span>
-            <span class="s1">&#39;va&#39;</span><span class="p">:</span><span class="s1">&#39;center&#39;</span><span class="p">,</span>
-            <span class="s1">&#39;fontsize&#39;</span><span class="p">:</span><span class="mi">12</span><span class="p">,</span> 
-            <span class="s1">&#39;weight&#39;</span><span class="p">:</span><span class="s1">&#39;normal&#39;</span>
-        <span class="p">}</span>
-        
-        <span class="n">ax</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="n">x_legend</span><span class="p">,</span> <span class="n">y_legend</span><span class="p">,</span>
-            <span class="n">value_text</span><span class="p">,</span>
-            <span class="o">**</span><span class="n">legend_text_kwargs</span><span class="p">)</span>
+            <span class="n">legend_text_kwargs</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="s1">&#39;ha&#39;</span><span class="p">:</span><span class="s1">&#39;center&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;va&#39;</span><span class="p">:</span><span class="s1">&#39;center&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;fontsize&#39;</span><span class="p">:</span><span class="mi">12</span><span class="p">,</span> 
+                <span class="s1">&#39;weight&#39;</span><span class="p">:</span><span class="s1">&#39;normal&#39;</span>
+            <span class="p">}</span>
+            
+            <span class="n">ax</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="n">x_legend</span><span class="p">,</span> <span class="n">y_legend</span><span class="p">,</span>
+                <span class="n">value_text</span><span class="p">,</span>
+                <span class="o">**</span><span class="n">legend_text_kwargs</span><span class="p">)</span>
 
-        <span class="n">superscript_text</span> <span class="o">=</span> <span class="sa">u</span><span class="s2">&quot;i</span><span class="se">\u03B8</span><span class="s2">&quot;</span>
-        <span class="n">superscript_dx</span> <span class="o">=</span> <span class="mf">0.25</span>
-        <span class="n">superscript_dy</span> <span class="o">=</span> <span class="mf">0.06</span>
-
-        <span class="c1"># legend_text_kwargs[&#39;fontsize&#39;]=8</span>
-
-        <span class="c1"># ax.text(x_legend+superscript_dx, y_legend+superscript_dy,</span>
-        <span class="c1">#     superscript_text,</span>
-        <span class="c1">#     **legend_text_kwargs)</span>
-
-        <span class="n">v01</span> <span class="o">=</span> <span class="mf">0.7</span>
-        <span class="n">ax</span><span class="o">.</span><span class="n">arrow</span><span class="p">(</span><span class="n">x_legend</span><span class="o">-</span><span class="n">arrow_width</span><span class="p">(</span><span class="n">value_01</span> <span class="o">=</span> <span class="n">v01</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span> 
-                <span class="n">y_legend</span><span class="o">-</span><span class="mf">0.15</span><span class="p">,</span>
-                <span class="n">arrow_width</span><span class="p">(</span><span class="n">value_01</span> <span class="o">=</span> <span class="n">v01</span><span class="p">),</span> <span class="mi">0</span><span class="p">,</span>
-                <span class="n">fc</span><span class="o">=</span><span class="n">pp</span><span class="p">[</span><span class="s1">&#39;normal_mode_arrow&#39;</span><span class="p">][</span><span class="s1">&#39;color&#39;</span><span class="p">],</span>
-                <span class="n">ec</span><span class="o">=</span><span class="n">pp</span><span class="p">[</span><span class="s1">&#39;normal_mode_arrow&#39;</span><span class="p">][</span><span class="s1">&#39;color&#39;</span><span class="p">],</span> 
-                <span class="o">**</span><span class="n">arrow_kwargs</span><span class="p">(</span><span class="n">value_01</span> <span class="o">=</span><span class="n">v01</span><span class="p">))</span>
+            <span class="n">v01</span> <span class="o">=</span> <span class="mf">0.7</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">arrow</span><span class="p">(</span><span class="n">x_legend</span><span class="o">-</span><span class="n">arrow_width</span><span class="p">(</span><span class="n">value_01</span> <span class="o">=</span> <span class="n">v01</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span> 
+                    <span class="n">y_legend</span><span class="o">-</span><span class="mf">0.15</span><span class="p">,</span>
+                    <span class="n">arrow_width</span><span class="p">(</span><span class="n">value_01</span> <span class="o">=</span> <span class="n">v01</span><span class="p">),</span> <span class="mi">0</span><span class="p">,</span>
+                    <span class="n">fc</span><span class="o">=</span><span class="n">pp</span><span class="p">[</span><span class="s1">&#39;normal_mode_arrow&#39;</span><span class="p">][</span><span class="s1">&#39;color&#39;</span><span class="p">],</span>
+                    <span class="n">ec</span><span class="o">=</span><span class="n">pp</span><span class="p">[</span><span class="s1">&#39;normal_mode_arrow&#39;</span><span class="p">][</span><span class="s1">&#39;color&#39;</span><span class="p">],</span> 
+                    <span class="o">**</span><span class="n">arrow_kwargs</span><span class="p">(</span><span class="n">value_01</span> <span class="o">=</span><span class="n">v01</span><span class="p">))</span>
        
 
         <span class="k">if</span> <span class="n">plot</span> <span class="o">==</span> <span class="kc">True</span><span class="p">:</span>
@@ -1291,7 +1510,7 @@
 
 <span class="sd">    &#39;&#39;&#39;</span>
 
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="p">,</span> <span class="n">edit</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">plot</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">print_network</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span><span class="n">_unittesting</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="p">,</span> <span class="n">edit</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">plot</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">print_network</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span><span class="n">_unittesting</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 
         <span class="c1"># Note: this will also give a valid path if filename was specified using </span>
         <span class="c1"># an absolute path</span>
@@ -1301,8 +1520,13 @@
             <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
                 <span class="k">pass</span>
         <span class="k">except</span> <span class="ne">FileNotFoundError</span><span class="p">:</span>
-            <span class="c1"># if file does not exist, also open the gui</span>
+            <span class="c1"># if file does not exist force the gui to open</span>
             <span class="n">edit</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="c1"># and create the folder </span>
+            <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">filename</span><span class="p">),</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="c1"># ... and file</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+                <span class="k">pass</span>
 
         <span class="k">if</span> <span class="n">edit</span><span class="p">:</span>
             <span class="n">run</span><span class="p">([</span><span class="n">sys</span><span class="o">.</span><span class="n">executable</span><span class="p">,</span>
@@ -1356,6 +1580,7 @@
 <span class="sd">        list of Component objects</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
+    <span class="nd">@timeit</span>
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">netlist</span><span class="p">):</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">netlist</span> <span class="o">=</span> <span class="n">netlist</span>
@@ -1364,8 +1589,10 @@
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;There are no components in the circuit&quot;</span><span class="p">)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_connected</span><span class="p">():</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;There are two sub-circuits which are not connected&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">has_shorts</span><span class="p">():</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Your circuit appears to be open or shorted making the analysis impossible&quot;</span><span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">has_opens</span><span class="p">():</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Analyzing an open circuit is impossible&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Your circuit appears to be open or shorted making the analysis impossible&quot;</span><span class="p">)</span>
 
     <span class="nd">@timeit</span>
     <span class="k">def</span> <span class="nf">is_connected</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> 
@@ -1402,10 +1629,50 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="k">return</span> <span class="kc">True</span>
 
+    <span class="k">def</span> <span class="nf">has_shorts</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Determines if there is an short circuit. </span>
+
+<span class="sd">        For each node, we construct the network where</span>
+<span class="sd">        that node has been removed. </span>
+
+<span class="sd">        If the removal of that node leads to two distinct, </span>
+<span class="sd">        non-connected circuits, then that node was a point </span>
+<span class="sd">        at which the circuit was being shorted.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">for</span> <span class="n">node_to_remove</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">net_dict</span><span class="p">)):</span>
+            <span class="c1"># create a copy of the network</span>
+            <span class="n">partial_network</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+
+            <span class="c1"># remove the node_to_remove from the network</span>
+            <span class="k">for</span> <span class="n">other_node</span> <span class="ow">in</span> <span class="n">partial_network</span><span class="o">.</span><span class="n">net_dict</span><span class="p">[</span><span class="n">node_to_remove</span><span class="p">]:</span>
+                <span class="k">del</span> <span class="n">partial_network</span><span class="o">.</span><span class="n">net_dict</span><span class="p">[</span><span class="n">other_node</span><span class="p">][</span><span class="n">node_to_remove</span><span class="p">]</span>
+            <span class="k">del</span> <span class="n">partial_network</span><span class="o">.</span><span class="n">net_dict</span><span class="p">[</span><span class="n">node_to_remove</span><span class="p">]</span>
+            
+            <span class="c1"># check if that network is connected</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">partial_network</span><span class="o">.</span><span class="n">is_connected</span><span class="p">():</span>
+                <span class="k">return</span> <span class="kc">True</span>
+
+        <span class="c1"># No shorts were found</span>
+        <span class="k">return</span> <span class="kc">False</span>
+        
     <span class="k">def</span> <span class="nf">has_opens</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">for</span> <span class="n">node</span><span class="p">,</span> <span class="n">connections</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">net_dict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Determines if there is an open connection in the </span>
+<span class="sd">        circuit. </span>
+
+<span class="sd">        If there are only two nodes in the circuit, it cannot be open. </span>
+<span class="sd">        This is because through another check we are imposing that the circuit has at least</span>
+<span class="sd">        two types of components, one inductive, one capacitive.</span>
+<span class="sd">        So a two node circuit will at minimum be an LC or JC circuit.</span>
+
+<span class="sd">        If there are more than two nodes, and one of the nodes is connected </span>
+<span class="sd">        to only one other, the circuit is open.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">connections</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">net_dict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
             <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">connections</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">net_dict</span><span class="p">)</span><span class="o">&gt;</span><span class="mi">2</span><span class="p">:</span>
                 <span class="k">return</span> <span class="kc">True</span>
+        <span class="k">return</span> <span class="kc">False</span>
 
     <span class="k">def</span> <span class="nf">parse_netlist</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 
@@ -1520,6 +1787,8 @@
             <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">el</span><span class="p">,</span><span class="n">W</span><span class="p">):</span>
                 <span class="n">el</span><span class="o">.</span><span class="n">node_minus</span> <span class="o">=</span> <span class="n">plot_node_to_new_node</span><span class="p">(</span><span class="n">el</span><span class="o">.</span><span class="n">node_minus</span><span class="p">)</span>
                 <span class="n">el</span><span class="o">.</span><span class="n">node_plus</span> <span class="o">=</span> <span class="n">plot_node_to_new_node</span><span class="p">(</span><span class="n">el</span><span class="o">.</span><span class="n">node_plus</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">el</span><span class="o">.</span><span class="n">node_minus</span> <span class="o">==</span> <span class="n">el</span><span class="o">.</span><span class="n">node_plus</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Your circuit appears to be shorted, making the analysis impossible&quot;</span><span class="p">)</span>
                 <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="p">[</span><span class="n">el</span><span class="o">.</span><span class="n">node_minus</span><span class="p">,</span> <span class="n">el</span><span class="o">.</span><span class="n">node_plus</span><span class="p">]:</span>
                     <span class="k">if</span> <span class="n">n</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">nodes</span><span class="p">:</span>
                         <span class="bp">self</span><span class="o">.</span><span class="n">nodes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
@@ -1547,10 +1816,6 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">is_lossy</span> <span class="o">=</span> <span class="n">is_lossy</span>
         <span class="n">ntr</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="c1"># ntr stands for Network To Reduce</span>
 
-        <span class="c1"># remove nodes which only have on type of element</span>
-        <span class="c1"># connections to other nodes</span>
-        <span class="n">ntr</span><span class="o">.</span><span class="n">simplify</span><span class="p">()</span>
-
         <span class="c1"># compute conductance matrix</span>
         <span class="n">ntr</span><span class="o">.</span><span class="n">compute_RLC_matrices</span><span class="p">()</span>
 
@@ -1560,29 +1825,26 @@
             <span class="n">char_poly</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">collect</span><span class="p">(</span><span class="n">sp</span><span class="o">.</span><span class="n">expand</span><span class="p">(</span><span class="n">char_poly</span><span class="p">),</span> <span class="n">w</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">char_poly_order</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">polys</span><span class="o">.</span><span class="n">polytools</span><span class="o">.</span><span class="n">degree</span><span class="p">(</span>
                 <span class="n">char_poly</span><span class="p">,</span> <span class="n">gen</span><span class="o">=</span><span class="n">w</span><span class="p">)</span>  <span class="c1"># Order of the polynomial</span>
-            <span class="c1"># Get polynomial coefficients, index 0 = highest order term</span>
+            <span class="c1"># Get polynomial coefficients, index 0 = lowest order term</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">char_poly_coeffs_analytical</span> <span class="o">=</span>\
-                <span class="p">[</span><span class="n">char_poly</span><span class="o">.</span><span class="n">coeff</span><span class="p">(</span><span class="n">w</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">char_poly_order</span><span class="o">+</span><span class="mi">1</span><span class="p">)[::</span><span class="o">-</span><span class="mi">1</span><span class="p">]]</span> 
+                <span class="p">[</span><span class="n">char_poly</span><span class="o">.</span><span class="n">coeff</span><span class="p">(</span><span class="n">w</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">char_poly_order</span><span class="o">+</span><span class="mi">1</span><span class="p">)]</span> 
         <span class="k">else</span><span class="p">:</span>
             <span class="n">w2</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">Symbol</span><span class="p">(</span><span class="s1">&#39;w2&#39;</span><span class="p">)</span>
             <span class="n">char_poly</span> <span class="o">=</span> <span class="n">determinant</span><span class="p">((</span><span class="o">-</span><span class="n">ntr</span><span class="o">.</span><span class="n">RLC_matrices</span><span class="p">[</span><span class="s1">&#39;L&#39;</span><span class="p">]</span><span class="o">+</span><span class="n">w2</span><span class="o">*</span><span class="n">ntr</span><span class="o">.</span><span class="n">RLC_matrices</span><span class="p">[</span><span class="s1">&#39;C&#39;</span><span class="p">]))</span>
             <span class="n">char_poly</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">collect</span><span class="p">(</span><span class="n">sp</span><span class="o">.</span><span class="n">expand</span><span class="p">(</span><span class="n">char_poly</span><span class="p">),</span> <span class="n">w2</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">char_poly_order</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">polys</span><span class="o">.</span><span class="n">polytools</span><span class="o">.</span><span class="n">degree</span><span class="p">(</span><span class="n">char_poly</span><span class="p">,</span> <span class="n">gen</span><span class="o">=</span><span class="n">w2</span><span class="p">)</span>  <span class="c1"># Order of the polynomial</span>
-            <span class="c1"># Get polynomial coefficients, index 0 = highest order term</span>
+            <span class="c1"># Get polynomial coefficients, index 0 = lowest order term</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">char_poly_coeffs_analytical</span> <span class="o">=</span>\
-                <span class="p">[</span><span class="n">char_poly</span><span class="o">.</span><span class="n">coeff</span><span class="p">(</span><span class="n">w2</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">char_poly_order</span><span class="o">+</span><span class="mi">1</span><span class="p">)[::</span><span class="o">-</span><span class="mi">1</span><span class="p">]]</span>  
+                <span class="p">[</span><span class="n">char_poly</span><span class="o">.</span><span class="n">coeff</span><span class="p">(</span><span class="n">w2</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">char_poly_order</span><span class="o">+</span><span class="mi">1</span><span class="p">)]</span>  
                 
         
         <span class="c1"># Divide by w if possible</span>
-        <span class="n">n</span><span class="o">=</span><span class="mi">1</span>
-        <span class="k">while</span> <span class="bp">self</span><span class="o">.</span><span class="n">char_poly_coeffs_analytical</span><span class="p">[</span><span class="o">-</span><span class="n">n</span><span class="p">]</span><span class="o">==</span><span class="mi">0</span><span class="p">:</span>
+        <span class="n">n</span><span class="o">=</span><span class="mi">0</span>
+        <span class="k">while</span> <span class="bp">self</span><span class="o">.</span><span class="n">char_poly_coeffs_analytical</span><span class="p">[</span><span class="n">n</span><span class="p">]</span><span class="o">==</span><span class="mi">0</span><span class="p">:</span>
             <span class="n">n</span><span class="o">+=</span><span class="mi">1</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">char_poly_coeffs_analytical</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">char_poly_coeffs_analytical</span><span class="p">[:</span><span class="bp">self</span><span class="o">.</span><span class="n">char_poly_order</span><span class="o">+</span><span class="mi">2</span><span class="o">-</span><span class="n">n</span><span class="p">]</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">char_poly_coeffs_analytical</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">char_poly_coeffs_analytical</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">char_poly_coeffs_analytical</span><span class="p">[</span><span class="n">n</span><span class="p">:]</span>
 
-    <span class="k">def</span> <span class="nf">simplify</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="c1"># TODO write method to speed up determinant calculation</span>
-        <span class="k">pass</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">char_poly_coeffs_analytical</span>
 
     <span class="k">def</span> <span class="nf">compute_RLC_matrices</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">N_nodes</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">net_dict</span><span class="p">)</span>
@@ -1602,11 +1864,20 @@
                         <span class="bp">self</span><span class="o">.</span><span class="n">RLC_matrices</span><span class="p">[</span><span class="n">k</span><span class="p">][</span><span class="n">i</span><span class="p">,</span><span class="n">i</span><span class="p">]</span> <span class="o">+=</span> <span class="n">RLC_matrix_components</span><span class="p">[</span><span class="n">k</span><span class="p">]</span>
                         <span class="bp">self</span><span class="o">.</span><span class="n">RLC_matrices</span><span class="p">[</span><span class="n">k</span><span class="p">][</span><span class="n">j</span><span class="p">,</span><span class="n">j</span><span class="p">]</span> <span class="o">+=</span> <span class="n">RLC_matrix_components</span><span class="p">[</span><span class="n">k</span><span class="p">]</span>
 
+        <span class="c1"># count the number of coefficients in each row</span>
+        <span class="n">number_coefficients</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">N_nodes</span><span class="p">))</span>
+        <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">RLC_matrices</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">N_nodes</span><span class="p">):</span>
+                <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">N_nodes</span><span class="p">):</span>
+                    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">RLC_matrices</span><span class="p">[</span><span class="n">k</span><span class="p">][</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">]</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+                        <span class="n">number_coefficients</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">+=</span><span class="mi">1</span>
+
 
         <span class="c1"># set a ground </span>
+        <span class="n">ground_node</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">number_coefficients</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">RLC_matrices</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">RLC_matrices</span><span class="p">[</span><span class="n">k</span><span class="p">]</span><span class="o">.</span><span class="n">row_del</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">RLC_matrices</span><span class="p">[</span><span class="n">k</span><span class="p">]</span><span class="o">.</span><span class="n">col_del</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">RLC_matrices</span><span class="p">[</span><span class="n">k</span><span class="p">]</span><span class="o">.</span><span class="n">row_del</span><span class="p">(</span><span class="n">ground_node</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">RLC_matrices</span><span class="p">[</span><span class="n">k</span><span class="p">]</span><span class="o">.</span><span class="n">col_del</span><span class="p">(</span><span class="n">ground_node</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">connect</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">element</span><span class="p">,</span> <span class="n">node_minus</span><span class="p">,</span> <span class="n">node_plus</span><span class="p">):</span>
         <span class="sd">&#39;&#39;&#39;</span>
@@ -1682,6 +1953,7 @@
         <span class="k">for</span> <span class="n">mesh_branch</span> <span class="ow">in</span> <span class="n">mesh_to_add</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="o">*</span><span class="n">mesh_branch</span><span class="p">)</span>
 
+    <span class="nd">@timeit</span>
     <span class="k">def</span> <span class="nf">admittance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node_minus</span><span class="p">,</span> <span class="n">node_plus</span><span class="p">):</span>
         <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">        Compute the admittance of the network between two nodes </span>
@@ -1993,7 +2265,7 @@
             <span class="k">elif</span> <span class="nb">type</span><span class="p">(</span><span class="n">a</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">str</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">label</span> <span class="o">=</span> <span class="n">a</span>
             <span class="k">else</span><span class="p">:</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="n">a</span>
 
                 <span class="c1"># Check its not too big, too small, or negative</span>
                 <span class="c1"># Note that values above max(min)_float would then</span>
@@ -2024,6 +2296,9 @@
         <span class="k">return</span> <span class="n">sp</span><span class="o">.</span><span class="n">Symbol</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">label</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_set_component_lists</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">label</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="s1">&#39; &#39;</span><span class="p">,</span> <span class="s1">&#39;None&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">]:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_circuit</span><span class="o">.</span><span class="n">components</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">label</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span>
+
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">label</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="s1">&#39; &#39;</span><span class="p">,</span> <span class="s1">&#39;None&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">]:</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">label</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_circuit</span><span class="o">.</span><span class="n">_no_value_components</span><span class="p">:</span>
                 <span class="c1"># raise ValueError(</span>
@@ -2032,87 +2307,53 @@
             <span class="k">else</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_circuit</span><span class="o">.</span><span class="n">_no_value_components</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">label</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">_flux</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">w</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_flux_zpf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mode</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_circuit</span><span class="o">.</span><span class="n">_set_zeta</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="n">w</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_circuit</span><span class="o">.</span><span class="n">zeta</span><span class="p">[</span><span class="n">mode</span><span class="p">]</span>
         <span class="k">try</span><span class="p">:</span>
-            <span class="n">tr</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_circuit</span><span class="o">.</span><span class="n">_flux_transformation_dict</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">node_minus</span><span class="p">,</span>
-                                                    <span class="bp">self</span><span class="o">.</span><span class="n">node_plus</span><span class="p">]</span>
+            <span class="n">tr</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_circuit</span><span class="o">.</span><span class="n">_flux_transformation_dict</span><span class="p">[</span>
+                                        <span class="bp">self</span><span class="o">.</span><span class="n">_circuit</span><span class="o">.</span><span class="n">ref_elt</span><span class="p">[</span><span class="n">mode</span><span class="p">]</span><span class="o">.</span><span class="n">node_minus</span><span class="p">,</span>
+                                        <span class="bp">self</span><span class="o">.</span><span class="n">_circuit</span><span class="o">.</span><span class="n">ref_elt</span><span class="p">[</span><span class="n">mode</span><span class="p">]</span><span class="o">.</span><span class="n">node_plus</span><span class="p">,</span>
+                                        <span class="bp">self</span><span class="o">.</span><span class="n">node_minus</span><span class="p">,</span>
+                                        <span class="bp">self</span><span class="o">.</span><span class="n">node_plus</span><span class="p">]</span>
         <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
             <span class="n">tr_analytical</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_circuit</span><span class="o">.</span><span class="n">_network</span><span class="o">.</span><span class="n">transfer</span><span class="p">(</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_circuit</span><span class="o">.</span><span class="n">ref_elt</span><span class="o">.</span><span class="n">node_minus</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_circuit</span><span class="o">.</span><span class="n">ref_elt</span><span class="o">.</span><span class="n">node_plus</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">node_minus</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">node_plus</span><span class="p">)</span>
-            <span class="n">tr_undecorated</span> <span class="o">=</span> <span class="n">lambdify</span><span class="p">([</span><span class="s1">&#39;w&#39;</span><span class="p">]</span><span class="o">+</span><span class="bp">self</span><span class="o">.</span><span class="n">_circuit</span><span class="o">.</span><span class="n">_no_value_components</span><span class="p">,</span><span class="n">tr_analytical</span><span class="p">,</span> <span class="s2">&quot;numpy&quot;</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_circuit</span><span class="o">.</span><span class="n">ref_elt</span><span class="p">[</span><span class="n">mode</span><span class="p">]</span><span class="o">.</span><span class="n">node_minus</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_circuit</span><span class="o">.</span><span class="n">ref_elt</span><span class="p">[</span><span class="n">mode</span><span class="p">]</span><span class="o">.</span><span class="n">node_plus</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">node_minus</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">node_plus</span><span class="p">)</span>
+            <span class="n">tr</span> <span class="o">=</span> <span class="n">lambdify</span><span class="p">([</span><span class="s1">&#39;w&#39;</span><span class="p">]</span><span class="o">+</span><span class="bp">self</span><span class="o">.</span><span class="n">_circuit</span><span class="o">.</span><span class="n">_no_value_components</span><span class="p">,</span><span class="n">tr_analytical</span><span class="p">,</span> <span class="s2">&quot;numpy&quot;</span><span class="p">)</span>
+            <span class="k">def</span> <span class="nf">tr_minus</span><span class="p">(</span><span class="n">w</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+                <span class="k">return</span> <span class="o">-</span><span class="n">tr</span><span class="p">(</span><span class="n">w</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
             
-            <span class="nd">@vectorize</span>
-            <span class="nd">@safely_evaluate</span>
-            <span class="k">def</span> <span class="nf">tr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">w</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-                <span class="k">return</span> <span class="n">tr_undecorated</span><span class="p">(</span><span class="n">w</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-
-            <span class="nd">@vectorize</span>
-            <span class="nd">@safely_evaluate</span>
-            <span class="k">def</span> <span class="nf">tr_minus</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">w</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-                <span class="k">return</span> <span class="o">-</span><span class="n">tr_undecorated</span><span class="p">(</span><span class="n">w</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-
-            <span class="bp">self</span><span class="o">.</span><span class="n">_circuit</span><span class="o">.</span><span class="n">_flux_transformation_dict</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">node_minus</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">node_plus</span><span class="p">]</span> <span class="o">=</span> <span class="n">tr</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_circuit</span><span class="o">.</span><span class="n">_flux_transformation_dict</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">node_plus</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">node_minus</span><span class="p">]</span> <span class="o">=</span> <span class="n">tr_minus</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_circuit</span><span class="o">.</span><span class="n">_flux_transformation_dict</span><span class="p">[</span>
+                                        <span class="bp">self</span><span class="o">.</span><span class="n">_circuit</span><span class="o">.</span><span class="n">ref_elt</span><span class="p">[</span><span class="n">mode</span><span class="p">]</span><span class="o">.</span><span class="n">node_minus</span><span class="p">,</span>
+                                        <span class="bp">self</span><span class="o">.</span><span class="n">_circuit</span><span class="o">.</span><span class="n">ref_elt</span><span class="p">[</span><span class="n">mode</span><span class="p">]</span><span class="o">.</span><span class="n">node_plus</span><span class="p">,</span>
+                                        <span class="bp">self</span><span class="o">.</span><span class="n">node_minus</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">node_plus</span><span class="p">]</span> <span class="o">=</span> <span class="n">tr</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_circuit</span><span class="o">.</span><span class="n">_flux_transformation_dict</span><span class="p">[</span>
+                                        <span class="bp">self</span><span class="o">.</span><span class="n">_circuit</span><span class="o">.</span><span class="n">ref_elt</span><span class="p">[</span><span class="n">mode</span><span class="p">]</span><span class="o">.</span><span class="n">node_minus</span><span class="p">,</span>
+                                        <span class="bp">self</span><span class="o">.</span><span class="n">_circuit</span><span class="o">.</span><span class="n">ref_elt</span><span class="p">[</span><span class="n">mode</span><span class="p">]</span><span class="o">.</span><span class="n">node_plus</span><span class="p">,</span>
+                                        <span class="bp">self</span><span class="o">.</span><span class="n">node_plus</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">node_minus</span><span class="p">]</span> <span class="o">=</span> <span class="n">tr_minus</span>
 
         <span class="c1"># Following Black-box quantization, </span>
         <span class="c1"># we assume the losses to be neglegible by </span>
         <span class="c1"># removing the imaginary part of the eigenfrequency</span>
-        <span class="n">w</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">w</span><span class="p">)</span>
+        <span class="c1"># w = np.real(w)</span>
         
         <span class="c1"># Calculation of phi_zpf of the reference junction/inductor</span>
         <span class="c1">#  = sqrt(hbar/w/ImdY[w])</span>
         <span class="c1"># The minus is there since 1/Im(Y)  = -Im(1/Y)</span>
-        <span class="n">phi_zpf_r</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">hbar</span><span class="o">/</span><span class="n">w</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">imag</span><span class="p">(</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">_circuit</span><span class="o">.</span><span class="n">_inverse_of_dY</span><span class="p">(</span><span class="n">w</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)))</span>
+        <span class="n">phi_zpf_r</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_circuit</span><span class="o">.</span><span class="n">ref_elt</span><span class="p">[</span><span class="n">mode</span><span class="p">]</span><span class="o">.</span><span class="n">_flux_zpf_r</span><span class="p">(</span><span class="n">w</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
         <span class="c1"># Note that the flux defined here </span>
-        <span class="n">phi</span> <span class="o">=</span> <span class="n">tr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">w</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span><span class="o">*</span><span class="n">phi_zpf_r</span>
+        <span class="n">phi</span> <span class="o">=</span> <span class="n">tr</span><span class="p">(</span><span class="n">w</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span><span class="o">*</span><span class="n">phi_zpf_r</span>
         <span class="c1"># is complex.</span>
-        <span class="c1"># This causes a problem for the quantization:</span>
-        <span class="c1"># the prefactor of a+a.dag will be complex</span>
-        <span class="c1"># making the flux operator non-hermitian</span>
-        <span class="c1"># This problem is adressed in the zpf method</span>
 
         <span class="k">return</span> <span class="n">phi</span>
-
-    <span class="k">def</span> <span class="nf">_convert_flux</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">flux</span><span class="p">,</span> <span class="n">w</span><span class="p">,</span><span class="n">quantity</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="k">if</span> <span class="n">quantity</span> <span class="o">==</span> <span class="s1">&#39;flux&#39;</span><span class="p">:</span>
-            <span class="n">phi_0</span> <span class="o">=</span> <span class="n">hbar</span><span class="o">/</span><span class="mf">2.</span><span class="o">/</span><span class="n">e</span>
-            <span class="k">return</span> <span class="n">flux</span><span class="o">/</span><span class="n">phi_0</span>
-        <span class="k">if</span> <span class="n">quantity</span> <span class="o">==</span> <span class="s1">&#39;voltage&#39;</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">flux</span><span class="o">*</span><span class="mi">1</span><span class="n">j</span><span class="o">*</span><span class="n">w</span>
-        <span class="k">if</span> <span class="n">quantity</span> <span class="o">==</span> <span class="s1">&#39;current&#39;</span><span class="p">:</span>
-            <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;w&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">w</span>
-            <span class="n">Y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_admittance</span><span class="p">()</span>
-            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">Y</span><span class="p">,</span> <span class="n">Number</span><span class="p">):</span>
-                <span class="k">pass</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="n">Y</span> <span class="o">=</span> <span class="n">Y</span><span class="o">.</span><span class="n">evalf</span><span class="p">(</span><span class="n">subs</span><span class="o">=</span><span class="n">kwargs</span><span class="p">)</span>
-            <span class="k">return</span> <span class="nb">complex</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_convert_flux</span><span class="p">(</span><span class="n">flux</span><span class="p">,</span> <span class="n">w</span><span class="p">,</span><span class="s1">&#39;voltage&#39;</span><span class="p">)</span><span class="o">*</span><span class="n">Y</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">quantity</span> <span class="o">==</span> <span class="s1">&#39;charge&#39;</span><span class="p">:</span>
-            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_convert_flux</span><span class="p">(</span><span class="n">flux</span><span class="p">,</span> <span class="n">w</span><span class="p">,</span><span class="s1">&#39;current&#39;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span><span class="o">/</span><span class="mi">1</span><span class="n">j</span><span class="o">/</span><span class="n">w</span><span class="o">/</span><span class="n">e</span>
 
 
     <span class="k">def</span> <span class="nf">_to_string</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">use_unicode</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">to_string</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">unit</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">label</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="n">use_unicode</span><span class="o">=</span><span class="n">use_unicode</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">_zpf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">w</span><span class="p">,</span> <span class="n">quantity</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        
-        <span class="c1"># Note that the flux defined in _flux</span>
-        <span class="n">phi_zpf</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_flux</span><span class="p">(</span><span class="n">w</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-        <span class="c1"># is complex.</span>
-        <span class="c1"># This causes a problem for the quantization:</span>
-        <span class="c1"># the prefactor of a+a.dag will be complex</span>
-        <span class="c1"># making the flux operator non-hermitian</span>
-        <span class="c1"># In the high-Q limit we are assuming for quantization </span>
-        <span class="c1"># phi_zpf = a+ib, where b&lt;&lt;a for inductors/junctions/capacitors</span>
-        <span class="c1"># phi_zpf = a+ib, where b&gt;&gt;a for resistors</span>
 
-        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">R</span><span class="p">):</span>
-            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_convert_flux</span><span class="p">(</span><span class="mi">1</span><span class="n">j</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">imag</span><span class="p">(</span><span class="n">phi_zpf</span><span class="p">),</span> <span class="n">w</span><span class="p">,</span><span class="n">quantity</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_convert_flux</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">phi_zpf</span><span class="p">),</span> <span class="n">w</span><span class="p">,</span><span class="n">quantity</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-
-
+    <span class="nd">@vectorize_kwargs</span><span class="p">(</span><span class="n">exclude</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;quantity&#39;</span><span class="p">,</span><span class="s1">&#39;mode&#39;</span><span class="p">])</span>
     <span class="k">def</span> <span class="nf">zpf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mode</span><span class="p">,</span> <span class="n">quantity</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="sa">r</span><span class="sd">&#39;&#39;&#39;Returns contribution of a mode to the zero-point fluctuations of a quantity for this component.</span>
 
@@ -2130,7 +2371,7 @@
 <span class="sd">        quantity:       string</span>
 <span class="sd">                        One of &#39;current&#39;, &#39;flux&#39;, &#39;charge&#39;, &#39;voltage&#39;</span>
 <span class="sd">        kwargs:     </span>
-<span class="sd">                    Values for un-specified circuit compoenents, </span>
+<span class="sd">                    Values for un-specified circuit components, </span>
 <span class="sd">                    ex: ``L=1e-9``.</span>
 
 <span class="sd">        Returns</span>
@@ -2162,13 +2403,33 @@
 
 <span class="sd">        Where :math:`Z(\omega)` is this components impedance.</span>
 <span class="sd">        &#39;&#39;&#39;</span>
-        <span class="n">mode_w</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_circuit</span><span class="o">.</span><span class="n">eigenfrequencies</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)[</span><span class="n">mode</span><span class="p">]</span><span class="o">*</span><span class="mf">2.</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_zpf</span><span class="p">(</span><span class="n">mode_w</span><span class="p">,</span> <span class="n">quantity</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">quantity</span> <span class="o">==</span> <span class="s1">&#39;flux&#39;</span><span class="p">:</span>
+            <span class="n">phi_0</span> <span class="o">=</span> <span class="n">hbar</span><span class="o">/</span><span class="mf">2.</span><span class="o">/</span><span class="n">e</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_flux_zpf</span><span class="p">(</span><span class="n">mode</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span><span class="o">/</span><span class="n">phi_0</span>
+        <span class="k">if</span> <span class="n">quantity</span> <span class="o">==</span> <span class="s1">&#39;voltage&#39;</span><span class="p">:</span>
+            <span class="n">phi_zpf</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_flux_zpf</span><span class="p">(</span><span class="n">mode</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+            <span class="c1"># The above will set the eigenfrequencies</span>
+            <span class="n">w</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_circuit</span><span class="o">.</span><span class="n">zeta</span><span class="p">)[</span><span class="n">mode</span><span class="p">]</span>
+            
+            <span class="k">return</span> <span class="n">phi_zpf</span><span class="o">*</span><span class="mi">1</span><span class="n">j</span><span class="o">*</span><span class="n">w</span>
+        <span class="k">if</span> <span class="n">quantity</span> <span class="o">==</span> <span class="s1">&#39;current&#39;</span><span class="p">:</span>
+            <span class="n">Vzpf</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">zpf</span><span class="p">(</span><span class="n">mode</span><span class="p">,</span><span class="s1">&#39;voltage&#39;</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+            <span class="c1"># The above will set the eigenfrequencies</span>
 
-    <span class="k">def</span> <span class="nf">phasor</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mode</span><span class="p">,</span> <span class="n">quantity</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+            <span class="n">kwargs_with_w</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">kwargs</span><span class="p">)</span>
+            <span class="n">kwargs_with_w</span><span class="p">[</span><span class="s1">&#39;w&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_circuit</span><span class="o">.</span><span class="n">zeta</span><span class="p">)[</span><span class="n">mode</span><span class="p">]</span>
+            <span class="n">Y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_admittance</span><span class="p">()</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">Y</span><span class="p">,</span> <span class="n">Number</span><span class="p">):</span>
+                <span class="k">pass</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">Y</span> <span class="o">=</span> <span class="n">Y</span><span class="o">.</span><span class="n">evalf</span><span class="p">(</span><span class="n">subs</span><span class="o">=</span><span class="n">kwargs_with_w</span><span class="p">)</span>
+            <span class="k">return</span> <span class="nb">complex</span><span class="p">(</span><span class="n">Vzpf</span><span class="o">*</span><span class="n">Y</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">quantity</span> <span class="o">==</span> <span class="s1">&#39;charge&#39;</span><span class="p">:</span>
+            <span class="n">Izpf</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">zpf</span><span class="p">(</span><span class="n">mode</span><span class="p">,</span><span class="s1">&#39;current&#39;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+            <span class="c1"># The above will set the eigenfrequencies</span>
 
-        <span class="n">mode_w</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_circuit</span><span class="o">.</span><span class="n">eigenfrequencies</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)[</span><span class="n">mode</span><span class="p">]</span><span class="o">*</span><span class="mf">2.</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_convert_flux</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_flux</span><span class="p">(</span><span class="n">mode_w</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">),</span><span class="n">mode_w</span><span class="p">,</span><span class="n">quantity</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+            <span class="n">w</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_circuit</span><span class="o">.</span><span class="n">zeta</span><span class="p">)[</span><span class="n">mode</span><span class="p">]</span>
+            <span class="k">return</span> <span class="n">Izpf</span><span class="o">/</span><span class="mi">1</span><span class="n">j</span><span class="o">/</span><span class="n">w</span><span class="o">/</span><span class="n">e</span>
 
 <span class="k">class</span> <span class="nc">W</span><span class="p">(</span><span class="n">Component</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;docstring for Wire&quot;&quot;&quot;</span>
@@ -2332,7 +2593,64 @@
             <span class="s1">&#39;R&#39;</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span>
             <span class="s1">&#39;L&#39;</span><span class="p">:</span><span class="mi">1</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_value</span><span class="p">(),</span>
             <span class="s1">&#39;C&#39;</span><span class="p">:</span><span class="mi">0</span>
-        <span class="p">}</span></div>
+        <span class="p">}</span>
+
+    <span class="nd">@timeit</span>
+    <span class="k">def</span> <span class="nf">_compute_flux_zpf_r</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Generate the L._flux_zpf_r function which</span>
+<span class="sd">        takes as an argument an angular frequency (and keyword arguments </span>
+<span class="sd">        if component values need to be specified) and returns the </span>
+<span class="sd">        derivative of the admittance evaluated at the nodes of the inductor, </span>
+<span class="sd">        which is effective capacitance at that frequency.         </span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="c1"># Compute a sympy expression for the admittance </span>
+        <span class="c1"># at the nodes of the reference element</span>
+        <span class="n">Y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_circuit</span><span class="o">.</span><span class="n">_network</span><span class="o">.</span><span class="n">admittance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">node_minus</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">node_plus</span><span class="p">)</span>
+
+        <span class="c1"># Write the expression as a single fraction </span>
+        <span class="c1"># with the numerator and denomenator as polynomials</span>
+        <span class="c1"># (it combines but also &quot;de-nests&quot;)      </span>
+        <span class="n">Y_together</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">together</span><span class="p">(</span><span class="n">Y</span><span class="p">)</span>
+
+        <span class="c1"># Extract numerator and denominator</span>
+        <span class="n">u</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">numer</span><span class="p">(</span><span class="n">Y_together</span><span class="p">)</span>
+        <span class="n">v</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">denom</span><span class="p">(</span><span class="n">Y_together</span><span class="p">)</span>
+
+        <span class="c1"># Symbol representing angular frequency</span>
+        <span class="n">w</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">Symbol</span><span class="p">(</span><span class="s1">&#39;w&#39;</span><span class="p">)</span>
+
+        <span class="c1"># Calculate derivatives</span>
+        <span class="n">derivatives</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">P</span> <span class="ow">in</span> <span class="p">[</span><span class="n">u</span><span class="p">]:</span><span class="c1">#[u,v]:</span>
+            <span class="c1"># Write as polynomial in &#39;w&#39;</span>
+            <span class="n">P</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">collect</span><span class="p">(</span><span class="n">sp</span><span class="o">.</span><span class="n">expand</span><span class="p">(</span><span class="n">P</span><span class="p">),</span> <span class="n">w</span><span class="p">)</span>
+
+            <span class="c1"># Obtain the order of the polynomial </span>
+            <span class="n">P_order</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">polys</span><span class="o">.</span><span class="n">polytools</span><span class="o">.</span><span class="n">degree</span><span class="p">(</span><span class="n">P</span><span class="p">,</span> <span class="n">gen</span><span class="o">=</span><span class="n">w</span><span class="p">)</span> 
+
+            <span class="c1"># Compute list of coefficients</span>
+            <span class="n">P_coeffs_analytical</span> <span class="o">=</span> <span class="p">[</span><span class="n">P</span><span class="o">.</span><span class="n">coeff</span><span class="p">(</span><span class="n">w</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">P_order</span><span class="o">+</span><span class="mi">1</span><span class="p">)[::</span><span class="o">-</span><span class="mi">1</span><span class="p">]]</span>
+
+            <span class="c1"># Express the derivative of the polynomial</span>
+            <span class="n">dP</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">([(</span><span class="n">P_order</span><span class="o">-</span><span class="n">n</span><span class="p">)</span><span class="o">*</span><span class="n">a</span><span class="o">*</span><span class="n">w</span><span class="o">**</span><span class="p">(</span><span class="n">P_order</span><span class="o">-</span><span class="n">n</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+                        <span class="k">for</span> <span class="n">n</span><span class="p">,</span> <span class="n">a</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">P_coeffs_analytical</span><span class="p">)])</span>
+
+            <span class="n">derivatives</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">dP</span><span class="p">)</span>
+        
+        <span class="n">du</span> <span class="o">=</span> <span class="n">derivatives</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="c1"># dv = derivatives[1]</span>
+        
+        <span class="c1"># Convert the sympy expression for v/du to a function</span>
+        <span class="c1"># Note the function arguments are the angular frequency </span>
+        <span class="c1"># and component values that need to be specified</span>
+        <span class="n">dY</span> <span class="o">=</span> <span class="n">lambdify</span><span class="p">([</span><span class="s1">&#39;w&#39;</span><span class="p">]</span><span class="o">+</span><span class="bp">self</span><span class="o">.</span><span class="n">_circuit</span><span class="o">.</span><span class="n">_no_value_components</span><span class="p">,</span><span class="n">du</span><span class="o">/</span><span class="n">v</span><span class="p">,</span> <span class="s2">&quot;numpy&quot;</span><span class="p">)</span>
+
+        <span class="k">def</span> <span class="nf">_flux_zpf_r</span><span class="p">(</span><span class="n">z</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">hbar</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">z</span><span class="p">)</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">imag</span><span class="p">(</span><span class="n">dY</span><span class="p">(</span><span class="n">z</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)))</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_flux_zpf_r</span> <span class="o">=</span> <span class="n">_flux_zpf_r</span></div>
+
 
 <div class="viewcode-block" id="J"><a class="viewcode-back" href="../../API/components/J.html#qucat.J">[docs]</a><span class="k">class</span> <span class="nc">J</span><span class="p">(</span><span class="n">L</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;A class representing an junction</span>
@@ -2396,13 +2714,11 @@
         <span class="k">return</span> <span class="p">(</span><span class="n">hbar</span><span class="o">/</span><span class="mf">2.</span><span class="o">/</span><span class="n">e</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="o">/</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_value</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span><span class="o">*</span><span class="n">h</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_set_component_lists</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="nb">super</span><span class="p">(</span><span class="n">J</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">_set_component_lists</span><span class="p">()</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">L</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">_set_component_lists</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_circuit</span><span class="o">.</span><span class="n">junctions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
-
-    <span class="k">def</span> <span class="nf">_anharmonicity</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">w</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_Ej</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">_zpf</span><span class="p">(</span><span class="n">w</span><span class="p">,</span><span class="s1">&#39;flux&#39;</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span><span class="o">**</span><span class="mi">4</span>
-
-<div class="viewcode-block" id="J.anharmonicity"><a class="viewcode-back" href="../../API/components/J.html#qucat.J.anharmonicity">[docs]</a>    <span class="k">def</span> <span class="nf">anharmonicity</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mode</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    
+<div class="viewcode-block" id="J.anharmonicity"><a class="viewcode-back" href="../../API/components/J.html#qucat.J.anharmonicity">[docs]</a>    <span class="nd">@vectorize_kwargs</span><span class="p">(</span><span class="n">exclude</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;mode&#39;</span><span class="p">])</span>
+    <span class="k">def</span> <span class="nf">anharmonicity</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mode</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="sa">r</span><span class="sd">&#39;&#39;&#39;Returns the contribution of this junction to the anharmonicity of a given normal mode.</span>
 
 <span class="sd">        Returned in units of Hertz, not angular frequency.</span>
@@ -2410,7 +2726,7 @@
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
 <span class="sd">        kwargs:     </span>
-<span class="sd">                    Values for un-specified circuit compoenents, </span>
+<span class="sd">                    Values for un-specified circuit components, </span>
 <span class="sd">                    ex: ``L=1e-9``.</span>
 <span class="sd">        </span>
 <span class="sd">        mode:           integer</span>
@@ -2440,8 +2756,8 @@
 <span class="sd">        Following first order perturbation, the total anharmonicity of a mode is obtained</span>
 <span class="sd">        by summing these contribution over all modes.</span>
 <span class="sd">        &#39;&#39;&#39;</span>
-        <span class="n">mode_w</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_circuit</span><span class="o">.</span><span class="n">eigenfrequencies</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)[</span><span class="n">mode</span><span class="p">]</span><span class="o">*</span><span class="mf">2.</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span>
-        <span class="k">return</span> <span class="n">_anharmonicity</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mode_w</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_Ej</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">absolute</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">zpf</span><span class="p">(</span><span class="n">mode</span><span class="p">,</span><span class="n">quantity</span><span class="o">=</span><span class="s1">&#39;flux&#39;</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">))</span><span class="o">**</span><span class="mi">4</span></div>
+
 
     <span class="k">def</span> <span class="nf">_draw</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">pp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_circuit</span><span class="o">.</span><span class="n">_pp</span>
