@@ -87,6 +87,8 @@ class Qcircuit(object):
 
     def __init__(self, netlist):
         self.Q_min = 1 # Modes with have a quality factor below Q_min will not ignored
+
+        self.warn_discarded_mode = True # If this is set to True, the user will be notified when a mode is discarded.
         
         # After an initial estimation of the complex eigenfrequenceis using a diaglinalization
         # of the companion matrix, the frequencies are polishd to a tolerence
@@ -245,7 +247,7 @@ class Qcircuit(object):
             # We can easily discard some of these casese by throwing away
             # negative solutions
             for w2_single in w2:
-                if np.real(w2_single) < 0:
+                if np.real(w2_single) < 0 and self.warn_discarded_mode:
                     error_message = "Imaginary frequency mode f = 1j %f Hz mode found (and discarded).\n"%(np.sqrt(-w2_single)/2/np.pi)
                     warn(error_message)
             w2 = w2[np.nonzero(w2 >= 0.)]
@@ -291,7 +293,7 @@ class Qcircuit(object):
         # The negative values are discarded which changes the number of modes
         # and makes parameter sweeps difficult 
         for w in zeta:
-            if np.real(w) < self.Q_min*2*np.imag(w):
+            if np.real(w) < self.Q_min*2*np.imag(w) and self.warn_discarded_mode:
                 error_message = "Discarding f = %f Hz mode "%(np.real(w/2/np.pi))
                 error_message += "since it has a too low quality factor Q = %f < %f"%(np.real(w)/2/np.imag(w),self.Q_min)
                 warn(error_message)
@@ -320,7 +322,7 @@ class Qcircuit(object):
                     ref_elt_index = ind_index
                     largest_dYm1 = dYm1
 
-            if ref_elt_index is None:
+            if ref_elt_index is None and self.warn_discarded_mode:
                 # Sometimes, when the circuits has vastly different
                 # values for its circuit components or modes are too
                 # decoupled, the symbolic 
