@@ -1,5 +1,0 @@
-*************
-Change Log
-*************
-
-To implement

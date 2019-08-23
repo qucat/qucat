@@ -85,18 +85,18 @@
             
               <p class="caption"><span class="caption-text">Contents:</span></p>
 <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../about.html">About</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../citing.html">Citing this project</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="tutorials.html">Tutorials</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="basics.html">Basics</a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#">Designing a classical microwave filter</a></li>
 <li class="toctree-l2"><a class="reference internal" href="optomechanics.html">Computing an optomechanical coupling</a></li>
-<li class="toctree-l2"><a class="reference internal" href="capacitive_network.html">Reducing a complex capacitive network in cQED</a></li>
 <li class="toctree-l2"><a class="reference internal" href="MMUSC.html">Modelling a distributed multi-mode resonator</a></li>
 <li class="toctree-l2"><a class="reference internal" href="tuneable_coupler.html">Understanding a tuneable coupler circuit</a></li>
-<li class="toctree-l2"><a class="reference internal" href="josephson_ring.html">Understanding a Josephson ring based qubit</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="../API/API.html">Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../API/API.html">List of functions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../contact.html">Contact</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../report_a_bug.html">Report a bug</a></li>
 </ul>
@@ -387,15 +387,103 @@ div.rendered_html tbody tr:hover {
     text-align: unset;
 }
 </style>
-<div class="section" id="Designing-a-classical-microwave-filter">
-<h1>Designing a classical microwave filter<a class="headerlink" href="#Designing-a-classical-microwave-filter" title="Permalink to this headline">¶</a></h1>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span>
+<span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="kn">from</span> <span class="nn">qucat</span> <span class="k">import</span> <span class="n">GUI</span>
 </pre></div>
+</div>
+</div>
+<div class="section" id="Designing-a-classical-microwave-filter">
+<h1>Designing a classical microwave filter<a class="headerlink" href="#Designing-a-classical-microwave-filter" title="Permalink to this headline">¶</a></h1>
+<p>In this application we show how QuCAT can be used to design classical microwave components. We study here a band pass filter made from two LC oscillators with the inductor inline and a capacitive shunt to ground. we are interested in the loss rate of a LC resonator connected through this filter to a 50 <span class="math notranslate nohighlight">\(\Omega\)</span> load, which could emulate a typical microwave transmission line.</p>
+<p><img alt="alt text" src="../_images/filter_circuit.png" /></p>
+<p>We start by opening the GUI and building this circuit.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="c1"># Build circuit</span>
+<span class="n">filtered_cavity</span> <span class="o">=</span> <span class="n">GUI</span><span class="p">(</span><span class="s1">&#39;circuits/filtered_cavity.txt&#39;</span><span class="p">,</span> <span class="c1"># location of the circuit file</span>
+        <span class="n">edit</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="c1"># open the GUI to edit the circuit</span>
+        <span class="n">plot</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="c1"># plot the circuit after having edited it</span>
+        <span class="n">print_network</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span> <span class="c1"># print the network</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/tutorials_filter_design_3_0.png" src="../_images/tutorials_filter_design_3_0.png" />
+</div>
+</div>
+<p>We can then access all the loss rates <code class="docutils literal notranslate"><span class="pre">k_all</span></code> of the different circuit modes through the method <code class="docutils literal notranslate"><span class="pre">loss_rates</span></code>. Since the values of <span class="math notranslate nohighlight">\(C\)</span> and <span class="math notranslate nohighlight">\(L\)</span> were not specified in the construction of the circuit, their values have to be passed as keyword arguments upon calling <code class="docutils literal notranslate"><span class="pre">loss_rates</span></code>.</p>
+<p>Since the filter capacitance and inductance is large relative to the capacitance and inductance of the resonator, the modes associated with the filter will have a much lower frequency. We can thus access the loss rate of the resonator by always selecting the last element of the array of loss rates with the command <code class="docutils literal notranslate"><span class="pre">k_all[-1]</span></code></p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="c1"># The resonance modes of the filter</span>
+<span class="c1"># have a very low quality factors, which make</span>
+<span class="c1"># them inadequate for quantization</span>
+<span class="c1"># by default QuCAT will discard these modes</span>
+<span class="c1"># and notify the user with a warning, here</span>
+<span class="c1"># we disactivate these warnings</span>
+<span class="n">filtered_cavity</span><span class="o">.</span><span class="n">warn_discarded_mode</span> <span class="o">=</span> <span class="kc">False</span>
+
+<span class="c1"># Build a list of inductances and capacitances</span>
+<span class="n">points</span> <span class="o">=</span> <span class="mi">31</span>
+<span class="n">C_list</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">logspace</span><span class="p">(</span><span class="o">-</span><span class="mf">13.5</span><span class="p">,</span><span class="o">-</span><span class="mf">11.8</span><span class="p">,</span><span class="n">points</span><span class="p">)</span>
+<span class="n">L_list</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">logspace</span><span class="p">(</span><span class="o">-</span><span class="mf">8.5</span><span class="p">,</span><span class="o">-</span><span class="mf">6.8</span><span class="p">,</span><span class="n">points</span><span class="p">)</span>
+
+<span class="c1"># Initialize an array to store the resonator loss rates</span>
+<span class="n">k</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">points</span><span class="p">,</span><span class="n">points</span><span class="p">))</span>
+
+<span class="c1"># Sweep over capacitances and inductances</span>
+<span class="k">for</span> <span class="n">i</span><span class="p">,</span><span class="n">capacitance</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">C_list</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">j</span><span class="p">,</span><span class="n">inductance</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">L_list</span><span class="p">):</span>
+        <span class="c1"># Calculate loss rates (for all modes)</span>
+        <span class="n">k_all_modes</span> <span class="o">=</span> <span class="n">filtered_cavity</span><span class="o">.</span><span class="n">loss_rates</span><span class="p">(</span>
+                    <span class="n">C</span> <span class="o">=</span> <span class="n">capacitance</span><span class="p">,</span>
+                    <span class="n">L</span> <span class="o">=</span> <span class="n">inductance</span><span class="p">)</span>
+        <span class="c1"># Store the resonator loss rate</span>
+        <span class="n">k</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="n">k_all_modes</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+C:\Anaconda3\lib\site-packages\qucat\core.py:2499: RuntimeWarning: invalid value encountered in sqrt
+  return np.sqrt(hbar/np.real(z)/np.imag(dY(z,**kwargs)))
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="n">plt</span><span class="o">.</span><span class="n">pcolor</span><span class="p">(</span><span class="n">C_list</span><span class="p">,</span><span class="n">L_list</span><span class="p">,</span><span class="n">k</span><span class="p">)</span>
+<span class="n">cbar</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">colorbar</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xscale</span><span class="p">(</span><span class="s1">&#39;log&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">yscale</span><span class="p">(</span><span class="s1">&#39;log&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/tutorials_filter_design_6_0.png" src="../_images/tutorials_filter_design_6_0.png" />
 </div>
 </div>
 </div>
