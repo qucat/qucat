@@ -6,38 +6,11 @@ import core
 from math import isclose
 import numpy as np
 from _constants import e, pi, h, hbar
+from utils import TestCaseAppended
 
 # Run plt.ion() to avoid hanging on plt.show() calls
 import matplotlib.pyplot as plt
 plt.ion()
-
-def cutoff_digits(f,digits):
-    float_format = '%%.%de'%digits
-    return float(float_format%(np.real(f))) + 1j*float(float_format%(np.imag(f)))
-
-class TestCaseAppended(unittest.TestCase):
-
-    def assertRelativelyClose(self,a,b,digits = 6):
-        a = cutoff_digits(a,digits)
-        b = cutoff_digits(b,digits)
-        self.assertEqual(a,b)
-
-    def assertArrayRelativelyClose(self,a,b,digits = 6):
-        a = np.array(a)
-        b = np.array(b)
-        self.assertTrue(a.shape==b.shape,msg = f'Arrays do not have the same dimension {a.shape}!={b.shape}')
-        for index,_ in np.ndenumerate(a):
-            a_comp = cutoff_digits(a[index],digits)
-            b_comp = cutoff_digits(b[index],digits)
-            self.assertEqual(a_comp,b_comp,
-                    msg = f'Components with index {index} do not match {a_comp}!={b_comp}')
-    
-    def open_gui_file(self,filename, edit = False, print_network=False,plot=False):
-        return core.GUI(os.path.join(
-            os.path.dirname(__file__),
-            'gui_testing_files',
-            filename),
-            edit = edit, print_network=print_network,plot=plot)
 
 class SeriesRLC(TestCaseAppended):
     '''
@@ -72,12 +45,18 @@ class SeriesRLC(TestCaseAppended):
     def test_dissipation(self):
         C = 100e-15
         L = 10e-9
-        R = 100e-9
+        R = 1e-3
         w,k,A,chi = self.parameters(R,L,C)
         cpx_w = (1j*C*R + np.sqrt(4*C*L - C**2*R**2))/(2.*C*L)
         self.assertRelativelyClose(2*np.imag(cpx_w)/2/np.pi,k)
 
 class Other(TestCaseAppended):
+
+    def multiplicity_removal(self):
+        circuit = self.open_gui_file('multiple_roots.txt')
+        freqs = circuit.eigenfrequencies(Cd = 25e-15)
+        self.assertEqual(2,len(freqs))
+
     def test_LC_double_series_L_double_series_C(self):
         C = 1e-8
         L = 3
@@ -91,6 +70,18 @@ class Other(TestCaseAppended):
         f_expected = 1/np.sqrt(L*C)/2/np.pi
         self.assertRelativelyClose(f_expected,f)
         
+class TransmonResonator(TestCaseAppended):
+
+    def parameters(self,Cj,Lj,Cc,Cr,Lr):
+        circuit = core.Network([
+            core.C(0,1,Cj),
+            core.J(0,1,Lj),
+            core.C(1,2,Cc),
+            core.C(0,2,Cr),
+            core.L(0,2,Lr)
+        ])
+        return circuit.f_k_A_chi()
+
 class Transmon(TestCaseAppended):
     '''
     Transmon circuit parameters
@@ -168,64 +159,7 @@ class Transmon(TestCaseAppended):
         f,k,A,chi = circuit.f_k_A_chi()
         self.assertArrayRelativelyClose([e**2/2./C/h,1/(np.sqrt(C*Lj)*2.*pi)],[A[0],f[0]])
 
-class ShuntedJosephsonRing(TestCaseAppended):
-    '''
-    Shunted Josephson ring
-    '''
-    
-    def parameters(self,C,L):
-        circuit = core.Network([
-            core.C(0,2,C),
-            core.C(1,3,C),
-            core.J(0,1,L),
-            core.J(1,2,L),
-            core.J(2,3,L),
-            core.J(3,0,L)
-        ])
-        return circuit.f_k_A_chi()
-
-    def test_number_of_modes_nHz(self):
-        C = 2.e9
-        L = 3.e11
-        w,k,A,chi = self.parameters(C,L)
-        self.assertEqual(len(w),2,msg = f"f_res = {w}")
-    def test_number_of_modes_Hz(self):
-        C = 2.
-        L = 3. 
-        w,k,A,chi = self.parameters(C,L)
-        self.assertEqual(len(w),2,msg = f"f_res = {w}")
-
-    def test_number_of_modes_GHz(self):
-        C = 1e-13
-        L = 1e-8
-        w,k,A,chi = self.parameters(C,L)
-        self.assertEqual(len(w),2,msg = f"f_res = {w}")
-
-    def test_frequency_0(self):
-        C = 1e-13
-        L = 1e-8
-        w,k,A,chi = self.parameters(C,L)
-        self.assertRelativelyClose(w[0],1/np.sqrt(L*C)/2./np.pi)
-
-    def test_frequency_1(self):
-        C = 1e-13
-        L = 1e-8
-        w,k,A,chi = self.parameters(C,L)
-        self.assertRelativelyClose(w[1],1/np.sqrt(L*C)/2./np.pi)
-
-    def test_anharmonicity_0(self):
-        C = 1e-13
-        L = 1e-8
-        w,k,A,chi = self.parameters(C,L)
-        self.assertRelativelyClose(A[0],e**2/2./(8*C)/h)
-
-    def test_anharmonicity_1(self):
-        C = 1e-13
-        L = 1e-8
-        w,k,A,chi = self.parameters(C,L)
-        self.assertRelativelyClose(A[1],e**2/2./(8*C)/h)
-
-class CoupledTransmonRLC(TestCaseAppended):
+class SweepingParameters(TestCaseAppended):
     '''
     Coupled transmon/RLC
     '''
@@ -258,17 +192,19 @@ class TestGraphics(TestCaseAppended):
         with self.assertRaises(TypeError):
             circuit.show_normal_mode()
         
-    def test_generate_graphics(self):
-        import _generate_graphics
-    
-    def test_show_transmon_RLC(self):
-        cir=self.open_gui_file('show_normal_mode_transmon_RLC_Lj_as_parameter.txt')
-        cir.show()
-
-    def test_show_normal_mode_transmon_RLC_Lj_as_parameter(self):
-        cir=self.open_gui_file('show_normal_mode_transmon_RLC_Lj_as_parameter.txt')
-        for quantity in ['flux','voltage','charge','current']:
-            cir.show_normal_mode(0,quantity,Lj=1e-9)
+    def test_sweeping_CJ_array_in_zpf(self):
+        C_comp = core.C(0,1,'C_J')
+        cir = core.Network([
+            C_comp,
+            core.J(0,1,10e-9),
+            core.C(1,2,1e-15),
+            core.C(2,0,100e-15),
+            core.L(2,0,10e-9),
+            core.R(2,0,1e6)
+            ])
+        self.assertRelativelyClose(
+             C_comp.zpf(mode = 1, quantity = 'charge', C_J=1.5e-9),
+            C_comp.zpf(mode = 1, quantity = 'charge', C_J=[1e-9,1.5e-9,3e-9])[1])
 
 class TestNetworkAnalysis(TestCaseAppended):
 

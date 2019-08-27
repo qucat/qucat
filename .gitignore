@@ -3,8 +3,8 @@ final_after_events*
 .DS_Store
 .vscode/
 .temp
-test*.txt
 .ipynb_checkpoints
+*ipynb_checkpoints*
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

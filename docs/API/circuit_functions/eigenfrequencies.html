@@ -85,9 +85,11 @@
             
               <p class="caption"><span class="caption-text">Contents:</span></p>
 <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../about.html">About</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../citing.html">Citing this project</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../tutorials/tutorials.html">Tutorials</a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="../API.html">Documentation</a><ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../API.html">List of functions</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="../builders.html">Creating a circuit</a></li>
 <li class="toctree-l2 current"><a class="reference internal" href="../circuit_functions.html">Circuit analysis</a><ul class="current">
 <li class="toctree-l3 current"><a class="current reference internal" href="#"> Calculating eigen-frequencies</a></li>
@@ -150,7 +152,7 @@
     
       <li><a href="../../index.html">Docs</a> &raquo;</li>
         
-          <li><a href="../API.html">API documentation</a> &raquo;</li>
+          <li><a href="../API.html">Index of functions</a> &raquo;</li>
         
           <li><a href="../circuit_functions.html">Circuit analysis</a> &raquo;</li>
         
@@ -209,7 +211,7 @@ not in angular frequency.</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>kwargs</strong> – Values for un-specified circuit compoenents,
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>kwargs</strong> – Values for un-specified circuit components,
 ex: <code class="docutils literal notranslate"><span class="pre">L=1e-9</span></code>.</td>
 </tr>
 <tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">Normal mode frequencies of the circuit, ordered from lowest
@@ -223,7 +225,7 @@ to highest frequency, given in Hertz.</td>
 <p>These eigen-frequencies <span class="math notranslate nohighlight">\(f_m\)</span> correspond to the real parts
 of the complex frequencies which make the conductance matrix
 singular, or equivalently the real parts of the poles of the impedance
-calculated between the nodes of an inductor or josephon junction.</p>
+calculated between the nodes of an inductor or josephson junction.</p>
 <p>The Hamiltonian of the circuit is</p>
 <p><span class="math notranslate nohighlight">\(\hat{H} = \sum_m hf_m\hat{a}_m^\dagger\hat{a}_m + \hat{U}\)</span>,</p>
 <p>where <span class="math notranslate nohighlight">\(h\)</span> is Plancks constant,
@@ -234,6 +236,7 @@ be the resonance frequencies of the circuit if all junctions
 were replaced with linear inductors. In that case the
 non-linear part of the Hamiltonian <span class="math notranslate nohighlight">\(\hat{U}\)</span>,
 originating in the junction non-linearity, would be 0.</p>
+<p>For more information on the underlying theory, see LINKTOCOME.</p>
 </dd></dl>
 
 </div>

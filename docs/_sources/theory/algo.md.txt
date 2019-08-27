@@ -1,0 +1,451 @@
+Algorithmic methods
+===================
+
+There are three calculations to accomplish in order to obtain all the
+parameters necessary to write the circuit Hamiltonian. We need:
+
+-   the eigen-frequencies $\omega_m$ and loss rates $\kappa_m$
+    fulfilling $Y_r(\zeta_m=\omega_m+i\kappa_m/2) = 0$ where $Y_r$ is
+    the admittance across a reference junction
+
+-   the derivative of this admittance evaluated at $\zeta_m$
+
+-   the transfer functions $T_{jr}$ between junctions $j$ and the
+    reference junction $r$
+
+In this section, we cover the algorithmic methods used to calculate
+these three quantities
+
+Resonance frequency and dissipation rate {#sec:methods_resonance_frequency}
+----------------------------------------
+
+### Theoretical background
+
+In order to obtain an expression for the admittance across the reference
+junction, we start by writing the set of equations governing the physics
+of the circuit. We first determine a list of nodes, which are points at
+which circuit components connect. Each node, labeled $n$, is assigned a
+voltage $v_n$. We name $r_\pm$ the positive and negative nodes of the
+reference junction.
+
+We are interested in the steady-state oscillatory behavior of the
+system. We can thus move to the frequency domain, with complex node
+voltages $|V_n(\omega)| e^{i(\omega t+\theta(V_n(\omega_n)))}$, fully
+described by their phasors, the complex numbers
+$V_n = |V_n(\omega)| e^{i\theta(V_n(\omega_n))}$. In this mathematical
+construct, the real-part of the complex voltages describes the voltage
+one would measure at the node in reality. Current conservation dictates
+that the sum of all currents arriving at any node $n$, from the other
+nodes $k$ of the circuit should be equal to the oscillatory current
+injected at node $n$ by a hypothetical, infinite impedance current
+source. This current is also characterized by a phasor $I_n$. This can
+be compactly written as $$\sum_{k\ne n} G_{nk}(V_n-V_k) = I_n
+    \label{eq:kirchhoff_1}$$ where $k$ label the other nodes of the
+circuit and $G_{nk}$ is the conductance directly connecting nodes $k$
+and $n$. Note that in this notation, if a node $k_1$ can only reach node
+$n$ through another node $k_2$, then $G_{nk_1} = 0$. Inductors (with
+inductance $L$), capacitors (with capacitance $C$) and resistors (with
+resistance $R$) then have conductances $1/iL\omega$, $iC\omega$ and
+$1/R$ respectively.
+
+Expanding
+Eq. [\[eq:kirchhoff\_1\]](#eq:kirchhoff_1){reference-type="ref"
+reference="eq:kirchhoff_1"} yields
+$$(\sum_{k\ne n} G_{nk})V_n-\sum_{k\ne n} G_{nk}V_k = I_n
+    \label{eq:kirchhoff_1}$$ which can be written in matrix form as
+$$\begin{pmatrix}
+    \Sigma_{k\ne 0}G_{0k} &-G_{01}  &\cdots  &-G_{0N} \\ 
+    -G_{10} &\Sigma_{k\ne 1}G_{1k} &\cdots  &-G_{1N} \\ 
+    \vdots &\vdots  &\ddots  & \vdots\\ 
+    -G_{N0} &-G_{N1}  &\cdots  &\Sigma_{k\ne N}G_{Nk} 
+    \end{pmatrix}
+    \begin{pmatrix}
+    V_0\\ 
+    V_1\\ 
+    \vdots\\ 
+    V_N
+    \end{pmatrix}=
+    \begin{pmatrix}
+    I_0\\ 
+    I_1\\ 
+    \vdots\\ 
+    I_N
+    \end{pmatrix}
+    \label{eq:conductance_matrix_no_ground}$$ Since voltage is the
+electric potential of a node relative to another, we still have the
+freedom of choosing a ground node. Equivalently, conservation of
+currents imposes that current exciting that node is equal to the sum of
+currents entering the others, there is thus a redundant degree of
+freedom in
+Eq.([\[eq:conductance\_matrix\_no\_ground\]](#eq:conductance_matrix_no_ground){reference-type="ref"
+reference="eq:conductance_matrix_no_ground"}). For simplicity, we will
+choose node 0 as ground. Since we are only interested in the admittance
+across the reference junction, we set all currents to zero, except the
+currents entering the positive and negative reference junction nodes:
+$I_{r_+}$ and $I_{r_-} = -I_{r_+}$ respectively. The admittance is
+defined by $Y_r = I_{r_+}/(V_{r_+}-V_{r_-})$. The equations then reduce
+to $$\mathbf{G}\begin{pmatrix}
+    V_1\\ 
+    V_2\\ 
+    \vdots\\ 
+    V_N
+    \end{pmatrix}=Y_r
+    \begin{pmatrix}
+    \vdots\\ 
+    0\\ 
+    V_{r_+}-V_{r_-}\\ 
+    0\\
+    \vdots\\ 
+    0\\ 
+    V_{r_-}-V_{r_+}\\ 
+    0\\
+    \vdots
+    \end{pmatrix}
+    \label{eq:conductance_matrix_equation}$$ Where $\mathbf{G}$ is the
+conductance matrix $$\mathbf{G} = 
+    \begin{pmatrix}
+    \Sigma_{k\ne 1}G_{1k} &-G_{12}  &\cdots  &-G_{1N} \\ 
+    -G_{21} &\Sigma_{k\ne 1}G_{2k} &\cdots  &-G_{2N} \\ 
+    \vdots &\vdots  &\ddots  & \vdots\\ 
+    -G_{N1} &-G_{N2}  &\cdots  &\Sigma_{k\ne N}G_{Nk} 
+    \end{pmatrix}
+    \label{eq:conductance_matrix}$$
+
+For $Y_r = 0$,
+Eq [\[eq:conductance\_matrix\_equation\]](#eq:conductance_matrix_equation){reference-type="ref"
+reference="eq:conductance_matrix_equation"} has a solution for only
+specific values of $\omega = \zeta_m$. These are the values which make
+the conductance matrix singular, i.e. which make its determinant zero
+$$\text{Det}\left[\mathbf{G}(\zeta_m)\right] = 0
+    \label{eq:det}$$ The determinant is a polynomial in $\omega$, so the
+problem of finding $\zeta_m = \omega_m+i\kappa_m/2$ reduces to finding
+the roots of this polynomial. Note that plugging $\zeta_m$ into the
+frequency domain expression for the node voltages yields
+$V_k(\zeta_m)e^{i\omega_mt}e^{-\kappa_mt/2}$, such that the energy
+$\propto v_k(t)^*v_k(t) \propto e^{-\kappa_mt}$ decays at a rate
+$\kappa_m$, which explains the division by two in the expression of
+$\zeta_m$. Also note, that we would have obtained equation
+Eq. ([\[eq:det\]](#eq:det){reference-type="ref" reference="eq:det"})
+regardless of the choice of reference element.
+
+### Algorithm
+
+We now describe the algorithm used to determine the solutions
+$\zeta_m = \omega_m+i\kappa_m/2$ of
+Eq. [\[eq:det\]](#eq:det){reference-type="ref" reference="eq:det"}. As
+an example, we consider the circuit of
+Fig. [\[fig:f\_finder\_example\]](#fig:f_finder_example){reference-type="ref"
+reference="fig:f_finder_example"}(a) that a user would have built with
+the GUI.
+
+![ **Example circuit to illustrate the mode frequency finder
+algorithm.** **(a)** Example of a circuit built through the GUI by a
+user. **(b)** Application of the first step of the algorithm which
+removes the wires and grounds to obtain a minimal number of nodes
+without removing any components. ](figures/fig_f_finder_example.pdf)
+
+[\[fig:f\_finder\_example\]]{#fig:f_finder_example
+label="fig:f_finder_example"}
+
+The algorithm is as follows
+
+1.  Eliminate wires and grounds. In this case, nodes $N_0,N_5$ would be
+    grouped under a single node labeled 0 and nodes $N_1,N_2,N_3$ would
+    be grouped under node 1, we label node $N_4$ node 2, as shown in
+    Fig. [\[fig:f\_finder\_example\]](#fig:f_finder_example){reference-type="ref"
+    reference="fig:f_finder_example"}(b).
+
+2.  Compute the un-grounded conductance matrix. For each component
+    present between the different couples of nodes, we append the
+    conductance matrix with the components conductance. The matrix is
+    then multiplied by $\omega$ such that all components are polynomials
+    in $\omega$, ensuring that the determinant is also a polynomial. In
+    this example, the matrix is $$\begin{pmatrix}
+            iC\omega^2+1/iL & -iC\omega^2  & -1/iL  \\
+            -iC\omega^2 &iC\omega^2+\omega/R  &-\omega/R  \\
+             -1/iL &-\omega/R  &1/iL +\omega/R
+            \end{pmatrix}$$
+
+3.  Choose a ground node. The node which has a corresponding column with
+    the most components is chosen as the ground node (to reduce
+    computation time). These rows and columns are erased from the
+    matrix, yielding the final form of the conductance matrix
+    $$\mathbf{G}=
+            \begin{pmatrix}
+            iC\omega^2+\omega/R  &-\omega/R  \\
+            -\omega/R  &1/iL +\omega/R
+            \end{pmatrix}$$
+
+4.  Compute the determinant. Even if the capacitance, inductance and
+    resistance were specified numerically, the conductance matrix would
+    still be a function of the symbolic variable $\omega$. We thus rely
+    on a symbolic Berkowitz determinant calculation
+    algorithm [@berkowitz1984computing; @kerber2009division] implemented
+    in the Sympy library through the `berkowitz_det` function. In this
+    example, one would obtain
+    $$\text{Det}[\mathbf{G}] = LC\omega^2-iRC\omega -1\ .$$
+
+5.  Find the roots of the polynomial. Whilst the above steps have to be
+    performed only once for a given circuit, this one should be
+    performed each time the user edits the value of a component. The
+    root-finding is divided in the following steps as prescribed by
+    Ref. [@press2007numerical]. Diagonalize the polynomials companion
+    matrix [@horn1985cr] to obtain an exhaustive list of all roots of
+    the polynomial. This is implemented in the NumPy library through the
+    `roots` function. Refine the precision of the roots using multiple
+    iterations of Halley's gradient based root
+    finder [@press2007numerical] until iterations do not improve the
+    root value beyond a predefined tolerance given by the `Qcircuit`
+    argument `root_relative_tolerance`. The maximum number of iterations
+    that may be carried out is determined by the `Qcircuit` argument
+    `root_max_iterations`. If the imaginary part relative to the real
+    part of the root is lower than the relative tolerance, the imaginary
+    part will be set to zero. The relative tolerance thus sets the
+    highest quality factor that QuCAT can detect. Remove identical roots
+    (equal up to the relative tolerance), roots with negative imaginary
+    or real parts, 0-frequency roots, roots for which $Y_l'(\omega_m)<0$
+    for all $l$, where $Y_l$ is the admittance evaluated at the nodes of
+    an inductive element $l$, and roots for which $Q_m<$
+    `Qcircuit.Q_min`. The user is warned of a root being discarded when
+    one of these cases is unexpected.
+
+The roots $\zeta_m$ obtained through this algorithm are accessed through
+the method `eigenfrequencies` which returns the oscillatory frequency in
+Hertz of all the modes ${\text{Re}[\zeta_m]/2\pi}$ or `loss_rates` which
+returns ${2\text{Im}[\zeta_m]/2\pi}$.
+
+Derivative of the admittance {#sec:methods_network_dY}
+----------------------------
+
+The zero-point fluctuations in phase $\varphi_{\text{zpf},m,r}$ for each
+mode $m$ across a reference junction $r$ is the starting point to
+computing a Hamiltonian for the non-linear potential of the Junctions.
+As expressed in Eq. ([\[eq:zpf\]](#eq:zpf){reference-type="ref"
+reference="eq:zpf"}), this quantity depends on the derivative $Y_r'$ of
+the admittance $Y_r$ calculated at the nodes of the reference element.
+In this section we first cover the algorithm used to obtain the
+admittance at the nodes of an arbitrary component. From this admittance
+we then describe the method to obtain the derivative of the admittance
+on which $\varphi_{\text{zpf},m,r}$ depends Finally we describe how to
+choose a (mode-dependent) reference element.
+
+### Computing the admittance
+
+Here we describe a method to compute the admittance of a network between
+two arbitrary nodes. We will continue using the example circuit of
+Fig. [\[fig:f\_finder\_example\]](#fig:f_finder_example){reference-type="ref"
+reference="fig:f_finder_example"}, assuming we want to compute the
+admittance at the nodes of the inductor.
+
+1.  Eliminate wires and grounds as in the resonance finding algorithm,
+    nodes $N_0,N_5$ would be grouped under a single node labeled 0 and
+    nodes $N_1,N_2,N_3$ would be grouped under node 1, we label node
+    $N_4$ node 2. We thus obtain
+    Fig. [\[fig:Y\_computation\_example\]](#fig:Y_computation_example){reference-type="ref"
+    reference="fig:Y_computation_example"}(a)
+
+2.  Group parallel connections. Group all components connected in
+    parallel as a single "admittance component\" equal to the sum of
+    admittances of its parts. In this way two nodes are either
+    disconnected, connected by a single inductor, capacitor, junction or
+    resistor, or connected by a single "admittance component\".
+
+3.  Reduce the network through star-mesh transformations. Excluding the
+    nodes across which we want to evaluate the admittance, we utilize
+    the star-mesh transformation described in
+    Fig. [\[fig:star\_mesh\]](#fig:star_mesh){reference-type="ref"
+    reference="fig:star_mesh"} to reduce the number of nodes in the
+    network to two. If following a star-mesh transformation, two
+    components are found in parallel, they are grouped under a single
+    "admittance component\" as described previously. For a node
+    connected to more than 3 other nodes the star-mesh transformation
+    will increase the total number of components in the circuit. So we
+    start with the least-connected nodes to maintain the total number of
+    components in the network to a minimum. In this example, we want to
+    keep nodes 0 and 2, but remove node 1, a start-mesh transform leads
+    to the circuit of
+    Fig. [\[fig:Y\_computation\_example\]](#fig:Y_computation_example){reference-type="ref"
+    reference="fig:Y_computation_example"}(b) then grouping parallel
+    componnets leads to (c).
+
+4.  The admittance is that of the remaining "admittance component\" once
+    the network has been completely reduced to two nodes.
+
+The symbolic variables at this stage (Sympy `Symbols`) are $\omega$, and
+the variables corresponding to any component with un-specified values.
+
+![ **Star-mesh transform.** A node $N$ connected to nodes $A,B,C,..$
+through admittances $Y_A,Y_B,...$ can be eliminated if we interconnect
+nodes $A,B,C,..$ with impedances $Y_{AB},Y_{AC},Y_{BC},...$ given by
+$Y_{XY} = Y_XY_Y/\sum_MY_M$. We show the 5 node case, the initial
+network on the left is called the "star\", which is then transformed to
+the "mesh\" on the right, reducing the total number of nodes by 1.
+](figures/fig_star_mesh.pdf){width="50%"}
+
+[\[fig:star\_mesh\]]{#fig:star_mesh label="fig:star_mesh"}
+
+![ **Example to illustrate the admittance calculation algorithm.**
+**(a)** Example of a circuit built through the GUI by a user, after
+removal of all wires and grounds. **(b)** Application of the star-mesh
+transformation to remove node 1. **(c)** After each application of the
+star-mesh transformation, parallel connections are grouped together.
+Only the two nodes across which we want to compute the admittance
+remain, the admittance is that of the remaining "admittance component\".
+](figures/fig_Y_computation_example.pdf)
+
+[\[fig:Y\_computation\_example\]]{#fig:Y_computation_example
+label="fig:Y_computation_example"}
+
+### Differentiating the admittance
+
+The expression for the admittance obtained from the above algorithm will
+necessarily be in the form of multiple multiplication, divisions or
+additions of the admittance of capacitors, inductors or resistors. It is
+thus possible to transform $Y$ to a rational function of $\omega$
+$$Y(\omega) = \frac{P(\omega)}{Q(\omega)} = \frac{p_0+p_1\omega+p_2\omega^2+...}{q_0+q_1\omega+q_2\omega^2+...}$$
+with the sympy function `together`. It is then easy to symbolically
+determine the derivative of Y, ready to be evaluated at $\zeta_m$ once
+the coefficients $p_i$ and $q_i$ have been extracted $$\begin{split}
+    Y'(\zeta_m) &= \left(P'(\zeta_m)Q(\zeta_m) -P(\zeta_m)Q'(\zeta_m)\right)/Q(\zeta_m)^2\\
+      &=(p_1+2p_2\zeta_m+...)/(q_0+q_1\zeta_m+...)\ ,
+\end{split}$$ taking advantage of the property
+$P(\zeta_m)\propto Y(\zeta_m)=0$.
+
+### Choice of reference element
+
+For each mode $m$, we use as reference element $r$ the inductor or
+junction which maximizes $\varphi_{\text{zpf},m,r}$ as specified by
+Eq. [\[eq:zpf\]](#eq:zpf){reference-type="ref" reference="eq:zpf"}. This
+corresponds to the element where the phase fluctuations are majoritarily
+located. We find that doing so considerably increases the success of
+evaluating $Y'(\omega_m)$. As an example, we plot in
+Fig. [\[fig:best\_ref\_elt\]](#fig:best_ref_elt){reference-type="ref"
+reference="fig:best_ref_elt"} the zero-point fluctuations in phase
+$\varphi_{\text{zpf},m,r}$ of the transmon-like mode, calculated for the
+circuit of Fig. [\[fig:1\]](#fig:1){reference-type="ref"
+reference="fig:1"}, with the junction or inductor as reference element.
+What we find is that if the coupling capacitor becomes too small,
+resulting in modes which are nearly totally localized in either inductor
+or junction, choosing the wrong reference element combined with
+numerical inaccuracies leads to unreliable values of
+$\varphi_{\text{zpf},m,r}$.
+
+![ **Impact of the choice of reference element.** **(a)** Schematic of
+the circuit used in this example. We have used a 100 fF capacitances, a
+10 nH inductor and a 8 nH Josephson inductance, we will vary the
+coupling capacitance. The zero-point fluctuations in phase
+$\varphi_{\text{zpf},r}$ across the inductor ($r=L$) and junction
+($r=J$) for most anharmonic mode are drawn on the schematic and plotted
+in **(b)** for different values of the coupling capacitor $C_C$. The
+phase oscillations associated with this mode are mostly located in the
+junction, so as the coupling capacitor is lowered, the amplitude of
+phase oscillations diminishes in the inductor. Below $C_C\sim 10^{-5}$
+fF, numerical accuracies lead to unreliable values of the phase
+fluctuations in the inductor. This results in the anharmonicity of the
+qubit-like mode $A_q$, plotted in **(c)**, to be incorrectly estimated
+if the inductor is chosen as a reference element and the anharmonicity
+is computed using
+Eq. ([\[eq:phi\_j\_from\_phi\_r\]](#eq:phi_j_from_phi_r){reference-type="ref"
+reference="eq:phi_j_from_phi_r"}). ](figures/fig_best_ref_elt.pdf)
+
+[\[fig:best\_ref\_elt\]]{#fig:best_ref_elt label="fig:best_ref_elt"}
+
+Transfer functions {#sec:methods_network_transfer}
+------------------
+
+In this section, we describe the method used to determine the transfer
+function $T_{jr}$ between a junction $j$ and the reference junction $r$.
+This quantity can be computed from the ABCD
+matrix [@pozar2009microwave]. The ABCD matrix relates the voltages and
+currents in a two port network $$\begin{pmatrix}
+    V_r \\
+    I_r
+    \end{pmatrix}=
+    \begin{pmatrix}
+    A&B \\
+    C&D
+    \end{pmatrix}
+    \begin{pmatrix}
+    V_j\\
+    I_j\\
+    \end{pmatrix}$$ where the convention for current direction is
+described in
+Fig. [\[fig:two\_port\_network\]](#fig:two_port_network){reference-type="ref"
+reference="fig:two_port_network"}.
+
+![ **Visual summary of the notations and properties of the ABCD matrix
+applied to the calculation of $T_{rj}$.** The transfer function
+$T_{rj} = 1/A$ is the inverse of the first coefficient of the ABCD
+matrix which relates the voltages and currents on either end of a
+network. These currents and voltages are defined as shown above, with
+the reference junction on the left and junction $j$ on the right.
+Currents are defined as entering and exciting on the left and right
+respectively. If the circuit is constituted of a cascade of two port
+sub-networks, the product of the sub-network ABCD matrices are equal to
+the ABCD matrix of the total network.
+](figures/fig_two_port_network.pdf)
+
+[\[fig:two\_port\_network\]]{#fig:two_port_network
+label="fig:two_port_network"}
+
+By constructing the network as in
+Fig. [\[fig:two\_port\_network\]](#fig:two_port_network){reference-type="ref"
+reference="fig:two_port_network"}, with the reference junction on the
+left and junction $j$ on the right, the transfer function is given by
+$$T_{jr}(\omega) = \frac{V_j(\omega)}{V_r(\omega)} = \frac{1}{A}$$
+
+To determine $A$, we first reduce the circuit using star-mesh
+transformations (see
+Fig.[\[fig:star\_mesh\]](#fig:star_mesh){reference-type="ref"
+reference="fig:star_mesh"}), and group parallel connections as described
+in the previous section, until only the nodes of junctions $r$ and $j$
+are left. If the junctions initially shared a node, the resulting
+circuit will be equivalent to the network shown in
+Fig.[\[fig:network\]](#fig:network){reference-type="ref"
+reference="fig:network"} (a). In this case,
+$$A = \left(1+\frac{Y_p}{Y_a}\right)\ .$$ If the junctions do not share
+nodes, the resulting circuit will be equivalent to the network shown in
+Fig.[\[fig:network\]](#fig:network){reference-type="ref"
+reference="fig:network"}(b), where some admittances may be equal to $0$
+to represent open circuits. To compute the ABCD matrix of this resulting
+circuit, we make use of the property illustrated in
+Fig. [\[fig:two\_port\_network\]](#fig:two_port_network){reference-type="ref"
+reference="fig:two_port_network"}: the ABCD matrix of a cascade
+connection of two-port networks is equal to the product of the ABCD
+matrices of the individual networks. We first determine the $ABCD$
+matrix of three parts of the network (separated by dashed line in
+Fig.[\[fig:network\]](#fig:network){reference-type="ref"
+reference="fig:network"}) such that the $ABCD$ matrix of the total
+network reads $$\begin{bmatrix}
+    A & B   \\
+    C & D  \\
+\end{bmatrix} = 
+\begin{bmatrix}
+    1 & 0   \\
+    Y_r & 1  \\
+\end{bmatrix}
+\begin{bmatrix}
+    \tilde A  & \tilde B   \\
+    \tilde C & \tilde D  \\
+\end{bmatrix}
+\begin{bmatrix}
+    1 & 0   \\
+    Y_j & 1  \\
+\end{bmatrix}\ .$$ $$A = \tilde A+\tilde B Y_j\ ,$$ where the $A$ and
+$B$ coefficients of the middle part of the network are $$\begin{split}
+    \tilde A&=(Y_a + Y_b)(Y_c + Y_d)/(Y_a Y_d-Y_b Y_c)\\
+    \tilde B&=(Y_a + Y_b + Y_c + Y_d)/(Y_a Y_d-Y_b Y_c)\ .
+\end{split}$$ The ABCD matrix for the middle part of the circuit is
+derived in Sec. 10.11 of Ref. [@arshad2010network], and the ABCD
+matrices for the circuits on either sides are provided in
+Ref. [@pozar2009microwave].
+
+![ **Networks after star-mesh reduction.** The two non-trivial
+situations reached after applying star-mesh transformations to a network
+to obtain $T_{rj}$.
+[]{label="fig:network"}](figures/fig_network.pdf){#fig:network
+width="50%"}
+
+This method is also applied to calculate the transfer function to
+capacitors, inductors and resistors, notably to visualize the normal
+mode with the `show_normal_mode` function.
