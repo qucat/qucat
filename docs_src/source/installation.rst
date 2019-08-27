@@ -2,7 +2,7 @@
 Installation
 *************
 
-**Important: QuCAT only supports python 3**
+.. note:: QuCAT only supports python 3
 
 Installing via pip
 ==================
@@ -34,9 +34,13 @@ The following packages are currently required:
 * Matplotlib, tested on version 3.0.3
 * Sympy, tested on version 1.3
 
-Additional features are available with the following packages:
+Generating a Hamiltonian requires
 
 * `QuTiP <http://qutip.org/docs/latest/installation.html>`_, tested on version 4.3
+
+Performance of Sympy and thus QuCAT is enhanced by using
+
+* `gmpy2 <https://gmpy2.readthedocs.io/en/latest/>`_
 
 We recommend installing python and these packages by 
 downloading and installing 

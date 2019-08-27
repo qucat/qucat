@@ -235,12 +235,6 @@ def pretty_value(v,is_complex = True, use_power_10=False, use_unicode=True, maxi
         sign_r, numbers_r = get_float_part(np.real(v),exp3,maximum_info)
         sign_i, numbers_i = get_float_part(np.imag(v),exp3,maximum_info)
 
-        if numbers_i.replace('0','').replace('.','')!='' and numbers_r.replace('0','').replace('.','')!='':
-            if float(numbers_r)>100*float(numbers_i):
-                numbers_i = ''
-            elif float(numbers_i)>100*float(numbers_r):
-                numbers_r = ''
-
         to_return = ''
         if numbers_r.replace('0','').replace('.','')!='':
             to_return += sign_r+numbers_r 

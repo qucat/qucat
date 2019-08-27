@@ -4,6 +4,7 @@ final_after_events*
 .vscode/
 .temp
 .ipynb_checkpoints
+*ipynb_checkpoints*
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
@@ -111,5 +112,3 @@ venv.bak/
 # mypy
 .mypy_cache/
 upload_to_test_PyPi.bat
-test.py
-test.py

@@ -6,7 +6,7 @@ in the `Steele Lab <http://steelelab.tudelft.nl>`_.
 
 If you wish to contribute to this project, if you need support to use 
 this software in your project, or if you simply wish to express your support,
-don't hesitate to send me an email at m.f.gely@tudelft.nl
+don't hesitate to send Mario an email at mario.gely@qucat.org.
 
 If you are using the software and think you have found a bug, or if you
 would like to see additional features developped, please use

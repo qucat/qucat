@@ -87,7 +87,7 @@
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../../installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../tutorials/tutorials.html">Tutorials</a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="../API.html">Documentation</a><ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../API.html">List of functions</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="../builders.html">Creating a circuit</a></li>
 <li class="toctree-l2 current"><a class="reference internal" href="../circuit_functions.html">Circuit analysis</a><ul class="current">
 <li class="toctree-l3"><a class="reference internal" href="eigenfrequencies.html"> Calculating eigen-frequencies</a></li>
@@ -103,6 +103,8 @@
 <li class="toctree-l2"><a class="reference internal" href="../components.html">Circuit components</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="../../contact.html">Contact</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../report_a_bug.html">Report a bug</a></li>
 </ul>
 
             
@@ -148,7 +150,7 @@
     
       <li><a href="../../index.html">Docs</a> &raquo;</li>
         
-          <li><a href="../API.html">API documentation</a> &raquo;</li>
+          <li><a href="../API.html">List of functions</a> &raquo;</li>
         
           <li><a href="../circuit_functions.html">Circuit analysis</a> &raquo;</li>
         
@@ -198,9 +200,11 @@
 <div class="section" id="generating-qutip-hamiltonian">
 <h1>Generating QuTiP hamiltonian<a class="headerlink" href="#generating-qutip-hamiltonian" title="Permalink to this headline">¶</a></h1>
 <dl class="method">
-<dt id="core.Qcircuit.hamiltonian">
-<code class="descclassname">Qcircuit.</code><code class="descname">hamiltonian</code><span class="sig-paren">(</span><em>modes='all'</em>, <em>taylor=4</em>, <em>excitations=6</em>, <em>return_ops=False</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/core.html#Qcircuit.hamiltonian"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#core.Qcircuit.hamiltonian" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns the cuircuits Hamiltonian for further analysis with QuTiP</p>
+<dt id="qucat.Qcircuit.hamiltonian">
+<code class="descclassname">Qcircuit.</code><code class="descname">hamiltonian</code><span class="sig-paren">(</span><em>modes='all'</em>, <em>taylor=4</em>, <em>excitations=6</em>, <em>return_ops=False</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qucat/core.html#Qcircuit.hamiltonian"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#qucat.Qcircuit.hamiltonian" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the circuits Hamiltonian for further analysis with QuTiP.
+The Hamiltonian is provided in units of frequency (not angular frequency),
+such that <span class="math notranslate nohighlight">\(h=1\)</span>.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -227,7 +231,7 @@ will be returned along with the hamiltonian in the form
 The form of the return is then <code class="docutils literal notranslate"><span class="pre">H,[a_0,a_1,..]</span></code>
 where <code class="docutils literal notranslate"><span class="pre">a_i</span></code> is the annihilation operator of the
 i-th considered mode, a QuTiP Qobj</li>
-<li><strong>kwargs</strong> – Values for un-specified circuit compoenents,
+<li><strong>kwargs</strong> – Values for un-specified circuit components,
 ex: <code class="docutils literal notranslate"><span class="pre">L=1e-9</span></code>.</li>
 </ul>
 </td>
@@ -242,15 +246,23 @@ ex: <code class="docutils literal notranslate"><span class="pre">L=1e-9</span></
 </table>
 <p class="rubric">Notes</p>
 <p>The Hamiltonian of the circuit, with the non-linearity of the Josephson junctions
-Taylor-expanded, is given by</p>
-<p><span class="math notranslate nohighlight">\(\hat{H} = \sum_{m\in\text{modes}} hf_m\hat{a}_m^\dagger\hat{a}_m + \sum_j\sum_{2n\le\text{taylor}}E_j\frac{(-1)^{n+1}}{(2n)!}\left[\frac{\phi_{zpf,m,j}}{\phi_0}(\hat{a}_m^\dagger+\hat{a}_m)\right]^{2n}\)</span>,</p>
+Taylor-expanded, is given in the limit of low dissipation by</p>
+<p><span class="math notranslate nohighlight">\(\hat{H} = \sum_{m\in\text{modes}} \hbar \omega_m\hat{a}_m^\dagger\hat{a}_m + \sum_j\sum_{2n\le\text{taylor}}E_j\frac{(-1)^{n+1}}{(2n)!}\left[\frac{\phi_{zpf,m,j}}{\phi_0}(\hat{a}_m^\dagger+\hat{a}_m)\right]^{2n}\)</span>,</p>
 <p>where <span class="math notranslate nohighlight">\(\hat{a}_m\)</span> is the annihilation operator of the m-th
 normal mode of the circuit and <span class="math notranslate nohighlight">\(f_m\)</span> is the frequency of
 the m-th normal mode, <span class="math notranslate nohighlight">\(E_j\)</span> is the Josephson energy of
-the j-th junction, <span class="math notranslate nohighlight">\(phi_0 = \hbar/2e\)</span> and</p>
+the j-th junction and <span class="math notranslate nohighlight">\(\phi_0 = \hbar/2e\)</span>.</p>
+<p>The zero point fluctuations <span class="math notranslate nohighlight">\(\phi_{zpf,m,j}\)</span> of mode
+<span class="math notranslate nohighlight">\(m\)</span> through junction <span class="math notranslate nohighlight">\(j\)</span> is calculated
+by multiplying the voltage transfer function between a reference junction
+and the junction <span class="math notranslate nohighlight">\(j\)</span> with the zero-point fluctuations
+of the reference junction</p>
 <p><span class="math notranslate nohighlight">\(\phi_{zpf,m} = \sqrt{\frac{\hbar}{\omega_mImY'(\omega_m)}}\)</span></p>
-<p>is the zero-point fluctuations in flux if a mode through the junction,
-with frequency <span class="math notranslate nohighlight">\(\omega_m\)</span> and admittance to the rest of the circuit <span class="math notranslate nohighlight">\(Y\)</span>.</p>
+<p>where <span class="math notranslate nohighlight">\(Y\)</span> is the admittance of
+the circuit calculated at the nodes of the reference junction.</p>
+<p>If the circuit has at least one resistor, the voltage transfer
+functions will become complex, but we take the approximation
+of high-quality factor modes by neglecting the imaginary part.</p>
 </dd></dl>
 
 </div>

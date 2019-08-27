@@ -4,5 +4,8 @@ Tutorials
 .. toctree::
     :maxdepth: 2
   
-    transmon_LC_GUI.ipynb
-    transmon_LC_programmatically.ipynb
+    basics.ipynb
+    filter_design.ipynb
+    optomechanics.ipynb
+    MMUSC.ipynb
+    tuneable_coupler.ipynb

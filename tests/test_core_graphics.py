@@ -42,3 +42,7 @@ class TestGraphics(TestCaseAppended):
         cir=self.open_gui_file('show_normal_mode_transmon_RLC_Lj_as_parameter.txt')
         for quantity in ['flux','voltage','charge','current']:
             cir.show_normal_mode(0,quantity,Lj=1e-9)
+
+
+if __name__ == "__main__":
+    unittest.main()

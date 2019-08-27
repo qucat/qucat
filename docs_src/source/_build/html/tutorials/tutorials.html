@@ -38,7 +38,7 @@
     <link rel="author" title="About these documents" href="../about.html" />
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Using qucat with the graphical circuit editor" href="transmon_LC_GUI.html" />
+    <link rel="next" title="Basics" href="basics.html" />
     <link rel="prev" title="Installation" href="../installation.html" /> 
 </head>
 
@@ -87,11 +87,18 @@
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Tutorials</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="transmon_LC_GUI.html">Using qucat with the graphical circuit editor</a></li>
-<li class="toctree-l2"><a class="reference internal" href="transmon_LC_programmatically.html">Using qucat programmatically</a></li>
+<li class="toctree-l2"><a class="reference internal" href="basics.html">Basics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="filter_design.html">Designing a classical microwave filter</a></li>
+<li class="toctree-l2"><a class="reference internal" href="optomechanics.html">Computing an optomechanical coupling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="capacitive_network.html">Reducing a complex capacitive network in cQED</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MMUSC.html">Modelling a distributed multi-mode resonator</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tuneable_coupler.html">Understanding a tuneable coupler circuit</a></li>
+<li class="toctree-l2"><a class="reference internal" href="josephson_ring.html">Understanding a Josephson ring based qubit</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="../API/API.html">Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../API/API.html">List of functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../contact.html">Contact</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../report_a_bug.html">Report a bug</a></li>
 </ul>
 
             
@@ -184,21 +191,21 @@
 <h1>Tutorials<a class="headerlink" href="#tutorials" title="Permalink to this headline">¶</a></h1>
 <div class="toctree-wrapper compound">
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="transmon_LC_GUI.html">Using qucat with the graphical circuit editor</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="transmon_LC_GUI.html#Construct-the-circuit">Construct the circuit</a></li>
-<li class="toctree-l2"><a class="reference internal" href="transmon_LC_GUI.html#Circuit-parameters">Circuit parameters</a></li>
-<li class="toctree-l2"><a class="reference internal" href="transmon_LC_GUI.html#Sweeping-a-parameter">Sweeping a parameter</a></li>
-<li class="toctree-l2"><a class="reference internal" href="transmon_LC_GUI.html#Visualizing-normal-modes">Visualizing normal modes</a></li>
-<li class="toctree-l2"><a class="reference internal" href="transmon_LC_GUI.html#Further-analysis-in-QuTiP">Further analysis in QuTiP</a></li>
+<li class="toctree-l1"><a class="reference internal" href="basics.html">Basics</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="basics.html#Building-the-circuit-programmatically">Building the circuit programmatically</a></li>
+<li class="toctree-l2"><a class="reference internal" href="basics.html#Building-a-circuit-with-the-GUI">Building a circuit with the GUI</a></li>
+<li class="toctree-l2"><a class="reference internal" href="basics.html#Hamiltonian,-and-further-analysis-with-QuTiP">Hamiltonian, and further analysis with QuTiP</a></li>
+<li class="toctree-l2"><a class="reference internal" href="basics.html#Calculating-eigenfrequencies,-loss-rates,-anharmonicities-and-cross-Kerr-couplings">Calculating eigenfrequencies, loss-rates, anharmonicities and cross-Kerr couplings</a></li>
+<li class="toctree-l2"><a class="reference internal" href="basics.html#Sweeping-a-parameter">Sweeping a parameter</a></li>
+<li class="toctree-l2"><a class="reference internal" href="basics.html#Visualizing-a-normal-mode">Visualizing a normal mode</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="transmon_LC_programmatically.html">Using qucat programmatically</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="transmon_LC_programmatically.html#Building-the-circuit">Building the circuit</a></li>
-<li class="toctree-l2"><a class="reference internal" href="transmon_LC_programmatically.html#Calculating-circuit-parameters">Calculating circuit parameters</a></li>
-<li class="toctree-l2"><a class="reference internal" href="transmon_LC_programmatically.html#Hamiltonian,-and-further-analysis-with-QuTiP">Hamiltonian, and further analysis with QuTiP</a></li>
-<li class="toctree-l2"><a class="reference internal" href="transmon_LC_programmatically.html#Sweeping-a-parameter:-the-avoided-crossing">Sweeping a parameter: the avoided crossing</a></li>
-</ul>
-</li>
+<li class="toctree-l1"><a class="reference internal" href="filter_design.html">Designing a classical microwave filter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="optomechanics.html">Computing an optomechanical coupling</a></li>
+<li class="toctree-l1"><a class="reference internal" href="capacitive_network.html">Reducing a complex capacitive network in cQED</a></li>
+<li class="toctree-l1"><a class="reference internal" href="MMUSC.html">Modelling a distributed multi-mode resonator</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tuneable_coupler.html">Understanding a tuneable coupler circuit</a></li>
+<li class="toctree-l1"><a class="reference internal" href="josephson_ring.html">Understanding a Josephson ring based qubit</a></li>
 </ul>
 </div>
 </div>
@@ -211,7 +218,7 @@
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="transmon_LC_GUI.html" class="btn btn-neutral float-right" title="Using qucat with the graphical circuit editor" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="basics.html" class="btn btn-neutral float-right" title="Basics" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
         <a href="../installation.html" class="btn btn-neutral float-left" title="Installation" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
