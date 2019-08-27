@@ -244,13 +244,7 @@
     "When the bare frequency of the coupler matches the coupled transmon frequencies, the coupler acts as a band-stop filter, and lets no current traverse.\n",
     "At this point, both symmetric and anti-symmetric modes should have identical frequencies.\n",
     "\n",
-    "This effect is shown experimentally through a measure of the first transitions of the two non-linear modes\n",
-    "\n",
-    "![](graphics/TC_data.png)\n",
-    "\n",
-    "*data from https://arxiv.org/abs/1802.10037*\n",
-    "\n",
-    "One is tuned with flux (symmetric mode), the other barely changes (anti-symmetric mode).\n",
+    "This effect is shown experimentally in Fig. 2(e) of https://arxiv.org/abs/1802.10037.\n",
     "\n",
     "We can reproduce this experiment by generating a Hamiltonian with QuCAT and diagonalizing it with QuTiP for different values of the flux."
    ]

@@ -210,7 +210,7 @@ Plots a schematic of the circuit overlayed with
 arrows representing the complex amplitude of a certain quantity
 <span class="math notranslate nohighlight">\(X\)</span> which can be flux, current, charge or voltage.</p>
 <p>More specifically, the complex amplitude of <span class="math notranslate nohighlight">\(X\)</span> if a
-single-photon coherent state were populating a given mode <code class="docutils literal notranslate"><span class="pre">mode</span></code>.</p>
+single-photon amplitude coherent state were populating a given mode <code class="docutils literal notranslate"><span class="pre">mode</span></code>.</p>
 <p>Current is shown in units of Ampere, voltage in Volts,
 charge in electron charge, and flux in units of the
 reduced flux quantum
@@ -245,10 +245,13 @@ arrow size and arrow direction</li>
 </table>
 <p class="rubric">Notes</p>
 <p>This annotated quantity, called a phasor, is calculated by multiplying the
-voltage transfer function <span class="math notranslate nohighlight">\(T_{cr}\)</span> (between a reference component <span class="math notranslate nohighlight">\(r\)</span>
-and the annotated component  <span class="math notranslate nohighlight">\(r\)</span> ), with
+voltage transfer function <span class="math notranslate nohighlight">\(T_{rc}\)</span> (between a reference component <span class="math notranslate nohighlight">\(r\)</span>
+and the annotated component  <span class="math notranslate nohighlight">\(c\)</span> ), with
 <span class="math notranslate nohighlight">\(X_{zpf,m,r}\)</span>, the zero-point fluctuations of <span class="math notranslate nohighlight">\(\hat{X}\)</span> at the reference component.</p>
-<p>Note that resistors make the transfer function <span class="math notranslate nohighlight">\(T_{cr}\)</span>, and hence the phasors complex.</p>
+<p>Note that resistors make the transfer function <span class="math notranslate nohighlight">\(T_{rc}\)</span>, and hence the phasors complex.</p>
+<p>Since this is plotted for a single-photon amplitude coherent state, the absolute value
+of the annotation is equal to the
+contribution of a mode to the zero-point fluctuations accross this component.</p>
 <p>For more detail on the underlying theory, see LINKTOCOME.</p>
 </dd></dl>
 

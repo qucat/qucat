@@ -637,15 +637,15 @@
 
 <span class="sd">        :math:`\hat{H} = \sum_m\sum_{n\ne m} (\hbar\omega_m-A_m-\frac{\chi_{mn}}{2})\hat{a}_m^\dagger\hat{a}_m -\frac{A_m}{2}\hat{a}_m^\dagger\hat{a}_m^\dagger\hat{a}_m\hat{a}_m -\chi_{mn}\hat{a}_m^\dagger\hat{a}_m\hat{a}_n^\dagger\hat{a}_n`,</span>
 
-<span class="sd">        valid for weak anharmonicity $\chi_{mn},A_m\ll \omega_m$.</span>
+<span class="sd">        valid for weak anharmonicity :math:`\chi_{mn},A_m\ll \omega_m`.</span>
 
 <span class="sd">        Here </span>
 
 <span class="sd">        * :math:`\omega_m` are the frequencies of the normal modes of the circuit where all junctions have been replaced with inductors characterized by their Josephson inductance</span>
 <span class="sd">        </span>
-<span class="sd">        * :math:`A_m` is the anharmonicity of mode $m$, the difference in frequency of the first two transitions of the mode</span>
+<span class="sd">        * :math:`A_m` is the anharmonicity of mode :math:`m` , the difference in frequency of the first two transitions of the mode</span>
 <span class="sd">        </span>
-<span class="sd">        * :math:`\chi_{mn}` is the shift in mode $m$ that incurs if an excitation is created in mode $n$ </span>
+<span class="sd">        * :math:`\chi_{mn}` is the shift in mode :math:`m` that incurs if an excitation is created in mode :math:`n`</span>
 
 <span class="sd">        This function returns the values of :math:`A_m`.</span>
 
@@ -685,15 +685,15 @@
 
 <span class="sd">        :math:`\hat{H} = \sum_m\sum_{n\ne m} (\hbar\omega_m-A_m-\frac{\chi_{mn}}{2})\hat{a}_m^\dagger\hat{a}_m -\frac{A_m}{2}\hat{a}_m^\dagger\hat{a}_m^\dagger\hat{a}_m\hat{a}_m -\chi_{mn}\hat{a}_m^\dagger\hat{a}_m\hat{a}_n^\dagger\hat{a}_n`,</span>
 
-<span class="sd">        valid for weak anharmonicity $\chi_{mn},A_m\ll \omega_m$.</span>
+<span class="sd">        valid for weak anharmonicity :math:`\chi_{mn},A_m\ll \omega_m`.</span>
 
 <span class="sd">        Here </span>
 
 <span class="sd">        * :math:`\omega_m` are the frequencies of the normal modes of the circuit where all junctions have been replaced with inductors characterized by their Josephson inductance</span>
 <span class="sd">        </span>
-<span class="sd">        * :math:`A_m` is the anharmonicity of mode $m$, the difference in frequency of the first two transitions of the mode</span>
+<span class="sd">        * :math:`A_m` is the anharmonicity of mode :math:`m` , the difference in frequency of the first two transitions of the mode</span>
 <span class="sd">        </span>
-<span class="sd">        * :math:`\chi_{mn}` is the shift in mode $m$ that incurs if an excitation is created in mode $n$ </span>
+<span class="sd">        * :math:`\chi_{mn}` is the shift in mode :math:`m` that incurs if an excitation is created in mode :math:`n`</span>
 
 <span class="sd">        This function returns the values of :math:`A_m` and :math:`\chi_{mn}` .</span>
 
@@ -877,13 +877,15 @@
 <span class="sd">        :math:`\hat{H} = \sum_{m\in\text{modes}} \hbar \omega_m\hat{a}_m^\dagger\hat{a}_m + \sum_j\sum_{2n\le\text{taylor}}E_j\frac{(-1)^{n+1}}{(2n)!}\left[\frac{\phi_{zpf,m,j}}{\phi_0}(\hat{a}_m^\dagger+\hat{a}_m)\right]^{2n}`,</span>
 <span class="sd">        </span>
 <span class="sd">        where :math:`\hat{a}_m` is the annihilation operator of the m-th</span>
-<span class="sd">        normal mode of the circuit, :math:`f_m` is the frequency of </span>
+<span class="sd">        normal mode of the circuit, :math:`\omega_m` is the frequency of </span>
 <span class="sd">        the m-th normal mode, :math:`E_j` is the Josephson energy of</span>
 <span class="sd">        the j-th junction and :math:`\phi_0 = \hbar/2e` and :math:`\phi_{zpf,m,j}` </span>
 <span class="sd">        is the zero point fluctuation of mode </span>
 <span class="sd">        :math:`m` through junction :math:`j`.</span>
 
 <span class="sd">        In the expression above, ``modes`` and ``taylor`` are arguments of the ``hamiltonian`` function.</span>
+
+<span class="sd">        For more details on the underlying theory, see LINKTOCOME</span>
 <span class="sd">        &#39;&#39;&#39;</span>
         <span class="kn">from</span> <span class="nn">qutip</span> <span class="k">import</span> <span class="n">destroy</span><span class="p">,</span> <span class="n">qeye</span><span class="p">,</span> <span class="n">tensor</span>
 
@@ -1035,7 +1037,7 @@
 <span class="sd">        :math:`X` which can be flux, current, charge or voltage.</span>
 
 <span class="sd">        More specifically, the complex amplitude of :math:`X` if a </span>
-<span class="sd">        single-photon coherent state were populating a given mode ``mode``.</span>
+<span class="sd">        single-photon amplitude coherent state were populating a given mode ``mode``.</span>
 
 <span class="sd">        Current is shown in units of Ampere, voltage in Volts, </span>
 <span class="sd">        charge in electron charge, and flux in units of the</span>
@@ -1074,11 +1076,15 @@
 <span class="sd">        -----</span>
 
 <span class="sd">        This annotated quantity, called a phasor, is calculated by multiplying the</span>
-<span class="sd">        voltage transfer function :math:`T_{cr}` (between a reference component :math:`r`</span>
-<span class="sd">        and the annotated component  :math:`r` ), with</span>
+<span class="sd">        voltage transfer function :math:`T_{rc}` (between a reference component :math:`r`</span>
+<span class="sd">        and the annotated component  :math:`c` ), with</span>
 <span class="sd">        :math:`X_{zpf,m,r}`, the zero-point fluctuations of :math:`\hat{X}` at the reference component.</span>
 <span class="sd">        </span>
-<span class="sd">        Note that resistors make the transfer function :math:`T_{cr}`, and hence the phasors complex.</span>
+<span class="sd">        Note that resistors make the transfer function :math:`T_{rc}`, and hence the phasors complex.</span>
+
+<span class="sd">        Since this is plotted for a single-photon amplitude coherent state, the absolute value</span>
+<span class="sd">        of the annotation is equal to the</span>
+<span class="sd">        contribution of a mode to the zero-point fluctuations accross this component.</span>
 
 <span class="sd">        For more detail on the underlying theory, see LINKTOCOME.</span>
 <span class="sd">        &#39;&#39;&#39;</span>
@@ -2307,7 +2313,7 @@
     <span class="k">def</span> <span class="nf">zpf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mode</span><span class="p">,</span> <span class="n">quantity</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="sa">r</span><span class="sd">&#39;&#39;&#39;Returns contribution of a mode to the zero-point fluctuations of a quantity for this component.</span>
 
-<span class="sd">        The quantity can be current current (in units of Ampere), </span>
+<span class="sd">        The quantity can be current (in units of Ampere), </span>
 <span class="sd">        voltage (in Volts), </span>
 <span class="sd">        charge (in electron charge), </span>
 <span class="sd">        or flux (in units of the reduced flux quantum, :math:`\hbar/2e`).</span>
@@ -2332,11 +2338,11 @@
 <span class="sd">        Notes</span>
 <span class="sd">        -----</span>
 <span class="sd">        This quantity is calculated by multiplying the</span>
-<span class="sd">        voltage transfer function :math:`T_{cr}` (between a reference component :math:`r`</span>
-<span class="sd">        and the annotated component  :math:`r` ), with</span>
+<span class="sd">        voltage transfer function :math:`T_{rc}` (between a reference component :math:`r`</span>
+<span class="sd">        and the annotated component  :math:`c` ), with</span>
 <span class="sd">        :math:`X_{zpf,m,r}`, the zero-point fluctuations of :math:`\hat{X}` at the reference component.</span>
 <span class="sd">        </span>
-<span class="sd">        Note that resistors make the transfer function :math:`T_{cr}`, and hence the phasors complex.</span>
+<span class="sd">        Note that resistors make the transfer function :math:`T_{rc}`, and hence this quantity, complex.</span>
 
 <span class="sd">        For more detail on the underlying theory, see LINKTOCOME.</span>
 <span class="sd">        &#39;&#39;&#39;</span>
@@ -2590,7 +2596,7 @@
 
 
 <div class="viewcode-block" id="J"><a class="viewcode-back" href="../../API/components/J.html#qucat.J">[docs]</a><span class="k">class</span> <span class="nc">J</span><span class="p">(</span><span class="n">L</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;A class representing an junction</span>
+    <span class="sd">&quot;&quot;&quot;A class representing a junction</span>
 <span class="sd">    </span>
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -2600,13 +2606,13 @@
 <span class="sd">                    Index corresponding to the other node of the junction</span>
 <span class="sd">    args:           &lt;float&gt; or &lt;str&gt; or &lt;float&gt;,&lt;str&gt;</span>
 <span class="sd">                    Other arguments should be a float which by default</span>
-<span class="sd">                    corresponds to the Losephson inductance of the</span>
+<span class="sd">                    corresponds to the Josephson inductance of the</span>
 <span class="sd">                    junction, a string corresponding to the </span>
 <span class="sd">                    name of that value (ex: `&quot;L_J&quot;`), or both.</span>
 <span class="sd">                    If only a label is provided, </span>
-<span class="sd">                    a value for should be passed</span>
+<span class="sd">                    a value for this junction should be passed</span>
 <span class="sd">                    as a keyword argument in subsequent function calls</span>
-<span class="sd">                    (ex: `L_J = 10e-9`)   </span>
+<span class="sd">                    (ex: `L_J = 10e-9`).</span>
 <span class="sd">                    This is the best way to proceed if one wants to sweep the value of this</span>
 <span class="sd">                    junction. Indeed, the most computationally expensive part of the </span>
 <span class="sd">                    analysis is performed upon initializing the circuit, subsequently</span>
@@ -2667,7 +2673,7 @@
 <span class="sd">                    ex: ``L=1e-9``.</span>
 <span class="sd">        </span>
 <span class="sd">        mode:           integer</span>
-<span class="sd">                        Determine what mode to plot, where 0 designates</span>
+<span class="sd">                        where 0 designates</span>
 <span class="sd">                        the lowest frequency mode, and the others</span>
 <span class="sd">                        are arranged in order of increasing frequency</span>
 <span class="sd">        Returns</span>
@@ -2677,7 +2683,9 @@
 <span class="sd">        </span>
 <span class="sd">        Notes</span>
 <span class="sd">        -----</span>
-<span class="sd">        Anharmonicity of the mode ``m`` if this were the only junction in the circuit (if all the </span>
+<span class="sd">        The quantity returned is the anharmonicity</span>
+<span class="sd">        of the mode ``m`` if this junction were the only junction</span>
+<span class="sd">        present in the circuit (i.e. if all the </span>
 <span class="sd">        others were replaced by linear inductors).</span>
 
 <span class="sd">        The total anharmonicity of a mode (in first order perturbation theory) is obtained</span>
@@ -2717,7 +2725,7 @@
             <span class="k">return</span> <span class="n">shift</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">x_plot_center</span><span class="p">),</span> <span class="n">shift</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">y_plot_center</span><span class="p">),</span> <span class="n">line_type</span></div>
 
 <div class="viewcode-block" id="R"><a class="viewcode-back" href="../../API/components/R.html#qucat.R">[docs]</a><span class="k">class</span> <span class="nc">R</span><span class="p">(</span><span class="n">Component</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;A class representing an resistor</span>
+    <span class="sd">&quot;&quot;&quot;A class representing a resistor</span>
 <span class="sd">    </span>
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>

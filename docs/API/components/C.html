@@ -229,7 +229,7 @@ such as the anharmonicity can be performed much faster.</li>
 <dt id="qucat.C.zpf">
 <code class="descname">zpf</code><span class="sig-paren">(</span><em>mode</em>, <em>quantity</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#qucat.C.zpf" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns contribution of a mode to the zero-point fluctuations of a quantity for this component.</p>
-<p>The quantity can be current current (in units of Ampere),
+<p>The quantity can be current (in units of Ampere),
 voltage (in Volts),
 charge (in electron charge),
 or flux (in units of the reduced flux quantum, <span class="math notranslate nohighlight">\(\hbar/2e\)</span>).</p>
@@ -257,10 +257,10 @@ ex: <code class="docutils literal notranslate"><span class="pre">L=1e-9</span></
 </table>
 <p class="rubric">Notes</p>
 <p>This quantity is calculated by multiplying the
-voltage transfer function <span class="math notranslate nohighlight">\(T_{cr}\)</span> (between a reference component <span class="math notranslate nohighlight">\(r\)</span>
-and the annotated component  <span class="math notranslate nohighlight">\(r\)</span> ), with
+voltage transfer function <span class="math notranslate nohighlight">\(T_{rc}\)</span> (between a reference component <span class="math notranslate nohighlight">\(r\)</span>
+and the annotated component  <span class="math notranslate nohighlight">\(c\)</span> ), with
 <span class="math notranslate nohighlight">\(X_{zpf,m,r}\)</span>, the zero-point fluctuations of <span class="math notranslate nohighlight">\(\hat{X}\)</span> at the reference component.</p>
-<p>Note that resistors make the transfer function <span class="math notranslate nohighlight">\(T_{cr}\)</span>, and hence the phasors complex.</p>
+<p>Note that resistors make the transfer function <span class="math notranslate nohighlight">\(T_{rc}\)</span>, and hence this quantity, complex.</p>
 <p>For more detail on the underlying theory, see LINKTOCOME.</p>
 </dd></dl>
 

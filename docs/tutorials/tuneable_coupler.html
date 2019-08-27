@@ -404,7 +404,7 @@ div.rendered_html tbody tr:hover {
 <p>Here, we study the circuit of <a class="reference external" href="https://arxiv.org/abs/1802.10037">https://arxiv.org/abs/1802.10037</a> where two transmon qubits are coupled through a tuneable coupler.</p>
 <p>This tuneable coupler is built from a capacitor and a Superconducting Quantum Interference Device, or SQUID. By flux biasing the SQUID, we change the effective Josephson energy of the coupler, which modifies the coupling between the two transmons. We will present how the normal mode visualization tool helps in understanding the physics of the device. Secondly, we will show how a Hamiltonian generated with QuCAT accurately reproduces experimental measurements of the device.</p>
 <p>We start by building the device shown below</p>
-<p><img alt="image0" src="../_images/TC_data.png" /></p>
+<p><img alt="image0" src="../_images/TC_circuit.png" /></p>
 <p><em>optical micrograph from https://arxiv.org/abs/1802.10037</em></p>
 <p>More specifically, we are interested in the part of the device in the dashed box, consisting of the two transmons and the tuneable coupler. The other circuitry, the flux line, drive line and readout resonator could be included to determine external losses, or the dispersive coupling of the transmons to their readout resonator. We will omit these features for simplicity here.</p>
 <p>The circuit is built with the GUI</p>
@@ -521,10 +521,7 @@ C:\Anaconda3\lib\site-packages\qucat\core.py:2499: RuntimeWarning: invalid value
 </div>
 </div>
 <p>currents are flowing away from the coupler in each transmon, we find a current through the coupler junction and capacitor on the order of <span class="math notranslate nohighlight">\(10^{-21}\)</span> A. This mode frequency should not vary as a function of <span class="math notranslate nohighlight">\(L_j\)</span>. When the bare frequency of the coupler matches the coupled transmon frequencies, the coupler acts as a band-stop filter, and lets no current traverse. At this point, both symmetric and anti-symmetric modes should have identical frequencies.</p>
-<p>This effect is shown experimentally through a measure of the first transitions of the two non-linear modes</p>
-<p><img alt="image0" src="../_images/TC_data.png" /></p>
-<p><em>data from https://arxiv.org/abs/1802.10037</em></p>
-<p>One is tuned with flux (symmetric mode), the other barely changes (anti-symmetric mode).</p>
+<p>This effect is shown experimentally in Fig. 2(e) of <a class="reference external" href="https://arxiv.org/abs/1802.10037">https://arxiv.org/abs/1802.10037</a>.</p>
 <p>We can reproduce this experiment by generating a Hamiltonian with QuCAT and diagonalizing it with QuTiP for different values of the flux.</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:

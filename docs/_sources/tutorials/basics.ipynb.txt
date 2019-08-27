@@ -2,11 +2,11 @@
  "cells": [
   {
    "cell_type": "code",
-   "execution_count": 1,
+   "execution_count": 5,
    "metadata": {
     "ExecuteTime": {
-     "end_time": "2019-08-27T13:14:25.719000Z",
-     "start_time": "2019-08-27T13:14:24.793000Z"
+     "end_time": "2019-08-27T15:17:03.082200Z",
+     "start_time": "2019-08-27T15:17:03.071200Z"
     }
    },
    "outputs": [],
@@ -31,11 +31,11 @@
   },
   {
    "cell_type": "code",
-   "execution_count": 2,
+   "execution_count": 6,
    "metadata": {
     "ExecuteTime": {
-     "end_time": "2019-08-27T13:14:28.408000Z",
-     "start_time": "2019-08-27T13:14:25.722000Z"
+     "end_time": "2019-08-27T15:17:05.168200Z",
+     "start_time": "2019-08-27T15:17:05.155200Z"
     }
    },
    "outputs": [],
@@ -153,11 +153,11 @@
   },
   {
    "cell_type": "code",
-   "execution_count": 5,
+   "execution_count": 7,
    "metadata": {
     "ExecuteTime": {
-     "end_time": "2019-08-22T16:06:14.133000Z",
-     "start_time": "2019-08-22T16:06:09.630000Z"
+     "end_time": "2019-08-27T15:17:40.470200Z",
+     "start_time": "2019-08-27T15:17:10.916200Z"
     }
    },
    "outputs": [
