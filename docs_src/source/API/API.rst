@@ -1,5 +1,5 @@
 *****************
-API documentation
+Index of functions
 *****************
 
 This chapter contains the documentation for all qucat public classes and functions.

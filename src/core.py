@@ -1,6 +1,7 @@
 import sympy as sp
 from sympy.utilities.lambdify import lambdify
 import numpy as np
+from numpy.polynomial.polynomial import Polynomial as npPoly
 from sympy.core.mul import Mul, Pow, Add
 from copy import deepcopy
 from numbers import Number
@@ -10,27 +11,25 @@ from subprocess import run
 import inspect
 import matplotlib.pyplot as plt
 import time
+from warnings import warn
 try:
     from ._constants import *
-    from ._utility import pretty_value,\
-            shift,\
-            to_string,\
-            safely_evaluate,\
-            vectorize
+    from ._utility import *
     from .plotting_settings import plotting_parameters_show,plotting_parameters_normal_modes
 except ImportError:
     # When running from source without pip installation
     from _constants import *
-    from _utility import pretty_value,\
-            shift,\
-            to_string,\
-            safely_evaluate,\
-            vectorize
+    from _utility import *
     from plotting_settings import plotting_parameters_show,plotting_parameters_normal_modes
 
 PROFILING = False
 
 def timeit(method):
+    '''
+    Decorator which prints the time 
+    a function took to execute.
+    Only works the global variable PROFILING is set to True.
+    '''
     def timed(*args, **kw):
         ts = time.time()
         result = method(*args, **kw)
@@ -42,6 +41,21 @@ def timeit(method):
     return timed
 
 def string_to_component(s, *arg, **kwarg):
+    '''
+    Allows the creation of a Component object using a string.
+
+    Parameters
+    ----------
+    s : string
+        One of 'W', 'R', 'L', 'J', 'C', 'G', dicatates the type 
+        of component to create
+    args, kwargs : 
+        Arguments needed for the component creation
+
+    Returns
+    -------
+    A component of type ``s``
+    '''
     if s == 'W':
         return W(*arg, **kwarg)
     elif s == 'R':
@@ -57,99 +71,126 @@ def string_to_component(s, *arg, **kwarg):
 
 class Qcircuit(object):
     """A class representing a quantum circuit.
-    '''
+
+    Attributes:
+        components (dict): Dictionary of components having a label, such that a component 
+            with label 'L_1' can be obtained by ``Qcircuit.components['L_1']``
+        Q_min (float): Modes with have a quality factor below Q_min will not ignored
+        inductors (list): List of inductor objects present in the circuit
+        resistors (list): List of inductor objects present in the circuit
+        junctions (list): List of junction objects present in the circuit
+        capacitors (list): List of capacitor objects present in the circuit
+        netlist (list): List of all components present in the circuit
+        ref_elt (J or L): list of junction or inductor component used as a reference for the calculation 
+                        of zero-point fluctations, each index of the list corresponds to a different mode
     """
 
     def __init__(self, netlist):
-        self.Q_min = 1
-        '''Doc for Q_min
-        '''
+        self.Q_min = 1 # Modes with have a quality factor below Q_min will not ignored
 
-        self._plotting_normal_mode = False
-        self.netlist = netlist
-        self._network = _Network(netlist)
+        self.warn_discarded_mode = True # If this is set to True, the user will be notified when a mode is discarded.
+        
+        # After an initial estimation of the complex eigenfrequenceis using a diaglinalization
+        # of the companion matrix, the frequencies are polishd to a tolerence
+        # self.root_relative_tolerance using a gradient based root finder, with a maximum number of iterations self.root_max_iterations
+        self.root_max_iterations = 1e4 
+        self.root_relative_tolerance = 1e-12
+
+        self._plotting_normal_mode = False # Used to keep track of which imported plotting_settings to use 
+                                            # only set to true when show_normal_mode is called
+        self.plotting_parameters_normal_modes = plotting_parameters_normal_modes
+        self.plotting_parameters_show = plotting_parameters_show
+
+        self.netlist = netlist # List of all components present in the circuit
+
+        self._network = _Network(netlist) # Converts the list of components into a network object
+                # The Network object has methods to compute of the admittance between two nodes
+                # or the tranfer function between two nodes and two others
+        
+        # We construct (enpty) lists of all the different type of 
+        # components that could be present in the circuit
         self.inductors = []
         self.capacitors = []
         self.junctions = []
         self.resistors = []
         self._wire = []
         self._grounds = []
+
+        # Initialize a dictionary of components having a label, such that a component 
+        # with label 'L_1' can be obtained by ``Qcircuit.components['L_1']``
+        self.components = {}
+
+        # Initialize a list which will contain the labels of the componentns which have
+        # no value (these will have to be specified in most methods as a kwarg)
         self._no_value_components = []
+
+        # For each component of the circuit....
         for elt in netlist:
+            # ...tell the component what circuit it belongs to
             elt._circuit = self
+            # ...and populate the empty lists/dictionaries initialized above with the element if appropriate
             elt._set_component_lists()
 
-        if len(self.junctions) > 0:
-            self.ref_elt = self.junctions[0]
-        elif len(self.inductors) > 0:
-            self.ref_elt = self.inductors[0]
-        else:
+
+        # Check that there is at least one inductive element in the circuit
+        if len(self.junctions) == 0 and len(self.inductors) == 0:
             raise ValueError(
                 "There should be at least one junction or inductor in the circuit")
 
+        # Check that there is at least one capacitive element in the circuit
         if len(self.capacitors) == 0:
             raise ValueError(
                 "There should be at least one capacitor in the circuit")
 
-        self._flux_transformation_dict = {}
-        for node in self._network.nodes:
-            self._flux_transformation_dict[node] = {}
+                
+        # define the function which returns the inverse of dY
+        # where Y is the admittance at the nodes of an inductive element
+        for inductive_element in self.inductors+self.junctions:
+            inductive_element._compute_flux_zpf_r()
 
-        self._compute_inverse_of_dY()
-        self._char_poly_coeffs = [lambdify(
-            self._no_value_components, c, 'numpy') for c in 
-            self._network.compute_char_poly_coeffs(is_lossy = (len(self.resistors)>0))]
+        # Initialize the flux transformation dictionary,
+        # where _flux_transformation_dict[ref_node_minus,ref_node_plus,node_minus,node_plus] 
+        # will be populated with a function which gives
+        # the voltage transfer function between the nodes surrounding
+        # the reference element and (node_plus,node_minus)
+        # this function takes as an argument an angular frequency
+        # and keyword arguments if component values need to be specified
+        self._flux_transformation_dict = {}
+
+        # define the functions which returns the components of the characteristic polynomial
+        # (the roots of which are the eigen-frequencies)
+        self._char_poly_coeffs = [lambdify(self._no_value_components, c, 'numpy') 
+            for c in self._network.compute_char_poly_coeffs(is_lossy = (len(self.resistors)>0))]
 
     @property
     def _pp(self):
+        '''
+        Returns the plotting parameters used 
+            * in the Qcircuit.show method (if self._plotting_normal_mode is False)
+            * in the Qcircuit.show_normal_modes() method (if self._plotting_normal_mode is True)
+        '''
         if self._plotting_normal_mode:
-            return plotting_parameters_normal_modes
+            return self.plotting_parameters_normal_modes
         else:
-            return plotting_parameters_show
+            return self.plotting_parameters_show
 
-    @timeit
-    def _compute_inverse_of_dY(self):
-        Y = self._network.admittance(self.ref_elt.node_minus, self.ref_elt.node_plus)
-        Y_together = sp.together(Y)    # Puts everything on a single fraction with the numerator and denomenator as polynomials
-                                            # So it combines but also "de-nests"
+    def _parse_kwargs(self, **kwargs):
+        '''
+        Raises a ValueError 
+        * if one of the kwargs is not the label of a circuit element
+        * if a component without a value has not had its value specified in the kwargs 
 
-        w = sp.Symbol('w')
-        # Write numerator as polynomial in omega
-        Y_numer = sp.numer(Y_together)
-        Y_numer_poly = sp.collect(sp.expand(Y_numer), w)
-        # Write numerator as polynomial in omega
-        Y_denom = sp.denom(Y_together)
-        Y_denom_poly = sp.collect(sp.expand(Y_denom), w)
-        Y_numer_poly_order = sp.polys.polytools.degree(
-            Y_numer_poly, gen=w)  # Order of the polynomial
-        Y_denom_poly_order = sp.polys.polytools.degree(
-            Y_denom_poly, gen=w)  # Order of the polynomial
-
-        Y_numer_poly_coeffs_analytical = [Y_numer_poly.coeff(w, n) for n in range(
-            Y_numer_poly_order+1)[::-1]]  # Get polynomial coefficients
-
-        Y_denom_poly_coeffs_analytical = [Y_denom_poly.coeff(w, n) for n in range(
-            Y_denom_poly_order+1)[::-1]]  # Get polynomial coefficients
-
-        v = sum([a*w**(Y_denom_poly_order-n)
-                     for n, a in enumerate(Y_denom_poly_coeffs_analytical)])
-        du = sum([(Y_numer_poly_order-n)*a*w**(Y_numer_poly_order-n-1)
-                      for n, a in enumerate(Y_numer_poly_coeffs_analytical)])
+        Called in all functions accepting keyword arguments (for un-specified circuit components).
         
-        self._inverse_of_dY_lambdified =  lambdify(
-                ['w']+self._no_value_components,
-                v/du, 
-                "numpy")
-
-    @vectorize
-    @safely_evaluate
-    def _inverse_of_dY(self, w,**kwargs):
-        return self._inverse_of_dY_lambdified(w,**kwargs)
-  
-    def _check_kwargs(self, **kwargs):
+        Parameters
+        ----------
+        kwargs:     
+                    Values for un-specified circuit components, 
+                    ex: ``L=1e-9``.
+        '''
         for key in kwargs:
             if key in self._no_value_components:
-                pass
+                kwargs[key]  = kwargs[key]
             else:
                 raise ValueError(
                     '%s is not the label of a circuit element' % key)
@@ -157,55 +198,171 @@ class Qcircuit(object):
         for label in self._no_value_components:
             try:
                 kwargs[label]
-            except Exception as e:
+            except Exception:
                 raise ValueError(
                     'The value of %s should be specified with the keyword argument %s=... ' % (label, label))
 
-
     @timeit
-    def _set_w_cpx(self, **kwargs):
-        self._check_kwargs(**kwargs)
-        char_poly_coeffs = [complex(coeff(**kwargs)) for coeff in self._char_poly_coeffs]
-        if len(self.resistors) == 0:
+    def _set_zeta(self, **kwargs):
+        '''
+        Sets the Qcircuit.zeta to the circuit eigenfrequencies
+        (including the imaginary part due to losses).
+
+        Parameters
+        ----------
+        kwargs:     
+                    Values for un-specified circuit components, 
+                    ex: ``L=1e-9``.
+        '''
+        try:
+            if kwargs == self._kwargs_previous:
+                # Avoid doing the same thing two
+                # times in a row
+                return
+        except AttributeError:
+            pass
+        self._kwargs_previous = kwargs
         
-            # The variable of the characteristic polynomial is w^2
-            w2 = np.real(np.roots(char_poly_coeffs))
+        # Check if the kwargs provided are correct
+        self._parse_kwargs(**kwargs)
+
+        if len(self.resistors) == 0:
+
+            # Compute the coefficients of the characteristic polynomial.
+            # The roots of this polynomial will provide the complex eigenfrequencies
+            char_poly = npPoly([np.real(coeff(**kwargs)) for coeff in self._char_poly_coeffs])
+            
+            # char_poly = remove_multiplicity(char_poly)
+        
+            # In this case, the variable of the characteristic polynomial is \omega^2
+            # And we can safely take the real part of the solution as there are no
+            # resistors in the circuit.
+            w2 = np.real(char_poly.roots())
+            w2 = polish_roots(char_poly,w2, self.root_max_iterations,np.sqrt(self.root_relative_tolerance))
 
             # Sometimes, when the circuits has vastly different
-            # values for its circuit components, the symbolic 
-            # calculations can yield an incorrect char_poly_coeffs
+            # values for its circuit components or modes are too
+            # decoupled, the symbolic 
+            # calculations can yield an incorrect char_poly
             # We can easily discard some of these casese by throwing away
             # negative solutions
-            w2 = w2[np.nonzero(w2 > 0.)]
+            for w2_single in w2:
+                if np.real(w2_single) < 0 and self.warn_discarded_mode:
+                    error_message = "Imaginary frequency mode f = 1j %f Hz mode found (and discarded).\n"%(np.sqrt(-w2_single)/2/np.pi)
+                    warn(error_message)
+            w2 = w2[np.nonzero(w2 >= 0.)]
 
-            w_cpx = np.sqrt(w2)
+            # Take the square root to get to the eigenfrequencies
+            zeta = np.sqrt(w2)
+
+            # Sort solutions with increasing frequency
+            order = np.argsort(np.real(zeta))
+            zeta = zeta[order]
+
         else:
-            w_cpx = np.roots(char_poly_coeffs)
-            w_cpx = w_cpx[np.nonzero(np.real(w_cpx) > 0.)]
 
-        
-        # Sometimes, when the circuits has vastly different
-        # values for its circuit components, the symbolic 
-        # calculations can yield an incorrect char_poly_coeffs
-        # We can easily discard some of these cases by throwing away
-        # any solutions with a complex impedance (ImY'<0)
-        # The minus sign is there since 1/Im(Y)  = -Im(1/Y)
-        w_cpx = w_cpx[np.nonzero(np.imag(-self._inverse_of_dY(np.real(w_cpx),**kwargs))>0)]
+            # Compute the coefficients of the characteristic polynomial.
+            # The roots of this polynomial will provide the complex eigenfrequencies
+            char_poly = npPoly([complex(coeff(**kwargs)) for coeff in self._char_poly_coeffs])
+            # char_poly = remove_multiplicity(char_poly)
+
+            zeta = char_poly.roots()
+            zeta = polish_roots(char_poly,zeta, self.root_max_iterations,self.root_relative_tolerance)
+
+            # Sort solutions with increasing frequency
+            order = np.argsort(np.real(zeta))
+            zeta = zeta[order]
+
+            # Negative modes are discarded
+            zeta = zeta[np.nonzero(np.real(zeta) >= 0.)]
+
+            # For each solution, its complex conjugate
+            # is also a solution, we want to discard the negative
+            # imaginary part solutions which correspond to unphysical
+            # negative dissipation modes
+            zeta = zeta[np.nonzero(np.imag(zeta) >= 0.)]
+
+        # zero frequency modes are discarded
+        zeta = zeta[np.nonzero(np.logical_not(np.isclose(np.real(zeta),0*zeta, rtol = self.root_relative_tolerance)))]
 
         # Only consider modes with Q>self.Q_min (=1 by default)
+        # The reason for this measure is that
         # 0-frequency solutions (with real parts close to 0)
         # tend to have frequencies which oscillate between positive and
-        # negative values which can make sweeps difficult
-        w_cpx = w_cpx[np.nonzero(np.real(w_cpx) > self.Q_min*2*np.imag(w_cpx))]
+        # negative values.
+        # The negative values are discarded which changes the number of modes
+        # and makes parameter sweeps difficult 
+        for w in zeta:
+            if np.real(w) < self.Q_min*2*np.imag(w) and self.warn_discarded_mode:
+                error_message = "Discarding f = %f Hz mode "%(np.real(w/2/np.pi))
+                error_message += "since it has a too low quality factor Q = %f < %f"%(np.real(w)/2/np.imag(w),self.Q_min)
+                warn(error_message)
+        zeta = zeta[np.nonzero(np.real(zeta) >= self.Q_min*2*np.imag(zeta))]
 
-        # Sort solutions with increasing frequency
-        order = np.argsort(np.real(w_cpx))
-        self.w_cpx = w_cpx[order]
+        # Choose reference elements for each mode which 
+        # maximize the inverse of dY: we want the reference 
+        # element to the element where zero-point fluctuations
+        # in flux are most localized.
+        inductive_elements = self.junctions+self.inductors
+        ref_elt = []
+        zeta_copy = deepcopy(zeta)
+        zeta = []
+        
+        for w in zeta_copy:
+            largest_dYm1 = 0
+            ref_elt_index = None
+            for ind_index,ind in enumerate(inductive_elements):
+                try:
+                    dYm1 = ind._flux_zpf_r(w,**kwargs)
+                except Exception:
+                    # Computation of dYm1 failed for some reason
+                    dYm1 = -1
+                    
+                if dYm1>largest_dYm1:
+                    ref_elt_index = ind_index
+                    largest_dYm1 = dYm1
+
+            if ref_elt_index is None and self.warn_discarded_mode:
+                # Sometimes, when the circuits has vastly different
+                # values for its circuit components or modes are too
+                # decoupled, the symbolic 
+                # calculations can yield an incorrect char_poly
+                # We can easily discard some of these cases by throwing away
+                # any solutions with a complex impedance (ImY'<0)
+                error_message = "Discarding f = %f Hz mode.\n"%(np.real(w/2/np.pi))
+                error_message += "since the calculation of zero-point-fluctuations was unsuccesful.\n"
+                warn(error_message)
+            else:
+                zeta.append(w)
+                ref_elt.append(inductive_elements[ref_elt_index])
+        zeta = np.array(zeta)
+
+        self.zeta = zeta
+        self.ref_elt = ref_elt
 
     def _anharmonicities_per_junction(self, **kwargs):
-        self._set_w_cpx(**kwargs)
-        return [j._anharmonicity(self.w_cpx, **kwargs) for j in self.junctions]
+        '''
+        Returns the contribution of each junction to the anharmonicity of each mode.
+        For more details, see the documentation of J.anharmonicity.
 
+        Anharmonicities are given in units of Hz (not angular frequency).
+
+        Parameters
+        ----------
+        kwargs:     
+                    Values for un-specified circuit components, 
+                    ex: ``L=1e-9``.
+
+        Returns
+        -------
+        anh_per_jun: ndarray
+            where ``anh_per_jun[j,m]`` corresponds to the contribution of junction ``j``
+            to the anharmonicity of mode ``m``
+        '''
+        self._set_zeta(**kwargs)
+        return [[j.anharmonicity(mode, **kwargs) for mode in range(len(self.zeta))] for j in self.junctions]
+    
+    @vectorize_kwargs
     def eigenfrequencies(self, **kwargs):
         '''Returns the normal mode frequencies of the circuit.
 
@@ -215,7 +372,7 @@ class Qcircuit(object):
         Parameters
         ----------
         kwargs:     
-                    Values for un-specified circuit compoenents, 
+                    Values for un-specified circuit components, 
                     ex: ``L=1e-9``.
 
         Returns
@@ -230,7 +387,7 @@ class Qcircuit(object):
         These eigen-frequencies :math:`f_m` correspond to the real parts
         of the complex frequencies which make the conductance matrix
         singular, or equivalently the real parts of the poles of the impedance
-        calculated between the nodes of an inductor or josephon junction.
+        calculated between the nodes of an inductor or josephson junction.
 
         The Hamiltonian of the circuit is
 
@@ -244,22 +401,25 @@ class Qcircuit(object):
         were replaced with linear inductors. In that case the 
         non-linear part of the Hamiltonian :math:`\hat{U}`, 
         originating in the junction non-linearity, would be 0.
-        '''
-        self._set_w_cpx(**kwargs)
-        return np.real(self.w_cpx)/2./pi
 
+        For more information on the underlying theory, see LINKTOCOME.
+        '''
+        self._set_zeta(**kwargs)
+        return np.real(self.zeta)/2./pi
+    
+    @vectorize_kwargs
     def loss_rates(self, **kwargs):
         '''Returns the loss rates of the circuit normal modes.
 
-        The array is ordered ordered with increasing normal mode frequencies.
-        Such that the first element of the array corresponds to the loss
+        The array is ordered ordered with increasing normal mode frequencies
+        such that the first element of the array corresponds to the loss
         rate of the lowest frequency mode. Losses are provided in units of Hertz, 
         **not in angular frequency**.
 
         Parameters
         ----------
         kwargs:     
-                    Values for un-specified circuit compoenents, 
+                    Values for un-specified circuit components, 
                     ex: ``L=1e-9``.
 
         Returns
@@ -272,8 +432,10 @@ class Qcircuit(object):
 
         These loss rates :math:`\kappa_m` correspond to twice the imaginary parts
         of the complex frequencies which make the conductance matrix
-        singular, or equivalently the imaginary parts of the poles of the impedance
+        singular, or equivalently twice the imaginary parts of the poles of the impedance
         calculated between the nodes of an inductor or josephon junction.
+
+        For further details on the underlying theory, see LINKTOCOME.
         
         The dynamics of the circuit can be studied in QuTiP
         by considering collapse operators for the m-th mode 
@@ -286,25 +448,27 @@ class Qcircuit(object):
         have to be converted to angular frequencies through the factor :math:`2\pi`.
         If you are also using a hamiltonian generated from qucat, 
         then it too should be converted to angular frequencies by multiplying 
-        the entire hamiltonian by :math:`2\pi` when performing time-dependant 
+        the entire Hamiltonian by :math:`2\pi` when performing time-dependant 
         simulations.
         '''
-        self._set_w_cpx(**kwargs)
-        return 2*np.imag(self.w_cpx)/2./pi
-
+        self._set_zeta(**kwargs)
+        return 2*np.imag(self.zeta)/2./pi
+    
+    @vectorize_kwargs
     def anharmonicities(self, **kwargs):
         r'''Returns the anharmonicity of the circuit normal modes.
 
-        The array is ordered ordered with increasing normal mode frequencies.
-        Such that the first element of the array corresponds to the loss
-        rate of the lowest frequency mode. Losses are provided in units of Hertz, 
+        The array is ordered ordered with increasing normal mode frequencies
+        such that the first element of the array corresponds to the 
+        anharmonicity of the lowest frequency mode. 
+        Anharmonicities are provided in units of Hertz, 
         not in angular frequency.
 
 
         Parameters
         ----------
         kwargs:     
-                    Values for un-specified circuit compoenents, 
+                    Values for un-specified circuit components, 
                     ex: ``L=1e-9``.
 
         Returns
@@ -314,41 +478,28 @@ class Qcircuit(object):
 
         Notes
         -----
-        The Hamiltonian of the circuit is
+        The Hamiltonian of a circuit in first order perturbation theory is given by
 
-        :math:`\hat{H} = \sum_m hf_m\hat{a}_m^\dagger\hat{a}_m + \sum_j E_j[1-\cos{\hat{\varphi_j}}-\frac{\hat{\varphi_j}^2}{2}]`,
+        :math:`\hat{H} = \sum_m\sum_{n\ne m} (\hbar\omega_m-A_m-\frac{\chi_{mn}}{2})\hat{a}_m^\dagger\hat{a}_m -\frac{A_m}{2}\hat{a}_m^\dagger\hat{a}_m^\dagger\hat{a}_m\hat{a}_m -\chi_{mn}\hat{a}_m^\dagger\hat{a}_m\hat{a}_n^\dagger\hat{a}_n`,
 
-        where :math:`\hat{a}_m` is the annihilation operator of the m-th
-        normal mode of the circuit and :math:`f_m` is the frequency of 
-        the m-th normal mode, :math:`E_j` is the Josephson energy of
-        the j-th junction and 
+        valid for weak anharmonicity :math:`\chi_{mn},A_m\ll \omega_m`.
+
+        Here 
+
+        * :math:`\omega_m` are the frequencies of the normal modes of the circuit where all junctions have been replaced with inductors characterized by their Josephson inductance
         
-        :math:`\varphi_j = \sum_m\frac{\phi_{zpf,m,j}}{\phi_0}(\hat{a}_m^\dagger+\hat{a}_m)`.
-
-        where :math:`phi_0 = \hbar/2e` and 
-
-        :math:`\phi_{zpf,m} = \sqrt{\frac{\hbar}{\omega_mImY'(\omega_m)}}`
-
-        is the zero-point fluctuations in flux if a mode through the junction, 
-        with frequency :math:`\omega_m` and admittance to the rest of the circuit :math:`Y`
-
-        By keeping only terms which play a role up to first order perturbation
-
-        :math:`\hat{H} = \sum_m\sum_{n\ne m} h(f_m-A_m-\frac{\chi_{mn}}{2})\hat{a}_m^\dagger\hat{a}_m -h\frac{A_m}{2}\hat{a}_m^\dagger\hat{a}_m^\dagger\hat{a}_m\hat{a}_m -h\chi_{mn}\hat{a}_m^\dagger\hat{a}_m\hat{a}_n^\dagger\hat{a}_n`
-
-        This function returns the anharmonicities
-
-        :math:`A_m = \sum_j A_{m,j}`
+        * :math:`A_m` is the anharmonicity of mode :math:`m` , the difference in frequency of the first two transitions of the mode
         
-        where
+        * :math:`\chi_{mn}` is the shift in mode :math:`m` that incurs if an excitation is created in mode :math:`n`
 
-        :math:`A_{m,j} = E_j/2/h\left(\frac{\phi_{zpf,m,j}}{\phi_0}\right)^4`
+        This function returns the values of :math:`A_m`.
 
-        is the contribution of junction j to the total anharmonicity of a mode m.
+        For more information on the underlying theory, see LINKTOCOME.
         '''
         Ks = self.kerr(**kwargs)
         return np.array([Ks[i, i] for i in range(Ks.shape[0])])
-
+    
+    @vectorize_kwargs
     def kerr(self, **kwargs):
         r'''Returns the Kerr parameters for the circuit normal modes.
 
@@ -365,7 +516,7 @@ class Qcircuit(object):
         Parameters
         ----------
         kwargs:     
-                    Values for un-specified circuit compoenents, 
+                    Values for un-specified circuit components, 
                     ex: ``L=1e-9``.
 
         Returns
@@ -375,50 +526,47 @@ class Qcircuit(object):
 
         Notes
         -----
+        The Hamiltonian of a circuit in first order perturbation theory is given by
 
-        The Hamiltonian of the circuit is
+        :math:`\hat{H} = \sum_m\sum_{n\ne m} (\hbar\omega_m-A_m-\frac{\chi_{mn}}{2})\hat{a}_m^\dagger\hat{a}_m -\frac{A_m}{2}\hat{a}_m^\dagger\hat{a}_m^\dagger\hat{a}_m\hat{a}_m -\chi_{mn}\hat{a}_m^\dagger\hat{a}_m\hat{a}_n^\dagger\hat{a}_n`,
 
-        :math:`\hat{H} = \sum_m hf_m\hat{a}_m^\dagger\hat{a}_m + \sum_j E_j[1-\cos{\hat{\varphi_j}}-\frac{\hat{\varphi_j}^2}{2}]`,
+        valid for weak anharmonicity :math:`\chi_{mn},A_m\ll \omega_m`.
 
-        where :math:`\hat{a}_m` is the annihilation operator of the m-th
-        normal mode of the circuit and :math:`f_m` is the frequency of 
-        the m-th normal mode, :math:`E_j` is the Josephson energy of
-        the j-th junction and 
+        Here 
+
+        * :math:`\omega_m` are the frequencies of the normal modes of the circuit where all junctions have been replaced with inductors characterized by their Josephson inductance
         
-        :math:`\phi_{zpf,m} = \sqrt{\frac{\hbar}{\omega_mImY'(\omega_m)}}`
-
-        is the zero-point fluctuations in flux if a mode through the junction, 
-        with frequency :math:`\omega_m` and admittance to the rest of the circuit :math:`Y`
-
-        By keeping only terms which play a role up to first order perturbation
-
-        :math:`\hat{H} = \sum_m\sum_{n\ne m} h(f_m-A_m-\frac{\chi_{mn}}{2})\hat{a}_m^\dagger\hat{a}_m -h\frac{A_m}{2}\hat{a}_m^\dagger\hat{a}_m^\dagger\hat{a}_m\hat{a}_m -h\chi_{mn}\hat{a}_m^\dagger\hat{a}_m\hat{a}_n^\dagger\hat{a}_n`
-
-        This function returns a matrix  :math:`K`, with components defined as
-
-        :math:`K_{mm} = \sum_j A_{m,j}`
-            
-        :math:`K_{mn} = \sum_j \sqrt{A_{m,j}}\sqrt{A_{n,j}}`
+        * :math:`A_m` is the anharmonicity of mode :math:`m` , the difference in frequency of the first two transitions of the mode
         
-        where
+        * :math:`\chi_{mn}` is the shift in mode :math:`m` that incurs if an excitation is created in mode :math:`n`
 
-        :math:`A_{m,j} = E_j/2/h\left(\frac{\phi_{zpf,m,j}}{\phi_0}\right)^4`
+        This function returns the values of :math:`A_m` and :math:`\chi_{mn}` .
 
-        is the contribution of junction j to the total anharmonicity of a mode m
+        For more information on the underlying theory, see LINKTOCOME.
         '''
+
+        # Compute anharmonicity per junction ``As``
+        # where ``As[j,m]`` corresponds to the contribution of junction ``j``
+        # to the anharmonicity of mode ``m``
         As = self._anharmonicities_per_junction(**kwargs)
-        N_modes = len(self.w_cpx)
+
+        # Number of modes in the circuit
+        N_modes = len(self.zeta)
+
+        # Number of junctions in the circuit
         N_junctions = len(self.junctions)
 
+        # initialize the vector of Kerr coefficients
         Ks = np.zeros((N_modes, N_modes))
 
         for i in range(N_modes):
-            line = []
             for j in range(N_modes):
                 for k in range(N_junctions):
                     if i == j:
+                        # Add contribution to self-Kerr
                         Ks[i, i] += np.real(As[k][i])
                     else:
+                        # Add contribution to cross-Kerr
                         # Note that taking the square root here is fine
                         # since Ks[i, j]~phi_ki^2*phi_kj^2 is necessarily a positive real
                         # since phi_ki,phi_kj are real numbers
@@ -456,7 +604,7 @@ class Qcircuit(object):
                         If set to True, this method will print a summary
                         of the system parameters as a table.
         kwargs:     
-                    Values for un-specified circuit compoenents, 
+                    Values for un-specified circuit components, 
                     ex: ``L=1e-9``.
 
         Returns
@@ -465,6 +613,8 @@ class Qcircuit(object):
             ``[[f_0,f_1,..],[k_0,k_1,..],[A_0,A_1,..],[[A_0,chi_01,..],[chi_10,A_1,..]..]]``
         '''
         
+        # Quantity to be returned: 
+        # eigenfrequency, loss-rates, anharmonicity, and Kerr parameters of the circuit
         to_return = self.eigenfrequencies(**kwargs),\
             self.loss_rates(**kwargs),\
             self.anharmonicities(**kwargs),\
@@ -473,28 +623,39 @@ class Qcircuit(object):
 
         if pretty_print:
 
+            # Number of modes in the circuit
             N_modes = len(to_return[0])
+
+            # Setup a template for the mode/frequency/dissipation/anharmonicity
+            # table row in the form `` 7 spaces | 7 spaces |  7 spaces | 7 spaces |``
             table_line = ""
             for i in range(4):
-                table_line += " %7s |"
+                table_line += " %12s |"
             table_line += "\n"
 
+            # Top row for content of columns
             to_print = table_line % (
                 "mode", " freq. ", " diss. ", " anha. ")
+
+            # add all the other rows (each row is a mode)
             for i, w in enumerate(to_return[0]):
                 to_print += table_line % tuple([str(i)]+[pretty_value(
                     to_return[j][i], use_unicode=False)+'Hz' for j in range(3)])
 
-            to_print += "\nKerr coefficients\n(diagonal = Kerr, off-diagonal = cross-Kerr)\n"
-
+            to_print += "\nKerr coefficients (diagonal = Kerr, off-diagonal = cross-Kerr)\n"
+            
+            # Setup template for the rows of the Kerr coefficients table row
+            # in the form `` 7 spaces | 7 spaces | ...``
             table_line = ""
             for i in range(N_modes+1):
-                table_line += " %7s |"
+                table_line += " %12s |"
             table_line += "\n"
 
+            # Top row indexing each column as a mode
             to_print += table_line % tuple(['mode'] +
                                             [str(i)+'   ' for i in range(N_modes)])
 
+            # Add other rows
             for i in range(N_modes):
                 line_elements = [str(i)]
                 for j in range(N_modes):
@@ -504,11 +665,13 @@ class Qcircuit(object):
                     else:
                         line_elements.append("")
                 to_print += table_line % tuple(line_elements)
+
+            # Print the two tables
             print(to_print)
 
         return to_return
 
-
+    @refuse_vectorize_kwargs(exclude = ['modes','taylor','excitations','return_ops'])
     def hamiltonian(self, modes='all', taylor=4, excitations=6, return_ops = False, **kwargs):
         r'''Returns the circuits Hamiltonian for further analysis with QuTiP.
         The Hamiltonian is provided in units of frequency (not angular frequency), 
@@ -542,7 +705,7 @@ class Qcircuit(object):
                     where ``a_i`` is the annihilation operator of the
                     i-th considered mode, a QuTiP Qobj
         kwargs:     
-                    Values for un-specified circuit compoenents, 
+                    Values for un-specified circuit components, 
                     ex: ``L=1e-9``.
 
         Returns
@@ -554,29 +717,20 @@ class Qcircuit(object):
         -----
         
         The Hamiltonian of the circuit, with the non-linearity of the Josephson junctions
-        Taylor-expanded, is given by
+        Taylor-expanded, is given in the limit of low dissipation by
 
         :math:`\hat{H} = \sum_{m\in\text{modes}} \hbar \omega_m\hat{a}_m^\dagger\hat{a}_m + \sum_j\sum_{2n\le\text{taylor}}E_j\frac{(-1)^{n+1}}{(2n)!}\left[\frac{\phi_{zpf,m,j}}{\phi_0}(\hat{a}_m^\dagger+\hat{a}_m)\right]^{2n}`,
         
         where :math:`\hat{a}_m` is the annihilation operator of the m-th
-        normal mode of the circuit and :math:`f_m` is the frequency of 
+        normal mode of the circuit, :math:`\omega_m` is the frequency of 
         the m-th normal mode, :math:`E_j` is the Josephson energy of
-        the j-th junction and :math:`\phi_0 = \hbar/2e`.
-            
-        The zero point fluctuations :math:`\phi_{zpf,m,j}` of mode 
-        :math:`m` through junction :math:`j` is calculated 
-        by multiplying the voltage transfer function between a reference junction
-        and the junction :math:`j` with the zero-point fluctuations
-        of the reference junction
+        the j-th junction and :math:`\phi_0 = \hbar/2e` and :math:`\phi_{zpf,m,j}` 
+        is the zero point fluctuation of mode 
+        :math:`m` through junction :math:`j`.
 
-        :math:`\phi_{zpf,m} = \sqrt{\frac{\hbar}{\omega_mImY'(\omega_m)}}`
+        In the expression above, ``modes`` and ``taylor`` are arguments of the ``hamiltonian`` function.
 
-        where :math:`Y` is the admittance of
-        the circuit calculated at the nodes of the reference junction.
-
-        If the circuit has at least one resistor, the voltage transfer 
-        functions will become complex, but we take the approximation
-        of high-quality factor modes by neglecting the imaginary part.
+        For more details on the underlying theory, see LINKTOCOME
         '''
         from qutip import destroy, qeye, tensor
 
@@ -588,6 +742,16 @@ class Qcircuit(object):
 
         if modes == 'all':
             modes = range(len(fs))
+        for m in modes:
+            try:
+                fs[m]
+            except IndexError:
+                error_message ="There are only %d modes in the circuit, and you specified mode index %d "%(len(fs),m)
+                error_message +="corresponding to the %d-th mode."%(m+1)
+                # error_message +="\nNote that the numer of modes may change as one sweeps a parameter"
+                # error_message +=" for example if a 0 frequency, spurious mode becomes negative due to "
+                # error_message +="numerical imprecision. Adding a resistance to the circuit may help with this."
+                raise ValueError(error_message)
 
         if not isinstance(excitations,list):
             excitations = [int(excitations) for i in modes]
@@ -601,16 +765,18 @@ class Qcircuit(object):
         phi = [0 for junction in self.junctions]
         qeye_list = [qeye(n) for n in excitations]
 
-        for i in modes:
+        for index,mode in enumerate(modes):
             a_to_tensor = deepcopy(qeye_list)
-            a_to_tensor[i] = destroy(excitations[i])
+            a_to_tensor[index] = destroy(excitations[index])
             a = tensor(a_to_tensor)
             operators.append(a)
-            H += fs[i]*a.dag()*a
+            H += fs[mode]*a.dag()*a
 
             for j, junction in enumerate(self.junctions):
                 # Note that zpf returns the flux in units of phi_0 = hbar/2./e
-                phi[j] += junction.zpf(quantity='flux',mode=i, **kwargs)*(a+a.dag()) 
+                phi[j] += np.real(junction.zpf(quantity='flux',mode=mode, **kwargs))*(a+a.dag()) 
+                # a = x+iy => -i*(a-a^) = -i(iy+iy) = --1
+                phi[j] += -1j*np.imag(junction.zpf(quantity='flux',mode=mode, **kwargs))*(a-a.dag()) 
 
         for j, junction in enumerate(self.junctions):
             n = 2
@@ -623,9 +789,11 @@ class Qcircuit(object):
             return H, operators
         return H
 
+    @refuse_vectorize_kwargs(exclude = ['plot','return_fig_ax'])
     def show(self,
              plot=True,
-             return_fig_ax=False):
+             return_fig_ax=False,
+             **kwargs):
         '''Plots the circuit.
 
         Only works if the circuit was created using the GUI.
@@ -697,6 +865,7 @@ class Qcircuit(object):
 
         plt.close()
 
+    @refuse_vectorize_kwargs(exclude = ['quantity'])
     def show_normal_mode(self, 
         mode, 
         quantity='current',
@@ -713,7 +882,7 @@ class Qcircuit(object):
         :math:`X` which can be flux, current, charge or voltage.
 
         More specifically, the complex amplitude of :math:`X` if a 
-        single-photon coherent state were populating a given mode ``mode``.
+        single-photon amplitude coherent state were populating a given mode ``mode``.
 
         Current is shown in units of Ampere, voltage in Volts, 
         charge in electron charge, and flux in units of the
@@ -752,33 +921,17 @@ class Qcircuit(object):
         -----
 
         This annotated quantity, called a phasor, is calculated by multiplying the
-        voltage transfer function :math:`T` (between a reference component
-        and the annotated component), with
-        :math:`X_{zpf,m}`, the zero-point fluctuations of :math:`\hat{X}`.
-
-        The reference component
-        is an inductor or a junction with inductance :math:`L_r`
-        for which we have calculated
-
-        :math:`\phi_{zpf,m} = \sqrt{\frac{\hbar}{\omega_mImY'(\omega_m)}}`
-
-        Which can be transformed to other quantities:
+        voltage transfer function :math:`T_{rc}` (between a reference component :math:`r`
+        and the annotated component  :math:`c` ), with
+        :math:`X_{zpf,m,r}`, the zero-point fluctuations of :math:`\hat{X}` at the reference component.
         
-        :math:`v = j\omega\phi`
+        Note that resistors make the transfer function :math:`T_{rc}`, and hence the phasors complex.
 
-        :math:`i =  v /j\omega L_r`
+        Since this is plotted for a single-photon amplitude coherent state, the absolute value
+        of the annotation is equal to the
+        contribution of a mode to the zero-point fluctuations accross this component.
 
-        :math:`q =  i/j\omega`  
-        
-        In the limit of high quality factor modes, the imaginary part
-        of the transfer function :math:`T` is negligable, making the 
-        phasor approximately 
-        equal to the contribution :math:`X_{zpf,m}` of the mode ``m`` to the zero-point fluctuations 
-        of :math:`\hat{X}`, such that :math:`\hat{X}` (varying per component) is
-
-        :math:`\hat{X} = \sum_m X_{zpf,m}(\hat{a}_m\pm\hat{a}_m^\dagger)`
-
-        where :math:`\hat{a}_m` is the annihilation operator of mode :math:`m`.
+        For more detail on the underlying theory, see LINKTOCOME.
         '''
 
         # This changes the default plotting settings 
@@ -823,7 +976,7 @@ class Qcircuit(object):
         all_values = []
         for el in self.netlist:
             if not isinstance(el,W):
-                all_values.append(el.phasor(mode = mode, quantity = quantity, **kwargs))
+                all_values.append(el.zpf(mode = mode, quantity = quantity, **kwargs))
         all_values = np.absolute(all_values)
         max_value = np.amax(all_values)
         min_value = np.amin(all_values)
@@ -885,7 +1038,7 @@ class Qcircuit(object):
             if not isinstance(el,W):
 
                 # phasor for the quantity and for the current
-                value = el.phasor(mode = mode, quantity = quantity, **kwargs)
+                value = el.zpf(mode = mode, quantity = quantity, **kwargs)
 
                 # location of the element center
                 x = el.x_plot_center
@@ -1000,27 +1153,27 @@ class Qcircuit(object):
                 value_text= "|Q|"
             value_text += u"exp(i\u03B8)"
         
-        x_legend = ax.get_xlim()[0]+0.4
-        y_legend = ax.get_ylim()[0]+0.25
+            x_legend = ax.get_xlim()[0]+0.4
+            y_legend = ax.get_ylim()[0]+0.25
 
-        legend_text_kwargs = {
-            'ha':'center',
-            'va':'center',
-            'fontsize':12, 
-            'weight':'normal'
-        }
-        
-        ax.text(x_legend, y_legend,
-            value_text,
-            **legend_text_kwargs)
+            legend_text_kwargs = {
+                'ha':'center',
+                'va':'center',
+                'fontsize':12, 
+                'weight':'normal'
+            }
+            
+            ax.text(x_legend, y_legend,
+                value_text,
+                **legend_text_kwargs)
 
-        v01 = 0.7
-        ax.arrow(x_legend-arrow_width(value_01 = v01)/2, 
-                y_legend-0.15,
-                arrow_width(value_01 = v01), 0,
-                fc=pp['normal_mode_arrow']['color'],
-                ec=pp['normal_mode_arrow']['color'], 
-                **arrow_kwargs(value_01 =v01))
+            v01 = 0.7
+            ax.arrow(x_legend-arrow_width(value_01 = v01)/2, 
+                    y_legend-0.15,
+                    arrow_width(value_01 = v01), 0,
+                    fc=pp['normal_mode_arrow']['color'],
+                    ec=pp['normal_mode_arrow']['color'], 
+                    **arrow_kwargs(value_01 =v01))
        
 
         if plot == True:
@@ -1079,9 +1232,8 @@ class Network(Qcircuit):
     ... R(2,0,50) # Add a 50 Ohm resistance to ground
     ... ])
 
-
-    
-    This is the best way to proceed if one wants to sweep the value of a 
+    The junction was parametrized only by a string ``L_J`` , 
+    this is the best way to proceed if one wants to sweep the value of a 
     component. Indeed, the most computationally expensive part of the 
     analysis is performed upon initializing the Network, subsequently
     changing the value of a component and re-calculating a quantity 
@@ -1107,7 +1259,7 @@ class GUI(Qcircuit):
                     about the graphically constructed circuit.
     edit:           Boolean
                     If True (default), the graphical user interface will be opened.
-                    One can set this argument to False to import the circuit withoug opening
+                    One can set this argument to False to import the circuit without opening
                     the graphical user interface
     plot:           Boolean
                     If True (default), the circuit will be plotted using matplotlib.
@@ -1128,11 +1280,11 @@ class GUI(Qcircuit):
     
     Each line of this text file is in the format:
 
-    <``type``>;<``x_minus``,``y_minus``>;<``x_plus``,``y_plus``>;``value``;``label``
+    ``type`` ; ``x_minus`` , ``y_minus`` ; ``x_plus`` , ``y_plus`` ; ``value`` ; ``label``
 
     and represents a circuit component, wire or ground element.
 
-    ``type`` can take the values ``L``, ``C``, ``R``, ``J``, ``W``or``G`` for 
+    ``type`` can take the values ``L``, ``C``, ``R``, ``J``, ``W`` or ``G`` for 
     inductor, capacitor, resistor, junction, wire or ground respectively.
 
     ``value`` will be a float representing the value of the component or will be empty
@@ -1159,7 +1311,7 @@ class GUI(Qcircuit):
 
     '''
 
-    def __init__(self, filename, edit=True, plot=True, print_network=True,_unittesting=False):
+    def __init__(self, filename, edit=True, plot=True, print_network=False,_unittesting=False):
 
         # Note: this will also give a valid path if filename was specified using 
         # an absolute path
@@ -1229,6 +1381,7 @@ class _Network(object):
         list of Component objects
     """
 
+    @timeit
     def __init__(self, netlist):
 
         self.netlist = netlist
@@ -1238,9 +1391,9 @@ class _Network(object):
         if not self.is_connected():
             raise ValueError("There are two sub-circuits which are not connected")
         if self.has_shorts():
-            raise ValueError("Your circuit appears to be shorted making the analysis impossible")
+            raise ValueError("Your circuit appears to be open or shorted making the analysis impossible")
         if self.has_opens():
-            raise ValueError("Your circuit appears to be open making the analysis impossible")
+            raise ValueError("Your circuit appears to be open or shorted making the analysis impossible")
 
     @timeit
     def is_connected(self, 
@@ -1473,24 +1626,25 @@ class _Network(object):
             char_poly = sp.collect(sp.expand(char_poly), w)
             self.char_poly_order = sp.polys.polytools.degree(
                 char_poly, gen=w)  # Order of the polynomial
-            # Get polynomial coefficients, index 0 = highest order term
+            # Get polynomial coefficients, index 0 = lowest order term
             self.char_poly_coeffs_analytical =\
-                [char_poly.coeff(w, n) for n in range(self.char_poly_order+1)[::-1]] 
+                [char_poly.coeff(w, n) for n in range(self.char_poly_order+1)] 
         else:
             w2 = sp.Symbol('w2')
             char_poly = determinant((-ntr.RLC_matrices['L']+w2*ntr.RLC_matrices['C']))
             char_poly = sp.collect(sp.expand(char_poly), w2)
             self.char_poly_order = sp.polys.polytools.degree(char_poly, gen=w2)  # Order of the polynomial
-            # Get polynomial coefficients, index 0 = highest order term
+            # Get polynomial coefficients, index 0 = lowest order term
             self.char_poly_coeffs_analytical =\
-                [char_poly.coeff(w2, n) for n in range(self.char_poly_order+1)[::-1]]  
+                [char_poly.coeff(w2, n) for n in range(self.char_poly_order+1)]  
                 
         
         # Divide by w if possible
-        n=1
-        while self.char_poly_coeffs_analytical[-n]==0:
+        n=0
+        while self.char_poly_coeffs_analytical[n]==0:
             n+=1
-        self.char_poly_coeffs_analytical = self.char_poly_coeffs_analytical[:self.char_poly_order+2-n]
+        self.char_poly_coeffs_analytical = self.char_poly_coeffs_analytical[n:]
+
         return self.char_poly_coeffs_analytical
 
     def compute_RLC_matrices(self):
@@ -1511,11 +1665,20 @@ class _Network(object):
                         self.RLC_matrices[k][i,i] += RLC_matrix_components[k]
                         self.RLC_matrices[k][j,j] += RLC_matrix_components[k]
 
+        # count the number of coefficients in each row
+        number_coefficients = np.zeros((N_nodes))
+        for k in self.RLC_matrices:
+            for i in range(N_nodes):
+                for j in range(N_nodes):
+                    if self.RLC_matrices[k][i,j] != 0:
+                        number_coefficients[i]+=1
+
 
         # set a ground 
+        ground_node = np.argmax(number_coefficients)
         for k in self.RLC_matrices:
-            self.RLC_matrices[k].row_del(0)
-            self.RLC_matrices[k].col_del(0)
+            self.RLC_matrices[k].row_del(ground_node)
+            self.RLC_matrices[k].col_del(ground_node)
 
     def connect(self, element, node_minus, node_plus):
         '''
@@ -1591,6 +1754,7 @@ class _Network(object):
         for mesh_branch in mesh_to_add:
             self.connect(*mesh_branch)
 
+    @timeit
     def admittance(self, node_minus, node_plus):
         '''
         Compute the admittance of the network between two nodes 
@@ -1902,7 +2066,7 @@ class Component(Circuit):
             elif type(a) is str:
                 self.label = a
             else:
-                self.value = float(a)
+                self.value = a
 
                 # Check its not too big, too small, or negative
                 # Note that values above max(min)_float would then
@@ -1933,6 +2097,9 @@ class Component(Circuit):
         return sp.Symbol(self.label)
 
     def _set_component_lists(self):
+        if self.label not in ['', ' ', 'None', None]:
+            self._circuit.components[self.label] = self
+
         if self.value is None and self.label not in ['', ' ', 'None', None]:
             if self.label in self._circuit._no_value_components:
                 # raise ValueError(
@@ -1941,91 +2108,57 @@ class Component(Circuit):
             else:
                 self._circuit._no_value_components.append(self.label)
 
-    def _flux(self, w, **kwargs):
+    def _flux_zpf(self, mode, **kwargs):
+        self._circuit._set_zeta(**kwargs)
+        w = self._circuit.zeta[mode]
         try:
-            tr = self._circuit._flux_transformation_dict[self.node_minus,
-                                                    self.node_plus]
+            tr = self._circuit._flux_transformation_dict[
+                                        self._circuit.ref_elt[mode].node_minus,
+                                        self._circuit.ref_elt[mode].node_plus,
+                                        self.node_minus,
+                                        self.node_plus]
         except KeyError:
             tr_analytical = self._circuit._network.transfer(
-                self._circuit.ref_elt.node_minus, self._circuit.ref_elt.node_plus, self.node_minus, self.node_plus)
-            tr_undecorated = lambdify(['w']+self._circuit._no_value_components,tr_analytical, "numpy")
+                self._circuit.ref_elt[mode].node_minus, self._circuit.ref_elt[mode].node_plus, self.node_minus, self.node_plus)
+            tr = lambdify(['w']+self._circuit._no_value_components,tr_analytical, "numpy")
+            def tr_minus(w,**kwargs):
+                return -tr(w,**kwargs)
             
-            @vectorize
-            @safely_evaluate
-            def tr(self, w,**kwargs):
-                return tr_undecorated(w,**kwargs)
-
-            @vectorize
-            @safely_evaluate
-            def tr_minus(self, w,**kwargs):
-                return -tr_undecorated(w,**kwargs)
-
-            self._circuit._flux_transformation_dict[self.node_minus,self.node_plus] = tr
-            self._circuit._flux_transformation_dict[self.node_plus,self.node_minus] = tr_minus
+            self._circuit._flux_transformation_dict[
+                                        self._circuit.ref_elt[mode].node_minus,
+                                        self._circuit.ref_elt[mode].node_plus,
+                                        self.node_minus,self.node_plus] = tr
+            self._circuit._flux_transformation_dict[
+                                        self._circuit.ref_elt[mode].node_minus,
+                                        self._circuit.ref_elt[mode].node_plus,
+                                        self.node_plus,self.node_minus] = tr_minus
 
         # Following Black-box quantization, 
         # we assume the losses to be neglegible by 
         # removing the imaginary part of the eigenfrequency
-        w = np.real(w)
+        # w = np.real(w)
         
         # Calculation of phi_zpf of the reference junction/inductor
         #  = sqrt(hbar/w/ImdY[w])
         # The minus is there since 1/Im(Y)  = -Im(1/Y)
-        phi_zpf_r = np.sqrt(hbar/w*np.imag(-self._circuit._inverse_of_dY(w,**kwargs)))
+        phi_zpf_r = self._circuit.ref_elt[mode]._flux_zpf_r(w,**kwargs)
 
         # Note that the flux defined here 
-        phi = tr(self, w,**kwargs)*phi_zpf_r
+        phi = tr(w,**kwargs)*phi_zpf_r
         # is complex.
-        # This causes a problem for the quantization:
-        # the prefactor of a+a.dag will be complex
-        # making the flux operator non-hermitian
-        # This problem is adressed in the zpf method
 
         return phi
-
-    def _convert_flux(self,flux, w,quantity, **kwargs):
-        if quantity == 'flux':
-            phi_0 = hbar/2./e
-            return flux/phi_0
-        if quantity == 'voltage':
-            return flux*1j*w
-        if quantity == 'current':
-            kwargs['w'] = w
-            Y = self._admittance()
-            if isinstance(Y, Number):
-                pass
-            else:
-                Y = Y.evalf(subs=kwargs)
-            return complex(self._convert_flux(flux, w,'voltage')*Y)
-        if quantity == 'charge':
-            return self._convert_flux(flux, w,'current', **kwargs)/1j/w/e
 
 
     def _to_string(self, use_unicode=True):
         return to_string(self.unit, self.label, self.value, use_unicode=use_unicode)
 
-    def _zpf(self, w, quantity, **kwargs):
-        
-        # Note that the flux defined in _flux
-        phi_zpf = self._flux(w,**kwargs)
-        # is complex.
-        # This causes a problem for the quantization:
-        # the prefactor of a+a.dag will be complex
-        # making the flux operator non-hermitian
-        # In the high-Q limit we are assuming for quantization 
-        # phi_zpf = a+ib, where b<<a for inductors/junctions/capacitors
-        # phi_zpf = a+ib, where b>>a for resistors
 
-        if isinstance(self,R):
-            return self._convert_flux(1j*np.imag(phi_zpf), w,quantity,**kwargs)
-        else:
-            return self._convert_flux(np.real(phi_zpf), w,quantity,**kwargs)
-
-
+    @vectorize_kwargs(exclude = ['quantity','mode'])
     def zpf(self, mode, quantity, **kwargs):
         r'''Returns contribution of a mode to the zero-point fluctuations of a quantity for this component.
 
-        The quantity can be current current (in units of Ampere), 
+        The quantity can be current (in units of Ampere), 
         voltage (in Volts), 
         charge (in electron charge), 
         or flux (in units of the reduced flux quantum, :math:`\hbar/2e`).
@@ -2039,7 +2172,7 @@ class Component(Circuit):
         quantity:       string
                         One of 'current', 'flux', 'charge', 'voltage'
         kwargs:     
-                    Values for un-specified circuit compoenents, 
+                    Values for un-specified circuit components, 
                     ex: ``L=1e-9``.
 
         Returns
@@ -2049,35 +2182,42 @@ class Component(Circuit):
 
         Notes
         -----
-        This quantity is calculated from the magnitude of the
-        transfer function between a reference component an this one.
-        The reference component
-        is an inductor or a junction with inductance :math:`L_r`
-        for which we have calculated
-
-        :math:`\phi_{zpf,m} = \sqrt{\frac{\hbar}{\omega_mImY'(\omega_m)}}`
-
-        the zero-point fluctuations in flux of mode :math:`m`
-        with frequency :math:`\omega_m` using the admittance of
-        the circuit calculated at the nodes of the reference junction
-
-        :math:`\phi_{zpf,m}` can be transformed to other quantities
+        This quantity is calculated by multiplying the
+        voltage transfer function :math:`T_{rc}` (between a reference component :math:`r`
+        and the annotated component  :math:`c` ), with
+        :math:`X_{zpf,m,r}`, the zero-point fluctuations of :math:`\hat{X}` at the reference component.
         
-        :math:`v_{zpf,m} = \omega\phi_{zpf,m}`
+        Note that resistors make the transfer function :math:`T_{rc}`, and hence this quantity, complex.
 
-        :math:`i_{zpf,m} = v_{zpf,m} / L_r\omega`
-
-        :math:`q_{zpf,m} = i_{zpf,m}/\omega`  
-
-        Where :math:`Z(\omega)` is this components impedance.
+        For more detail on the underlying theory, see LINKTOCOME.
         '''
-        mode_w = self._circuit.eigenfrequencies(**kwargs)[mode]*2.*np.pi
-        return self._zpf(mode_w, quantity, **kwargs)
+        if quantity == 'flux':
+            phi_0 = hbar/2./e
+            return self._flux_zpf(mode,**kwargs)/phi_0
+        if quantity == 'voltage':
+            phi_zpf = self._flux_zpf(mode,**kwargs)
+            # The above will set the eigenfrequencies
+            w=np.real(self._circuit.zeta)[mode]
+            
+            return phi_zpf*1j*w
+        if quantity == 'current':
+            Vzpf = self.zpf(mode,'voltage',**kwargs)
+            # The above will set the eigenfrequencies
 
-    def phasor(self, mode, quantity, **kwargs):
+            kwargs_with_w = deepcopy(kwargs)
+            kwargs_with_w['w'] = np.real(self._circuit.zeta)[mode]
+            Y = self._admittance()
+            if isinstance(Y, Number):
+                pass
+            else:
+                Y = Y.evalf(subs=kwargs_with_w)
+            return complex(Vzpf*Y)
+        if quantity == 'charge':
+            Izpf = self.zpf(mode,'current', **kwargs)
+            # The above will set the eigenfrequencies
 
-        mode_w = self._circuit.eigenfrequencies(**kwargs)[mode]*2.*np.pi
-        return self._convert_flux(self._flux(mode_w,**kwargs),mode_w,quantity,**kwargs)
+            w = np.real(self._circuit.zeta)[mode]
+            return Izpf/1j/w/e
 
 class W(Component):
     """docstring for Wire"""
@@ -2243,8 +2383,65 @@ class L(Component):
             'C':0
         }
 
+    @timeit
+    def _compute_flux_zpf_r(self):
+        '''
+        Generate the L._flux_zpf_r function which
+        takes as an argument an angular frequency (and keyword arguments 
+        if component values need to be specified) and returns the 
+        derivative of the admittance evaluated at the nodes of the inductor, 
+        which is effective capacitance at that frequency.         
+        '''
+        # Compute a sympy expression for the admittance 
+        # at the nodes of the reference element
+        Y = self._circuit._network.admittance(self.node_minus, self.node_plus)
+
+        # Write the expression as a single fraction 
+        # with the numerator and denomenator as polynomials
+        # (it combines but also "de-nests")      
+        Y_together = sp.together(Y)
+
+        # Extract numerator and denominator
+        u = sp.numer(Y_together)
+        v = sp.denom(Y_together)
+
+        # Symbol representing angular frequency
+        w = sp.Symbol('w')
+
+        # Calculate derivatives
+        derivatives = []
+        for P in [u]:#[u,v]:
+            # Write as polynomial in 'w'
+            P = sp.collect(sp.expand(P), w)
+
+            # Obtain the order of the polynomial 
+            P_order = sp.polys.polytools.degree(P, gen=w) 
+
+            # Compute list of coefficients
+            P_coeffs_analytical = [P.coeff(w, n) for n in range(P_order+1)[::-1]]
+
+            # Express the derivative of the polynomial
+            dP = sum([(P_order-n)*a*w**(P_order-n-1)
+                        for n, a in enumerate(P_coeffs_analytical)])
+
+            derivatives.append(dP)
+        
+        du = derivatives[0]
+        # dv = derivatives[1]
+        
+        # Convert the sympy expression for v/du to a function
+        # Note the function arguments are the angular frequency 
+        # and component values that need to be specified
+        dY = lambdify(['w']+self._circuit._no_value_components,du/v, "numpy")
+
+        def _flux_zpf_r(z,**kwargs):
+            return np.sqrt(hbar/np.real(z)/np.imag(dY(z,**kwargs)))
+
+        self._flux_zpf_r = _flux_zpf_r
+
+
 class J(L):
-    """A class representing an junction
+    """A class representing a junction
     
     Parameters
     ----------
@@ -2254,13 +2451,13 @@ class J(L):
                     Index corresponding to the other node of the junction
     args:           <float> or <str> or <float>,<str>
                     Other arguments should be a float which by default
-                    corresponds to the Losephson inductance of the
+                    corresponds to the Josephson inductance of the
                     junction, a string corresponding to the 
                     name of that value (ex: `"L_J"`), or both.
                     If only a label is provided, 
-                    a value for should be passed
+                    a value for this junction should be passed
                     as a keyword argument in subsequent function calls
-                    (ex: `L_J = 10e-9`)   
+                    (ex: `L_J = 10e-9`).
                     This is the best way to proceed if one wants to sweep the value of this
                     junction. Indeed, the most computationally expensive part of the 
                     analysis is performed upon initializing the circuit, subsequently
@@ -2305,12 +2502,10 @@ class J(L):
         return (hbar/2./e)**2/(self._get_value(**kwargs)*h)
 
     def _set_component_lists(self):
-        super(J, self)._set_component_lists()
+        super(L, self)._set_component_lists()
         self._circuit.junctions.append(self)
-
-    def _anharmonicity(self,w,**kwargs):
-        return self._get_Ej(**kwargs)/2*self._zpf(w,'flux',**kwargs)**4
-
+    
+    @vectorize_kwargs(exclude = ['mode'])
     def anharmonicity(self, mode, **kwargs):
         r'''Returns the contribution of this junction to the anharmonicity of a given normal mode.
 
@@ -2319,11 +2514,11 @@ class J(L):
         Parameters
         ----------
         kwargs:     
-                    Values for un-specified circuit compoenents, 
+                    Values for un-specified circuit components, 
                     ex: ``L=1e-9``.
         
         mode:           integer
-                        Determine what mode to plot, where 0 designates
+                        where 0 designates
                         the lowest frequency mode, and the others
                         are arranged in order of increasing frequency
         Returns
@@ -2333,24 +2528,18 @@ class J(L):
         
         Notes
         -----
-        This quantity (in units of Hertz) is defined as 
+        The quantity returned is the anharmonicity
+        of the mode ``m`` if this junction were the only junction
+        present in the circuit (i.e. if all the 
+        others were replaced by linear inductors).
 
-        :math:`A_{m,j} = E_j/2/h\left(\frac{\phi_{zpf,m,j}}{\phi_0}\right)^4`
-
-        where :math:`phi_0 = \hbar/2e`, 
-        :math:`E_j` is this junctions Josephson energy,
-        and 
-
-        :math:`\phi_{zpf,m} = \sqrt{\frac{\hbar}{\omega_mImY'(\omega_m)}}`
-
-        is the zero-point fluctuations in flux if a mode through the junction, 
-        with frequency :math:`\omega_m` and admittance to the rest of the circuit :math:`Y`
-
-        Following first order perturbation, the total anharmonicity of a mode is obtained
+        The total anharmonicity of a mode (in first order perturbation theory) is obtained
         by summing these contribution over all modes.
+
+        For more details, see LINKTOCOME
         '''
-        mode_w = self._circuit.eigenfrequencies(**kwargs)[mode]*2.*np.pi
-        return _anharmonicity(self, mode_w, **kwargs)
+        return self._get_Ej(**kwargs)/2*np.absolute(self.zpf(mode,quantity='flux',**kwargs))**4
+
 
     def _draw(self):
         pp = self._circuit._pp
@@ -2381,7 +2570,7 @@ class J(L):
             return shift(y, self.x_plot_center), shift(x, self.y_plot_center), line_type
 
 class R(Component):
-    """A class representing an resistor
+    """A class representing a resistor
     
     Parameters
     ----------

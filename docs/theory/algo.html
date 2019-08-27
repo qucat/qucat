@@ -1,0 +1,684 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Algorithmic methods &mdash; qucat  documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../_static/jquery.js"></script>
+        <script type="text/javascript" src="../_static/underscore.js"></script>
+        <script type="text/javascript" src="../_static/doctools.js"></script>
+        <script type="text/javascript" src="../_static/language_data.js"></script>
+        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script type="text/x-mathjax-config">MathJax.Hub.Config({"tex2jax": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true, "ignoreClass": "document", "processClass": "math|output_area"}})</script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="author" title="About these documents" href="../about.html" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Contact" href="../contact.html" />
+    <link rel="prev" title="Circuit quantization overview {#sec:circuit_quantization_overview}" href="circuit_quantization.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> qucat
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../API/API.html">List of functions</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="theory.html">Theoretical background</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="circuit_quantization.html">Circuit quantization overview {#sec:circuit_quantization_overview}</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Algorithmic methods</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#resonance-frequency-and-dissipation-rate-sec-methods-resonance-frequency">Resonance frequency and dissipation rate {#sec:methods_resonance_frequency}</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#derivative-of-the-admittance-sec-methods-network-dy">Derivative of the admittance {#sec:methods_network_dY}</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#transfer-functions-sec-methods-network-transfer">Transfer functions {#sec:methods_network_transfer}</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../contact.html">Contact</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../report_a_bug.html">Report a bug</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">qucat</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="theory.html">Technical details</a> &raquo;</li>
+        
+      <li>Algorithmic methods</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../_sources/theory/algo.md.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  
+<style>
+/* CSS overrides for sphinx_rtd_theme */
+
+/* 24px margin */
+.nbinput.nblast,
+.nboutput.nblast {
+    margin-bottom: 19px;  /* padding has already 5px */
+}
+
+/* ... except between code cells! */
+.nblast + .nbinput {
+    margin-top: -19px;
+}
+
+.admonition > p:before {
+    margin-right: 4px;  /* make room for the exclamation icon */
+}
+
+/* Fix math alignment, see https://github.com/rtfd/sphinx_rtd_theme/pull/686 */
+.math {
+    text-align: unset;
+}
+</style>
+<div class="section" id="algorithmic-methods">
+<h1>Algorithmic methods<a class="headerlink" href="#algorithmic-methods" title="Permalink to this headline">¶</a></h1>
+<p>There are three calculations to accomplish in order to obtain all the
+parameters necessary to write the circuit Hamiltonian. We need:</p>
+<ul class="simple">
+<li>the eigen-frequencies $omega_m$ and loss rates $kappa_m$
+fulfilling $Y_r(zeta_m=omega_m+ikappa_m/2) = 0$ where $Y_r$ is
+the admittance across a reference junction</li>
+<li>the derivative of this admittance evaluated at $zeta_m$</li>
+<li>the transfer functions $T_{jr}$ between junctions $j$ and the
+reference junction $r$</li>
+</ul>
+<p>In this section, we cover the algorithmic methods used to calculate
+these three quantities</p>
+<div class="section" id="resonance-frequency-and-dissipation-rate-sec-methods-resonance-frequency">
+<h2>Resonance frequency and dissipation rate {#sec:methods_resonance_frequency}<a class="headerlink" href="#resonance-frequency-and-dissipation-rate-sec-methods-resonance-frequency" title="Permalink to this headline">¶</a></h2>
+<p>### Theoretical background</p>
+<p>In order to obtain an expression for the admittance across the reference
+junction, we start by writing the set of equations governing the physics
+of the circuit. We first determine a list of nodes, which are points at
+which circuit components connect. Each node, labeled $n$, is assigned a
+voltage $v_n$. We name $r_pm$ the positive and negative nodes of the
+reference junction.</p>
+<p>We are interested in the steady-state oscillatory behavior of the
+system. We can thus move to the frequency domain, with complex node
+voltages $|V_n(omega)| e^{i(omega t+theta(V_n(omega_n)))}$, fully
+described by their phasors, the complex numbers
+$V_n = <a href="#id1"><span class="problematic" id="id2">|V_n(\omega)|</span></a> e^{itheta(V_n(omega_n))}$. In this mathematical
+construct, the real-part of the complex voltages describes the voltage
+one would measure at the node in reality. Current conservation dictates
+that the sum of all currents arriving at any node $n$, from the other
+nodes $k$ of the circuit should be equal to the oscillatory current
+injected at node $n$ by a hypothetical, infinite impedance current
+source. This current is also characterized by a phasor $I_n$. This can
+be compactly written as $$sum_{kne n} G_{nk}(V_n-V_k) = I_n</p>
+<blockquote>
+<div>label{eq:kirchhoff_1}$$ where $k$ label the other nodes of the</div></blockquote>
+<p>circuit and $G_{nk}$ is the conductance directly connecting nodes $k$
+and $n$. Note that in this notation, if a node $k_1$ can only reach node
+$n$ through another node $k_2$, then $G_{nk_1} = 0$. Inductors (with
+inductance $L$), capacitors (with capacitance $C$) and resistors (with
+resistance $R$) then have conductances $1/iLomega$, $iComega$ and
+$1/R$ respectively.</p>
+<p>Expanding
+Eq.&nbsp;[[eq:kirchhoff_1]](#eq:kirchhoff_1){reference-type=”ref”
+reference=”eq:kirchhoff_1”} yields
+$$(sum_{kne n} G_{nk})V_n-sum_{kne n} G_{nk}V_k = I_n</p>
+<blockquote>
+<div>label{eq:kirchhoff_1}$$ which can be written in matrix form as</div></blockquote>
+<dl class="docutils">
+<dt>$$begin{pmatrix}</dt>
+<dd>Sigma_{kne 0}G_{0k} &amp;-G_{01}  &amp;cdots  &amp;-G_{0N} \
+-G_{10} &amp;Sigma_{kne 1}G_{1k} &amp;cdots  &amp;-G_{1N} \
+vdots &amp;vdots  &amp;ddots  &amp; vdots\
+-G_{N0} &amp;-G_{N1}  &amp;cdots  &amp;Sigma_{kne N}G_{Nk}
+end{pmatrix}
+begin{pmatrix}
+V_0\
+V_1\
+vdots\
+V_N
+end{pmatrix}=
+begin{pmatrix}
+I_0\
+I_1\
+vdots\
+I_N
+end{pmatrix}
+label{eq:conductance_matrix_no_ground}$$ Since voltage is the</dd>
+</dl>
+<p>electric potential of a node relative to another, we still have the
+freedom of choosing a ground node. Equivalently, conservation of
+currents imposes that current exciting that node is equal to the sum of
+currents entering the others, there is thus a redundant degree of
+freedom in
+Eq.([[eq:conductance_matrix_no_ground]](#eq:conductance_matrix_no_ground){reference-type=”ref”
+reference=”eq:conductance_matrix_no_ground”}). For simplicity, we will
+choose node 0 as ground. Since we are only interested in the admittance
+across the reference junction, we set all currents to zero, except the
+currents entering the positive and negative reference junction nodes:
+$I_{r_+}$ and $I_{<a href="#id3"><span class="problematic" id="id4">r_</span></a>-} = -I_{r_+}$ respectively. The admittance is
+defined by $Y_r = I_{r_+}/(V_{r_+}-V_{<a href="#id5"><span class="problematic" id="id6">r_</span></a>-})$. The equations then reduce
+to $$mathbf{G}begin{pmatrix}</p>
+<blockquote>
+<div>V_1\
+V_2\
+vdots\
+V_N
+end{pmatrix}=Y_r
+begin{pmatrix}
+vdots\
+0\
+V_{r_+}-V_{<a href="#id7"><span class="problematic" id="id8">r_</span></a>-}\
+0\
+vdots\
+0\
+V_{<a href="#id9"><span class="problematic" id="id10">r_</span></a>-}-V_{r_+}\
+0\
+vdots
+end{pmatrix}
+label{eq:conductance_matrix_equation}$$ Where $mathbf{G}$ is the</div></blockquote>
+<dl class="docutils">
+<dt>conductance matrix $$mathbf{G} =</dt>
+<dd>begin{pmatrix}
+Sigma_{kne 1}G_{1k} &amp;-G_{12}  &amp;cdots  &amp;-G_{1N} \
+-G_{21} &amp;Sigma_{kne 1}G_{2k} &amp;cdots  &amp;-G_{2N} \
+vdots &amp;vdots  &amp;ddots  &amp; vdots\
+-G_{N1} &amp;-G_{N2}  &amp;cdots  &amp;Sigma_{kne N}G_{Nk}
+end{pmatrix}
+label{eq:conductance_matrix}$$</dd>
+</dl>
+<p>For $Y_r = 0$,
+Eq&nbsp;[[eq:conductance_matrix_equation]](#eq:conductance_matrix_equation){reference-type=”ref”
+reference=”eq:conductance_matrix_equation”} has a solution for only
+specific values of $omega = zeta_m$. These are the values which make
+the conductance matrix singular, i.e. which make its determinant zero
+$$text{Det}left[mathbf{G}(zeta_m)right] = 0</p>
+<blockquote>
+<div>label{eq:det}$$ The determinant is a polynomial in $omega$, so the</div></blockquote>
+<p>problem of finding $zeta_m = omega_m+ikappa_m/2$ reduces to finding
+the roots of this polynomial. Note that plugging $zeta_m$ into the
+frequency domain expression for the node voltages yields
+$V_k(zeta_m)e^{iomega_mt}e^{-kappa_mt/2}$, such that the energy
+$propto v_k(t)^*v_k(t) propto e^{-kappa_mt}$ decays at a rate
+$kappa_m$, which explains the division by two in the expression of
+$zeta_m$. Also note, that we would have obtained equation
+Eq.&nbsp;([[eq:det]](#eq:det){reference-type=”ref” reference=”eq:det”})
+regardless of the choice of reference element.</p>
+<p>### Algorithm</p>
+<p>We now describe the algorithm used to determine the solutions
+$zeta_m = omega_m+ikappa_m/2$ of
+Eq.&nbsp;[[eq:det]](#eq:det){reference-type=”ref” reference=”eq:det”}. As
+an example, we consider the circuit of
+Fig.&nbsp;[[fig:f_finder_example]](#fig:f_finder_example){reference-type=”ref”
+reference=”fig:f_finder_example”}(a) that a user would have built with
+the GUI.</p>
+<p>![ <strong>Example circuit to illustrate the mode frequency finder
+algorithm.</strong> <strong>(a)</strong> Example of a circuit built through the GUI by a
+user. <strong>(b)</strong> Application of the first step of the algorithm which
+removes the wires and grounds to obtain a minimal number of nodes
+without removing any components. ](figures/fig_f_finder_example.pdf)</p>
+<p>[[fig:f_finder_example]]{#fig:f_finder_example
+label=”fig:f_finder_example”}</p>
+<p>The algorithm is as follows</p>
+<ol class="arabic">
+<li><p class="first">Eliminate wires and grounds. In this case, nodes $N_0,N_5$ would be
+grouped under a single node labeled 0 and nodes $N_1,N_2,N_3$ would
+be grouped under node 1, we label node $N_4$ node 2, as shown in
+Fig.&nbsp;[[fig:f_finder_example]](#fig:f_finder_example){reference-type=”ref”
+reference=”fig:f_finder_example”}(b).</p>
+</li>
+<li><p class="first">Compute the un-grounded conductance matrix. For each component
+present between the different couples of nodes, we append the
+conductance matrix with the components conductance. The matrix is
+then multiplied by $omega$ such that all components are polynomials
+in $omega$, ensuring that the determinant is also a polynomial. In
+this example, the matrix is $$begin{pmatrix}</p>
+<blockquote>
+<div><p>iComega^2+1/iL &amp; -iComega^2  &amp; -1/iL  \
+-iComega^2 &amp;iComega^2+omega/R  &amp;-omega/R  \</p>
+<blockquote>
+<div><p>-1/iL &amp;-omega/R  &amp;1/iL +omega/R</p>
+</div></blockquote>
+<p>end{pmatrix}$$</p>
+</div></blockquote>
+</li>
+<li><p class="first">Choose a ground node. The node which has a corresponding column with
+the most components is chosen as the ground node (to reduce
+computation time). These rows and columns are erased from the
+matrix, yielding the final form of the conductance matrix
+$$mathbf{G}=</p>
+<blockquote>
+<div><p>begin{pmatrix}
+iComega^2+omega/R  &amp;-omega/R  \
+-omega/R  &amp;1/iL +omega/R
+end{pmatrix}$$</p>
+</div></blockquote>
+</li>
+<li><p class="first">Compute the determinant. Even if the capacitance, inductance and
+resistance were specified numerically, the conductance matrix would
+still be a function of the symbolic variable $omega$. We thus rely
+on a symbolic Berkowitz determinant calculation
+algorithm&nbsp;[&#64;berkowitz1984computing; &#64;kerber2009division] implemented
+in the Sympy library through the <cite>berkowitz_det</cite> function. In this
+example, one would obtain
+$$text{Det}[mathbf{G}] = LComega^2-iRComega -1.$$</p>
+</li>
+<li><p class="first">Find the roots of the polynomial. Whilst the above steps have to be
+performed only once for a given circuit, this one should be
+performed each time the user edits the value of a component. The
+root-finding is divided in the following steps as prescribed by
+Ref.&nbsp;[&#64;press2007numerical]. Diagonalize the polynomials companion
+matrix&nbsp;[&#64;horn1985cr] to obtain an exhaustive list of all roots of
+the polynomial. This is implemented in the NumPy library through the
+<cite>roots</cite> function. Refine the precision of the roots using multiple
+iterations of Halley’s gradient based root
+finder&nbsp;[&#64;press2007numerical] until iterations do not improve the
+root value beyond a predefined tolerance given by the <cite>Qcircuit</cite>
+argument <cite>root_relative_tolerance</cite>. The maximum number of iterations
+that may be carried out is determined by the <cite>Qcircuit</cite> argument
+<cite>root_max_iterations</cite>. If the imaginary part relative to the real
+part of the root is lower than the relative tolerance, the imaginary
+part will be set to zero. The relative tolerance thus sets the
+highest quality factor that QuCAT can detect. Remove identical roots
+(equal up to the relative tolerance), roots with negative imaginary
+or real parts, 0-frequency roots, roots for which $Y_l’(omega_m)&lt;0$
+for all $l$, where $Y_l$ is the admittance evaluated at the nodes of
+an inductive element $l$, and roots for which $Q_m&lt;$
+<cite>Qcircuit.Q_min</cite>. The user is warned of a root being discarded when
+one of these cases is unexpected.</p>
+</li>
+</ol>
+<p>The roots $zeta_m$ obtained through this algorithm are accessed through
+the method <cite>eigenfrequencies</cite> which returns the oscillatory frequency in
+Hertz of all the modes ${text{Re}[zeta_m]/2pi}$ or <cite>loss_rates</cite> which
+returns ${2text{Im}[zeta_m]/2pi}$.</p>
+</div>
+<div class="section" id="derivative-of-the-admittance-sec-methods-network-dy">
+<h2>Derivative of the admittance {#sec:methods_network_dY}<a class="headerlink" href="#derivative-of-the-admittance-sec-methods-network-dy" title="Permalink to this headline">¶</a></h2>
+<p>The zero-point fluctuations in phase $varphi_{text{zpf},m,r}$ for each
+mode $m$ across a reference junction $r$ is the starting point to
+computing a Hamiltonian for the non-linear potential of the Junctions.
+As expressed in Eq.&nbsp;([[eq:zpf]](#eq:zpf){reference-type=”ref”
+reference=”eq:zpf”}), this quantity depends on the derivative $Y_r’$ of
+the admittance $Y_r$ calculated at the nodes of the reference element.
+In this section we first cover the algorithm used to obtain the
+admittance at the nodes of an arbitrary component. From this admittance
+we then describe the method to obtain the derivative of the admittance
+on which $varphi_{text{zpf},m,r}$ depends Finally we describe how to
+choose a (mode-dependent) reference element.</p>
+<p>### Computing the admittance</p>
+<p>Here we describe a method to compute the admittance of a network between
+two arbitrary nodes. We will continue using the example circuit of
+Fig.&nbsp;[[fig:f_finder_example]](#fig:f_finder_example){reference-type=”ref”
+reference=”fig:f_finder_example”}, assuming we want to compute the
+admittance at the nodes of the inductor.</p>
+<ol class="arabic simple">
+<li>Eliminate wires and grounds as in the resonance finding algorithm,
+nodes $N_0,N_5$ would be grouped under a single node labeled 0 and
+nodes $N_1,N_2,N_3$ would be grouped under node 1, we label node
+$N_4$ node 2. We thus obtain
+Fig.&nbsp;[[fig:Y_computation_example]](#fig:Y_computation_example){reference-type=”ref”
+reference=”fig:Y_computation_example”}(a)</li>
+<li>Group parallel connections. Group all components connected in
+parallel as a single “admittance component” equal to the sum of
+admittances of its parts. In this way two nodes are either
+disconnected, connected by a single inductor, capacitor, junction or
+resistor, or connected by a single “admittance component”.</li>
+<li>Reduce the network through star-mesh transformations. Excluding the
+nodes across which we want to evaluate the admittance, we utilize
+the star-mesh transformation described in
+Fig.&nbsp;[[fig:star_mesh]](#fig:star_mesh){reference-type=”ref”
+reference=”fig:star_mesh”} to reduce the number of nodes in the
+network to two. If following a star-mesh transformation, two
+components are found in parallel, they are grouped under a single
+“admittance component” as described previously. For a node
+connected to more than 3 other nodes the star-mesh transformation
+will increase the total number of components in the circuit. So we
+start with the least-connected nodes to maintain the total number of
+components in the network to a minimum. In this example, we want to
+keep nodes 0 and 2, but remove node 1, a start-mesh transform leads
+to the circuit of
+Fig.&nbsp;[[fig:Y_computation_example]](#fig:Y_computation_example){reference-type=”ref”
+reference=”fig:Y_computation_example”}(b) then grouping parallel
+componnets leads to (c).</li>
+<li>The admittance is that of the remaining “admittance component” once
+the network has been completely reduced to two nodes.</li>
+</ol>
+<p>The symbolic variables at this stage (Sympy <cite>Symbols</cite>) are $omega$, and
+the variables corresponding to any component with un-specified values.</p>
+<p>![ <strong>Star-mesh transform.</strong> A node $N$ connected to nodes $A,B,C,..$
+through admittances $Y_A,Y_B,…$ can be eliminated if we interconnect
+nodes $A,B,C,..$ with impedances $Y_{AB},Y_{AC},Y_{BC},…$ given by
+$Y_{XY} = Y_XY_Y/sum_MY_M$. We show the 5 node case, the initial
+network on the left is called the “star”, which is then transformed to
+the “mesh” on the right, reducing the total number of nodes by 1.
+](figures/fig_star_mesh.pdf){width=”50%”}</p>
+<p>[[fig:star_mesh]]{#fig:star_mesh label=”fig:star_mesh”}</p>
+<p>![ <strong>Example to illustrate the admittance calculation algorithm.</strong>
+<strong>(a)</strong> Example of a circuit built through the GUI by a user, after
+removal of all wires and grounds. <strong>(b)</strong> Application of the star-mesh
+transformation to remove node 1. <strong>(c)</strong> After each application of the
+star-mesh transformation, parallel connections are grouped together.
+Only the two nodes across which we want to compute the admittance
+remain, the admittance is that of the remaining “admittance component”.
+](figures/fig_Y_computation_example.pdf)</p>
+<p>[[fig:Y_computation_example]]{#fig:Y_computation_example
+label=”fig:Y_computation_example”}</p>
+<p>### Differentiating the admittance</p>
+<p>The expression for the admittance obtained from the above algorithm will
+necessarily be in the form of multiple multiplication, divisions or
+additions of the admittance of capacitors, inductors or resistors. It is
+thus possible to transform $Y$ to a rational function of $omega$
+$$Y(omega) = frac{P(omega)}{Q(omega)} = frac{p_0+p_1omega+p_2omega^2+…}{q_0+q_1omega+q_2omega^2+…}$$
+with the sympy function <cite>together</cite>. It is then easy to symbolically
+determine the derivative of Y, ready to be evaluated at $zeta_m$ once
+the coefficients $p_i$ and $q_i$ have been extracted $$begin{split}</p>
+<blockquote>
+<div><dl class="docutils">
+<dt>Y’(zeta_m) &amp;= left(P’(zeta_m)Q(zeta_m) -P(zeta_m)Q’(zeta_m)right)/Q(zeta_m)^2\</dt>
+<dd>&amp;=(p_1+2p_2zeta_m+…)/(q_0+q_1zeta_m+…),</dd>
+</dl>
+</div></blockquote>
+<p>end{split}$$ taking advantage of the property
+$P(zeta_m)propto Y(zeta_m)=0$.</p>
+<p>### Choice of reference element</p>
+<p>For each mode $m$, we use as reference element $r$ the inductor or
+junction which maximizes $varphi_{text{zpf},m,r}$ as specified by
+Eq.&nbsp;[[eq:zpf]](#eq:zpf){reference-type=”ref” reference=”eq:zpf”}. This
+corresponds to the element where the phase fluctuations are majoritarily
+located. We find that doing so considerably increases the success of
+evaluating $Y’(omega_m)$. As an example, we plot in
+Fig.&nbsp;[[fig:best_ref_elt]](#fig:best_ref_elt){reference-type=”ref”
+reference=”fig:best_ref_elt”} the zero-point fluctuations in phase
+$varphi_{text{zpf},m,r}$ of the transmon-like mode, calculated for the
+circuit of Fig.&nbsp;[[fig:1]](#fig:1){reference-type=”ref”
+reference=”fig:1”}, with the junction or inductor as reference element.
+What we find is that if the coupling capacitor becomes too small,
+resulting in modes which are nearly totally localized in either inductor
+or junction, choosing the wrong reference element combined with
+numerical inaccuracies leads to unreliable values of
+$varphi_{text{zpf},m,r}$.</p>
+<p>![ <strong>Impact of the choice of reference element.</strong> <strong>(a)</strong> Schematic of
+the circuit used in this example. We have used a 100 fF capacitances, a
+10 nH inductor and a 8 nH Josephson inductance, we will vary the
+coupling capacitance. The zero-point fluctuations in phase
+$varphi_{text{zpf},r}$ across the inductor ($r=L$) and junction
+($r=J$) for most anharmonic mode are drawn on the schematic and plotted
+in <strong>(b)</strong> for different values of the coupling capacitor $C_C$. The
+phase oscillations associated with this mode are mostly located in the
+junction, so as the coupling capacitor is lowered, the amplitude of
+phase oscillations diminishes in the inductor. Below $C_Csim 10^{-5}$
+fF, numerical accuracies lead to unreliable values of the phase
+fluctuations in the inductor. This results in the anharmonicity of the
+qubit-like mode $A_q$, plotted in <strong>(c)</strong>, to be incorrectly estimated
+if the inductor is chosen as a reference element and the anharmonicity
+is computed using
+Eq.&nbsp;([[eq:phi_j_from_phi_r]](#eq:phi_j_from_phi_r){reference-type=”ref”
+reference=”eq:phi_j_from_phi_r”}). ](figures/fig_best_ref_elt.pdf)</p>
+<p>[[fig:best_ref_elt]]{#fig:best_ref_elt label=”fig:best_ref_elt”}</p>
+</div>
+<div class="section" id="transfer-functions-sec-methods-network-transfer">
+<h2>Transfer functions {#sec:methods_network_transfer}<a class="headerlink" href="#transfer-functions-sec-methods-network-transfer" title="Permalink to this headline">¶</a></h2>
+<p>In this section, we describe the method used to determine the transfer
+function $T_{jr}$ between a junction $j$ and the reference junction $r$.
+This quantity can be computed from the ABCD
+matrix&nbsp;[&#64;pozar2009microwave]. The ABCD matrix relates the voltages and
+currents in a two port network $$begin{pmatrix}</p>
+<blockquote>
+<div>V_r \
+I_r
+end{pmatrix}=
+begin{pmatrix}
+A&amp;B \
+C&amp;D
+end{pmatrix}
+begin{pmatrix}
+V_j\
+I_j\
+end{pmatrix}$$ where the convention for current direction is</div></blockquote>
+<p>described in
+Fig.&nbsp;[[fig:two_port_network]](#fig:two_port_network){reference-type=”ref”
+reference=”fig:two_port_network”}.</p>
+<p>![ <strong>Visual summary of the notations and properties of the ABCD matrix
+applied to the calculation of $T_{rj}$.</strong> The transfer function
+$T_{rj} = 1/A$ is the inverse of the first coefficient of the ABCD
+matrix which relates the voltages and currents on either end of a
+network. These currents and voltages are defined as shown above, with
+the reference junction on the left and junction $j$ on the right.
+Currents are defined as entering and exciting on the left and right
+respectively. If the circuit is constituted of a cascade of two port
+sub-networks, the product of the sub-network ABCD matrices are equal to
+the ABCD matrix of the total network.
+](figures/fig_two_port_network.pdf)</p>
+<p>[[fig:two_port_network]]{#fig:two_port_network
+label=”fig:two_port_network”}</p>
+<p>By constructing the network as in
+Fig.&nbsp;[[fig:two_port_network]](#fig:two_port_network){reference-type=”ref”
+reference=”fig:two_port_network”}, with the reference junction on the
+left and junction $j$ on the right, the transfer function is given by
+$$T_{jr}(omega) = frac{V_j(omega)}{V_r(omega)} = frac{1}{A}$$</p>
+<p>To determine $A$, we first reduce the circuit using star-mesh
+transformations (see
+Fig.[[fig:star_mesh]](#fig:star_mesh){reference-type=”ref”
+reference=”fig:star_mesh”}), and group parallel connections as described
+in the previous section, until only the nodes of junctions $r$ and $j$
+are left. If the junctions initially shared a node, the resulting
+circuit will be equivalent to the network shown in
+Fig.[[fig:network]](#fig:network){reference-type=”ref”
+reference=”fig:network”} (a). In this case,
+$$A = left(1+frac{Y_p}{Y_a}right).$$ If the junctions do not share
+nodes, the resulting circuit will be equivalent to the network shown in
+Fig.[[fig:network]](#fig:network){reference-type=”ref”
+reference=”fig:network”}(b), where some admittances may be equal to $0$
+to represent open circuits. To compute the ABCD matrix of this resulting
+circuit, we make use of the property illustrated in
+Fig.&nbsp;[[fig:two_port_network]](#fig:two_port_network){reference-type=”ref”
+reference=”fig:two_port_network”}: the ABCD matrix of a cascade
+connection of two-port networks is equal to the product of the ABCD
+matrices of the individual networks. We first determine the $ABCD$
+matrix of three parts of the network (separated by dashed line in
+Fig.[[fig:network]](#fig:network){reference-type=”ref”
+reference=”fig:network”}) such that the $ABCD$ matrix of the total
+network reads $$begin{bmatrix}</p>
+<blockquote>
+<div>A &amp; B   \
+C &amp; D  \</div></blockquote>
+<p>end{bmatrix} =
+begin{bmatrix}</p>
+<blockquote>
+<div>1 &amp; 0   \
+Y_r &amp; 1  \</div></blockquote>
+<p>end{bmatrix}
+begin{bmatrix}</p>
+<blockquote>
+<div>tilde A  &amp; tilde B   \
+tilde C &amp; tilde D  \</div></blockquote>
+<p>end{bmatrix}
+begin{bmatrix}</p>
+<blockquote>
+<div>1 &amp; 0   \
+Y_j &amp; 1  \</div></blockquote>
+<p>end{bmatrix}.$$ $$A = tilde A+tilde B Y_j,$$ where the $A$ and
+$B$ coefficients of the middle part of the network are $$begin{split}</p>
+<blockquote>
+<div>tilde A&amp;=(Y_a + Y_b)(Y_c + Y_d)/(Y_a Y_d-Y_b Y_c)\
+tilde B&amp;=(Y_a + Y_b + Y_c + Y_d)/(Y_a Y_d-Y_b Y_c).</div></blockquote>
+<p>end{split}$$ The ABCD matrix for the middle part of the circuit is
+derived in Sec. 10.11 of Ref.&nbsp;[&#64;arshad2010network], and the ABCD
+matrices for the circuits on either sides are provided in
+Ref.&nbsp;[&#64;pozar2009microwave].</p>
+<p>![ <strong>Networks after star-mesh reduction.</strong> The two non-trivial
+situations reached after applying star-mesh transformations to a network
+to obtain $T_{rj}$.
+[]{label=”fig:network”}](figures/fig_network.pdf){#fig:network
+width=”50%”}</p>
+<p>This method is also applied to calculate the transfer function to
+capacitors, inductors and resistors, notably to visualize the normal
+mode with the <cite>show_normal_mode</cite> function.</p>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="../contact.html" class="btn btn-neutral float-right" title="Contact" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="circuit_quantization.html" class="btn btn-neutral float-left" title="Circuit quantization overview {#sec:circuit_quantization_overview}" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, Mario Gely
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

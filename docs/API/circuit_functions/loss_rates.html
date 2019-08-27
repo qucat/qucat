@@ -85,9 +85,11 @@
             
               <p class="caption"><span class="caption-text">Contents:</span></p>
 <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../about.html">About</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../citing.html">Citing this project</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../tutorials/tutorials.html">Tutorials</a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="../API.html">Documentation</a><ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../API.html">List of functions</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="../builders.html">Creating a circuit</a></li>
 <li class="toctree-l2 current"><a class="reference internal" href="../circuit_functions.html">Circuit analysis</a><ul class="current">
 <li class="toctree-l3"><a class="reference internal" href="eigenfrequencies.html"> Calculating eigen-frequencies</a></li>
@@ -150,7 +152,7 @@
     
       <li><a href="../../index.html">Docs</a> &raquo;</li>
         
-          <li><a href="../API.html">API documentation</a> &raquo;</li>
+          <li><a href="../API.html">Index of functions</a> &raquo;</li>
         
           <li><a href="../circuit_functions.html">Circuit analysis</a> &raquo;</li>
         
@@ -203,15 +205,15 @@
 <dt id="qucat.Qcircuit.loss_rates">
 <code class="descclassname">Qcircuit.</code><code class="descname">loss_rates</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qucat/core.html#Qcircuit.loss_rates"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#qucat.Qcircuit.loss_rates" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns the loss rates of the circuit normal modes.</p>
-<p>The array is ordered ordered with increasing normal mode frequencies.
-Such that the first element of the array corresponds to the loss
+<p>The array is ordered ordered with increasing normal mode frequencies
+such that the first element of the array corresponds to the loss
 rate of the lowest frequency mode. Losses are provided in units of Hertz,
 <strong>not in angular frequency</strong>.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>kwargs</strong> – Values for un-specified circuit compoenents,
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>kwargs</strong> – Values for un-specified circuit components,
 ex: <code class="docutils literal notranslate"><span class="pre">L=1e-9</span></code>.</td>
 </tr>
 <tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">Normal mode losses of the circuit</td>
@@ -221,10 +223,11 @@ ex: <code class="docutils literal notranslate"><span class="pre">L=1e-9</span></
 </tbody>
 </table>
 <p class="rubric">Notes</p>
-<p>These loss rates <span class="math notranslate nohighlight">\(\kappa_m\)</span> correspond to the imaginary parts
+<p>These loss rates <span class="math notranslate nohighlight">\(\kappa_m\)</span> correspond to twice the imaginary parts
 of the complex frequencies which make the conductance matrix
-singular, or equivalently the imaginary parts of the poles of the impedance
+singular, or equivalently twice the imaginary parts of the poles of the impedance
 calculated between the nodes of an inductor or josephon junction.</p>
+<p>For further details on the underlying theory, see LINKTOCOME.</p>
 <p>The dynamics of the circuit can be studied in QuTiP
 by considering collapse operators for the m-th mode
 <span class="math notranslate nohighlight">\(\sqrt{2\pi\kappa_m(n_{th,m}+1)}\hat{a}_m\)</span> and
@@ -236,7 +239,7 @@ Note that dissipation rates that are obtained from this function
 have to be converted to angular frequencies through the factor <span class="math notranslate nohighlight">\(2\pi\)</span>.
 If you are also using a hamiltonian generated from qucat,
 then it too should be converted to angular frequencies by multiplying
-the entire hamiltonian by <span class="math notranslate nohighlight">\(2\pi\)</span> when performing time-dependant
+the entire Hamiltonian by <span class="math notranslate nohighlight">\(2\pi\)</span> when performing time-dependant
 simulations.</p>
 </dd></dl>
 

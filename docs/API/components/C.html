@@ -85,9 +85,11 @@
             
               <p class="caption"><span class="caption-text">Contents:</span></p>
 <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../about.html">About</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../citing.html">Citing this project</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../tutorials/tutorials.html">Tutorials</a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="../API.html">Documentation</a><ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../API.html">List of functions</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="../builders.html">Creating a circuit</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../circuit_functions.html">Circuit analysis</a></li>
 <li class="toctree-l2 current"><a class="reference internal" href="../components.html">Circuit components</a><ul class="current">
@@ -146,7 +148,7 @@
     
       <li><a href="../../index.html">Docs</a> &raquo;</li>
         
-          <li><a href="../API.html">API documentation</a> &raquo;</li>
+          <li><a href="../API.html">Index of functions</a> &raquo;</li>
         
           <li><a href="../components.html">Circuit components</a> &raquo;</li>
         
@@ -227,7 +229,7 @@ such as the anharmonicity can be performed much faster.</li>
 <dt id="qucat.C.zpf">
 <code class="descname">zpf</code><span class="sig-paren">(</span><em>mode</em>, <em>quantity</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#qucat.C.zpf" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns contribution of a mode to the zero-point fluctuations of a quantity for this component.</p>
-<p>The quantity can be current current (in units of Ampere),
+<p>The quantity can be current (in units of Ampere),
 voltage (in Volts),
 charge (in electron charge),
 or flux (in units of the reduced flux quantum, <span class="math notranslate nohighlight">\(\hbar/2e\)</span>).</p>
@@ -240,7 +242,7 @@ or flux (in units of the reduced flux quantum, <span class="math notranslate noh
 the lowest frequency mode, and the others
 are arranged in order of increasing frequency</li>
 <li><strong>quantity</strong> (<em>string</em>) – One of ‘current’, ‘flux’, ‘charge’, ‘voltage’</li>
-<li><strong>kwargs</strong> – Values for un-specified circuit compoenents,
+<li><strong>kwargs</strong> – Values for un-specified circuit components,
 ex: <code class="docutils literal notranslate"><span class="pre">L=1e-9</span></code>.</li>
 </ul>
 </td>
@@ -254,20 +256,12 @@ ex: <code class="docutils literal notranslate"><span class="pre">L=1e-9</span></
 </tbody>
 </table>
 <p class="rubric">Notes</p>
-<p>This quantity is calculated from the magnitude of the
-transfer function between a reference component an this one.
-The reference component
-is an inductor or a junction with inductance <span class="math notranslate nohighlight">\(L_r\)</span>
-for which we have calculated</p>
-<p><span class="math notranslate nohighlight">\(\phi_{zpf,m} = \sqrt{\frac{\hbar}{\omega_mImY'(\omega_m)}}\)</span></p>
-<p>the zero-point fluctuations in flux of mode <span class="math notranslate nohighlight">\(m\)</span>
-with frequency <span class="math notranslate nohighlight">\(\omega_m\)</span> using the admittance of
-the circuit calculated at the nodes of the reference junction</p>
-<p><span class="math notranslate nohighlight">\(\phi_{zpf,m}\)</span> can be transformed to other quantities</p>
-<p><span class="math notranslate nohighlight">\(v_{zpf,m} = \omega\phi_{zpf,m}\)</span></p>
-<p><span class="math notranslate nohighlight">\(i_{zpf,m} = v_{zpf,m} / L_r\omega\)</span></p>
-<p><span class="math notranslate nohighlight">\(q_{zpf,m} = i_{zpf,m}/\omega\)</span></p>
-<p>Where <span class="math notranslate nohighlight">\(Z(\omega)\)</span> is this components impedance.</p>
+<p>This quantity is calculated by multiplying the
+voltage transfer function <span class="math notranslate nohighlight">\(T_{rc}\)</span> (between a reference component <span class="math notranslate nohighlight">\(r\)</span>
+and the annotated component  <span class="math notranslate nohighlight">\(c\)</span> ), with
+<span class="math notranslate nohighlight">\(X_{zpf,m,r}\)</span>, the zero-point fluctuations of <span class="math notranslate nohighlight">\(\hat{X}\)</span> at the reference component.</p>
+<p>Note that resistors make the transfer function <span class="math notranslate nohighlight">\(T_{rc}\)</span>, and hence this quantity, complex.</p>
+<p>For more detail on the underlying theory, see LINKTOCOME.</p>
 </dd></dl>
 
 </dd></dl>

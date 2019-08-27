@@ -39,7 +39,7 @@
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Tutorials" href="tutorials/tutorials.html" />
-    <link rel="prev" title="QUCAT" href="index.html" /> 
+    <link rel="prev" title="Citing this project" href="citing.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -85,6 +85,8 @@
             
               <p class="caption"><span class="caption-text">Contents:</span></p>
 <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="about.html">About</a></li>
+<li class="toctree-l1"><a class="reference internal" href="citing.html">Citing this project</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Installation</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#installing-via-pip">Installing via pip</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#installing-from-source">Installing from source</a></li>
@@ -92,7 +94,7 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="tutorials/tutorials.html">Tutorials</a></li>
-<li class="toctree-l1"><a class="reference internal" href="API/API.html">Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="API/API.html">List of functions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="contact.html">Contact</a></li>
 <li class="toctree-l1"><a class="reference internal" href="report_a_bug.html">Report a bug</a></li>
 </ul>
@@ -185,7 +187,10 @@
 </style>
 <div class="section" id="installation">
 <h1>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h1>
-<p><strong>Important: QuCAT only supports python 3</strong></p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">QuCAT only supports python 3</p>
+</div>
 <div class="section" id="installing-via-pip">
 <h2>Installing via pip<a class="headerlink" href="#installing-via-pip" title="Permalink to this headline">¶</a></h2>
 <p>The recommended way to install qucat is via pip by opening a terminal and running</p>
@@ -209,9 +214,13 @@ The following packages are currently required:</p>
 <li>Matplotlib, tested on version 3.0.3</li>
 <li>Sympy, tested on version 1.3</li>
 </ul>
-<p>Additional features are available with the following packages:</p>
+<p>Generating a Hamiltonian requires</p>
 <ul class="simple">
 <li><a class="reference external" href="http://qutip.org/docs/latest/installation.html">QuTiP</a>, tested on version 4.3</li>
+</ul>
+<p>Performance of Sympy and thus QuCAT is enhanced by using</p>
+<ul class="simple">
+<li><a class="reference external" href="https://gmpy2.readthedocs.io/en/latest/">gmpy2</a></li>
 </ul>
 <p>We recommend installing python and these packages by
 downloading and installing
@@ -230,7 +239,7 @@ downloading and installing
         <a href="tutorials/tutorials.html" class="btn btn-neutral float-right" title="Tutorials" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="index.html" class="btn btn-neutral float-left" title="QUCAT" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="citing.html" class="btn btn-neutral float-left" title="Citing this project" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   

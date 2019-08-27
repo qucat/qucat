@@ -85,9 +85,11 @@
             
               <p class="caption"><span class="caption-text">Contents:</span></p>
 <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../about.html">About</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../citing.html">Citing this project</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../tutorials/tutorials.html">Tutorials</a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="../API.html">Documentation</a><ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../API.html">List of functions</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="../builders.html">Creating a circuit</a></li>
 <li class="toctree-l2 current"><a class="reference internal" href="../circuit_functions.html">Circuit analysis</a><ul class="current">
 <li class="toctree-l3"><a class="reference internal" href="eigenfrequencies.html"> Calculating eigen-frequencies</a></li>
@@ -150,7 +152,7 @@
     
       <li><a href="../../index.html">Docs</a> &raquo;</li>
         
-          <li><a href="../API.html">API documentation</a> &raquo;</li>
+          <li><a href="../API.html">Index of functions</a> &raquo;</li>
         
           <li><a href="../circuit_functions.html">Circuit analysis</a> &raquo;</li>
         
@@ -208,7 +210,7 @@ Plots a schematic of the circuit overlayed with
 arrows representing the complex amplitude of a certain quantity
 <span class="math notranslate nohighlight">\(X\)</span> which can be flux, current, charge or voltage.</p>
 <p>More specifically, the complex amplitude of <span class="math notranslate nohighlight">\(X\)</span> if a
-single-photon coherent state were populating a given mode <code class="docutils literal notranslate"><span class="pre">mode</span></code>.</p>
+single-photon amplitude coherent state were populating a given mode <code class="docutils literal notranslate"><span class="pre">mode</span></code>.</p>
 <p>Current is shown in units of Ampere, voltage in Volts,
 charge in electron charge, and flux in units of the
 reduced flux quantum
@@ -243,24 +245,14 @@ arrow size and arrow direction</li>
 </table>
 <p class="rubric">Notes</p>
 <p>This annotated quantity, called a phasor, is calculated by multiplying the
-voltage transfer function <span class="math notranslate nohighlight">\(T\)</span> (between a reference component
-and the annotated component), with
-<span class="math notranslate nohighlight">\(X_{zpf,m}\)</span>, the zero-point fluctuations of <span class="math notranslate nohighlight">\(\hat{X}\)</span>.</p>
-<p>The reference component
-is an inductor or a junction with inductance <span class="math notranslate nohighlight">\(L_r\)</span>
-for which we have calculated</p>
-<p><span class="math notranslate nohighlight">\(\phi_{zpf,m} = \sqrt{\frac{\hbar}{\omega_mImY'(\omega_m)}}\)</span></p>
-<p>Which can be transformed to other quantities:</p>
-<p><span class="math notranslate nohighlight">\(v = j\omega\phi\)</span></p>
-<p><span class="math notranslate nohighlight">\(i =  v /j\omega L_r\)</span></p>
-<p><span class="math notranslate nohighlight">\(q =  i/j\omega\)</span></p>
-<p>In the limit of high quality factor modes, the imaginary part
-of the transfer function <span class="math notranslate nohighlight">\(T\)</span> is negligable, making the
-phasor approximately
-equal to the contribution <span class="math notranslate nohighlight">\(X_{zpf,m}\)</span> of the mode <code class="docutils literal notranslate"><span class="pre">m</span></code> to the zero-point fluctuations
-of <span class="math notranslate nohighlight">\(\hat{X}\)</span>, such that <span class="math notranslate nohighlight">\(\hat{X}\)</span> (varying per component) is</p>
-<p><span class="math notranslate nohighlight">\(\hat{X} = \sum_m X_{zpf,m}(\hat{a}_m\pm\hat{a}_m^\dagger)\)</span></p>
-<p>where <span class="math notranslate nohighlight">\(\hat{a}_m\)</span> is the annihilation operator of mode <span class="math notranslate nohighlight">\(m\)</span>.</p>
+voltage transfer function <span class="math notranslate nohighlight">\(T_{rc}\)</span> (between a reference component <span class="math notranslate nohighlight">\(r\)</span>
+and the annotated component  <span class="math notranslate nohighlight">\(c\)</span> ), with
+<span class="math notranslate nohighlight">\(X_{zpf,m,r}\)</span>, the zero-point fluctuations of <span class="math notranslate nohighlight">\(\hat{X}\)</span> at the reference component.</p>
+<p>Note that resistors make the transfer function <span class="math notranslate nohighlight">\(T_{rc}\)</span>, and hence the phasors complex.</p>
+<p>Since this is plotted for a single-photon amplitude coherent state, the absolute value
+of the annotation is equal to the
+contribution of a mode to the zero-point fluctuations accross this component.</p>
+<p>For more detail on the underlying theory, see LINKTOCOME.</p>
 </dd></dl>
 
 </div>

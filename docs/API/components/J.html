@@ -85,9 +85,11 @@
             
               <p class="caption"><span class="caption-text">Contents:</span></p>
 <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../about.html">About</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../citing.html">Citing this project</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../tutorials/tutorials.html">Tutorials</a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="../API.html">Documentation</a><ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../API.html">List of functions</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="../builders.html">Creating a circuit</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../circuit_functions.html">Circuit analysis</a></li>
 <li class="toctree-l2 current"><a class="reference internal" href="../components.html">Circuit components</a><ul class="current">
@@ -146,7 +148,7 @@
     
       <li><a href="../../index.html">Docs</a> &raquo;</li>
         
-          <li><a href="../API.html">API documentation</a> &raquo;</li>
+          <li><a href="../API.html">Index of functions</a> &raquo;</li>
         
           <li><a href="../components.html">Circuit components</a> &raquo;</li>
         
@@ -198,7 +200,7 @@
 <dl class="class">
 <dt id="qucat.J">
 <em class="property">class </em><code class="descclassname">qucat.</code><code class="descname">J</code><span class="sig-paren">(</span><em>node_minus</em>, <em>node_plus</em>, <em>*args</em>, <em>use_E=False</em>, <em>use_I=False</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qucat/core.html#J"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#qucat.J" title="Permalink to this definition">¶</a></dt>
-<dd><p>A class representing an junction</p>
+<dd><p>A class representing a junction</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -207,13 +209,13 @@
 <li><strong>node_minus</strong> (<em>integer</em>) – Index corresponding to one node of junction</li>
 <li><strong>node_minus</strong> – Index corresponding to the other node of the junction</li>
 <li><strong>args</strong> (<em>&lt;float&gt;</em><em> or </em><em>&lt;str&gt;</em><em> or </em><em>&lt;float&gt;</em><em>,</em><em>&lt;str&gt;</em>) – Other arguments should be a float which by default
-corresponds to the Losephson inductance of the
+corresponds to the Josephson inductance of the
 junction, a string corresponding to the
 name of that value (ex: <cite>“L_J”</cite>), or both.
 If only a label is provided,
-a value for should be passed
+a value for this junction should be passed
 as a keyword argument in subsequent function calls
-(ex: <cite>L_J = 10e-9</cite>)
+(ex: <cite>L_J = 10e-9</cite>).
 This is the best way to proceed if one wants to sweep the value of this
 junction. Indeed, the most computationally expensive part of the
 analysis is performed upon initializing the circuit, subsequently
@@ -240,9 +242,9 @@ than its Josephson inductance</li>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>kwargs</strong> – Values for un-specified circuit compoenents,
+<li><strong>kwargs</strong> – Values for un-specified circuit components,
 ex: <code class="docutils literal notranslate"><span class="pre">L=1e-9</span></code>.</li>
-<li><strong>mode</strong> (<em>integer</em>) – Determine what mode to plot, where 0 designates
+<li><strong>mode</strong> (<em>integer</em>) – where 0 designates
 the lowest frequency mode, and the others
 are arranged in order of increasing frequency</li>
 </ul>
@@ -257,23 +259,20 @@ are arranged in order of increasing frequency</li>
 </tbody>
 </table>
 <p class="rubric">Notes</p>
-<p>This quantity (in units of Hertz) is defined as</p>
-<p><span class="math notranslate nohighlight">\(A_{m,j} = E_j/2/h\left(\frac{\phi_{zpf,m,j}}{\phi_0}\right)^4\)</span></p>
-<p>where <span class="math notranslate nohighlight">\(phi_0 = \hbar/2e\)</span>,
-<span class="math notranslate nohighlight">\(E_j\)</span> is this junctions Josephson energy,
-and</p>
-<p><span class="math notranslate nohighlight">\(\phi_{zpf,m} = \sqrt{\frac{\hbar}{\omega_mImY'(\omega_m)}}\)</span></p>
-<p>is the zero-point fluctuations in flux if a mode through the junction,
-with frequency <span class="math notranslate nohighlight">\(\omega_m\)</span> and admittance to the rest of the circuit <span class="math notranslate nohighlight">\(Y\)</span></p>
-<p>Following first order perturbation, the total anharmonicity of a mode is obtained
+<p>The quantity returned is the anharmonicity
+of the mode <code class="docutils literal notranslate"><span class="pre">m</span></code> if this junction were the only junction
+present in the circuit (i.e. if all the
+others were replaced by linear inductors).</p>
+<p>The total anharmonicity of a mode (in first order perturbation theory) is obtained
 by summing these contribution over all modes.</p>
+<p>For more details, see LINKTOCOME</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="qucat.J.zpf">
 <code class="descname">zpf</code><span class="sig-paren">(</span><em>mode</em>, <em>quantity</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#qucat.J.zpf" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns contribution of a mode to the zero-point fluctuations of a quantity for this component.</p>
-<p>The quantity can be current current (in units of Ampere),
+<p>The quantity can be current (in units of Ampere),
 voltage (in Volts),
 charge (in electron charge),
 or flux (in units of the reduced flux quantum, <span class="math notranslate nohighlight">\(\hbar/2e\)</span>).</p>
@@ -286,7 +285,7 @@ or flux (in units of the reduced flux quantum, <span class="math notranslate noh
 the lowest frequency mode, and the others
 are arranged in order of increasing frequency</li>
 <li><strong>quantity</strong> (<em>string</em>) – One of ‘current’, ‘flux’, ‘charge’, ‘voltage’</li>
-<li><strong>kwargs</strong> – Values for un-specified circuit compoenents,
+<li><strong>kwargs</strong> – Values for un-specified circuit components,
 ex: <code class="docutils literal notranslate"><span class="pre">L=1e-9</span></code>.</li>
 </ul>
 </td>
@@ -300,20 +299,12 @@ ex: <code class="docutils literal notranslate"><span class="pre">L=1e-9</span></
 </tbody>
 </table>
 <p class="rubric">Notes</p>
-<p>This quantity is calculated from the magnitude of the
-transfer function between a reference component an this one.
-The reference component
-is an inductor or a junction with inductance <span class="math notranslate nohighlight">\(L_r\)</span>
-for which we have calculated</p>
-<p><span class="math notranslate nohighlight">\(\phi_{zpf,m} = \sqrt{\frac{\hbar}{\omega_mImY'(\omega_m)}}\)</span></p>
-<p>the zero-point fluctuations in flux of mode <span class="math notranslate nohighlight">\(m\)</span>
-with frequency <span class="math notranslate nohighlight">\(\omega_m\)</span> using the admittance of
-the circuit calculated at the nodes of the reference junction</p>
-<p><span class="math notranslate nohighlight">\(\phi_{zpf,m}\)</span> can be transformed to other quantities</p>
-<p><span class="math notranslate nohighlight">\(v_{zpf,m} = \omega\phi_{zpf,m}\)</span></p>
-<p><span class="math notranslate nohighlight">\(i_{zpf,m} = v_{zpf,m} / L_r\omega\)</span></p>
-<p><span class="math notranslate nohighlight">\(q_{zpf,m} = i_{zpf,m}/\omega\)</span></p>
-<p>Where <span class="math notranslate nohighlight">\(Z(\omega)\)</span> is this components impedance.</p>
+<p>This quantity is calculated by multiplying the
+voltage transfer function <span class="math notranslate nohighlight">\(T_{rc}\)</span> (between a reference component <span class="math notranslate nohighlight">\(r\)</span>
+and the annotated component  <span class="math notranslate nohighlight">\(c\)</span> ), with
+<span class="math notranslate nohighlight">\(X_{zpf,m,r}\)</span>, the zero-point fluctuations of <span class="math notranslate nohighlight">\(\hat{X}\)</span> at the reference component.</p>
+<p>Note that resistors make the transfer function <span class="math notranslate nohighlight">\(T_{rc}\)</span>, and hence this quantity, complex.</p>
+<p>For more detail on the underlying theory, see LINKTOCOME.</p>
 </dd></dl>
 
 </dd></dl>

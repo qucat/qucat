@@ -1,8 +1,7 @@
 import sys
 import os
 sys.path.append(os.path.join(os.path.join(os.path.dirname(os.path.dirname(__file__)),'src')))
-from utils_test_tutorials import run_notebook
-from test_core import TestCaseAppended
+from utils import run_notebook, TestCaseAppended
 import unittest
 from shutil import rmtree
 
@@ -18,13 +17,18 @@ class TestTutorials(TestCaseAppended):
         return var_dict
 
 
-class TestBasics(TestTutorials):
+class TestAll(TestTutorials):
 
-    def test_transmon_LC_GUI(self):
-        var_dict = self.run_tutorial('transmon_LC_GUI.ipynb')
-
-    def test_transmon_LC_programmatically(self):
-        var_dict = self.run_tutorial('transmon_LC_programmatically.ipynb')
+    def test_basics(self):
+        var_dict = self.run_tutorial('basics.ipynb')
+    def test_filter(self):
+        var_dict = self.run_tutorial('filter_design.ipynb')
+    def test_mmusc(self):
+        var_dict = self.run_tutorial('MMUSC.ipynb')
+    def test_OM(self):
+        var_dict = self.run_tutorial('optomechanics.ipynb')
+    def test_TC(self):
+        var_dict = self.run_tutorial('tuneable_coupler.ipynb')
         
 if __name__ == "__main__":
     unittest.main()
