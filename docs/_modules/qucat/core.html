@@ -542,7 +542,7 @@
 <span class="sd">        These eigen-frequencies :math:`f_m` correspond to the real parts</span>
 <span class="sd">        of the complex frequencies which make the conductance matrix</span>
 <span class="sd">        singular, or equivalently the real parts of the poles of the impedance</span>
-<span class="sd">        calculated between the nodes of an inductor or josephon junction.</span>
+<span class="sd">        calculated between the nodes of an inductor or josephson junction.</span>
 
 <span class="sd">        The Hamiltonian of the circuit is</span>
 
@@ -556,6 +556,8 @@
 <span class="sd">        were replaced with linear inductors. In that case the </span>
 <span class="sd">        non-linear part of the Hamiltonian :math:`\hat{U}`, </span>
 <span class="sd">        originating in the junction non-linearity, would be 0.</span>
+
+<span class="sd">        For more information on the underlying theory, see LINKTOCOME.</span>
 <span class="sd">        &#39;&#39;&#39;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_set_zeta</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">zeta</span><span class="p">)</span><span class="o">/</span><span class="mf">2.</span><span class="o">/</span><span class="n">pi</span></div>
@@ -564,8 +566,8 @@
     <span class="k">def</span> <span class="nf">loss_rates</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="sd">&#39;&#39;&#39;Returns the loss rates of the circuit normal modes.</span>
 
-<span class="sd">        The array is ordered ordered with increasing normal mode frequencies.</span>
-<span class="sd">        Such that the first element of the array corresponds to the loss</span>
+<span class="sd">        The array is ordered ordered with increasing normal mode frequencies</span>
+<span class="sd">        such that the first element of the array corresponds to the loss</span>
 <span class="sd">        rate of the lowest frequency mode. Losses are provided in units of Hertz, </span>
 <span class="sd">        **not in angular frequency**.</span>
 
@@ -583,10 +585,12 @@
 <span class="sd">        Notes</span>
 <span class="sd">        -----</span>
 
-<span class="sd">        These loss rates :math:`\kappa_m` correspond to the imaginary parts</span>
+<span class="sd">        These loss rates :math:`\kappa_m` correspond to twice the imaginary parts</span>
 <span class="sd">        of the complex frequencies which make the conductance matrix</span>
-<span class="sd">        singular, or equivalently the imaginary parts of the poles of the impedance</span>
+<span class="sd">        singular, or equivalently twice the imaginary parts of the poles of the impedance</span>
 <span class="sd">        calculated between the nodes of an inductor or josephon junction.</span>
+
+<span class="sd">        For further details on the underlying theory, see LINKTOCOME.</span>
 <span class="sd">        </span>
 <span class="sd">        The dynamics of the circuit can be studied in QuTiP</span>
 <span class="sd">        by considering collapse operators for the m-th mode </span>
@@ -599,7 +603,7 @@
 <span class="sd">        have to be converted to angular frequencies through the factor :math:`2\pi`.</span>
 <span class="sd">        If you are also using a hamiltonian generated from qucat, </span>
 <span class="sd">        then it too should be converted to angular frequencies by multiplying </span>
-<span class="sd">        the entire hamiltonian by :math:`2\pi` when performing time-dependant </span>
+<span class="sd">        the entire Hamiltonian by :math:`2\pi` when performing time-dependant </span>
 <span class="sd">        simulations.</span>
 <span class="sd">        &#39;&#39;&#39;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_set_zeta</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
@@ -609,9 +613,10 @@
     <span class="k">def</span> <span class="nf">anharmonicities</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="sa">r</span><span class="sd">&#39;&#39;&#39;Returns the anharmonicity of the circuit normal modes.</span>
 
-<span class="sd">        The array is ordered ordered with increasing normal mode frequencies.</span>
-<span class="sd">        Such that the first element of the array corresponds to the loss</span>
-<span class="sd">        rate of the lowest frequency mode. Losses are provided in units of Hertz, </span>
+<span class="sd">        The array is ordered ordered with increasing normal mode frequencies</span>
+<span class="sd">        such that the first element of the array corresponds to the </span>
+<span class="sd">        anharmonicity of the lowest frequency mode. </span>
+<span class="sd">        Anharmonicities are provided in units of Hertz, </span>
 <span class="sd">        not in angular frequency.</span>
 
 
@@ -628,37 +633,23 @@
 
 <span class="sd">        Notes</span>
 <span class="sd">        -----</span>
-<span class="sd">        The Hamiltonian of the circuit in the limit of low-dissipation is</span>
+<span class="sd">        The Hamiltonian of a circuit in first order perturbation theory is given by</span>
 
-<span class="sd">        :math:`\hat{H} = \sum_m hf_m\hat{a}_m^\dagger\hat{a}_m + \sum_j E_j[1-\cos{\hat{\varphi_j}}-\frac{\hat{\varphi_j}^2}{2}]`,</span>
+<span class="sd">        :math:`\hat{H} = \sum_m\sum_{n\ne m} (\hbar\omega_m-A_m-\frac{\chi_{mn}}{2})\hat{a}_m^\dagger\hat{a}_m -\frac{A_m}{2}\hat{a}_m^\dagger\hat{a}_m^\dagger\hat{a}_m\hat{a}_m -\chi_{mn}\hat{a}_m^\dagger\hat{a}_m\hat{a}_n^\dagger\hat{a}_n`,</span>
 
-<span class="sd">        where :math:`\hat{a}_m` is the annihilation operator of the m-th</span>
-<span class="sd">        normal mode of the circuit and :math:`f_m` is the frequency of </span>
-<span class="sd">        the m-th normal mode, :math:`E_j` is the Josephson energy of</span>
-<span class="sd">        the j-th junction and </span>
+<span class="sd">        valid for weak anharmonicity $\chi_{mn},A_m\ll \omega_m$.</span>
+
+<span class="sd">        Here </span>
+
+<span class="sd">        * :math:`\omega_m` are the frequencies of the normal modes of the circuit where all junctions have been replaced with inductors characterized by their Josephson inductance</span>
 <span class="sd">        </span>
-<span class="sd">        :math:`\varphi_j = \sum_m\frac{\phi_{zpf,m,j}}{\phi_0}(\hat{a}_m^\dagger+\hat{a}_m)`.</span>
-
-<span class="sd">        where :math:`phi_0 = \hbar/2e` and </span>
-
-<span class="sd">        :math:`\phi_{zpf,m} = \sqrt{\frac{\hbar}{\omega_mImY&#39;(\omega_m)}}`</span>
-
-<span class="sd">        is the zero-point fluctuations in flux if a mode through the junction, </span>
-<span class="sd">        with frequency :math:`\omega_m` and admittance to the rest of the circuit :math:`Y`</span>
-
-<span class="sd">        By keeping only terms which play a role up to first order perturbation</span>
-
-<span class="sd">        :math:`\hat{H} = \sum_m\sum_{n\ne m} h(f_m-A_m-\frac{\chi_{mn}}{2})\hat{a}_m^\dagger\hat{a}_m -h\frac{A_m}{2}\hat{a}_m^\dagger\hat{a}_m^\dagger\hat{a}_m\hat{a}_m -h\chi_{mn}\hat{a}_m^\dagger\hat{a}_m\hat{a}_n^\dagger\hat{a}_n`</span>
-
-<span class="sd">        This function returns the anharmonicities</span>
-
-<span class="sd">        :math:`A_m = \sum_j A_{m,j}`</span>
+<span class="sd">        * :math:`A_m` is the anharmonicity of mode $m$, the difference in frequency of the first two transitions of the mode</span>
 <span class="sd">        </span>
-<span class="sd">        where</span>
+<span class="sd">        * :math:`\chi_{mn}` is the shift in mode $m$ that incurs if an excitation is created in mode $n$ </span>
 
-<span class="sd">        :math:`A_{m,j} = E_j/2/h\left(\frac{\phi_{zpf,m,j}}{\phi_0}\right)^4`</span>
+<span class="sd">        This function returns the values of :math:`A_m`.</span>
 
-<span class="sd">        is the contribution of junction j to the total anharmonicity of a mode m.</span>
+<span class="sd">        For more information on the underlying theory, see LINKTOCOME.</span>
 <span class="sd">        &#39;&#39;&#39;</span>
         <span class="n">Ks</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">kerr</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">Ks</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">Ks</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])])</span></div>
@@ -690,36 +681,23 @@
 
 <span class="sd">        Notes</span>
 <span class="sd">        -----</span>
+<span class="sd">        The Hamiltonian of a circuit in first order perturbation theory is given by</span>
 
-<span class="sd">        The Hamiltonian of the circuit in the limit of low dissipation is</span>
+<span class="sd">        :math:`\hat{H} = \sum_m\sum_{n\ne m} (\hbar\omega_m-A_m-\frac{\chi_{mn}}{2})\hat{a}_m^\dagger\hat{a}_m -\frac{A_m}{2}\hat{a}_m^\dagger\hat{a}_m^\dagger\hat{a}_m\hat{a}_m -\chi_{mn}\hat{a}_m^\dagger\hat{a}_m\hat{a}_n^\dagger\hat{a}_n`,</span>
 
-<span class="sd">        :math:`\hat{H} = \sum_m hf_m\hat{a}_m^\dagger\hat{a}_m + \sum_j E_j[1-\cos{\hat{\varphi_j}}-\frac{\hat{\varphi_j}^2}{2}]`,</span>
+<span class="sd">        valid for weak anharmonicity $\chi_{mn},A_m\ll \omega_m$.</span>
 
-<span class="sd">        where :math:`\hat{a}_m` is the annihilation operator of the m-th</span>
-<span class="sd">        normal mode of the circuit and :math:`f_m` is the frequency of </span>
-<span class="sd">        the m-th normal mode, :math:`E_j` is the Josephson energy of</span>
-<span class="sd">        the j-th junction and </span>
+<span class="sd">        Here </span>
+
+<span class="sd">        * :math:`\omega_m` are the frequencies of the normal modes of the circuit where all junctions have been replaced with inductors characterized by their Josephson inductance</span>
 <span class="sd">        </span>
-<span class="sd">        :math:`\phi_{zpf,m} = \sqrt{\frac{\hbar}{\omega_mImY&#39;(\omega_m)}}`</span>
-
-<span class="sd">        is the zero-point fluctuations in flux if a mode through the junction, </span>
-<span class="sd">        with frequency :math:`\omega_m` and admittance to the rest of the circuit :math:`Y`</span>
-
-<span class="sd">        By keeping only terms which play a role up to first order perturbation</span>
-
-<span class="sd">        :math:`\hat{H} = \sum_m\sum_{n\ne m} h(f_m-A_m-\frac{\chi_{mn}}{2})\hat{a}_m^\dagger\hat{a}_m -h\frac{A_m}{2}\hat{a}_m^\dagger\hat{a}_m^\dagger\hat{a}_m\hat{a}_m -h\chi_{mn}\hat{a}_m^\dagger\hat{a}_m\hat{a}_n^\dagger\hat{a}_n`</span>
-
-<span class="sd">        This function returns a matrix  :math:`K`, with components defined as</span>
-
-<span class="sd">        :math:`K_{mm} = \sum_j A_{m,j}`</span>
-<span class="sd">            </span>
-<span class="sd">        :math:`K_{mn} = \sum_j \sqrt{A_{m,j}}\sqrt{A_{n,j}}`</span>
+<span class="sd">        * :math:`A_m` is the anharmonicity of mode $m$, the difference in frequency of the first two transitions of the mode</span>
 <span class="sd">        </span>
-<span class="sd">        where</span>
+<span class="sd">        * :math:`\chi_{mn}` is the shift in mode $m$ that incurs if an excitation is created in mode $n$ </span>
 
-<span class="sd">        :math:`A_{m,j} = E_j/2/h\left(\frac{\phi_{zpf,m,j}}{\phi_0}\right)^4`</span>
+<span class="sd">        This function returns the values of :math:`A_m` and :math:`\chi_{mn}` .</span>
 
-<span class="sd">        is the contribution of junction j to the total anharmonicity of a mode m</span>
+<span class="sd">        For more information on the underlying theory, see LINKTOCOME.</span>
 <span class="sd">        &#39;&#39;&#39;</span>
 
         <span class="c1"># Compute anharmonicity per junction ``As``</span>
@@ -899,24 +877,13 @@
 <span class="sd">        :math:`\hat{H} = \sum_{m\in\text{modes}} \hbar \omega_m\hat{a}_m^\dagger\hat{a}_m + \sum_j\sum_{2n\le\text{taylor}}E_j\frac{(-1)^{n+1}}{(2n)!}\left[\frac{\phi_{zpf,m,j}}{\phi_0}(\hat{a}_m^\dagger+\hat{a}_m)\right]^{2n}`,</span>
 <span class="sd">        </span>
 <span class="sd">        where :math:`\hat{a}_m` is the annihilation operator of the m-th</span>
-<span class="sd">        normal mode of the circuit and :math:`f_m` is the frequency of </span>
+<span class="sd">        normal mode of the circuit, :math:`f_m` is the frequency of </span>
 <span class="sd">        the m-th normal mode, :math:`E_j` is the Josephson energy of</span>
-<span class="sd">        the j-th junction and :math:`\phi_0 = \hbar/2e`.</span>
-<span class="sd">            </span>
-<span class="sd">        The zero point fluctuations :math:`\phi_{zpf,m,j}` of mode </span>
-<span class="sd">        :math:`m` through junction :math:`j` is calculated </span>
-<span class="sd">        by multiplying the voltage transfer function between a reference junction</span>
-<span class="sd">        and the junction :math:`j` with the zero-point fluctuations</span>
-<span class="sd">        of the reference junction</span>
+<span class="sd">        the j-th junction and :math:`\phi_0 = \hbar/2e` and :math:`\phi_{zpf,m,j}` </span>
+<span class="sd">        is the zero point fluctuation of mode </span>
+<span class="sd">        :math:`m` through junction :math:`j`.</span>
 
-<span class="sd">        :math:`\phi_{zpf,m} = \sqrt{\frac{\hbar}{\omega_mImY&#39;(\omega_m)}}`</span>
-
-<span class="sd">        where :math:`Y` is the admittance of</span>
-<span class="sd">        the circuit calculated at the nodes of the reference junction.</span>
-
-<span class="sd">        If the circuit has at least one resistor, the voltage transfer </span>
-<span class="sd">        functions will become complex, but we take the approximation</span>
-<span class="sd">        of high-quality factor modes by neglecting the imaginary part.</span>
+<span class="sd">        In the expression above, ``modes`` and ``taylor`` are arguments of the ``hamiltonian`` function.</span>
 <span class="sd">        &#39;&#39;&#39;</span>
         <span class="kn">from</span> <span class="nn">qutip</span> <span class="k">import</span> <span class="n">destroy</span><span class="p">,</span> <span class="n">qeye</span><span class="p">,</span> <span class="n">tensor</span>
 
@@ -1107,33 +1074,13 @@
 <span class="sd">        -----</span>
 
 <span class="sd">        This annotated quantity, called a phasor, is calculated by multiplying the</span>
-<span class="sd">        voltage transfer function :math:`T` (between a reference component</span>
-<span class="sd">        and the annotated component), with</span>
-<span class="sd">        :math:`X_{zpf,m}`, the zero-point fluctuations of :math:`\hat{X}`.</span>
-
-<span class="sd">        The reference component</span>
-<span class="sd">        is an inductor or a junction with inductance :math:`L_r`</span>
-<span class="sd">        for which we have calculated</span>
-
-<span class="sd">        :math:`\phi_{zpf,m} = \sqrt{\frac{\hbar}{\omega_mImY&#39;(\omega_m)}}`</span>
-
-<span class="sd">        Which can be transformed to other quantities:</span>
+<span class="sd">        voltage transfer function :math:`T_{cr}` (between a reference component :math:`r`</span>
+<span class="sd">        and the annotated component  :math:`r` ), with</span>
+<span class="sd">        :math:`X_{zpf,m,r}`, the zero-point fluctuations of :math:`\hat{X}` at the reference component.</span>
 <span class="sd">        </span>
-<span class="sd">        :math:`v = j\omega\phi`</span>
+<span class="sd">        Note that resistors make the transfer function :math:`T_{cr}`, and hence the phasors complex.</span>
 
-<span class="sd">        :math:`i =  v /j\omega L_r`</span>
-
-<span class="sd">        :math:`q =  i/j\omega`  </span>
-<span class="sd">        </span>
-<span class="sd">        In the limit of high quality factor modes, the imaginary part</span>
-<span class="sd">        of the transfer function :math:`T` is negligable, making the </span>
-<span class="sd">        phasor approximately </span>
-<span class="sd">        equal to the contribution :math:`X_{zpf,m}` of the mode ``m`` to the zero-point fluctuations </span>
-<span class="sd">        of :math:`\hat{X}`, such that :math:`\hat{X}` (varying per component) is</span>
-
-<span class="sd">        :math:`\hat{X} = \sum_m X_{zpf,m}(\hat{a}_m\pm\hat{a}_m^\dagger)`</span>
-
-<span class="sd">        where :math:`\hat{a}_m` is the annihilation operator of mode :math:`m`.</span>
+<span class="sd">        For more detail on the underlying theory, see LINKTOCOME.</span>
 <span class="sd">        &#39;&#39;&#39;</span>
 
         <span class="c1"># This changes the default plotting settings </span>
@@ -1434,9 +1381,8 @@
 <span class="sd">    ... R(2,0,50) # Add a 50 Ohm resistance to ground</span>
 <span class="sd">    ... ])</span>
 
-
-<span class="sd">    </span>
-<span class="sd">    This is the best way to proceed if one wants to sweep the value of a </span>
+<span class="sd">    The junction was parametrized only by a string ``L_J`` , </span>
+<span class="sd">    this is the best way to proceed if one wants to sweep the value of a </span>
 <span class="sd">    component. Indeed, the most computationally expensive part of the </span>
 <span class="sd">    analysis is performed upon initializing the Network, subsequently</span>
 <span class="sd">    changing the value of a component and re-calculating a quantity </span>
@@ -1462,7 +1408,7 @@
 <span class="sd">                    about the graphically constructed circuit.</span>
 <span class="sd">    edit:           Boolean</span>
 <span class="sd">                    If True (default), the graphical user interface will be opened.</span>
-<span class="sd">                    One can set this argument to False to import the circuit withoug opening</span>
+<span class="sd">                    One can set this argument to False to import the circuit without opening</span>
 <span class="sd">                    the graphical user interface</span>
 <span class="sd">    plot:           Boolean</span>
 <span class="sd">                    If True (default), the circuit will be plotted using matplotlib.</span>
@@ -1483,11 +1429,11 @@
 <span class="sd">    </span>
 <span class="sd">    Each line of this text file is in the format:</span>
 
-<span class="sd">    &lt;``type``&gt;;&lt;``x_minus``,``y_minus``&gt;;&lt;``x_plus``,``y_plus``&gt;;``value``;``label``</span>
+<span class="sd">    ``type`` ; ``x_minus`` , ``y_minus`` ; ``x_plus`` , ``y_plus`` ; ``value`` ; ``label``</span>
 
 <span class="sd">    and represents a circuit component, wire or ground element.</span>
 
-<span class="sd">    ``type`` can take the values ``L``, ``C``, ``R``, ``J``, ``W``or``G`` for </span>
+<span class="sd">    ``type`` can take the values ``L``, ``C``, ``R``, ``J``, ``W`` or ``G`` for </span>
 <span class="sd">    inductor, capacitor, resistor, junction, wire or ground respectively.</span>
 
 <span class="sd">    ``value`` will be a float representing the value of the component or will be empty</span>
@@ -2385,27 +2331,14 @@
 
 <span class="sd">        Notes</span>
 <span class="sd">        -----</span>
-<span class="sd">        This quantity is calculated from the magnitude of the</span>
-<span class="sd">        transfer function between a reference component an this one.</span>
-<span class="sd">        The reference component</span>
-<span class="sd">        is an inductor or a junction with inductance :math:`L_r`</span>
-<span class="sd">        for which we have calculated</span>
-
-<span class="sd">        :math:`\phi_{zpf,m} = \sqrt{\frac{\hbar}{\omega_mImY&#39;(\omega_m)}}`</span>
-
-<span class="sd">        the zero-point fluctuations in flux of mode :math:`m`</span>
-<span class="sd">        with frequency :math:`\omega_m` using the admittance of</span>
-<span class="sd">        the circuit calculated at the nodes of the reference junction</span>
-
-<span class="sd">        :math:`\phi_{zpf,m}` can be transformed to other quantities</span>
+<span class="sd">        This quantity is calculated by multiplying the</span>
+<span class="sd">        voltage transfer function :math:`T_{cr}` (between a reference component :math:`r`</span>
+<span class="sd">        and the annotated component  :math:`r` ), with</span>
+<span class="sd">        :math:`X_{zpf,m,r}`, the zero-point fluctuations of :math:`\hat{X}` at the reference component.</span>
 <span class="sd">        </span>
-<span class="sd">        :math:`v_{zpf,m} = \omega\phi_{zpf,m}`</span>
+<span class="sd">        Note that resistors make the transfer function :math:`T_{cr}`, and hence the phasors complex.</span>
 
-<span class="sd">        :math:`i_{zpf,m} = v_{zpf,m} / L_r\omega`</span>
-
-<span class="sd">        :math:`q_{zpf,m} = i_{zpf,m}/\omega`  </span>
-
-<span class="sd">        Where :math:`Z(\omega)` is this components impedance.</span>
+<span class="sd">        For more detail on the underlying theory, see LINKTOCOME.</span>
 <span class="sd">        &#39;&#39;&#39;</span>
         <span class="k">if</span> <span class="n">quantity</span> <span class="o">==</span> <span class="s1">&#39;flux&#39;</span><span class="p">:</span>
             <span class="n">phi_0</span> <span class="o">=</span> <span class="n">hbar</span><span class="o">/</span><span class="mf">2.</span><span class="o">/</span><span class="n">e</span>
@@ -2744,21 +2677,13 @@
 <span class="sd">        </span>
 <span class="sd">        Notes</span>
 <span class="sd">        -----</span>
-<span class="sd">        This quantity (in units of Hertz) is defined as </span>
+<span class="sd">        Anharmonicity of the mode ``m`` if this were the only junction in the circuit (if all the </span>
+<span class="sd">        others were replaced by linear inductors).</span>
 
-<span class="sd">        :math:`A_{m,j} = E_j/2/h\left(\frac{\phi_{zpf,m,j}}{\phi_0}\right)^4`</span>
-
-<span class="sd">        where :math:`phi_0 = \hbar/2e`, </span>
-<span class="sd">        :math:`E_j` is this junctions Josephson energy,</span>
-<span class="sd">        and </span>
-
-<span class="sd">        :math:`\phi_{zpf,m} = \sqrt{\frac{\hbar}{\omega_mImY&#39;(\omega_m)}}`</span>
-
-<span class="sd">        is the zero-point fluctuations in flux if a mode through the junction, </span>
-<span class="sd">        with frequency :math:`\omega_m` and admittance to the rest of the circuit :math:`Y`</span>
-
-<span class="sd">        Following first order perturbation, the total anharmonicity of a mode is obtained</span>
+<span class="sd">        The total anharmonicity of a mode (in first order perturbation theory) is obtained</span>
 <span class="sd">        by summing these contribution over all modes.</span>
+
+<span class="sd">        For more details, see LINKTOCOME</span>
 <span class="sd">        &#39;&#39;&#39;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_Ej</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">absolute</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">zpf</span><span class="p">(</span><span class="n">mode</span><span class="p">,</span><span class="n">quantity</span><span class="o">=</span><span class="s1">&#39;flux&#39;</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">))</span><span class="o">**</span><span class="mi">4</span></div>
 

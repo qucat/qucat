@@ -4,7 +4,7 @@
 QuCAT
 =====================================
 
-.. note:: We hope you enjoy using QuCAT. Please help us make QuCAT better by :ref:`citing` it in your publications
+.. note:: We hope you enjoy using QuCAT. Please help us make QuCAT better by :ref:`citing` in your publications
 
 QuCAT stands for Quantum Circuit Analyzer Tool. 
 This open source python library provides standard analysis

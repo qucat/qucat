@@ -245,24 +245,11 @@ arrow size and arrow direction</li>
 </table>
 <p class="rubric">Notes</p>
 <p>This annotated quantity, called a phasor, is calculated by multiplying the
-voltage transfer function <span class="math notranslate nohighlight">\(T\)</span> (between a reference component
-and the annotated component), with
-<span class="math notranslate nohighlight">\(X_{zpf,m}\)</span>, the zero-point fluctuations of <span class="math notranslate nohighlight">\(\hat{X}\)</span>.</p>
-<p>The reference component
-is an inductor or a junction with inductance <span class="math notranslate nohighlight">\(L_r\)</span>
-for which we have calculated</p>
-<p><span class="math notranslate nohighlight">\(\phi_{zpf,m} = \sqrt{\frac{\hbar}{\omega_mImY'(\omega_m)}}\)</span></p>
-<p>Which can be transformed to other quantities:</p>
-<p><span class="math notranslate nohighlight">\(v = j\omega\phi\)</span></p>
-<p><span class="math notranslate nohighlight">\(i =  v /j\omega L_r\)</span></p>
-<p><span class="math notranslate nohighlight">\(q =  i/j\omega\)</span></p>
-<p>In the limit of high quality factor modes, the imaginary part
-of the transfer function <span class="math notranslate nohighlight">\(T\)</span> is negligable, making the
-phasor approximately
-equal to the contribution <span class="math notranslate nohighlight">\(X_{zpf,m}\)</span> of the mode <code class="docutils literal notranslate"><span class="pre">m</span></code> to the zero-point fluctuations
-of <span class="math notranslate nohighlight">\(\hat{X}\)</span>, such that <span class="math notranslate nohighlight">\(\hat{X}\)</span> (varying per component) is</p>
-<p><span class="math notranslate nohighlight">\(\hat{X} = \sum_m X_{zpf,m}(\hat{a}_m\pm\hat{a}_m^\dagger)\)</span></p>
-<p>where <span class="math notranslate nohighlight">\(\hat{a}_m\)</span> is the annihilation operator of mode <span class="math notranslate nohighlight">\(m\)</span>.</p>
+voltage transfer function <span class="math notranslate nohighlight">\(T_{cr}\)</span> (between a reference component <span class="math notranslate nohighlight">\(r\)</span>
+and the annotated component  <span class="math notranslate nohighlight">\(r\)</span> ), with
+<span class="math notranslate nohighlight">\(X_{zpf,m,r}\)</span>, the zero-point fluctuations of <span class="math notranslate nohighlight">\(\hat{X}\)</span> at the reference component.</p>
+<p>Note that resistors make the transfer function <span class="math notranslate nohighlight">\(T_{cr}\)</span>, and hence the phasors complex.</p>
+<p>For more detail on the underlying theory, see LINKTOCOME.</p>
 </dd></dl>
 
 </div>

@@ -403,15 +403,16 @@ div.rendered_html tbody tr:hover {
 <h1>Modelling a distributed multi-mode resonator<a class="headerlink" href="#Modelling-a-distributed-multi-mode-resonator" title="Permalink to this headline">¶</a></h1>
 <p>In this section we use QuCAT to study the convergence of parameters in the first order Hamiltonian</p>
 <p><span class="math notranslate nohighlight">\(\hat{H} = \sum_m\sum_{n\ne m} (\hbar\omega_m-A_m-\frac{\chi_{mn}}{2})\hat{a}_m^\dagger\hat{a}_m -\frac{A_m}{2}\hat{a}_m^\dagger\hat{a}_m^\dagger\hat{a}_m\hat{a}_m -\chi_{mn}\hat{a}_m^\dagger\hat{a}_m\hat{a}_n^\dagger\hat{a}_n\)</span></p>
-<p>of a transmon qubit coupled to a multi-mode resonator.</p>
+<p>of a transmon qubit coupled to a multi-mode resonator. As done experimentally in <a class="reference external" href="https://arxiv.org/pdf/1704.06208.pdf">https://arxiv.org/pdf/1704.06208.pdf</a> and theoretically in <a class="reference external" href="https://arxiv.org/pdf/1701.05095.pdf">https://arxiv.org/pdf/1701.05095.pdf</a></p>
 <p>Using a length of coplanar waveguide terminated with engineered boundary conditions is a common way of building a microwave resonator. One implementation is a <span class="math notranslate nohighlight">\(\lambda/4\)</span> resonator terminated on one end by a large shunt capacitor, acting as a near-perfect short circuit for microwaves such that only a small amount of radiation may enter or leave the resonator. The shunt capacitor creates a voltage node, and at the open end the voltage is free to oscillate, and can couple, as shown below to
 a transmon qubit.</p>
-<p><img alt="alt text" src="../_images/MMUSC_circuit.png" /> <em>optical micrograph from https://arxiv.org/abs/1704.06208</em></p>
+<p><img alt="alt text" src="../_images/MMUSC_circuit.png" /></p>
+<p><em>optical micrograph from https://arxiv.org/abs/1704.06208</em></p>
 <p>This resonator hosts a number of normal modes, justifying its lumped element equivalent circuit shown in <strong>(c)</strong>, a series of LC oscillators with increasing resonance frequency.</p>
 <p>We will use QuCAT to track the evolution of different characteristics of the system as the number of considered resonator modes <span class="math notranslate nohighlight">\(N\)</span> increases.</p>
 <p>We start by defining some constants</p>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -434,7 +435,7 @@ a transmon qubit.</p>
 </pre></div>
 </div>
 </div>
-<p>we can then generate a list of Qcircuits we name for different number of resonator modes <span class="math notranslate nohighlight">\(N\)</span></p>
+<p>we can then generate a list of Qcircuits, each one corresponding to a different number of resonator modes <span class="math notranslate nohighlight">\(N\)</span></p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
 </pre></div>
@@ -443,7 +444,7 @@ a transmon qubit.</p>
 <span></span><span class="c1"># initialize list of Qcircuits for different number of resonator modes</span>
 <span class="n">qcircuits</span> <span class="o">=</span> <span class="p">[]</span>
 
-<span class="c1"># Maximum number of rsonator modes we will be considering</span>
+<span class="c1"># Maximum number of resonator modes we will be considering</span>
 <span class="n">N_max</span> <span class="o">=</span> <span class="mi">6</span>
 
 
@@ -471,7 +472,44 @@ a transmon qubit.</p>
 </div>
 </div>
 <p>Note that <span class="math notranslate nohighlight">\(N+2\)</span> is the index of the ground node.</p>
-<p>We can now access some parameters of the system. Only the first mode of the resonator has a lower frequency than the transmon. The transmon-like mode is thus indexed as mode <code class="docutils literal notranslate"><span class="pre">1</span></code>. A list of its frequencies, for the different number of resonator modes is given by</p>
+<p>We can now access some parameters of the system.</p>
+<p>To get an initial idea of the mode distribution in the circuit, let us display the mode resonance frequencies and anharmonicities of the transmon coupled to 6 resonator modes</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="n">f</span><span class="p">,</span><span class="n">k</span><span class="p">,</span><span class="n">A</span><span class="p">,</span><span class="n">chi</span> <span class="o">=</span> <span class="n">qcircuits</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">f_k_A_chi</span><span class="p">(</span><span class="n">pretty_print</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+         mode |       freq.  |       diss.  |       anha.  |
+            0 |     4.38 GHz |          0Hz |      196 kHz |
+            1 |     8.05 GHz |          0Hz |      361 MHz |
+            2 |       14 GHz |          0Hz |      2.6 MHz |
+            3 |       23 GHz |          0Hz |      349 kHz |
+            4 |     32.2 GHz |          0Hz |      134 kHz |
+            5 |     41.3 GHz |          0Hz |     69.3 kHz |
+            6 |     50.5 GHz |          0Hz |     39.4 kHz |
+
+Kerr coefficients (diagonal = Kerr, off-diagonal = cross-Kerr)
+         mode |         0    |         1    |         2    |         3    |         4    |         5    |         6    |
+            0 |      196 kHz |              |              |              |              |              |              |
+            1 |     16.8 MHz |      361 MHz |              |              |              |              |              |
+            2 |     1.43 MHz |     61.3 MHz |      2.6 MHz |              |              |              |              |
+            3 |      523 kHz |     22.4 MHz |      1.9 MHz |      349 kHz |              |              |              |
+            4 |      325 kHz |     13.9 MHz |     1.18 MHz |      433 kHz |      134 kHz |              |              |
+            5 |      233 kHz |       10 MHz |      849 kHz |      311 kHz |      193 kHz |     69.3 kHz |              |
+            6 |      176 kHz |     7.54 MHz |      640 kHz |      234 kHz |      146 kHz |      105 kHz |     39.4 kHz |
+
+</pre></div></div>
+</div>
+<p>Mode <code class="docutils literal notranslate"><span class="pre">1</span></code>, is the only one with a significant anharmonicity and is thus the qubit-like mode. A list of this modes frequencies, for varying number of resonator modes is given by</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
 </pre></div>
@@ -491,7 +529,7 @@ a transmon qubit.</p>
 </pre></div>
 </div>
 </div>
-<p>Finally the Lamb shift, or shift in the transmon frequency resulting from the zero-point fluctuations of the resonator modes, is given following the equation shown at the top of the page, by the sum of half the cross-Kerr couplings between the transmon mode and the others</p>
+<p>Finally the Lamb shift, or shift in the transmon frequency resulting from the zero-point fluctuations of the resonator modes, is given, following the equation shown at the top of the page, by the sum of half the cross-Kerr couplings between the transmon mode and the others</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
 </pre></div>
@@ -536,7 +574,7 @@ a transmon qubit.</p>
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../_images/tutorials_MMUSC_13_0.png" src="../_images/tutorials_MMUSC_13_0.png" />
+<img alt="../_images/tutorials_MMUSC_15_0.png" src="../_images/tutorials_MMUSC_15_0.png" />
 </div>
 </div>
 </div>

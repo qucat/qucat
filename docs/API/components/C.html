@@ -256,20 +256,12 @@ ex: <code class="docutils literal notranslate"><span class="pre">L=1e-9</span></
 </tbody>
 </table>
 <p class="rubric">Notes</p>
-<p>This quantity is calculated from the magnitude of the
-transfer function between a reference component an this one.
-The reference component
-is an inductor or a junction with inductance <span class="math notranslate nohighlight">\(L_r\)</span>
-for which we have calculated</p>
-<p><span class="math notranslate nohighlight">\(\phi_{zpf,m} = \sqrt{\frac{\hbar}{\omega_mImY'(\omega_m)}}\)</span></p>
-<p>the zero-point fluctuations in flux of mode <span class="math notranslate nohighlight">\(m\)</span>
-with frequency <span class="math notranslate nohighlight">\(\omega_m\)</span> using the admittance of
-the circuit calculated at the nodes of the reference junction</p>
-<p><span class="math notranslate nohighlight">\(\phi_{zpf,m}\)</span> can be transformed to other quantities</p>
-<p><span class="math notranslate nohighlight">\(v_{zpf,m} = \omega\phi_{zpf,m}\)</span></p>
-<p><span class="math notranslate nohighlight">\(i_{zpf,m} = v_{zpf,m} / L_r\omega\)</span></p>
-<p><span class="math notranslate nohighlight">\(q_{zpf,m} = i_{zpf,m}/\omega\)</span></p>
-<p>Where <span class="math notranslate nohighlight">\(Z(\omega)\)</span> is this components impedance.</p>
+<p>This quantity is calculated by multiplying the
+voltage transfer function <span class="math notranslate nohighlight">\(T_{cr}\)</span> (between a reference component <span class="math notranslate nohighlight">\(r\)</span>
+and the annotated component  <span class="math notranslate nohighlight">\(r\)</span> ), with
+<span class="math notranslate nohighlight">\(X_{zpf,m,r}\)</span>, the zero-point fluctuations of <span class="math notranslate nohighlight">\(\hat{X}\)</span> at the reference component.</p>
+<p>Note that resistors make the transfer function <span class="math notranslate nohighlight">\(T_{cr}\)</span>, and hence the phasors complex.</p>
+<p>For more detail on the underlying theory, see LINKTOCOME.</p>
 </dd></dl>
 
 </dd></dl>

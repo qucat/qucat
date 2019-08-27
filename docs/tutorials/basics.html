@@ -431,10 +431,21 @@ div.rendered_html tbody tr:hover {
 <p>One should then create a circuit. These are named <code class="docutils literal notranslate"><span class="pre">Qcircuit</span></code>, short for “Quantum circuit”. There are two ways of creating a <code class="docutils literal notranslate"><span class="pre">Qcircuit</span></code>: using the graphical user interface (GUI), or programmatically.</p>
 <div class="section" id="Building-the-circuit-programmatically">
 <h2>Building the circuit programmatically<a class="headerlink" href="#Building-the-circuit-programmatically" title="Permalink to this headline">¶</a></h2>
-<p>This is done with a list of circuit components created with the functions <code class="docutils literal notranslate"><span class="pre">R</span></code>, <code class="docutils literal notranslate"><span class="pre">L</span></code>, <code class="docutils literal notranslate"><span class="pre">C</span></code>, <code class="docutils literal notranslate"><span class="pre">J</span></code> for resistors, inductors, capacitors and junctions respectively. All circuit components take as first two argument integers referring to the negative and positive node of the circuit components. Here 0 corresponds to the ground node for example. The third argument is either a float giving the component a value, or a string which labels the component parameter to be specified later. Doing the
-latter avoids performing the computationally expensive initialization of the circuit multiple times when sweeping a parameter.</p>
+<p>This is done with circuit components created with the functions <code class="docutils literal notranslate"><span class="pre">R</span></code>, <code class="docutils literal notranslate"><span class="pre">L</span></code>, <code class="docutils literal notranslate"><span class="pre">C</span></code>, <code class="docutils literal notranslate"><span class="pre">J</span></code> for resistors, inductors, capacitors and junctions respectively. All circuit components take as first two argument integers referring to the negative and positive node of the circuit components. The third argument is either a float giving the component a value, and/or a string which labels the component parameter to be specified later. Doing the latter avoids performing the computationally expensive
+initialization of the circuit multiple times when sweeping a parameter.</p>
+<p>For example, this code creates a resistor, with negative node 0, and positive node 1, with a resistance we label <code class="docutils literal notranslate"><span class="pre">R_1</span></code>, and a resistance value of 1 M<span class="math notranslate nohighlight">\(\Omega\)</span>:</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="n">resistor</span> <span class="o">=</span> <span class="n">R</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mf">1e6</span><span class="p">,</span><span class="s1">&#39;R_1&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<p>To create a <code class="docutils literal notranslate"><span class="pre">Qcircuit</span></code>, we should pass a list of such components to the <code class="docutils literal notranslate"><span class="pre">qucat</span></code> function <code class="docutils literal notranslate"><span class="pre">Network</span></code>. The following code</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -449,14 +460,14 @@ latter avoids performing the computationally expensive initialization of the cir
 </pre></div>
 </div>
 </div>
-<p>This implements the following circuit, where we have indexed the nodes.</p>
+<p>implements the circuit below, where we have indexed the nodes.</p>
 <p><img alt="alt text" src="../_images/basic_circuit.png" /></p>
+<p>Since we have not specified a value for <span class="math notranslate nohighlight">\(L_j\)</span>, we have to specify it as a keyword in all subsequent functions. This is the most computationally efficient way to perform a parameter sweep.</p>
 <p>By default, <strong>junctions are parametrized by their Josephson inductance</strong> <span class="math notranslate nohighlight">\(L_j = \phi_0^2/E_j\)</span> where <span class="math notranslate nohighlight">\(\phi_0 = \hbar/2e\)</span> is the reduced flux quantum, <span class="math notranslate nohighlight">\(\hbar\)</span> Plancks reduced constant and <span class="math notranslate nohighlight">\(e\)</span> the electron charge. and <span class="math notranslate nohighlight">\(E_j\)</span> (in Joules) is the Josephson energy.</p>
 </div>
 <div class="section" id="Building-a-circuit-with-the-GUI">
 <h2>Building a circuit with the GUI<a class="headerlink" href="#Building-a-circuit-with-the-GUI" title="Permalink to this headline">¶</a></h2>
-<p>Alternatively, we can open the GUI to create the circuit. All changes made to the circuit are saved automatically to the file <code class="docutils literal notranslate"><span class="pre">circuits/baiscs.txt</span></code> and when we shut down the editor, the variable <code class="docutils literal notranslate"><span class="pre">cir</span></code> here will become a <code class="docutils literal notranslate"><span class="pre">Qcircuit</span></code> object, from which further analysis is possible.</p>
-<p><strong>Note: by default the junction is parametrized by its josephson inductance</strong></p>
+<p>Alternatively, we can open the GUI to create the circuit through the following code:</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
 </pre></div>
@@ -474,7 +485,7 @@ latter avoids performing the computationally expensive initialization of the cir
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../_images/tutorials_basics_12_0.png" src="../_images/tutorials_basics_12_0.png" />
+<img alt="../_images/tutorials_basics_14_0.png" src="../_images/tutorials_basics_14_0.png" />
 </div>
 </div>
 <div class="nboutput nblast docutils container">
@@ -492,6 +503,9 @@ R 0 2 1 MOhm
 
 </pre></div></div>
 </div>
+<p>All changes made to the circuit are saved automatically to the file <code class="docutils literal notranslate"><span class="pre">circuits/basics.txt</span></code> and when we shut down the editor, the variable <code class="docutils literal notranslate"><span class="pre">cir</span></code> became a <code class="docutils literal notranslate"><span class="pre">Qcircuit</span></code> object, from which further analysis is possible.</p>
+<p><strong>Note: by default the junction is parametrized by its josephson inductance</strong></p>
+<p>Since we have not specified a value for <span class="math notranslate nohighlight">\(L_j\)</span>, we have to specify it as a keyword in all subsequent functions. This is the most computationally efficient way to perform a parameter sweep.</p>
 </div>
 <div class="section" id="Hamiltonian,-and-further-analysis-with-QuTiP">
 <h2>Hamiltonian, and further analysis with QuTiP<a class="headerlink" href="#Hamiltonian,-and-further-analysis-with-QuTiP" title="Permalink to this headline">¶</a></h2>
@@ -499,7 +513,9 @@ R 0 2 1 MOhm
 <h3>Generating a Hamiltonian<a class="headerlink" href="#Generating-a-Hamiltonian" title="Permalink to this headline">¶</a></h3>
 <p>The Hamiltonian of the circuit, with the non-linearity of the Josephson junctions Taylor-expanded, is given by</p>
 <p><span class="math notranslate nohighlight">\(\hat{H} = \sum_{m\in\text{modes}} \hbar \omega_m\hat{a}_m^\dagger\hat{a}_m +\sum_j\sum_{2n\le\text{taylor}}E_j\frac{(-1)^{n+1}}{(2n)!}\left(\frac{\phi_{zpf,m,j}}{\phi_0}(\hat{a}_m^\dagger+\hat{a}_m)\right)^{2n}\)</span></p>
-<p>And in its construction, we have the freedom to choose the set of <code class="docutils literal notranslate"><span class="pre">modes</span></code> to include, the order of the Taylor expansion of the junction potential <code class="docutils literal notranslate"><span class="pre">taylor</span></code>, and the number of excitations of each mode to consider.</p>
+<p>See our technical paper for more details: LINK TO COME</p>
+<p>In its construction, we have the freedom to choose the set of <code class="docutils literal notranslate"><span class="pre">modes</span></code> to include, the order of the Taylor expansion of the junction potential <code class="docutils literal notranslate"><span class="pre">taylor</span></code>, and the number of excitations of each mode to consider.</p>
+<p>The code below generates a Hamiltonian and calculates its eigenenergies</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
 </pre></div>
@@ -551,7 +567,7 @@ R 0 2 1 MOhm
     <span class="n">return_ops</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span>  <span class="c1"># with this, we return the annihilation operators of</span>
                         <span class="c1"># the different modes in addition to the Hamiltonian</span>
 
-<span class="c1"># The Hamiltonian which should be in angular frequencies for time-dependant simulations</span>
+<span class="c1"># The Hamiltonian should be in angular frequencies for time-dependant simulations</span>
 <span class="n">H</span> <span class="o">=</span> <span class="mf">2.</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">*</span><span class="n">H</span>
 
 <span class="n">k</span> <span class="o">=</span> <span class="n">cir</span><span class="o">.</span><span class="n">loss_rates</span><span class="p">(</span><span class="n">Lj</span> <span class="o">=</span> <span class="mf">8e-9</span><span class="p">)</span> <span class="c1"># Calculate loss rates of the different modes</span>
@@ -569,7 +585,13 @@ R 0 2 1 MOhm
 <p>QuCAT can also return the parameters of the (already diagonal) Hamiltonian in first-order perturbation theory</p>
 <p><span class="math notranslate nohighlight">\(\hat{H} = \sum_m\sum_{n\ne m} (\hbar\omega_m-A_m-\frac{\chi_{mn}}{2})\hat{a}_m^\dagger\hat{a}_m -\frac{A_m}{2}\hat{a}_m^\dagger\hat{a}_m^\dagger\hat{a}_m\hat{a}_m -\chi_{mn}\hat{a}_m^\dagger\hat{a}_m\hat{a}_n^\dagger\hat{a}_n\)</span></p>
 <p>valid for weak anharmonicity <span class="math notranslate nohighlight">\(\chi_{mn},A_m\ll \omega_m\)</span>.</p>
-<p>Here * <span class="math notranslate nohighlight">\(\omega_m\)</span> are the frequencies of the normal modes of the circuit where all junctions have been replaced with inductors characterized by their Josephson inductance * <span class="math notranslate nohighlight">\(A_m\)</span> is the anharmonicity of mode <span class="math notranslate nohighlight">\(m\)</span>, the difference in frequency of the first two transitions of the mode * <span class="math notranslate nohighlight">\(\chi_{mn}\)</span> is the shift in mode <span class="math notranslate nohighlight">\(m\)</span> that incurs if an excitation is created in mode <span class="math notranslate nohighlight">\(n\)</span></p>
+<p>Here</p>
+<ul class="simple">
+<li><span class="math notranslate nohighlight">\(\omega_m\)</span> are the frequencies of the normal modes of the circuit where all junctions have been replaced with inductors characterized by their Josephson inductance</li>
+<li><span class="math notranslate nohighlight">\(A_m\)</span> is the anharmonicity of mode <span class="math notranslate nohighlight">\(m\)</span>, the difference in frequency of the first two transitions of the mode</li>
+<li><span class="math notranslate nohighlight">\(\chi_{mn}\)</span> is the shift in mode <span class="math notranslate nohighlight">\(m\)</span> that incurs if an excitation is created in mode <span class="math notranslate nohighlight">\(n\)</span></li>
+</ul>
+<p>See our technical paper for more details: LINK TO COME</p>
 <p>These parameters, together with the loss rate of the modes, are calculated with the functions <code class="docutils literal notranslate"><span class="pre">eigenfrequencies</span></code>, <code class="docutils literal notranslate"><span class="pre">loss_rates</span></code>, <code class="docutils literal notranslate"><span class="pre">anharmonicities</span></code> and <code class="docutils literal notranslate"><span class="pre">kerr</span></code>, which return the specified quantities for each mode <strong>in units of Hertz</strong>, <strong>ordered with increasing mode frequency</strong></p>
 <div class="section" id="Eigen-frequencies">
 <h3>Eigen-frequencies<a class="headerlink" href="#Eigen-frequencies" title="Permalink to this headline">¶</a></h3>
@@ -638,7 +660,7 @@ R 0 2 1 MOhm
 667.43 kHz
 </pre></div></div>
 </div>
-<p>From the above, we have found that the cross-Kerr interaction between these two modes is of about 635 kHz.</p>
+<p>From the above, we have found that the cross-Kerr interaction between these two modes is of about 667 kHz.</p>
 <p>This should correspond to <span class="math notranslate nohighlight">\(2\sqrt{A_0A_1}\)</span> where <span class="math notranslate nohighlight">\(A_i\)</span> is the anharmonicity of mode <span class="math notranslate nohighlight">\(i\)</span>. Let’s check that:</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
@@ -680,6 +702,7 @@ R 0 2 1 MOhm
 </pre></div>
 </div>
 </div>
+<p>All these quantities are always ordered with increasing mode frequency, so the second element of the array corresponds to the loss rate of the transmon mode.</p>
 </div>
 <div class="section" id="T_1-times">
 <h3><span class="math notranslate nohighlight">\(T_1\)</span> times<a class="headerlink" href="#T_1-times" title="Permalink to this headline">¶</a></h3>
@@ -702,7 +725,7 @@ R 0 2 1 MOhm
 [1.0123685e-07 4.1434084e-05]
 </pre></div></div>
 </div>
-<p>All these relevant parameters (frequency, dissipation, anharmonicity and Kerr parameters) can be computed using a single function</p>
+<p>All these relevant parameters (frequency, dissipation, anharmonicity and Kerr parameters) can be returned in this order using a single function</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[16]:
 </pre></div>
@@ -796,7 +819,7 @@ C:\Anaconda3\lib\site-packages\numpy\core\numeric.py:538: ComplexWarning: Castin
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../_images/tutorials_basics_47_1.png" src="../_images/tutorials_basics_47_1.png" />
+<img alt="../_images/tutorials_basics_51_1.png" src="../_images/tutorials_basics_51_1.png" />
 </div>
 </div>
 </div>
@@ -818,14 +841,14 @@ C:\Anaconda3\lib\site-packages\numpy\core\numeric.py:538: ComplexWarning: Castin
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../_images/tutorials_basics_50_0.png" src="../_images/tutorials_basics_50_0.png" />
+<img alt="../_images/tutorials_basics_54_0.png" src="../_images/tutorials_basics_54_0.png" />
 </div>
 </div>
 <div class="nboutput nblast docutils container">
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../_images/tutorials_basics_50_1.png" src="../_images/tutorials_basics_50_1.png" />
+<img alt="../_images/tutorials_basics_54_1.png" src="../_images/tutorials_basics_54_1.png" />
 </div>
 </div>
 <p>The annotation corresponds to the complex amplitude, or phasor, of current across the component, if the mode was populated with a single photon amplitude coherent state. The absolute value of this annotation thus corresponds to the contribution of a mode to the zero-point fluctuations of the given quantity across the component. The direction of the arrows indicates what direction we take for 0 phase for that component.</p>

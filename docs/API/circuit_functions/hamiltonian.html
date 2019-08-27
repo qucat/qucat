@@ -251,20 +251,12 @@ ex: <code class="docutils literal notranslate"><span class="pre">L=1e-9</span></
 Taylor-expanded, is given in the limit of low dissipation by</p>
 <p><span class="math notranslate nohighlight">\(\hat{H} = \sum_{m\in\text{modes}} \hbar \omega_m\hat{a}_m^\dagger\hat{a}_m + \sum_j\sum_{2n\le\text{taylor}}E_j\frac{(-1)^{n+1}}{(2n)!}\left[\frac{\phi_{zpf,m,j}}{\phi_0}(\hat{a}_m^\dagger+\hat{a}_m)\right]^{2n}\)</span>,</p>
 <p>where <span class="math notranslate nohighlight">\(\hat{a}_m\)</span> is the annihilation operator of the m-th
-normal mode of the circuit and <span class="math notranslate nohighlight">\(f_m\)</span> is the frequency of
+normal mode of the circuit, <span class="math notranslate nohighlight">\(f_m\)</span> is the frequency of
 the m-th normal mode, <span class="math notranslate nohighlight">\(E_j\)</span> is the Josephson energy of
-the j-th junction and <span class="math notranslate nohighlight">\(\phi_0 = \hbar/2e\)</span>.</p>
-<p>The zero point fluctuations <span class="math notranslate nohighlight">\(\phi_{zpf,m,j}\)</span> of mode
-<span class="math notranslate nohighlight">\(m\)</span> through junction <span class="math notranslate nohighlight">\(j\)</span> is calculated
-by multiplying the voltage transfer function between a reference junction
-and the junction <span class="math notranslate nohighlight">\(j\)</span> with the zero-point fluctuations
-of the reference junction</p>
-<p><span class="math notranslate nohighlight">\(\phi_{zpf,m} = \sqrt{\frac{\hbar}{\omega_mImY'(\omega_m)}}\)</span></p>
-<p>where <span class="math notranslate nohighlight">\(Y\)</span> is the admittance of
-the circuit calculated at the nodes of the reference junction.</p>
-<p>If the circuit has at least one resistor, the voltage transfer
-functions will become complex, but we take the approximation
-of high-quality factor modes by neglecting the imaginary part.</p>
+the j-th junction and <span class="math notranslate nohighlight">\(\phi_0 = \hbar/2e\)</span> and <span class="math notranslate nohighlight">\(\phi_{zpf,m,j}\)</span>
+is the zero point fluctuation of mode
+<span class="math notranslate nohighlight">\(m\)</span> through junction <span class="math notranslate nohighlight">\(j\)</span>.</p>
+<p>In the expression above, <code class="docutils literal notranslate"><span class="pre">modes</span></code> and <code class="docutils literal notranslate"><span class="pre">taylor</span></code> are arguments of the <code class="docutils literal notranslate"><span class="pre">hamiltonian</span></code> function.</p>
 </dd></dl>
 
 </div>

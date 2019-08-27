@@ -387,7 +387,7 @@ class Qcircuit(object):
         These eigen-frequencies :math:`f_m` correspond to the real parts
         of the complex frequencies which make the conductance matrix
         singular, or equivalently the real parts of the poles of the impedance
-        calculated between the nodes of an inductor or josephon junction.
+        calculated between the nodes of an inductor or josephson junction.
 
         The Hamiltonian of the circuit is
 
@@ -401,6 +401,8 @@ class Qcircuit(object):
         were replaced with linear inductors. In that case the 
         non-linear part of the Hamiltonian :math:`\hat{U}`, 
         originating in the junction non-linearity, would be 0.
+
+        For more information on the underlying theory, see LINKTOCOME.
         '''
         self._set_zeta(**kwargs)
         return np.real(self.zeta)/2./pi
@@ -409,8 +411,8 @@ class Qcircuit(object):
     def loss_rates(self, **kwargs):
         '''Returns the loss rates of the circuit normal modes.
 
-        The array is ordered ordered with increasing normal mode frequencies.
-        Such that the first element of the array corresponds to the loss
+        The array is ordered ordered with increasing normal mode frequencies
+        such that the first element of the array corresponds to the loss
         rate of the lowest frequency mode. Losses are provided in units of Hertz, 
         **not in angular frequency**.
 
@@ -428,10 +430,12 @@ class Qcircuit(object):
         Notes
         -----
 
-        These loss rates :math:`\kappa_m` correspond to the imaginary parts
+        These loss rates :math:`\kappa_m` correspond to twice the imaginary parts
         of the complex frequencies which make the conductance matrix
-        singular, or equivalently the imaginary parts of the poles of the impedance
+        singular, or equivalently twice the imaginary parts of the poles of the impedance
         calculated between the nodes of an inductor or josephon junction.
+
+        For further details on the underlying theory, see LINKTOCOME.
         
         The dynamics of the circuit can be studied in QuTiP
         by considering collapse operators for the m-th mode 
@@ -444,7 +448,7 @@ class Qcircuit(object):
         have to be converted to angular frequencies through the factor :math:`2\pi`.
         If you are also using a hamiltonian generated from qucat, 
         then it too should be converted to angular frequencies by multiplying 
-        the entire hamiltonian by :math:`2\pi` when performing time-dependant 
+        the entire Hamiltonian by :math:`2\pi` when performing time-dependant 
         simulations.
         '''
         self._set_zeta(**kwargs)
@@ -454,9 +458,10 @@ class Qcircuit(object):
     def anharmonicities(self, **kwargs):
         r'''Returns the anharmonicity of the circuit normal modes.
 
-        The array is ordered ordered with increasing normal mode frequencies.
-        Such that the first element of the array corresponds to the loss
-        rate of the lowest frequency mode. Losses are provided in units of Hertz, 
+        The array is ordered ordered with increasing normal mode frequencies
+        such that the first element of the array corresponds to the 
+        anharmonicity of the lowest frequency mode. 
+        Anharmonicities are provided in units of Hertz, 
         not in angular frequency.
 
 
@@ -473,37 +478,23 @@ class Qcircuit(object):
 
         Notes
         -----
-        The Hamiltonian of the circuit in the limit of low-dissipation is
+        The Hamiltonian of a circuit in first order perturbation theory is given by
 
-        :math:`\hat{H} = \sum_m hf_m\hat{a}_m^\dagger\hat{a}_m + \sum_j E_j[1-\cos{\hat{\varphi_j}}-\frac{\hat{\varphi_j}^2}{2}]`,
+        :math:`\hat{H} = \sum_m\sum_{n\ne m} (\hbar\omega_m-A_m-\frac{\chi_{mn}}{2})\hat{a}_m^\dagger\hat{a}_m -\frac{A_m}{2}\hat{a}_m^\dagger\hat{a}_m^\dagger\hat{a}_m\hat{a}_m -\chi_{mn}\hat{a}_m^\dagger\hat{a}_m\hat{a}_n^\dagger\hat{a}_n`,
 
-        where :math:`\hat{a}_m` is the annihilation operator of the m-th
-        normal mode of the circuit and :math:`f_m` is the frequency of 
-        the m-th normal mode, :math:`E_j` is the Josephson energy of
-        the j-th junction and 
+        valid for weak anharmonicity :math:`\chi_{mn},A_m\ll \omega_m`.
+
+        Here 
+
+        * :math:`\omega_m` are the frequencies of the normal modes of the circuit where all junctions have been replaced with inductors characterized by their Josephson inductance
         
-        :math:`\varphi_j = \sum_m\frac{\phi_{zpf,m,j}}{\phi_0}(\hat{a}_m^\dagger+\hat{a}_m)`.
-
-        where :math:`phi_0 = \hbar/2e` and 
-
-        :math:`\phi_{zpf,m} = \sqrt{\frac{\hbar}{\omega_mImY'(\omega_m)}}`
-
-        is the zero-point fluctuations in flux if a mode through the junction, 
-        with frequency :math:`\omega_m` and admittance to the rest of the circuit :math:`Y`
-
-        By keeping only terms which play a role up to first order perturbation
-
-        :math:`\hat{H} = \sum_m\sum_{n\ne m} h(f_m-A_m-\frac{\chi_{mn}}{2})\hat{a}_m^\dagger\hat{a}_m -h\frac{A_m}{2}\hat{a}_m^\dagger\hat{a}_m^\dagger\hat{a}_m\hat{a}_m -h\chi_{mn}\hat{a}_m^\dagger\hat{a}_m\hat{a}_n^\dagger\hat{a}_n`
-
-        This function returns the anharmonicities
-
-        :math:`A_m = \sum_j A_{m,j}`
+        * :math:`A_m` is the anharmonicity of mode :math:`m` , the difference in frequency of the first two transitions of the mode
         
-        where
+        * :math:`\chi_{mn}` is the shift in mode :math:`m` that incurs if an excitation is created in mode :math:`n`
 
-        :math:`A_{m,j} = E_j/2/h\left(\frac{\phi_{zpf,m,j}}{\phi_0}\right)^4`
+        This function returns the values of :math:`A_m`.
 
-        is the contribution of junction j to the total anharmonicity of a mode m.
+        For more information on the underlying theory, see LINKTOCOME.
         '''
         Ks = self.kerr(**kwargs)
         return np.array([Ks[i, i] for i in range(Ks.shape[0])])
@@ -535,36 +526,23 @@ class Qcircuit(object):
 
         Notes
         -----
+        The Hamiltonian of a circuit in first order perturbation theory is given by
 
-        The Hamiltonian of the circuit in the limit of low dissipation is
+        :math:`\hat{H} = \sum_m\sum_{n\ne m} (\hbar\omega_m-A_m-\frac{\chi_{mn}}{2})\hat{a}_m^\dagger\hat{a}_m -\frac{A_m}{2}\hat{a}_m^\dagger\hat{a}_m^\dagger\hat{a}_m\hat{a}_m -\chi_{mn}\hat{a}_m^\dagger\hat{a}_m\hat{a}_n^\dagger\hat{a}_n`,
 
-        :math:`\hat{H} = \sum_m hf_m\hat{a}_m^\dagger\hat{a}_m + \sum_j E_j[1-\cos{\hat{\varphi_j}}-\frac{\hat{\varphi_j}^2}{2}]`,
+        valid for weak anharmonicity :math:`\chi_{mn},A_m\ll \omega_m`.
 
-        where :math:`\hat{a}_m` is the annihilation operator of the m-th
-        normal mode of the circuit and :math:`f_m` is the frequency of 
-        the m-th normal mode, :math:`E_j` is the Josephson energy of
-        the j-th junction and 
+        Here 
+
+        * :math:`\omega_m` are the frequencies of the normal modes of the circuit where all junctions have been replaced with inductors characterized by their Josephson inductance
         
-        :math:`\phi_{zpf,m} = \sqrt{\frac{\hbar}{\omega_mImY'(\omega_m)}}`
-
-        is the zero-point fluctuations in flux if a mode through the junction, 
-        with frequency :math:`\omega_m` and admittance to the rest of the circuit :math:`Y`
-
-        By keeping only terms which play a role up to first order perturbation
-
-        :math:`\hat{H} = \sum_m\sum_{n\ne m} h(f_m-A_m-\frac{\chi_{mn}}{2})\hat{a}_m^\dagger\hat{a}_m -h\frac{A_m}{2}\hat{a}_m^\dagger\hat{a}_m^\dagger\hat{a}_m\hat{a}_m -h\chi_{mn}\hat{a}_m^\dagger\hat{a}_m\hat{a}_n^\dagger\hat{a}_n`
-
-        This function returns a matrix  :math:`K`, with components defined as
-
-        :math:`K_{mm} = \sum_j A_{m,j}`
-            
-        :math:`K_{mn} = \sum_j \sqrt{A_{m,j}}\sqrt{A_{n,j}}`
+        * :math:`A_m` is the anharmonicity of mode :math:`m` , the difference in frequency of the first two transitions of the mode
         
-        where
+        * :math:`\chi_{mn}` is the shift in mode :math:`m` that incurs if an excitation is created in mode :math:`n`
 
-        :math:`A_{m,j} = E_j/2/h\left(\frac{\phi_{zpf,m,j}}{\phi_0}\right)^4`
+        This function returns the values of :math:`A_m` and :math:`\chi_{mn}` .
 
-        is the contribution of junction j to the total anharmonicity of a mode m
+        For more information on the underlying theory, see LINKTOCOME.
         '''
 
         # Compute anharmonicity per junction ``As``
@@ -744,24 +722,15 @@ class Qcircuit(object):
         :math:`\hat{H} = \sum_{m\in\text{modes}} \hbar \omega_m\hat{a}_m^\dagger\hat{a}_m + \sum_j\sum_{2n\le\text{taylor}}E_j\frac{(-1)^{n+1}}{(2n)!}\left[\frac{\phi_{zpf,m,j}}{\phi_0}(\hat{a}_m^\dagger+\hat{a}_m)\right]^{2n}`,
         
         where :math:`\hat{a}_m` is the annihilation operator of the m-th
-        normal mode of the circuit and :math:`f_m` is the frequency of 
+        normal mode of the circuit, :math:`\omega_m` is the frequency of 
         the m-th normal mode, :math:`E_j` is the Josephson energy of
-        the j-th junction and :math:`\phi_0 = \hbar/2e`.
-            
-        The zero point fluctuations :math:`\phi_{zpf,m,j}` of mode 
-        :math:`m` through junction :math:`j` is calculated 
-        by multiplying the voltage transfer function between a reference junction
-        and the junction :math:`j` with the zero-point fluctuations
-        of the reference junction
+        the j-th junction and :math:`\phi_0 = \hbar/2e` and :math:`\phi_{zpf,m,j}` 
+        is the zero point fluctuation of mode 
+        :math:`m` through junction :math:`j`.
 
-        :math:`\phi_{zpf,m} = \sqrt{\frac{\hbar}{\omega_mImY'(\omega_m)}}`
+        In the expression above, ``modes`` and ``taylor`` are arguments of the ``hamiltonian`` function.
 
-        where :math:`Y` is the admittance of
-        the circuit calculated at the nodes of the reference junction.
-
-        If the circuit has at least one resistor, the voltage transfer 
-        functions will become complex, but we take the approximation
-        of high-quality factor modes by neglecting the imaginary part.
+        For more details on the underlying theory, see LINKTOCOME
         '''
         from qutip import destroy, qeye, tensor
 
@@ -913,7 +882,7 @@ class Qcircuit(object):
         :math:`X` which can be flux, current, charge or voltage.
 
         More specifically, the complex amplitude of :math:`X` if a 
-        single-photon coherent state were populating a given mode ``mode``.
+        single-photon amplitude coherent state were populating a given mode ``mode``.
 
         Current is shown in units of Ampere, voltage in Volts, 
         charge in electron charge, and flux in units of the
@@ -952,33 +921,17 @@ class Qcircuit(object):
         -----
 
         This annotated quantity, called a phasor, is calculated by multiplying the
-        voltage transfer function :math:`T` (between a reference component
-        and the annotated component), with
-        :math:`X_{zpf,m}`, the zero-point fluctuations of :math:`\hat{X}`.
-
-        The reference component
-        is an inductor or a junction with inductance :math:`L_r`
-        for which we have calculated
-
-        :math:`\phi_{zpf,m} = \sqrt{\frac{\hbar}{\omega_mImY'(\omega_m)}}`
-
-        Which can be transformed to other quantities:
+        voltage transfer function :math:`T_{rc}` (between a reference component :math:`r`
+        and the annotated component  :math:`c` ), with
+        :math:`X_{zpf,m,r}`, the zero-point fluctuations of :math:`\hat{X}` at the reference component.
         
-        :math:`v = j\omega\phi`
+        Note that resistors make the transfer function :math:`T_{rc}`, and hence the phasors complex.
 
-        :math:`i =  v /j\omega L_r`
+        Since this is plotted for a single-photon amplitude coherent state, the absolute value
+        of the annotation is equal to the
+        contribution of a mode to the zero-point fluctuations accross this component.
 
-        :math:`q =  i/j\omega`  
-        
-        In the limit of high quality factor modes, the imaginary part
-        of the transfer function :math:`T` is negligable, making the 
-        phasor approximately 
-        equal to the contribution :math:`X_{zpf,m}` of the mode ``m`` to the zero-point fluctuations 
-        of :math:`\hat{X}`, such that :math:`\hat{X}` (varying per component) is
-
-        :math:`\hat{X} = \sum_m X_{zpf,m}(\hat{a}_m\pm\hat{a}_m^\dagger)`
-
-        where :math:`\hat{a}_m` is the annihilation operator of mode :math:`m`.
+        For more detail on the underlying theory, see LINKTOCOME.
         '''
 
         # This changes the default plotting settings 
@@ -1279,9 +1232,8 @@ class Network(Qcircuit):
     ... R(2,0,50) # Add a 50 Ohm resistance to ground
     ... ])
 
-
-    
-    This is the best way to proceed if one wants to sweep the value of a 
+    The junction was parametrized only by a string ``L_J`` , 
+    this is the best way to proceed if one wants to sweep the value of a 
     component. Indeed, the most computationally expensive part of the 
     analysis is performed upon initializing the Network, subsequently
     changing the value of a component and re-calculating a quantity 
@@ -1307,7 +1259,7 @@ class GUI(Qcircuit):
                     about the graphically constructed circuit.
     edit:           Boolean
                     If True (default), the graphical user interface will be opened.
-                    One can set this argument to False to import the circuit withoug opening
+                    One can set this argument to False to import the circuit without opening
                     the graphical user interface
     plot:           Boolean
                     If True (default), the circuit will be plotted using matplotlib.
@@ -1328,11 +1280,11 @@ class GUI(Qcircuit):
     
     Each line of this text file is in the format:
 
-    <``type``>;<``x_minus``,``y_minus``>;<``x_plus``,``y_plus``>;``value``;``label``
+    ``type`` ; ``x_minus`` , ``y_minus`` ; ``x_plus`` , ``y_plus`` ; ``value`` ; ``label``
 
     and represents a circuit component, wire or ground element.
 
-    ``type`` can take the values ``L``, ``C``, ``R``, ``J``, ``W``or``G`` for 
+    ``type`` can take the values ``L``, ``C``, ``R``, ``J``, ``W`` or ``G`` for 
     inductor, capacitor, resistor, junction, wire or ground respectively.
 
     ``value`` will be a float representing the value of the component or will be empty
@@ -2206,7 +2158,7 @@ class Component(Circuit):
     def zpf(self, mode, quantity, **kwargs):
         r'''Returns contribution of a mode to the zero-point fluctuations of a quantity for this component.
 
-        The quantity can be current current (in units of Ampere), 
+        The quantity can be current (in units of Ampere), 
         voltage (in Volts), 
         charge (in electron charge), 
         or flux (in units of the reduced flux quantum, :math:`\hbar/2e`).
@@ -2230,27 +2182,14 @@ class Component(Circuit):
 
         Notes
         -----
-        This quantity is calculated from the magnitude of the
-        transfer function between a reference component an this one.
-        The reference component
-        is an inductor or a junction with inductance :math:`L_r`
-        for which we have calculated
-
-        :math:`\phi_{zpf,m} = \sqrt{\frac{\hbar}{\omega_mImY'(\omega_m)}}`
-
-        the zero-point fluctuations in flux of mode :math:`m`
-        with frequency :math:`\omega_m` using the admittance of
-        the circuit calculated at the nodes of the reference junction
-
-        :math:`\phi_{zpf,m}` can be transformed to other quantities
+        This quantity is calculated by multiplying the
+        voltage transfer function :math:`T_{rc}` (between a reference component :math:`r`
+        and the annotated component  :math:`c` ), with
+        :math:`X_{zpf,m,r}`, the zero-point fluctuations of :math:`\hat{X}` at the reference component.
         
-        :math:`v_{zpf,m} = \omega\phi_{zpf,m}`
+        Note that resistors make the transfer function :math:`T_{rc}`, and hence this quantity, complex.
 
-        :math:`i_{zpf,m} = v_{zpf,m} / L_r\omega`
-
-        :math:`q_{zpf,m} = i_{zpf,m}/\omega`  
-
-        Where :math:`Z(\omega)` is this components impedance.
+        For more detail on the underlying theory, see LINKTOCOME.
         '''
         if quantity == 'flux':
             phi_0 = hbar/2./e
@@ -2502,7 +2441,7 @@ class L(Component):
 
 
 class J(L):
-    """A class representing an junction
+    """A class representing a junction
     
     Parameters
     ----------
@@ -2512,13 +2451,13 @@ class J(L):
                     Index corresponding to the other node of the junction
     args:           <float> or <str> or <float>,<str>
                     Other arguments should be a float which by default
-                    corresponds to the Losephson inductance of the
+                    corresponds to the Josephson inductance of the
                     junction, a string corresponding to the 
                     name of that value (ex: `"L_J"`), or both.
                     If only a label is provided, 
-                    a value for should be passed
+                    a value for this junction should be passed
                     as a keyword argument in subsequent function calls
-                    (ex: `L_J = 10e-9`)   
+                    (ex: `L_J = 10e-9`).
                     This is the best way to proceed if one wants to sweep the value of this
                     junction. Indeed, the most computationally expensive part of the 
                     analysis is performed upon initializing the circuit, subsequently
@@ -2579,7 +2518,7 @@ class J(L):
                     ex: ``L=1e-9``.
         
         mode:           integer
-                        Determine what mode to plot, where 0 designates
+                        where 0 designates
                         the lowest frequency mode, and the others
                         are arranged in order of increasing frequency
         Returns
@@ -2589,21 +2528,15 @@ class J(L):
         
         Notes
         -----
-        This quantity (in units of Hertz) is defined as 
+        The quantity returned is the anharmonicity
+        of the mode ``m`` if this junction were the only junction
+        present in the circuit (i.e. if all the 
+        others were replaced by linear inductors).
 
-        :math:`A_{m,j} = E_j/2/h\left(\frac{\phi_{zpf,m,j}}{\phi_0}\right)^4`
-
-        where :math:`phi_0 = \hbar/2e`, 
-        :math:`E_j` is this junctions Josephson energy,
-        and 
-
-        :math:`\phi_{zpf,m} = \sqrt{\frac{\hbar}{\omega_mImY'(\omega_m)}}`
-
-        is the zero-point fluctuations in flux if a mode through the junction, 
-        with frequency :math:`\omega_m` and admittance to the rest of the circuit :math:`Y`
-
-        Following first order perturbation, the total anharmonicity of a mode is obtained
+        The total anharmonicity of a mode (in first order perturbation theory) is obtained
         by summing these contribution over all modes.
+
+        For more details, see LINKTOCOME
         '''
         return self._get_Ej(**kwargs)/2*np.absolute(self.zpf(mode,quantity='flux',**kwargs))**4
 
@@ -2637,7 +2570,7 @@ class J(L):
             return shift(y, self.x_plot_center), shift(x, self.y_plot_center), line_type
 
 class R(Component):
-    """A class representing an resistor
+    """A class representing a resistor
     
     Parameters
     ----------

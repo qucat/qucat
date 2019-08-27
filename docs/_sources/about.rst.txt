@@ -35,21 +35,23 @@ Contributing
 Your contribution is more than welcome!
 You can submit pull requests `on our Github <https://github.com/mgely/qucat/>`_, or contact Mario if you want to bring big contributions to the project.
 
-Possible extensions of the QuCAT features could include black-box impedance components to model distributed components (see `[1] <https://arxiv.org/abs/1204.0587>`_), 
-more precisely modeling lossy circuits `[2] <https://arxiv.org/abs/1403.7341>`_,`[3] <https://arxiv.org/abs/1505.04116>)`_, 
+Possible extensions of the QuCAT features could include black-box impedance components to model distributed components `[1] <https://arxiv.org/abs/1204.0587>`_, 
+more precisely modeling lossy circuits `[2] <https://arxiv.org/abs/1403.7341>`_, `[3] <https://arxiv.org/abs/1505.04116>`_, 
 handling static offsets in flux or charge through DC sources, additional elements such as coupled inductors or 
 superconducting quantum interference devices (SQUIDS) and different quantization methods, enabling for example 
 quantization in the charge or flux basis. 
 The latter would extend QuCAT beyond the scope of weakly-anharmonic circuits.
 
 In terms of performance, QuCAT would benefit from delegating analytical calculations to a more efficient, 
-compiled language, with the exciting prospect of simulating large scale circuits. 
+compiled language. 
 
 [1] arxiv.org/abs/1204.0587
+
 [2] arxiv.org/abs/1403.7341
+
 [3] arxiv.org/abs/1505.04116
 
 Funding
 =======
 
-This work was supported by the European Research Council under the European Union’s H2020 program with grant agreements 681476 - QOM3D and 732894 - HOT.
+This work is supported by the European Research Council under the European Union’s H2020 program with grant agreements 681476 - QOM3D and 732894 - HOT.
