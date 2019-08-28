@@ -557,7 +557,7 @@
 <span class="sd">        non-linear part of the Hamiltonian :math:`\hat{U}`, </span>
 <span class="sd">        originating in the junction non-linearity, would be 0.</span>
 
-<span class="sd">        For more information on the underlying theory, see LINKTOCOME.</span>
+<span class="sd">        For more information on the underlying theory, see https://arxiv.org/pdf/1908.10342.pdf.</span>
 <span class="sd">        &#39;&#39;&#39;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_set_zeta</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">zeta</span><span class="p">)</span><span class="o">/</span><span class="mf">2.</span><span class="o">/</span><span class="n">pi</span></div>
@@ -590,7 +590,7 @@
 <span class="sd">        singular, or equivalently twice the imaginary parts of the poles of the impedance</span>
 <span class="sd">        calculated between the nodes of an inductor or josephon junction.</span>
 
-<span class="sd">        For further details on the underlying theory, see LINKTOCOME.</span>
+<span class="sd">        For further details on the underlying theory, see https://arxiv.org/pdf/1908.10342.pdf.</span>
 <span class="sd">        </span>
 <span class="sd">        The dynamics of the circuit can be studied in QuTiP</span>
 <span class="sd">        by considering collapse operators for the m-th mode </span>
@@ -649,7 +649,7 @@
 
 <span class="sd">        This function returns the values of :math:`A_m`.</span>
 
-<span class="sd">        For more information on the underlying theory, see LINKTOCOME.</span>
+<span class="sd">        For more information on the underlying theory, see https://arxiv.org/pdf/1908.10342.pdf.</span>
 <span class="sd">        &#39;&#39;&#39;</span>
         <span class="n">Ks</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">kerr</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">Ks</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">Ks</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])])</span></div>
@@ -697,7 +697,7 @@
 
 <span class="sd">        This function returns the values of :math:`A_m` and :math:`\chi_{mn}` .</span>
 
-<span class="sd">        For more information on the underlying theory, see LINKTOCOME.</span>
+<span class="sd">        For more information on the underlying theory, see https://arxiv.org/pdf/1908.10342.pdf.</span>
 <span class="sd">        &#39;&#39;&#39;</span>
 
         <span class="c1"># Compute anharmonicity per junction ``As``</span>
@@ -885,7 +885,7 @@
 
 <span class="sd">        In the expression above, ``modes`` and ``taylor`` are arguments of the ``hamiltonian`` function.</span>
 
-<span class="sd">        For more details on the underlying theory, see LINKTOCOME</span>
+<span class="sd">        For more details on the underlying theory, see https://arxiv.org/pdf/1908.10342.pdf</span>
 <span class="sd">        &#39;&#39;&#39;</span>
         <span class="kn">from</span> <span class="nn">qutip</span> <span class="k">import</span> <span class="n">destroy</span><span class="p">,</span> <span class="n">qeye</span><span class="p">,</span> <span class="n">tensor</span>
 
@@ -1086,7 +1086,7 @@
 <span class="sd">        of the annotation is equal to the</span>
 <span class="sd">        contribution of a mode to the zero-point fluctuations accross this component.</span>
 
-<span class="sd">        For more detail on the underlying theory, see LINKTOCOME.</span>
+<span class="sd">        For more detail on the underlying theory, see https://arxiv.org/pdf/1908.10342.pdf.</span>
 <span class="sd">        &#39;&#39;&#39;</span>
 
         <span class="c1"># This changes the default plotting settings </span>
@@ -2344,7 +2344,7 @@
 <span class="sd">        </span>
 <span class="sd">        Note that resistors make the transfer function :math:`T_{rc}`, and hence this quantity, complex.</span>
 
-<span class="sd">        For more detail on the underlying theory, see LINKTOCOME.</span>
+<span class="sd">        For more detail on the underlying theory, see https://arxiv.org/pdf/1908.10342.pdf.</span>
 <span class="sd">        &#39;&#39;&#39;</span>
         <span class="k">if</span> <span class="n">quantity</span> <span class="o">==</span> <span class="s1">&#39;flux&#39;</span><span class="p">:</span>
             <span class="n">phi_0</span> <span class="o">=</span> <span class="n">hbar</span><span class="o">/</span><span class="mf">2.</span><span class="o">/</span><span class="n">e</span>
@@ -2691,7 +2691,7 @@
 <span class="sd">        The total anharmonicity of a mode (in first order perturbation theory) is obtained</span>
 <span class="sd">        by summing these contribution over all modes.</span>
 
-<span class="sd">        For more details, see LINKTOCOME</span>
+<span class="sd">        For more details, see https://arxiv.org/pdf/1908.10342.pdf</span>
 <span class="sd">        &#39;&#39;&#39;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_Ej</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">absolute</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">zpf</span><span class="p">(</span><span class="n">mode</span><span class="p">,</span><span class="n">quantity</span><span class="o">=</span><span class="s1">&#39;flux&#39;</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">))</span><span class="o">**</span><span class="mi">4</span></div>
 

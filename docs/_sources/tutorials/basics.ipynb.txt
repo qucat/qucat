@@ -230,7 +230,7 @@
     "\n",
     "$\\hat{H} = \\sum_{m\\in\\text{modes}} \\hbar \\omega_m\\hat{a}_m^\\dagger\\hat{a}_m +\\sum_j\\sum_{2n\\le\\text{taylor}}E_j\\frac{(-1)^{n+1}}{(2n)!}\\left(\\frac{\\phi_{zpf,m,j}}{\\phi_0}(\\hat{a}_m^\\dagger+\\hat{a}_m)\\right)^{2n}$\n",
     "\n",
-    "See our technical paper for more details: LINK TO COME\n",
+    "See our technical paper for more details: https://arxiv.org/pdf/1908.10342.pdf\n",
     "\n",
     "In its construction, we have the freedom to choose the set of ``modes`` to include, the order of the Taylor expansion of the junction potential ``taylor``, and the number of excitations of each mode to consider.\n",
     "\n",
@@ -366,7 +366,7 @@
     " \n",
     " * $\\chi_{mn}$ is the shift in mode $m$ that incurs if an excitation is created in mode $n$ \n",
     "\n",
-    "See our technical paper for more details: LINK TO COME\n",
+    "See our technical paper for more details: https://arxiv.org/pdf/1908.10342.pdf\n",
     "\n",
     "These parameters, together with the loss rate of the modes, are calculated with the functions ``eigenfrequencies``, ``loss_rates``, ``anharmonicities`` and ``kerr``, which return the specified quantities for each mode **in units of Hertz**, **ordered with increasing mode frequency**"
    ]

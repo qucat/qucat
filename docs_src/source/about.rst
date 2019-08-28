@@ -16,7 +16,7 @@ How QuCAT works
 =================
 
 For an overview of the circuit quantization method used by QuCAT and the algorithmic methods which
-implement it, go to our technical paper LINK TO COME.
+implement it, go to our technical paper https://arxiv.org/pdf/1908.10342.pdf.
 
 Authors
 =======

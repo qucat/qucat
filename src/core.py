@@ -402,7 +402,7 @@ class Qcircuit(object):
         non-linear part of the Hamiltonian :math:`\hat{U}`, 
         originating in the junction non-linearity, would be 0.
 
-        For more information on the underlying theory, see LINKTOCOME.
+        For more information on the underlying theory, see https://arxiv.org/pdf/1908.10342.pdf.
         '''
         self._set_zeta(**kwargs)
         return np.real(self.zeta)/2./pi
@@ -435,7 +435,7 @@ class Qcircuit(object):
         singular, or equivalently twice the imaginary parts of the poles of the impedance
         calculated between the nodes of an inductor or josephon junction.
 
-        For further details on the underlying theory, see LINKTOCOME.
+        For further details on the underlying theory, see https://arxiv.org/pdf/1908.10342.pdf.
         
         The dynamics of the circuit can be studied in QuTiP
         by considering collapse operators for the m-th mode 
@@ -494,7 +494,7 @@ class Qcircuit(object):
 
         This function returns the values of :math:`A_m`.
 
-        For more information on the underlying theory, see LINKTOCOME.
+        For more information on the underlying theory, see https://arxiv.org/pdf/1908.10342.pdf.
         '''
         Ks = self.kerr(**kwargs)
         return np.array([Ks[i, i] for i in range(Ks.shape[0])])
@@ -542,7 +542,7 @@ class Qcircuit(object):
 
         This function returns the values of :math:`A_m` and :math:`\chi_{mn}` .
 
-        For more information on the underlying theory, see LINKTOCOME.
+        For more information on the underlying theory, see https://arxiv.org/pdf/1908.10342.pdf.
         '''
 
         # Compute anharmonicity per junction ``As``
@@ -730,7 +730,7 @@ class Qcircuit(object):
 
         In the expression above, ``modes`` and ``taylor`` are arguments of the ``hamiltonian`` function.
 
-        For more details on the underlying theory, see LINKTOCOME
+        For more details on the underlying theory, see https://arxiv.org/pdf/1908.10342.pdf
         '''
         from qutip import destroy, qeye, tensor
 
@@ -931,7 +931,7 @@ class Qcircuit(object):
         of the annotation is equal to the
         contribution of a mode to the zero-point fluctuations accross this component.
 
-        For more detail on the underlying theory, see LINKTOCOME.
+        For more detail on the underlying theory, see https://arxiv.org/pdf/1908.10342.pdf.
         '''
 
         # This changes the default plotting settings 
@@ -2189,7 +2189,7 @@ class Component(Circuit):
         
         Note that resistors make the transfer function :math:`T_{rc}`, and hence this quantity, complex.
 
-        For more detail on the underlying theory, see LINKTOCOME.
+        For more detail on the underlying theory, see https://arxiv.org/pdf/1908.10342.pdf.
         '''
         if quantity == 'flux':
             phi_0 = hbar/2./e
@@ -2536,7 +2536,7 @@ class J(L):
         The total anharmonicity of a mode (in first order perturbation theory) is obtained
         by summing these contribution over all modes.
 
-        For more details, see LINKTOCOME
+        For more details, see https://arxiv.org/pdf/1908.10342.pdf
         '''
         return self._get_Ej(**kwargs)/2*np.absolute(self.zpf(mode,quantity='flux',**kwargs))**4
 
