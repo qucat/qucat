@@ -5,18 +5,22 @@ python:
 install: 
 
   # setup conda, which is necessary to install qutip
+  # just copied in the conda code from https://docs.conda.io/projects/conda/en/latest/user-guide/tasks/use-conda-with-travis-ci.html#
   - wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh;
   - bash miniconda.sh -b -p $HOME/miniconda
   - export PATH="$HOME/miniconda/bin:$PATH"
   - hash -r
   - conda config --set always_yes yes --set changeps1 no
   - conda update -q conda
-  # Useful for debugging any issues with conda
   - conda info -a
-
-  # Install qutip
-  - conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION qutip
+  - conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION 
   - source activate test-environment
+  
+  # Install qutip
+  - conda config --append channels conda-forge
+  - conda install qutip
+
+  # install qucat
   - pip install .
 
 script: pytest
