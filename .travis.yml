@@ -14,7 +14,7 @@ install:
   - conda update -q conda
   - conda info -a
   # Here we also install all dependencies of qucat
-  - conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION numpy scipy matplotlib sympy pillow nbformat
+  - conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION numpy scipy matplotlib sympy pillow nbformat pytest
   - source activate test-environment
   
   # Install qutip
