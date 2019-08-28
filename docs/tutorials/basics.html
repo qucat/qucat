@@ -513,7 +513,7 @@ R 0 2 1 MOhm
 <h3>Generating a Hamiltonian<a class="headerlink" href="#Generating-a-Hamiltonian" title="Permalink to this headline">¶</a></h3>
 <p>The Hamiltonian of the circuit, with the non-linearity of the Josephson junctions Taylor-expanded, is given by</p>
 <p><span class="math notranslate nohighlight">\(\hat{H} = \sum_{m\in\text{modes}} \hbar \omega_m\hat{a}_m^\dagger\hat{a}_m +\sum_j\sum_{2n\le\text{taylor}}E_j\frac{(-1)^{n+1}}{(2n)!}\left(\frac{\phi_{zpf,m,j}}{\phi_0}(\hat{a}_m^\dagger+\hat{a}_m)\right)^{2n}\)</span></p>
-<p>See our technical paper for more details: LINK TO COME</p>
+<p>See our technical paper for more details: <a class="reference external" href="https://arxiv.org/pdf/1908.10342.pdf">https://arxiv.org/pdf/1908.10342.pdf</a></p>
 <p>In its construction, we have the freedom to choose the set of <code class="docutils literal notranslate"><span class="pre">modes</span></code> to include, the order of the Taylor expansion of the junction potential <code class="docutils literal notranslate"><span class="pre">taylor</span></code>, and the number of excitations of each mode to consider.</p>
 <p>The code below generates a Hamiltonian and calculates its eigenenergies</p>
 <div class="nbinput nblast docutils container">
@@ -591,7 +591,7 @@ R 0 2 1 MOhm
 <li><span class="math notranslate nohighlight">\(A_m\)</span> is the anharmonicity of mode <span class="math notranslate nohighlight">\(m\)</span>, the difference in frequency of the first two transitions of the mode</li>
 <li><span class="math notranslate nohighlight">\(\chi_{mn}\)</span> is the shift in mode <span class="math notranslate nohighlight">\(m\)</span> that incurs if an excitation is created in mode <span class="math notranslate nohighlight">\(n\)</span></li>
 </ul>
-<p>See our technical paper for more details: LINK TO COME</p>
+<p>See our technical paper for more details: <a class="reference external" href="https://arxiv.org/pdf/1908.10342.pdf">https://arxiv.org/pdf/1908.10342.pdf</a></p>
 <p>These parameters, together with the loss rate of the modes, are calculated with the functions <code class="docutils literal notranslate"><span class="pre">eigenfrequencies</span></code>, <code class="docutils literal notranslate"><span class="pre">loss_rates</span></code>, <code class="docutils literal notranslate"><span class="pre">anharmonicities</span></code> and <code class="docutils literal notranslate"><span class="pre">kerr</span></code>, which return the specified quantities for each mode <strong>in units of Hertz</strong>, <strong>ordered with increasing mode frequency</strong></p>
 <div class="section" id="Eigen-frequencies">
 <h3>Eigen-frequencies<a class="headerlink" href="#Eigen-frequencies" title="Permalink to this headline">¶</a></h3>
