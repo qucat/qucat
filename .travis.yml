@@ -2,19 +2,21 @@ language: python
 python:
   - "3.7"
 
-
-# QuTiP builds are currently broken under very old versions
-# of GCC, such as are installed by default with Travis CI.
-addons:
-  apt:
-    packages:
-      - gcc-4.8
-env:
-  global:
-    - CC: gcc-4.8
-
 install: 
-  - pip install cython
-  - pip install qutip
+
+  # setup conda, which is necessary to install qutip
+  - wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh;
+  - bash miniconda.sh -b -p $HOME/miniconda
+  - export PATH="$HOME/miniconda/bin:$PATH"
+  - hash -r
+  - conda config --set always_yes yes --set changeps1 no
+  - conda update -q conda
+  # Useful for debugging any issues with conda
+  - conda info -a
+
+  # Install qutip
+  - conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION qutip
+  - source activate test-environment
   - pip install .
+
 script: pytest
