@@ -1,3 +1,5 @@
+import matplotlib
+matplotlib.use('Agg')
 import unittest
 import os
 import sys
@@ -94,9 +96,6 @@ class AutomaticTesting(GuiTestingHandler):
     def run_events(self):
 
         shutil.copyfile(self.init,self.final_after_events)
-
-        import matplotlib
-        matplotlib.use('Agg')
         self.gui = GuiWindow(self.final_after_events, _unittesting = True, _os_type =self.os_type)
 
         with open(self.events,'r') as f:
