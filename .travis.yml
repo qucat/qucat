@@ -1,6 +1,18 @@
 language: python
 python:
   - "3.7"
+
+
+# QuTiP builds are currently broken under very old versions
+# of GCC, such as are installed by default with Travis CI.
+addons:
+  apt:
+    packages:
+      - gcc-4.8
+env:
+  global:
+    - CC: gcc-4.8
+
 install: 
   - pip install cython
   - pip install qutip
