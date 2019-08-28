@@ -9,11 +9,6 @@ class TestTutorials(TestCaseAppended):
     def run_tutorial(self,notebook_name):
         var_dict = run_notebook(notebook_name)
         self.assertFalse(isinstance(var_dict,str),msg=var_dict)
-        try:
-            rmtree('circuits')
-        except FileNotFoundError:
-            # no folder was created
-            pass
         return var_dict
 
 

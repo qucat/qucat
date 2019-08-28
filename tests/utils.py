@@ -49,9 +49,9 @@ def parse_cell(code):
         if len(line.replace(' ',''))>0:
             if not line.replace(' ','')[0]=='%' and not 'plt.show(' in line:
                 if 'GUI(' in line:
-                    valid_lines += 'def GUI(*args,edit=False,**kwargs):\n'
+                    valid_lines += 'def GUI(*args,**kwargs):\n'
                     valid_lines += '    from qucat import GUI\n'
-                    valid_lines += '    return GUI(*args,edit=False,**kwargs)\n'
+                    valid_lines += '    return GUI(args[0],edit=False)\n'
                 valid_lines += line+'\n'
 
         valid_lines = valid_lines.replace('qucat.','').replace('from qucat ','from core ')
@@ -62,6 +62,7 @@ def run_notebook(notebook_name):
     import os
     sys.path.append(join(join(dirname(dirname(__file__)),'src')))
     tutorials_folder = join(dirname(dirname(__file__)),'docs_src','source','tutorials')
+    os.chdir(tutorials_folder)
     nb = nbformat.read(join(tutorials_folder,notebook_name), 4)
     sys.stdout = open(devnull, "w")
     sys.stderr = open(devnull, "w")
