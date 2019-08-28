@@ -46,7 +46,6 @@ class ManualTesting(GuiTestingHandler):
             contents = netlist_file.read()
         return contents
 
-
 class AutomaticTesting(GuiTestingHandler):
 
     def launch_gui_testing(self,exclude = None, force_build = False, run_slower = False, os_type = 'windows'):
@@ -95,6 +94,9 @@ class AutomaticTesting(GuiTestingHandler):
     def run_events(self):
 
         shutil.copyfile(self.init,self.final_after_events)
+
+        import matplotlib
+        matplotlib.use('Agg')
         self.gui = GuiWindow(self.final_after_events, _unittesting = True, _os_type =self.os_type)
 
         with open(self.events,'r') as f:
