@@ -190,7 +190,7 @@ class TestComponentCreation(AutomaticTesting):
     def test_building_capacitor(self):
         self.launch_gui_testing()
     def test_building_resistor(self):
-        self.launch_gui_testing()
+        self.launch_gui_testing(force_build=True)
     def test_building_junction(self):
         self.launch_gui_testing()
     def test_building_ground(self):
