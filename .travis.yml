@@ -1,7 +1,11 @@
 language: python
+
+# this is needed to run tests requiring a graphical user interface
+# see https://docs.travis-ci.com/user/gui-and-headless-browsers/
 dist: xenial
 services:
   - xvfb
+
 python:
   - "3.7"
 
@@ -25,5 +29,4 @@ install:
   - conda install qutip
 
 script: 
-  - source activate test-environment
   - pytest

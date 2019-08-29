@@ -1,5 +1,3 @@
-import matplotlib
-matplotlib.use('Agg')
 import unittest
 import os
 import sys
