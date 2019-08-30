@@ -160,25 +160,7 @@ class AutomaticTesting(GuiTestingHandler):
             
         return True
 
-class TestDeleting(AutomaticTesting):
-    
-    def test_deleting_an_RLC_on_mac(self):
-        self.launch_gui_testing(os_type = 'mac')
 
-
-class TestOpening(AutomaticTesting):
-    
-    def test_if_opening_blank_test_throws_error(self):
-        self.launch_gui_testing()
-
-    def test_opening_complicated_wire_network(self):
-        self.launch_gui_testing()
-
-    def test_opening_complicated_circuit(self):
-        self.launch_gui_testing()
-
-    def test_opening_longfloat(self):
-        self.launch_gui_testing()
 
 class TestComponentCreation(AutomaticTesting):
     def test_building_resistor(self):
@@ -208,6 +190,27 @@ class TestComponentCreation(AutomaticTesting):
     def test_cancel_junction_build(self):
         self.launch_gui_testing()
     
+
+class TestDeleting(AutomaticTesting):
+    
+    def test_deleting_an_RLC_on_mac(self):
+        self.launch_gui_testing(os_type = 'mac')
+
+
+class TestOpening(AutomaticTesting):
+    
+    def test_if_opening_blank_test_throws_error(self):
+        self.launch_gui_testing()
+
+    def test_opening_complicated_wire_network(self):
+        self.launch_gui_testing()
+
+    def test_opening_complicated_circuit(self):
+        self.launch_gui_testing()
+
+    def test_opening_longfloat(self):
+        self.launch_gui_testing()
+
 class TestCutCopyPaste(AutomaticTesting):
 
     def test_copy_paste__copying_nothing(self):
