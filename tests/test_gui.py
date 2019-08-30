@@ -129,14 +129,14 @@ class AutomaticTesting(GuiTestingHandler):
 
     def remove_exluded_events(self):
         if self.exclude is not None:
-            temp = os.path.join(folder,'temp.txt')
+            temp = os.path.join(self.folder,'temp.txt')
             shutil.copyfile(self.events,temp)
             with open(self.events,'w') as to_write:
                 with open(temp,'r') as to_read:
                     lines = to_read.readlines()
                     for l in lines:
                         wr = True
-                        for e in exclude:
+                        for e in self.exclude:
                             if e in l:
                                 wr = False
                         if wr:
@@ -164,7 +164,7 @@ class AutomaticTesting(GuiTestingHandler):
 
 class TestComponentCreation(AutomaticTesting):
     def test_building_resistor(self):
-        self.launch_gui_testing(force_build=False)
+        self.launch_gui_testing()
     def test_building_wire(self):
         self.launch_gui_testing()
 
