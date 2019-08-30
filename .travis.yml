@@ -20,14 +20,25 @@ install:
   - conda config --set always_yes yes --set changeps1 no
   - conda update -q conda
   - conda info -a
-  # Here we also install all dependencies of qucat
+
+  # environment in which we will be testing the pip installation
+  - conda create -q -n pip-environment python=$TRAVIS_PYTHON_VERSION 
+
+  # environment in which we will be running the tests
+  # Here we also install all dependencies of qucat manually
   - conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION numpy scipy matplotlib sympy pillow nbformat pytest pytest-cov codecov
-  - source activate test-environment
   
   # Install qutip
+  - source activate test-environment
   - conda config --append channels conda-forge
   - conda install qutip
 
 script: 
+  # Run tests
+  - source activate test-environment
   - pytest --cov=src
   - codecov
+
+  # Test pip installation
+  - source activate pip-environment
+  - pip install .
