@@ -181,14 +181,14 @@ class TestOpening(AutomaticTesting):
         self.launch_gui_testing()
 
 class TestComponentCreation(AutomaticTesting):
+    def test_building_resistor(self):
+        self.launch_gui_testing(force_build=False)
     def test_building_wire(self):
         self.launch_gui_testing()
 
     def test_building_overlapping_and_intersecting_wires(self):
         self.launch_gui_testing()
         
-    def test_building_resistor(self):
-        self.launch_gui_testing(force_build=False)
     def test_building_capacitor(self):
         self.launch_gui_testing()
     def test_building_junction(self):
