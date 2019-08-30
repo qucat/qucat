@@ -163,8 +163,8 @@ class AutomaticTesting(GuiTestingHandler):
 
 
 class TestComponentCreation(AutomaticTesting):
-    def test_building_resistor(self):
-        self.launch_gui_testing()
+    # def test_building_resistor(self):
+    #     self.launch_gui_testing()
     def test_building_wire(self):
         self.launch_gui_testing()
 
