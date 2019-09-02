@@ -9,15 +9,17 @@ QuCAT features an intuitive graphical or programmatical interface to create circ
 
 **If you find QuCAT useful, please consider citing it in your publications, see: https://qucat.org/citing.html.**
 
+Installation
+------------
+
+[![Downloads](https://pepy.tech/badge/qucat)](https://pepy.tech/project/qucat)
+
+The recommended way to install qucat is via pip by opening a terminal and running ``pip install qucat``, more information [here](https://qucat.org/installation.html).
+
 Documentation
 ------------------
 
 Visit https://qucat.org/ for all information about installation, a documented lists of functions, tutorials and more.
-
-Installation
-------------
-
-The recommended way to install qucat is via pip by opening a terminal and running ``pip install qucat``, more information [here](https://qucat.org/installation.html).
 
 Tutorials
 ---------
