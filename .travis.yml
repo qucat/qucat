@@ -1,0 +1,44 @@
+language: python
+
+# this is needed to run tests requiring a graphical user interface
+# see https://docs.travis-ci.com/user/gui-and-headless-browsers/
+dist: xenial
+services:
+  - xvfb
+
+python:
+  - "3.7.3"
+
+install: 
+
+  # setup conda, which is necessary to install qutip
+  # just copied in the conda code from https://docs.conda.io/projects/conda/en/latest/user-guide/tasks/use-conda-with-travis-ci.html#
+  - wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh;
+  - bash miniconda.sh -b -p $HOME/miniconda
+  - export PATH="$HOME/miniconda/bin:$PATH"
+  - hash -r
+  - conda config --set always_yes yes --set changeps1 no
+  - conda update -q conda
+  - conda info -a
+
+  # environment in which we will be testing the pip installation
+  - conda create -q -n pip-environment python=$TRAVIS_PYTHON_VERSION 
+
+  # environment in which we will be running the tests
+  # Here we also install all dependencies of qucat manually
+  - conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION numpy scipy matplotlib sympy pillow nbformat pytest pytest-cov codecov
+  
+  # Install qutip
+  - source activate test-environment
+  - conda config --append channels conda-forge
+  - conda install qutip
+
+script: 
+  # Run tests
+  - source activate test-environment
+  - pytest --cov=src
+  - codecov
+
+  # Test pip installation
+  - source activate pip-environment
+  - pip install .

@@ -26,6 +26,5 @@ setuptools.setup(
         "matplotlib",
         "sympy",
         "pillow",
-        "qutip",
     ],
 )
