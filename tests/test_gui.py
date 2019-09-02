@@ -46,7 +46,6 @@ class ManualTesting(GuiTestingHandler):
             contents = netlist_file.read()
         return contents
 
-
 class AutomaticTesting(GuiTestingHandler):
 
     def launch_gui_testing(self,exclude = None, force_build = False, run_slower = False, os_type = 'windows'):
@@ -130,14 +129,14 @@ class AutomaticTesting(GuiTestingHandler):
 
     def remove_exluded_events(self):
         if self.exclude is not None:
-            temp = os.path.join(folder,'temp.txt')
+            temp = os.path.join(self.folder,'temp.txt')
             shutil.copyfile(self.events,temp)
             with open(self.events,'w') as to_write:
                 with open(temp,'r') as to_read:
                     lines = to_read.readlines()
                     for l in lines:
                         wr = True
-                        for e in exclude:
+                        for e in self.exclude:
                             if e in l:
                                 wr = False
                         if wr:
@@ -161,6 +160,37 @@ class AutomaticTesting(GuiTestingHandler):
             
         return True
 
+
+
+class TestComponentCreation(AutomaticTesting):
+    # def test_building_resistor(self):
+    #     self.launch_gui_testing()
+    def test_building_wire(self):
+        self.launch_gui_testing()
+
+    def test_building_overlapping_and_intersecting_wires(self):
+        self.launch_gui_testing()
+        
+    def test_building_capacitor(self):
+        self.launch_gui_testing()
+    def test_building_junction(self):
+        self.launch_gui_testing()
+    def test_building_ground(self):
+        self.launch_gui_testing()
+    def test_building_rotated_ground(self):
+        self.launch_gui_testing()
+    def test_building_inductor(self):
+        self.launch_gui_testing()
+    def test_building_transmon(self):
+        self.launch_gui_testing()
+    def test_cancel_wire_build_before_first_node(self):
+        self.launch_gui_testing()
+    def test_cancel_wire_build_after_first_node(self):
+        self.launch_gui_testing()
+    def test_cancel_junction_build(self):
+        self.launch_gui_testing()
+    
+
 class TestDeleting(AutomaticTesting):
     
     def test_deleting_an_RLC_on_mac(self):
@@ -181,34 +211,6 @@ class TestOpening(AutomaticTesting):
     def test_opening_longfloat(self):
         self.launch_gui_testing()
 
-class TestComponentCreation(AutomaticTesting):
-    def test_building_wire(self):
-        self.launch_gui_testing()
-
-    def test_building_overlapping_and_intersecting_wires(self):
-        self.launch_gui_testing()
-        
-    def test_building_capacitor(self):
-        self.launch_gui_testing()
-    def test_building_resistor(self):
-        self.launch_gui_testing()
-    def test_building_junction(self):
-        self.launch_gui_testing()
-    def test_building_ground(self):
-        self.launch_gui_testing()
-    def test_building_rotated_ground(self):
-        self.launch_gui_testing()
-    def test_building_inductor(self):
-        self.launch_gui_testing()
-    def test_building_transmon(self):
-        self.launch_gui_testing()
-    def test_cancel_wire_build_before_first_node(self):
-        self.launch_gui_testing()
-    def test_cancel_wire_build_after_first_node(self):
-        self.launch_gui_testing()
-    def test_cancel_junction_build(self):
-        self.launch_gui_testing()
-    
 class TestCutCopyPaste(AutomaticTesting):
 
     def test_copy_paste__copying_nothing(self):

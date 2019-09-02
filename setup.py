@@ -20,4 +20,11 @@ setuptools.setup(
     python_requires='>3.0.0',
     include_package_data=True,
     package_data={'qucat': ['.graphics/*']},
+    install_requires=[
+        "numpy",
+        "scipy",
+        "matplotlib",
+        "sympy",
+        "pillow",
+    ],
 )
