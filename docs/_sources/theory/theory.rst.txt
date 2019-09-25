@@ -1,9 +1,0 @@
-*****************
-Technical details
-*****************
-
-.. toctree::
-    :maxdepth: 2
-  
-    circuit_quantization.md
-    algo.md

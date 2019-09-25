@@ -16,7 +16,7 @@ Installing from source
 
 The latest source code is available on our Github repository
 
-`<https://github.com/mgely/qucat>`_
+`<https://github.com/qucat/qucat>`_
 
 To install from source, download or clone the source code, 
 open a terminal and navigate to the qucat folder, and run 
