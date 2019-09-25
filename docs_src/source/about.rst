@@ -33,7 +33,7 @@ Contributing
 ============
 
 Your contribution is more than welcome!
-You can submit pull requests `on our Github <https://github.com/mgely/qucat/>`_, or contact Mario if you want to bring big contributions to the project.
+You can submit pull requests `on our Github <https://github.com/qucat/qucat/>`_, or contact Mario if you want to bring big contributions to the project.
 
 Possible extensions of the QuCAT features could include black-box impedance components to model distributed components `[1] <https://arxiv.org/abs/1204.0587>`_, 
 more precisely modeling lossy circuits `[2] <https://arxiv.org/abs/1403.7341>`_, `[3] <https://arxiv.org/abs/1505.04116>`_, 
