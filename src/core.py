@@ -12,6 +12,7 @@ import inspect
 import matplotlib.pyplot as plt
 import time
 from warnings import warn
+import io
 try:
     from ._constants import *
     from ._utility import *
@@ -1307,11 +1308,29 @@ class GUI(Qcircuit):
 
 
     .. image:: Network_example_circuit.png
-    
-
     '''
 
-    def __init__(self, filename, edit=True, plot=True, print_network=False,_unittesting=False):
+    def __init__(
+            self,
+            filename,
+            edit=True,
+            plot=True,
+            print_network=False,
+            _unittesting=False,):
+
+        edit = edit or self._try_to_open_and_create_if_needed(filename)
+
+        if edit:
+            run([sys.executable,
+                os.path.join(os.path.dirname(__file__),"_gui.py"),
+                filename])
+
+        with open(filename, 'r') as stream:
+            self._load(stream, plot, print_network)
+
+    @staticmethod
+    def _try_to_open_and_create_if_needed(filename):
+        edit = False
 
         # Note: this will also give a valid path if filename was specified using 
         # an absolute path
@@ -1328,28 +1347,11 @@ class GUI(Qcircuit):
             # ... and file
             with open(filename, "w") as f:
                 pass
+        return edit
 
-        if edit:
-            run([sys.executable,
-                os.path.join(os.path.dirname(__file__),"_gui.py"),
-                filename])
+    def _load(self, stream, plot, print_network):
 
-        netlist = []
-        with open(filename, 'r') as f:
-            for el in f:
-                el = el.replace('\n', '')
-                el = el.split(";")
-                if el[3] == '':
-                    v = None
-                else:
-                    v = float(el[3])
-                if el[4] == '':
-                    l = None
-                else:
-                    l = el[4]
-                netlist.append(
-                    string_to_component(el[0], el[1], el[2], v, l))
-
+        netlist = self._parse_file(stream)
         super(GUI, self).__init__(netlist)
         for el in self.netlist:
             el._set_plot_coordinates()
@@ -1365,6 +1367,31 @@ class GUI(Qcircuit):
                     max(el.node_minus,el.node_plus),
                     el._to_string(use_unicode = False)))
             print('\n')
+
+    @staticmethod
+    def _parse_file(stream):
+        netlist = []
+        for el in stream:
+            el = el.replace('\n', '')
+            el = el.split(";")
+            if el[3] == '':
+                v = None
+            else:
+                v = float(el[3])
+            if el[4] == '':
+                l = None
+            else:
+                l = el[4]
+            netlist.append(
+                string_to_component(el[0], el[1], el[2], v, l))
+        return netlist
+
+    @classmethod
+    def from_text(cls, text, plot, print_network):
+        inst = cls.__new__(cls)
+        inst._load(io.StringIO(text), plot, print_network)
+        return inst
+
 
 class _Network(object):
     """
