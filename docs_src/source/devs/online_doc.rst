@@ -42,7 +42,7 @@ Information on sphinx, on reStructuredText and the configuration file
 can be found online, 
 notably `here <http://www.sphinx-doc.org/en/master/>`_.
 
-..note :: Building the docs from a default Anaconda python installation requires the additional pip-installable packages: nbsphinx, recommonmark, sphinx_rtd_theme
+.. note:: Building the docs from a default Anaconda python installation requires the additional pip-installable packages: nbsphinx, recommonmark, sphinx_rtd_theme
 
 Editing class or function documentation
 --------------------------------------------
