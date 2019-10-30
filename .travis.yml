@@ -34,6 +34,12 @@ install:
   - conda install qutip
 
 script: 
+  
+  # Test documentation building
+  - source activate test-environment
+  - pip install --upgrade pip
+  - python build_docs.py
+
   # Run tests
   - source activate test-environment
   - pytest --cov=src
@@ -42,6 +48,3 @@ script:
   # Test pip installation
   - source activate pip-environment
   - pip install .
-
-  # Test documentation building
-  - python build_docs.py
