@@ -25,6 +25,7 @@
         <script type="text/javascript" src="../_static/underscore.js"></script>
         <script type="text/javascript" src="../_static/doctools.js"></script>
         <script type="text/javascript" src="../_static/language_data.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
         <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
         <script type="text/x-mathjax-config">MathJax.Hub.Config({"tex2jax": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true, "ignoreClass": "document", "processClass": "math|output_area"}})</script>
     
@@ -88,8 +89,8 @@
 <li class="toctree-l1"><a class="reference internal" href="../about.html">About</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../citing.html">Citing this project</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../tutorials/tutorials.html">Tutorials</a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="API.html">List of functions</a><ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/index.html">Tutorials</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">List of functions</a><ul class="current">
 <li class="toctree-l2 current"><a class="reference internal" href="builders.html">Creating a circuit</a><ul class="current">
 <li class="toctree-l3"><a class="reference internal" href="gui.html">Graphically</a></li>
 <li class="toctree-l3 current"><a class="current reference internal" href="#">Programmatically</a></li>
@@ -101,6 +102,7 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../contact.html">Contact</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../report_a_bug.html">Report a bug</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../devs/index.html">Developer Guide</a></li>
 </ul>
 
             
@@ -146,7 +148,7 @@
     
       <li><a href="../index.html">Docs</a> &raquo;</li>
         
-          <li><a href="API.html">Index of functions</a> &raquo;</li>
+          <li><a href="index.html">Index of functions</a> &raquo;</li>
         
           <li><a href="builders.html">Creating a circuit</a> &raquo;</li>
         
@@ -197,9 +199,9 @@
 <h1>Building a circuit programmatically<a class="headerlink" href="#building-a-circuit-programmatically" title="Permalink to this headline">¶</a></h1>
 <dl class="class">
 <dt id="qucat.Network">
-<em class="property">class </em><code class="descclassname">qucat.</code><code class="descname">Network</code><span class="sig-paren">(</span><em>netlist</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/qucat/core.html#Network"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#qucat.Network" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">qucat.</code><code class="sig-name descname">Network</code><span class="sig-paren">(</span><em class="sig-param">netlist</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/qucat/core.html#Network"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#qucat.Network" title="Permalink to this definition">¶</a></dt>
 <dd><p>Constructs a Qcircuit object from a list of components without resorting to a graphical user interface.</p>
-<p>The list can be composed of instances of the <a class="reference internal" href="components/L.html#qucat.L" title="qucat.L"><code class="xref py py-class docutils literal notranslate"><span class="pre">qucat.L</span></code></a>, <a class="reference internal" href="components/C.html#qucat.C" title="qucat.C"><code class="xref py py-class docutils literal notranslate"><span class="pre">qucat.C</span></code></a>,
+<p>The list can be composed of instances of the <a class="reference internal" href="components/L.html#qucat.L" title="qucat.L"><code class="xref py py-class docutils literal notranslate"><span class="pre">qucat.L</span></code></a>, <a class="reference internal" href="../devs/example_class_autostring.html#qucat.C" title="qucat.C"><code class="xref py py-class docutils literal notranslate"><span class="pre">qucat.C</span></code></a>,
 <a class="reference internal" href="components/R.html#qucat.R" title="qucat.R"><code class="xref py py-class docutils literal notranslate"><span class="pre">qucat.R</span></code></a> or <a class="reference internal" href="components/J.html#qucat.J" title="qucat.J"><code class="xref py py-class docutils literal notranslate"><span class="pre">qucat.J</span></code></a> classes
 for inductors, capacitors, resistors or junctions respectively.</p>
 <p>This Qcircuit construction method offers the advantage of programmatically constructing
@@ -208,18 +210,17 @@ On could, for example, construct an array of LC-resonators using a python <code 
 would be tedious using a graphical user interface.
 The disadvantage is that one cannot use the plotting tools <code class="xref py py-meth docutils literal notranslate"><span class="pre">show()</span></code> or
 <code class="xref py py-meth docutils literal notranslate"><span class="pre">show_normal_modes()</span></code> to visualize the circuit or its innerworkings.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>netlist</strong> (list of <code class="xref py py-class docutils literal notranslate"><span class="pre">qucat.Component</span></code>) – See examples</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">A Qcircuit object, see qucat.Qcircuit</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">qucat.Qcircuit</td>
-</tr>
-</tbody>
-</table>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>netlist</strong> (list of <code class="xref py py-class docutils literal notranslate"><span class="pre">qucat.Component</span></code>) – See examples</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A Qcircuit object, see qucat.Qcircuit</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>qucat.Qcircuit</p>
+</dd>
+</dl>
 <p class="rubric">Examples</p>
 <p>Here we construct a parallel combination of a capacitor, inductor and junction, grounded
 on one end and connected at the other end through a capacitor to a 50 Ohm resistor to ground.</p>

@@ -27,10 +27,11 @@ normal modes.
     about
     citing
     installation
-    Tutorials <tutorials/tutorials>
-    List of functions <API/API>
+    Tutorials <tutorials/index>
+    List of functions <API/index>
     contact
     report_a_bug
+    Developer Guide <devs/index>
 
 .. about
 .. citing

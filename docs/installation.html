@@ -25,6 +25,7 @@
         <script type="text/javascript" src="_static/underscore.js"></script>
         <script type="text/javascript" src="_static/doctools.js"></script>
         <script type="text/javascript" src="_static/language_data.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
         <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
         <script type="text/x-mathjax-config">MathJax.Hub.Config({"tex2jax": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true, "ignoreClass": "document", "processClass": "math|output_area"}})</script>
     
@@ -38,7 +39,7 @@
     <link rel="author" title="About these documents" href="about.html" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Tutorials" href="tutorials/tutorials.html" />
+    <link rel="next" title="Tutorials" href="tutorials/index.html" />
     <link rel="prev" title="Citing this project" href="citing.html" /> 
 </head>
 
@@ -93,10 +94,11 @@
 <li class="toctree-l2"><a class="reference internal" href="#requirements">Requirements</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="tutorials/tutorials.html">Tutorials</a></li>
-<li class="toctree-l1"><a class="reference internal" href="API/API.html">List of functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorials/index.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="API/index.html">List of functions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="contact.html">Contact</a></li>
 <li class="toctree-l1"><a class="reference internal" href="report_a_bug.html">Report a bug</a></li>
+<li class="toctree-l1"><a class="reference internal" href="devs/index.html">Developer Guide</a></li>
 </ul>
 
             
@@ -188,8 +190,8 @@
 <div class="section" id="installation">
 <h1>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h1>
 <div class="admonition note">
-<p class="first admonition-title">Note</p>
-<p class="last">QuCAT only supports python 3</p>
+<p class="admonition-title">Note</p>
+<p>QuCAT only supports python 3</p>
 </div>
 <div class="section" id="installing-via-pip">
 <h2>Installing via pip<a class="headerlink" href="#installing-via-pip" title="Permalink to this headline">¶</a></h2>
@@ -209,18 +211,18 @@ open a terminal and navigate to the qucat folder, and run
 <p>Qucat depends on several open-source libraries.
 The following packages are currently required:</p>
 <ul class="simple">
-<li>Python 3, tested on version 3.7</li>
-<li>Numpy, tested on version 1.16.2</li>
-<li>Matplotlib, tested on version 3.0.3</li>
-<li>Sympy, tested on version 1.3</li>
+<li><p>Python 3, tested on version 3.7</p></li>
+<li><p>Numpy, tested on version 1.16.2</p></li>
+<li><p>Matplotlib, tested on version 3.0.3</p></li>
+<li><p>Sympy, tested on version 1.3</p></li>
 </ul>
 <p>Generating a Hamiltonian requires</p>
 <ul class="simple">
-<li><a class="reference external" href="http://qutip.org/docs/latest/installation.html">QuTiP</a>, tested on version 4.3</li>
+<li><p><a class="reference external" href="http://qutip.org/docs/latest/installation.html">QuTiP</a>, tested on version 4.3</p></li>
 </ul>
 <p>Performance of Sympy and thus QuCAT is enhanced by using</p>
 <ul class="simple">
-<li><a class="reference external" href="https://gmpy2.readthedocs.io/en/latest/">gmpy2</a></li>
+<li><p><a class="reference external" href="https://gmpy2.readthedocs.io/en/latest/">gmpy2</a></p></li>
 </ul>
 <p>We recommend installing python and these packages by
 downloading and installing
@@ -236,7 +238,7 @@ downloading and installing
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="tutorials/tutorials.html" class="btn btn-neutral float-right" title="Tutorials" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="tutorials/index.html" class="btn btn-neutral float-right" title="Tutorials" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
         <a href="citing.html" class="btn btn-neutral float-left" title="Citing this project" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>

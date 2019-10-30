@@ -1,0 +1,20 @@
+# Import python test framework
+import unittest
+
+import os
+import sys
+
+# Add the ./src/ folder to the system path
+sys.path.append(os.path.join(os.path.join(os.path.dirname(os.path.dirname(__file__)),'src')))
+
+# Import function to be tested
+from new import f
+
+class TestCase(unittest.TestCase):
+
+    def test_f_function(self):
+        # Check if f(1,2) is indeed equal to 3
+        self.assertEqual(f(1,2),3)
+
+if __name__ == '__main__':
+    unittest.main()

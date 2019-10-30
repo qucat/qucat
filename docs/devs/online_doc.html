@@ -1,0 +1,346 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Writing documentation or website content &mdash; qucat  documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../_static/jquery.js"></script>
+        <script type="text/javascript" src="../_static/underscore.js"></script>
+        <script type="text/javascript" src="../_static/doctools.js"></script>
+        <script type="text/javascript" src="../_static/language_data.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script type="text/x-mathjax-config">MathJax.Hub.Config({"tex2jax": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true, "ignoreClass": "document", "processClass": "math|output_area"}})</script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="author" title="About these documents" href="../about.html" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="prev" title="Unit testing" href="unittests.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> qucat
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../about.html">About</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../citing.html">Citing this project</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/index.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../API/index.html">List of functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../contact.html">Contact</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../report_a_bug.html">Report a bug</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Developer Guide</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="comments.html"> Format for docstrings and comments</a></li>
+<li class="toctree-l2"><a class="reference internal" href="unittests.html"> How to write and run unittests</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#"> How to edit and build the documentation and website</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#building-the-documentation">Building the documentation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#editing-class-or-function-documentation">Editing class or function documentation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#editing-the-tutorials">Editing the tutorials</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">qucat</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="index.html">Contributing to QuCAT</a> &raquo;</li>
+        
+      <li>Writing documentation or website content</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../_sources/devs/online_doc.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  
+<style>
+/* CSS overrides for sphinx_rtd_theme */
+
+/* 24px margin */
+.nbinput.nblast,
+.nboutput.nblast {
+    margin-bottom: 19px;  /* padding has already 5px */
+}
+
+/* ... except between code cells! */
+.nblast + .nbinput {
+    margin-top: -19px;
+}
+
+.admonition > p:before {
+    margin-right: 4px;  /* make room for the exclamation icon */
+}
+
+/* Fix math alignment, see https://github.com/rtfd/sphinx_rtd_theme/pull/686 */
+.math {
+    text-align: unset;
+}
+</style>
+<div class="section" id="writing-documentation-or-website-content">
+<h1>Writing documentation or website content<a class="headerlink" href="#writing-documentation-or-website-content" title="Permalink to this headline">¶</a></h1>
+<p>We assume you have
+cloned a version of the
+<a class="reference external" href="https://github.com/qucat/qucat/">qucat repository</a>
+to your machine.</p>
+<p>The source code for the documentation is located in the
+<code class="docutils literal notranslate"><span class="pre">/docs_src/source</span></code> folder.
+The built documentation is stored in the <code class="docutils literal notranslate"><span class="pre">/docs/</span></code> folder.
+Through Github pages, the website (qucat.org) always
+matches the contents of the <code class="docutils literal notranslate"><span class="pre">/docs/</span></code> folder of the
+master branch.
+The website can be previewed locally by opening the <code class="docutils literal notranslate"><span class="pre">/docs/index.html</span></code>
+file with a web browser.</p>
+<p>In order to edit the documentation/website one should thus follow
+these steps</p>
+<ul class="simple">
+<li><p>edit the reStructuredText files located in <code class="docutils literal notranslate"><span class="pre">/docs_src/source</span></code></p></li>
+<li><p>build the documentation by runing the <code class="docutils literal notranslate"><span class="pre">build_docs.py</span></code> script</p></li>
+<li><p>check the changes locally by opening the <code class="docutils literal notranslate"><span class="pre">/docs/index.html</span></code> file with a web browser</p></li>
+<li><p>push the code to the github repository</p></li>
+<li><p>Once the code is pulled into the master branch, these changes are automatically applied to the website.</p></li>
+</ul>
+<p>Building the documentation,
+and editing the tutorials or the documentation of the functions
+requires specific instruction given below.</p>
+<div class="section" id="building-the-documentation">
+<h2>Building the documentation<a class="headerlink" href="#building-the-documentation" title="Permalink to this headline">¶</a></h2>
+<p>The documentation can be built by runing the <code class="docutils literal notranslate"><span class="pre">build_docs.py</span></code> script.</p>
+<p>Some details about the build process:
+we use Sphinx to build the html content for the website
+from the reStructuredText (.rst) files located in <code class="docutils literal notranslate"><span class="pre">/docs_src/source</span></code>.
+This build process if configured through the <code class="docutils literal notranslate"><span class="pre">/docs_src/source/conf.py</span></code>.
+Information on sphinx, on reStructuredText and the configuration file
+can be found online,
+notably <a class="reference external" href="http://www.sphinx-doc.org/en/master/">here</a>.</p>
+<p>..note :: Building the docs from a default Anaconda python installation requires the additional pip-installable packages: nbsphinx, recommonmark, sphinx_rtd_theme</p>
+</div>
+<div class="section" id="editing-class-or-function-documentation">
+<h2>Editing class or function documentation<a class="headerlink" href="#editing-class-or-function-documentation" title="Permalink to this headline">¶</a></h2>
+<p>One advantage of using Sphinx, is that it can
+extract docstrings from the source-code
+(located in the <code class="docutils literal notranslate"><span class="pre">src</span></code> folder) and turn
+it into elegant html documentation of
+a class or function.</p>
+<p>As an example for classes, inserting the following code
+in the reStructuredText file of one of the documentation pages</p>
+<div class="highlight-rst notranslate"><div class="highlight"><pre><span></span><span class="p">..</span> <span class="ow">autoclass</span><span class="p">::</span> qucat.C
+    <span class="nc">:members:</span>
+    <span class="nc">:inherited-members:</span>
+</pre></div>
+</div>
+<p>will produce the content of the page
+<a class="reference internal" href="../API/components/C.html#capacitor"><span class="std std-ref">Capacitor</span></a>.</p>
+<p>Here <code class="docutils literal notranslate"><span class="pre">:members:</span></code> and <code class="docutils literal notranslate"><span class="pre">:inherited-members:</span></code> indicates that
+we also want to display information about the class
+methods and inherited methods.
+One can similarly include documentation for
+functions using <code class="docutils literal notranslate"><span class="pre">..</span> <span class="pre">automodule::</span></code>, more
+details on the topic can be found
+<a class="reference external" href="http://www.sphinx-doc.org/en/master/usage/extensions/autodoc.html">here</a>.</p>
+<p>Since the automatic documentation
+has already been set up for all QuCAT classes,
+<strong>any public modules added to existing classes
+by a contributor, and correctly commented, will thus be automatically
+included in the documentaion website after their pull request
+is merged into the master branch</strong>.
+Details about how to write good docstrings
+which lead to
+such documentation can be found at
+<a class="reference internal" href="comments.html#commenting"><span class="std std-ref">Commenting and docstrings</span></a>.</p>
+<p>Note that one can also create a private module,
+which will not be included
+in the documentation,
+by prepending the name
+of the function by an underscore.</p>
+</div>
+<div class="section" id="editing-the-tutorials">
+<h2>Editing the tutorials<a class="headerlink" href="#editing-the-tutorials" title="Permalink to this headline">¶</a></h2>
+<p>The tutorials featured on the website correspond
+to jupyter notebooks located in the <code class="docutils literal notranslate"><span class="pre">docs_src/source/tutorials</span></code>
+folder.</p>
+<p>In order to <strong>edit</strong> a tutorial</p>
+<ul class="simple">
+<li><p>Open a tutorial in <code class="docutils literal notranslate"><span class="pre">docs_src/source/tutorials</span></code>, edit and save it</p></li>
+</ul>
+<p>In order to <strong>add a new</strong> tutorial</p>
+<ul class="simple">
+<li><p>Add your jupyter notebook to the <code class="docutils literal notranslate"><span class="pre">docs_src/source/tutorials</span></code> folder.</p></li>
+<li><p>Edit the  <code class="docutils literal notranslate"><span class="pre">docs_src/source/tutorials/index.rst</span></code> file by adding the name of your notebook to the existing list</p></li>
+</ul>
+<p>In <strong>both cases</strong>, subsequently</p>
+<ul class="simple">
+<li><p>Build the documentation by runing the <code class="docutils literal notranslate"><span class="pre">build_docs.py</span></code> script</p></li>
+<li><p>Preview your changes by opening the <code class="docutils literal notranslate"><span class="pre">/docs/index.html</span></code> file with a web browser</p></li>
+<li><p>Make a pull request: your changes will be visible on the website when merged to the master branch</p></li>
+</ul>
+<p>If you are adding a new tutorial, you may want to include it in the
+set of tests QuCAT performs each time a change is made to the code, see
+<a class="reference internal" href="unittests.html#unittesting"><span class="std std-ref">Unit testing</span></a>.</p>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+      
+        <a href="unittests.html" class="btn btn-neutral float-left" title="Unit testing" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, Mario Gely
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

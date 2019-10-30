@@ -25,6 +25,7 @@
         <script type="text/javascript" src="_static/underscore.js"></script>
         <script type="text/javascript" src="_static/doctools.js"></script>
         <script type="text/javascript" src="_static/language_data.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
         <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
         <script type="text/x-mathjax-config">MathJax.Hub.Config({"tex2jax": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true, "ignoreClass": "document", "processClass": "math|output_area"}})</script>
     
@@ -87,10 +88,11 @@
 <li class="toctree-l1"><a class="reference internal" href="about.html">About</a></li>
 <li class="toctree-l1"><a class="reference internal" href="citing.html">Citing this project</a></li>
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="tutorials/tutorials.html">Tutorials</a></li>
-<li class="toctree-l1"><a class="reference internal" href="API/API.html">List of functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorials/index.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="API/index.html">List of functions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="contact.html">Contact</a></li>
 <li class="toctree-l1"><a class="reference internal" href="report_a_bug.html">Report a bug</a></li>
+<li class="toctree-l1"><a class="reference internal" href="devs/index.html">Developer Guide</a></li>
 </ul>
 
             
@@ -182,8 +184,8 @@
 <div class="section" id="qucat">
 <h1>QuCAT<a class="headerlink" href="#qucat" title="Permalink to this headline">¶</a></h1>
 <div class="admonition note">
-<p class="first admonition-title">Note</p>
-<p class="last">We hope you enjoy using QuCAT. Please help us make QuCAT better by <a class="reference internal" href="citing.html#citing"><span class="std std-ref">Citing this project</span></a> in your publications</p>
+<p class="admonition-title">Note</p>
+<p>We hope you enjoy using QuCAT. Please help us make QuCAT better by <a class="reference internal" href="citing.html#citing"><span class="std std-ref">Citing this project</span></a> in your publications</p>
 </div>
 <p>QuCAT stands for Quantum Circuit Analyzer Tool.
 This open source python library provides standard analysis
@@ -213,7 +215,7 @@ normal modes.</p>
 <li class="toctree-l2"><a class="reference internal" href="installation.html#requirements">Requirements</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="tutorials/tutorials.html">Tutorials</a><ul>
+<li class="toctree-l1"><a class="reference internal" href="tutorials/index.html">Tutorials</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="tutorials/basics.html">Basics</a></li>
 <li class="toctree-l2"><a class="reference internal" href="tutorials/filter_design.html">Designing a classical microwave filter</a></li>
 <li class="toctree-l2"><a class="reference internal" href="tutorials/optomechanics.html">Computing an optomechanical coupling</a></li>
@@ -221,7 +223,7 @@ normal modes.</p>
 <li class="toctree-l2"><a class="reference internal" href="tutorials/tuneable_coupler.html">Understanding a tuneable coupler circuit</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="API/API.html">List of functions</a><ul>
+<li class="toctree-l1"><a class="reference internal" href="API/index.html">List of functions</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="API/builders.html">Creating a circuit</a></li>
 <li class="toctree-l2"><a class="reference internal" href="API/circuit_functions.html">Circuit analysis</a></li>
 <li class="toctree-l2"><a class="reference internal" href="API/components.html">Circuit components</a></li>
@@ -229,6 +231,12 @@ normal modes.</p>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="contact.html">Contact</a></li>
 <li class="toctree-l1"><a class="reference internal" href="report_a_bug.html">Report a bug</a></li>
+<li class="toctree-l1"><a class="reference internal" href="devs/index.html">Developer Guide</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="devs/comments.html"> Format for docstrings and comments</a></li>
+<li class="toctree-l2"><a class="reference internal" href="devs/unittests.html"> How to write and run unittests</a></li>
+<li class="toctree-l2"><a class="reference internal" href="devs/online_doc.html"> How to edit and build the documentation and website</a></li>
+</ul>
+</li>
 </ul>
 </div>
 </div>
