@@ -1,0 +1,304 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Commenting and docstrings &mdash; qucat  documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../_static/jquery.js"></script>
+        <script type="text/javascript" src="../_static/underscore.js"></script>
+        <script type="text/javascript" src="../_static/doctools.js"></script>
+        <script type="text/javascript" src="../_static/language_data.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script type="text/x-mathjax-config">MathJax.Hub.Config({"tex2jax": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true, "ignoreClass": "document", "processClass": "math|output_area"}})</script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="author" title="About these documents" href="../about.html" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Unit testing" href="unittests.html" />
+    <link rel="prev" title="Contributing to QuCAT" href="index.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> qucat
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../about.html">About</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../citing.html">Citing this project</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/index.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../API/index.html">List of functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../contact.html">Contact</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../report_a_bug.html">Report a bug</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Developer Guide</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#"> Format for docstrings and comments</a></li>
+<li class="toctree-l2"><a class="reference internal" href="unittests.html"> How to write and run unittests</a></li>
+<li class="toctree-l2"><a class="reference internal" href="online_doc.html"> How to edit and build the documentation and website</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">qucat</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="index.html">Contributing to QuCAT</a> &raquo;</li>
+        
+      <li>Commenting and docstrings</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../_sources/devs/comments.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  
+<style>
+/* CSS overrides for sphinx_rtd_theme */
+
+/* 24px margin */
+.nbinput.nblast,
+.nboutput.nblast {
+    margin-bottom: 19px;  /* padding has already 5px */
+}
+
+/* ... except between code cells! */
+.nblast + .nbinput {
+    margin-top: -19px;
+}
+
+.admonition > p:before {
+    margin-right: 4px;  /* make room for the exclamation icon */
+}
+
+/* Fix math alignment, see https://github.com/rtfd/sphinx_rtd_theme/pull/686 */
+.math {
+    text-align: unset;
+}
+</style>
+<div class="section" id="commenting-and-docstrings">
+<span id="commenting"></span><h1>Commenting and docstrings<a class="headerlink" href="#commenting-and-docstrings" title="Permalink to this headline">¶</a></h1>
+<p>Commenting your code should come in two flavors.</p>
+<p>First are inline comments which explain what the code is doing, for example</p>
+<div class="highlight-pyth notranslate"><div class="highlight"><pre><span></span># Size (in units of pt) of arrow heads for plots of normal-mode current distributions
+a_head = 3 
+</pre></div>
+</div>
+<p>the more of these, the better!</p>
+<p>The second, and most important comments are docstrings.
+These should describe <em>at least</em> what every function or class does, what parameters it accepts and what it returns,
+and <em>ideally</em> feature examples of typical use or some theoretical background.</p>
+<p>This accomplishes two things:</p>
+<ul class="simple">
+<li><p>The docstring can automatically be transformed to content for the QuCAT website</p></li>
+<li><p>It will appear to a user who requests help on a function (for example by using shift-tab in a jupyter notebook)</p></li>
+</ul>
+<p>Docstrings should be formatted as <a class="reference external" href="https://numpydoc.readthedocs.io/en/latest/format.html#id4">numpy style docstrings</a>.
+As an example, this docstring</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">zpf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mode</span><span class="p">,</span> <span class="n">quantity</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sa">r</span><span class="sd">&#39;&#39;&#39;Returns contribution of a mode to the zero-point fluctuations of a quantity for this component.</span>
+
+<span class="sd">    The quantity can be current (in units of Ampere), </span>
+<span class="sd">    voltage (in Volts), </span>
+<span class="sd">    charge (in electron charge), </span>
+<span class="sd">    or flux (in units of the reduced flux quantum, :math:`\hbar/2e`).</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    mode:           integer</span>
+<span class="sd">                    Determine what mode to consider, where 0 designates</span>
+<span class="sd">                    the lowest frequency mode, and the others</span>
+<span class="sd">                    are arranged in order of increasing frequency</span>
+<span class="sd">    quantity:       string</span>
+<span class="sd">                    One of &#39;current&#39;, &#39;flux&#39;, &#39;charge&#39;, &#39;voltage&#39;</span>
+<span class="sd">    kwargs:     </span>
+<span class="sd">                Values for un-specified circuit components, </span>
+<span class="sd">                ex: ``L=1e-9``.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    float</span>
+<span class="sd">        contribution of the ``mode`` to the zero-point fluctuations of the ``quantity``</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    This quantity is calculated by multiplying the</span>
+<span class="sd">    voltage transfer function :math:`T_{rc}` (between a reference component :math:`r`</span>
+<span class="sd">    and the annotated component  :math:`c` ), with</span>
+<span class="sd">    :math:`X_{zpf,m,r}`, the zero-point fluctuations of :math:`\hat{X}` at the reference component.</span>
+<span class="sd">    </span>
+<span class="sd">    Note that resistors make the transfer function :math:`T_{rc}`, and hence this quantity, complex.</span>
+
+<span class="sd">    For more detail on the underlying theory, see https://arxiv.org/pdf/1908.10342.pdf.</span>
+<span class="sd">    &#39;&#39;&#39;</span><span class="s1">&#39;&#39;&#39;</span>
+</pre></div>
+</div>
+<p>Translates to the following website content</p>
+<div class="figure align-left">
+<a class="reference internal image-reference" href="../_images/example_docstring_html.PNG"><img alt="../_images/example_docstring_html.PNG" src="../_images/example_docstring_html.PNG" style="width: 575.4px; height: 541.8px;" /></a>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="unittests.html" class="btn btn-neutral float-right" title="Unit testing" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="index.html" class="btn btn-neutral float-left" title="Contributing to QuCAT" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, Mario Gely
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>
