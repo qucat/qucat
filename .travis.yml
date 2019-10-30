@@ -42,3 +42,6 @@ script:
   # Test pip installation
   - source activate pip-environment
   - pip install .
+
+  # Test documentation building
+  - python build_docs.py
