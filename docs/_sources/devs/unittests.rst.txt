@@ -48,14 +48,14 @@ Writing a basic test
 Let us assume that a developer wishes to contribute a new module ``src/new.py``
 which contains a function ``f`` which adds two numbers
 
-.. literalinclude:: example_minimal_new_module.py
+.. literalinclude:: example_minimal_new_module.txt
    :language: python
 
 One should then create a ``test/test_new.py`` file which test if the 
 function works as expected.
 This is one way of doing it
 
-.. literalinclude:: example_minimal_test.py
+.. literalinclude:: example_minimal_test.txt
    :language: python
 
 For more details on the unittest framework, check
@@ -78,7 +78,7 @@ then dropping.
 The correct location to add this test is in the 
 ``test/test_gui.py`` file, with the following code
 
-.. literalinclude:: example_gui_test.py
+.. literalinclude:: example_gui_test.txt
    :language: python
 
 The **first time** we run this file,
@@ -131,5 +131,5 @@ If one adds a new notebook, for example ``new_tutorial.ipynb``
 in the tutorials folder, one can test it by adding the following code 
 to the ``test/test_tutorials.py`` script
 
-.. literalinclude:: example_tutorial_test.py
+.. literalinclude:: example_tutorial_test.txt
    :language: python

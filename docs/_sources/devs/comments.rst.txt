@@ -8,7 +8,7 @@ Commenting your code should come in two flavors.
 
 First are inline comments which explain what the code is doing, for example
 
-.. literalinclude:: example_inline_comment.py
+.. literalinclude:: example_inline_comment.txt
    :language: pyth
 
 the more of these, the better!
@@ -25,7 +25,7 @@ This accomplishes two things:
 Docstrings should be formatted as `numpy style docstrings <https://numpydoc.readthedocs.io/en/latest/format.html#id4>`_.
 As an example, this docstring
 
-.. literalinclude:: example_docstring.py
+.. literalinclude:: example_docstring.txt
    :language: python
     
 
