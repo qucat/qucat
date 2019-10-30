@@ -25,7 +25,7 @@ install:
   - conda create -q -n pip-environment python=$TRAVIS_PYTHON_VERSION 
 
   # environment in which we will be running the docs building
-  - conda create -q -n docs-environment python=$TRAVIS_PYTHON_VERSION sphinx-build nbsphinx recommonmark sphinx_rtd_theme
+  - conda create -q -n docs-environment python=$TRAVIS_PYTHON_VERSION python3-sphinx nbsphinx recommonmark sphinx_rtd_theme
   
   # environment in which we will be running the tests
   # Here we also install all dependencies of qucat manually
