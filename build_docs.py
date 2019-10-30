@@ -7,13 +7,11 @@ repo_directory = dirname(__file__)
 docs_directory = join(repo_directory,'docs')
 docs_src_directory = join(repo_directory,'docs_src')
 
-# To make sure the make file is found
-# by the script
+# 
 os.chdir(docs_src_directory)
 
 # pip install qucat from the current repository
-from pip._internal import main as pipmain
-pipmain(['install', repo_directory])
+os.system('pip install ..')
 
 # This is the website url, which is the
 # only thing we want to keep from the

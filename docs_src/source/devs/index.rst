@@ -18,6 +18,7 @@ The project repository is organized as follows
 - Unittesting is carried out automatically each time code is contributed through the testing scripts located in ``tests``. This is setup in the ``.travis.yml`` file
 - The source code for the documentation is located in ``docs_src``. By executing the ``build_docs.py`` script, it becomes the content for the documentation website. This content is stored in the folder ``docs``
 - One can use the cloned QuCAT library to test changes (rather than any pip-installed version) by editing and running the ``test.py`` script
+- The ``master`` branch should reflect the latest pip-installable version of the software. The ``develop`` branch should contain new unittested features. Branches based on the ``develop`` branch should be used for work in progress.
 
 If you implement any new features in QuCAT, 
 new function should contain 

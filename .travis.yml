@@ -36,8 +36,6 @@ install:
 script: 
   
   # Test documentation building
-  - source activate test-environment
-  - pip install --upgrade pip
   - python build_docs.py
 
   # Run tests
