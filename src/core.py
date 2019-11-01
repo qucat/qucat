@@ -337,6 +337,12 @@ class Qcircuit(object):
                 ref_elt.append(inductive_elements[ref_elt_index])
         zeta = np.array(zeta)
 
+        if len(zeta) == 0:
+            error_message = ("No normal modes with a quality factor >%f were found.\n"%self.Q_min)+\
+                        "This could be because a small resistor is shorting the circuit "+\
+                        "or because a large resistor is creating an open circuit."
+            raise ValueError(error_message)
+
         self.zeta = zeta
         self.ref_elt = ref_elt
 

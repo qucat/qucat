@@ -12,6 +12,30 @@ from utils import TestCaseAppended
 import matplotlib.pyplot as plt
 plt.ion()
 
+class CircuitInstantiation (TestCaseAppended):
+    '''Test the creation of Qcircuit objects
+    '''
+
+    def test_seriesRLC_with_too_large_R(self):
+        c = core.Network([
+            core.C(0,1,100e-15),
+            core.L(1,2,10e-9),
+            core.R(0,2,1e6),
+        ])
+        c.Q_min = 1
+        with self.assertRaises(ValueError):
+            c.eigenfrequencies()
+    
+    def test_parallelRLC_with_too_small_R(self):
+        c = core.Network([
+            core.C(0,1,100e-15),
+            core.L(0,1,10e-9),
+            core.R(0,1,0.1),
+        ])
+        c.Q_min = 1
+        with self.assertRaises(ValueError):
+            c.eigenfrequencies()
+
 class SeriesRLC(TestCaseAppended):
     '''
     Series RLC circuit parameters
