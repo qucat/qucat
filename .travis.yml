@@ -44,7 +44,9 @@ install:
 
 script: 
   
-  # TODO: Test documentation building (the below fails)
+  # 
+
+  # Test documentation build
   - source activate docs-environment
   - pip install nbsphinx 
   - pip install recommonmark 
@@ -56,6 +58,6 @@ script:
   - pytest --cov=src
   - codecov
 
-  # Test pip installation
-  - source activate pip-environment
+  # Test pip installation from source
+  - source activate pip-environment-source
   - pip install .
