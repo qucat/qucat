@@ -3,8 +3,14 @@ language: python
 # this is needed to run tests requiring a graphical user interface
 # see https://docs.travis-ci.com/user/gui-and-headless-browsers/
 dist: xenial
+
 services:
   - xvfb
+
+addons:
+  apt_packages:
+    # required to build the documentation
+    - pandoc
 
 python:
   - "3.7.3"
@@ -25,7 +31,7 @@ install:
   - conda create -q -n pip-environment python=$TRAVIS_PYTHON_VERSION 
 
   # environment in which we will be running the docs building
-  # - conda create -q -n docs-environment python=$TRAVIS_PYTHON_VERSION sphinx 
+  - conda create -q -n docs-environment python=$TRAVIS_PYTHON_VERSION sphinx 
   
   # environment in which we will be running the tests
   # Here we also install all dependencies of qucat manually
@@ -39,11 +45,11 @@ install:
 script: 
   
   # TODO: Test documentation building (the below fails)
-  # - source activate docs-environment
-  # - pip install nbsphinx 
-  # - pip install recommonmark 
-  # - pip install sphinx_rtd_theme
-  # - python build_docs.py
+  - source activate docs-environment
+  - pip install nbsphinx 
+  - pip install recommonmark 
+  - pip install sphinx_rtd_theme
+  - python build_docs.py
 
   # Run tests
   - source activate test-environment
