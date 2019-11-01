@@ -27,8 +27,11 @@ install:
   - conda update -q conda
   - conda info -a
 
-  # environment in which we will be testing the pip installation
-  - conda create -q -n pip-environment python=$TRAVIS_PYTHON_VERSION 
+  # environment in which we will be testing the pip installation from source
+  - conda create -q -n pip-environment-source python=$TRAVIS_PYTHON_VERSION 
+  
+  # environment in which we will be testing the pip installation from the package index
+  - conda create -q -n pip-environment-index python=$TRAVIS_PYTHON_VERSION 
 
   # environment in which we will be running the docs building
   - conda create -q -n docs-environment python=$TRAVIS_PYTHON_VERSION sphinx 
@@ -44,7 +47,10 @@ install:
 
 script: 
   
-  # 
+  # Test pip installation from the index
+  - source activate pip-environment-index
+  - pip install qucat
+  - python -c "import qucat"
 
   # Test documentation build
   - source activate docs-environment
@@ -61,3 +67,4 @@ script:
   # Test pip installation from source
   - source activate pip-environment-source
   - pip install .
+  - python -c "import qucat"
