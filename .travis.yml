@@ -3,8 +3,14 @@ language: python
 # this is needed to run tests requiring a graphical user interface
 # see https://docs.travis-ci.com/user/gui-and-headless-browsers/
 dist: xenial
+
 services:
   - xvfb
+
+addons:
+  apt_packages:
+    # required to build the documentation
+    - pandoc
 
 python:
   - "3.7.3"
@@ -21,11 +27,14 @@ install:
   - conda update -q conda
   - conda info -a
 
-  # environment in which we will be testing the pip installation
-  - conda create -q -n pip-environment python=$TRAVIS_PYTHON_VERSION 
+  # environment in which we will be testing the pip installation from source
+  - conda create -q -n pip-environment-source python=$TRAVIS_PYTHON_VERSION 
+  
+  # environment in which we will be testing the pip installation from the package index
+  - conda create -q -n pip-environment-index python=$TRAVIS_PYTHON_VERSION 
 
   # environment in which we will be running the docs building
-  # - conda create -q -n docs-environment python=$TRAVIS_PYTHON_VERSION sphinx 
+  - conda create -q -n docs-environment python=$TRAVIS_PYTHON_VERSION sphinx 
   
   # environment in which we will be running the tests
   # Here we also install all dependencies of qucat manually
@@ -38,18 +47,24 @@ install:
 
 script: 
   
-  # TODO: Test documentation building (the below fails)
-  # - source activate docs-environment
-  # - pip install nbsphinx 
-  # - pip install recommonmark 
-  # - pip install sphinx_rtd_theme
-  # - python build_docs.py
+  # Test pip installation from the index
+  - source activate pip-environment-index
+  - pip install qucat
+  - python -c "import qucat"
+
+  # Test documentation build
+  - source activate docs-environment
+  - pip install nbsphinx 
+  - pip install recommonmark 
+  - pip install sphinx_rtd_theme
+  - python build_docs.py
 
   # Run tests
   - source activate test-environment
   - pytest --cov=src
   - codecov
 
-  # Test pip installation
-  - source activate pip-environment
+  # Test pip installation from source
+  - source activate pip-environment-source
   - pip install .
+  - python -c "import qucat"

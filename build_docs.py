@@ -1,9 +1,9 @@
-from os.path import dirname, join
+from os.path import dirname, join, abspath
 import os
 import subprocess
 import shutil
 import sys
-repo_directory = dirname(__file__)
+repo_directory = dirname(abspath(__file__))
 docs_directory = join(repo_directory,'docs')
 docs_src_directory = join(repo_directory,'docs_src')
 
