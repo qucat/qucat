@@ -1,3 +1,5 @@
+from typing import Iterable, List
+
 import sympy as sp
 from sympy.utilities.lambdify import lambdify
 import numpy as np
@@ -1329,7 +1331,21 @@ class GUI(Qcircuit):
             self._load(stream, plot, print_network)
 
     @staticmethod
-    def _try_to_open_and_create_if_needed(filename):
+    def _try_to_open_and_create_if_needed(filename: str) -> bool:
+        """Try to open a file representing a network, and create if needed.
+
+        Parameters
+        ----------
+        filename : str
+            Path to the file
+
+        Returns
+        -------
+        bool
+            If the file wasn't found and we had to create it, we return True,
+                indicating that the file has been edited. Otherwise we return
+                False.
+        """
         edit = False
 
         # Note: this will also give a valid path if filename was specified using 
@@ -1369,7 +1385,19 @@ class GUI(Qcircuit):
             print('\n')
 
     @staticmethod
-    def _parse_file(stream):
+    def _parse_file(stream: Iterable[str]) -> List[Component]:
+        """Parse string representation of a network into a list of Component.
+
+        Parameters
+        ----------
+        stream
+            Something like an open file, where iteration yields a sequence of
+                strings, each one representing a single Component.
+
+        Returns
+        -------
+        List[Component]
+        """
         netlist = []
         for el in stream:
             el = el.replace('\n', '')
@@ -1387,7 +1415,24 @@ class GUI(Qcircuit):
         return netlist
 
     @classmethod
-    def from_text(cls, text, plot, print_network):
+    def from_text(cls, text: str, plot: bool, print_network: bool) -> 'GUI':
+        """Construct from a text representation of the network.
+
+        The text representation format is described in the class docstring.
+
+        Parameters
+        ----------
+        text : string
+            Text representation of the network.
+        plot : bool
+            See class docstring
+        print_network : bool
+            See class docstring
+
+        Returns
+        -------
+        GUI
+        """
         inst = cls.__new__(cls)
         inst._load(io.StringIO(text), plot, print_network)
         return inst
