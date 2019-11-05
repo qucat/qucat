@@ -61,7 +61,6 @@ script:
 
   # Run tests
   - source activate test-environment
-  # check formatting with black
   - black --check src/
   - pytest --cov=src
   - codecov
