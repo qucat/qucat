@@ -38,7 +38,7 @@ install:
 
   # environment in which we will be running the tests
   # Here we also install all dependencies of qucat manually
-  - conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION black numpy scipy matplotlib sympy pillow nbformat pytest pytest-cov codecov
+  - conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION numpy scipy matplotlib sympy pillow nbformat pytest pytest-cov codecov
 
   # Install qutip
   - source activate test-environment
@@ -61,7 +61,6 @@ script:
 
   # Run tests
   - source activate test-environment
-  - black --check src/
   - pytest --cov=src
   - codecov
 
