@@ -8,7 +8,8 @@ Formatting
 ----------
 
 Your code should conform to the Black code style.
-By using `Black <https://black.readthedocs.io/en/stable/>`_, the formatting can
+By using `Black <https://black.readthedocs.io/en/stable/>`_,
+the formatting can
 be performed automatically at each commit.
 To set this up, install black and pre-commit
 
