@@ -63,6 +63,7 @@ script:
   # Run tests
   - source activate test-environment
   - black --check src/
+  - black --diff src/
   - pytest --cov=src
   - codecov
 
