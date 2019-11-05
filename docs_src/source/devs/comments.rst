@@ -11,7 +11,7 @@ Your code should conform to the Black code style.
 By using `Black <https://black.readthedocs.io/en/stable/>`_,
 the formatting can
 be performed automatically at each commit.
-To set this up, install black and pre-commit
+To set this up,
 
 ``pip install black pre-commit``
 
@@ -28,11 +28,6 @@ Aternatively, one can run the Black formatter manually
 on all source files before each commit
 
 ``black src/``
-
-Using Black is highly recommended
-as Black
-also checks the formatting each time one pushes
-to Github.
 
 Comments
 --------
