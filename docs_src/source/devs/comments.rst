@@ -19,12 +19,18 @@ navigate to the root of the repository and run
 
 ``pre-commit install``
 
-Now each time you commit your code will automatically be formatted in the correct way.
+Now each time you commit, your code will automatically be formatted in the correct way.
 To check if the formatting is correct, you can always run
 
 ``black --check src/``
 
-Setting this up is highly recommended as Black
+Aternatively, one can run the Black formatter manually
+on all source files before each commit
+
+``black src/``
+
+Using Black is highly recommended
+as Black
 also checks the formatting each time one pushes
 to Github.
 
