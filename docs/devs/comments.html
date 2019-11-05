@@ -8,7 +8,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <title>Commenting and docstrings &mdash; qucat  documentation</title>
+  <title>Formatting &mdash; qucat  documentation</title>
 
 
 
@@ -94,7 +94,11 @@
 <li class="toctree-l1"><a class="reference internal" href="../contact.html">Contact</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../report_a_bug.html">Report a bug</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="index.html">Developer Guide</a><ul class="current">
-<li class="toctree-l2 current"><a class="current reference internal" href="#"> Format for docstrings and comments</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#"> Formatting</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id1">Formatting</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#comments">Comments</a></li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="unittests.html"> How to write and run unittests</a></li>
 <li class="toctree-l2"><a class="reference internal" href="online_doc.html"> How to edit and build the documentation and website</a></li>
 </ul>
@@ -146,7 +150,7 @@
 
           <li><a href="index.html">Contributing to QuCAT</a> &raquo;</li>
 
-      <li>Commenting and docstrings</li>
+      <li>Formatting</li>
 
 
       <li class="wy-breadcrumbs-aside">
@@ -189,8 +193,26 @@
     text-align: unset;
 }
 </style>
-<div class="section" id="commenting-and-docstrings">
-<span id="commenting"></span><h1>Commenting and docstrings<a class="headerlink" href="#commenting-and-docstrings" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="formatting">
+<span id="commenting"></span><h1>Formatting<a class="headerlink" href="#formatting" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="id1">
+<h2>Formatting<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h2>
+<p>Your code should conform to the Black code style.
+By using <a class="reference external" href="https://black.readthedocs.io/en/stable/">Black</a>, the formatting can
+be performed automatically at each commit.
+To set this up, install black and pre-commit</p>
+<p><code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">black</span> <span class="pre">pre-commit</span></code></p>
+<p>navigate to the root of the repository and run</p>
+<p><code class="docutils literal notranslate"><span class="pre">pre-commit</span> <span class="pre">install</span></code></p>
+<p>Now each time you commit your code will automatically be formatted in the correct way.
+To check if the formatting is correct, you can always run</p>
+<p><code class="docutils literal notranslate"><span class="pre">black</span> <span class="pre">--check</span> <span class="pre">src/</span></code></p>
+<p>Setting this up is highly recommended as Black
+also checks the formatting each time one pushes
+to Github.</p>
+</div>
+<div class="section" id="comments">
+<h2>Comments<a class="headerlink" href="#comments" title="Permalink to this headline">¶</a></h2>
 <p>Commenting your code should come in two flavors.</p>
 <p>First are inline comments which explain what the code is doing, for example</p>
 <div class="highlight-pyth notranslate"><div class="highlight"><pre><span></span># Size (in units of pt) of arrow heads for plots of normal-mode current distributions
@@ -211,9 +233,9 @@ As an example, this docstring</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">zpf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mode</span><span class="p">,</span> <span class="n">quantity</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
     <span class="sa">r</span><span class="sd">&#39;&#39;&#39;Returns contribution of a mode to the zero-point fluctuations of a quantity for this component.</span>
 
-<span class="sd">    The quantity can be current (in units of Ampere), </span>
-<span class="sd">    voltage (in Volts), </span>
-<span class="sd">    charge (in electron charge), </span>
+<span class="sd">    The quantity can be current (in units of Ampere),</span>
+<span class="sd">    voltage (in Volts),</span>
+<span class="sd">    charge (in electron charge),</span>
 <span class="sd">    or flux (in units of the reduced flux quantum, :math:`\hbar/2e`).</span>
 
 <span class="sd">    Parameters</span>
@@ -224,8 +246,8 @@ As an example, this docstring</p>
 <span class="sd">                    are arranged in order of increasing frequency</span>
 <span class="sd">    quantity:       string</span>
 <span class="sd">                    One of &#39;current&#39;, &#39;flux&#39;, &#39;charge&#39;, &#39;voltage&#39;</span>
-<span class="sd">    kwargs:     </span>
-<span class="sd">                Values for un-specified circuit components, </span>
+<span class="sd">    kwargs:</span>
+<span class="sd">                Values for un-specified circuit components,</span>
 <span class="sd">                ex: ``L=1e-9``.</span>
 
 <span class="sd">    Returns</span>
@@ -239,7 +261,7 @@ As an example, this docstring</p>
 <span class="sd">    voltage transfer function :math:`T_{rc}` (between a reference component :math:`r`</span>
 <span class="sd">    and the annotated component  :math:`c` ), with</span>
 <span class="sd">    :math:`X_{zpf,m,r}`, the zero-point fluctuations of :math:`\hat{X}` at the reference component.</span>
-<span class="sd">    </span>
+
 <span class="sd">    Note that resistors make the transfer function :math:`T_{rc}`, and hence this quantity, complex.</span>
 
 <span class="sd">    For more detail on the underlying theory, see https://arxiv.org/pdf/1908.10342.pdf.</span>
@@ -249,6 +271,7 @@ As an example, this docstring</p>
 <p>Translates to the following website content</p>
 <div class="figure align-left">
 <a class="reference internal image-reference" href="../_images/example_docstring_html.PNG"><img alt="../_images/example_docstring_html.PNG" src="../_images/example_docstring_html.PNG" style="width: 575.4px; height: 541.8px;" /></a>
+</div>
 </div>
 </div>
 

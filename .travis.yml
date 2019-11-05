@@ -61,10 +61,10 @@ script:
 
   # Run tests
   - source activate test-environment
-  - pytest --cov=src
-  - codecov
   # check formatting with black
   - black --check src/
+  - pytest --cov=src
+  - codecov
 
   # Test pip installation from source
   - source activate pip-environment-source

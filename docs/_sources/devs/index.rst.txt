@@ -30,7 +30,7 @@ Tutorials to help in all these tasks can be found below
 .. toctree::
    :maxdepth: 3
 
-    Format for docstrings and comments <comments>
+    Formatting <comments>
     How to write and run unittests <unittests>
     How to edit and build the documentation and website <online_doc>
     File structure <file>
