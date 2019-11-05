@@ -1,7 +1,7 @@
 .. _commenting:
 
 =========================
-Commenting and docstrings 
+Commenting and docstrings
 =========================
 
 Commenting your code should come in two flavors.
@@ -27,7 +27,7 @@ As an example, this docstring
 
 .. literalinclude:: example_docstring.txt
    :language: python
-    
+
 
 Translates to the following website content
 

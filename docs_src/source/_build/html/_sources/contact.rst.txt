@@ -1,10 +1,10 @@
 Contact
 ============
 
-This project is being developped by Mario Gely at the University of Delft, 
+This project is being developped by Mario Gely at the University of Delft,
 in the `Steele Lab <http://steelelab.tudelft.nl>`_.
 
-If you wish to contribute to this project, if you need support to use 
+If you wish to contribute to this project, if you need support to use
 this software in your project, or if you simply wish to express your support,
 don't hesitate to send Mario an email at mario.gely@qucat.org.
 

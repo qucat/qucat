@@ -1,3 +1,5 @@
+# To run on all files use `pre-commit run --all-files`
+#
 # See https://pre-commit.com for more information
 # See https://pre-commit.com/hooks.html for more hooks
 repos:
