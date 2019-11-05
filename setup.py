@@ -1,6 +1,9 @@
 import setuptools
 from distutils.dir_util import remove_tree
 
+with open('requirements.txt') as f:
+    requirements = f.read().splitlines()
+
 setuptools.setup(
     name="qucat",
     version="1.0.1",
@@ -20,11 +23,5 @@ setuptools.setup(
     python_requires='>3.0.0',
     include_package_data=True,
     package_data={'qucat': ['.graphics/*']},
-    install_requires=[
-        "numpy",
-        "scipy",
-        "matplotlib",
-        "sympy",
-        "pillow",
-    ],
+    install_requires=requirements,
 )
