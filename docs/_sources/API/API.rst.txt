@@ -6,13 +6,7 @@ This chapter contains the documentation for all qucat public classes and functio
 
 .. toctree::
    :maxdepth: 3
-  
-   builders.rst 
+
+   builders.rst
    circuit_functions.rst
    components.rst
-
-
-
-
-
-

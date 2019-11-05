@@ -1,3 +1,4 @@
+# check syntax with https://config.travis-ci.com/explore
 language: python
 
 # this is needed to run tests requiring a graphical user interface
@@ -15,7 +16,7 @@ addons:
 python:
   - "3.7.3"
 
-install: 
+install:
 
   # setup conda, which is necessary to install qutip
   # just copied in the conda code from https://docs.conda.io/projects/conda/en/latest/user-guide/tasks/use-conda-with-travis-ci.html#
@@ -28,25 +29,25 @@ install:
   - conda info -a
 
   # environment in which we will be testing the pip installation from source
-  - conda create -q -n pip-environment-source python=$TRAVIS_PYTHON_VERSION 
-  
+  - conda create -q -n pip-environment-source python=$TRAVIS_PYTHON_VERSION
+
   # environment in which we will be testing the pip installation from the package index
-  - conda create -q -n pip-environment-index python=$TRAVIS_PYTHON_VERSION 
+  - conda create -q -n pip-environment-index python=$TRAVIS_PYTHON_VERSION
 
   # environment in which we will be running the docs building
-  - conda create -q -n docs-environment python=$TRAVIS_PYTHON_VERSION sphinx 
-  
+  - conda create -q -n docs-environment python=$TRAVIS_PYTHON_VERSION sphinx
+
   # environment in which we will be running the tests
   # Here we also install all dependencies of qucat manually
-  - conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION numpy scipy matplotlib sympy pillow nbformat pytest pytest-cov codecov
-  
+  - conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION numpy scipy matplotlib sympy pillow nbformat pytest pytest-cov codecov black
+
   # Install qutip
   - source activate test-environment
   - conda config --append channels conda-forge
   - conda install qutip
 
-script: 
-  
+script:
+
   # Test pip installation from the index
   - source activate pip-environment-index
   - pip install qucat
@@ -54,13 +55,15 @@ script:
 
   # Test documentation build
   - source activate docs-environment
-  - pip install nbsphinx 
-  - pip install recommonmark 
+  - pip install nbsphinx
+  - pip install recommonmark
   - pip install sphinx_rtd_theme
   - python build_docs.py
 
   # Run tests
   - source activate test-environment
+  - black --check src/
+  - black --diff src/
   - pytest --cov=src
   - codecov
 
