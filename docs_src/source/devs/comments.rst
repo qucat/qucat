@@ -13,9 +13,13 @@ the formatting can
 be performed automatically at each commit.
 To set this up,
 
-``pip install black pre-commit``
+``pip install black==19.10b0 pre-commit``
 
-navigate to the root of the repository and run
+or
+
+``pip install -r requirements-dev.txt``
+
+then navigate to the root of the repository and run
 
 ``pre-commit install``
 
