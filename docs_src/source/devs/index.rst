@@ -6,8 +6,9 @@ Contributing to QuCAT
 
 In order to contribute
 `create a pull request <https://help.github.com/en/github/collaborating-with-issues-and-pull-requests/creating-a-pull-request-from-a-fork>`_
-from a fork of our
-`Github repository <https://github.com/qucat/qucat/>`_.
+to merge your fork of our
+`Github repository <https://github.com/qucat/qucat/tree/develop>`_
+to the develop branch of the project.
 You can always :ref:`contact` us,
 especially if you want to bring big contributions to the project.
 
@@ -25,7 +26,7 @@ new function should contain
 a docstring and some comments, and
 tests should be implemented to automatically verify your contribution.
 Additional online documentation may be needed.
-Tutorials to help in all these tasks can be found below
+Tutorials to help in all these tasks can be found below.
 
 .. toctree::
    :maxdepth: 3

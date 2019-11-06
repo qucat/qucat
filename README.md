@@ -39,8 +39,8 @@ Development branch: [![Build Status](https://travis-ci.com/qucat/qucat.svg?branc
 Contribute
 ----------
 
-You are most welcome to contribute to QuCAT development by forking this
-repository and sending pull requests.
+You are most welcome to contribute to QuCAT by sending pull requests to merge your
+fork of the repository to the ``develop`` branch.
 
 A guide for developers is available  [here](https://qucat.org/devs/index.html).
 
