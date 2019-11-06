@@ -33,6 +33,11 @@ on all source files before each commit
 
 ``black src/``
 
+.. note:: The specifics of the formatting are determined by the 
+    version of Black which is used. 
+    Make sure you use the version specified above or
+    in the requirements-dev.txt
+
 Comments
 --------
 
