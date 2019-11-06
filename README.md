@@ -42,6 +42,8 @@ Contribute
 You are most welcome to contribute to QuCAT development by forking this
 repository and sending pull requests.
 
+A guide for developers is available  [here](https://qucat.org/devs/index.html).
+
 Filing bug reports, proposing changes or additional features can be done on our
 [issues page](https://github.com/qucat/qucat/issues/new/choose)
 
