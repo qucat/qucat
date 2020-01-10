@@ -1814,7 +1814,7 @@ class CircuitEditor(tk.Canvas):
         Deselects all components and opens the right click menu.
         '''
         label_template = "{:<15}{:>6}"
-        menu_font = Font(family="Courier New", size=self.canvas.font_size, weight='normal')
+        menu_font = Font(family="Courier New", size=self.font_size, weight='normal')
 
         menu = tk.Menu(self, tearoff=0)
         menu.add_command(label=label_template.format("Paste","Ctrl-V"), command=(lambda :self.event_generate('<Control-v>')),
