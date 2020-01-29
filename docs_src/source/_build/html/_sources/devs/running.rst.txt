@@ -1,0 +1,9 @@
+=========================
+Writing documentation
+=========================
+
+Building the docs from a default Anaconda installation
+requires the additional pip-installable packages:
+nbsphinx, recommonmark, sphinx_rtd_theme
+
+The locally built documentation can

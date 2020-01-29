@@ -1,11 +1,12 @@
 import tkinter as tk
 from tkinter.font import Font
-from tkinter import messagebox,filedialog
+from tkinter import messagebox, filedialog
 import sys
 from PIL import Image, ImageTk
 from tkinter import ttk
 import numpy as np
 import os
+
 # We have to do this to avoid calling the package __init__.py
 # which calls matplotlib.pyplot, causing issues on MAC OSX
 # see https://stackoverflow.com/questions/32019556/matplotlib-crashing-tkinter-application
@@ -17,17 +18,17 @@ from plotting_settings import *
 from copy import deepcopy
 import time
 import platform
- 
 
-def track_event(track_events_to, event,sequence):
-    '''Writes all details necessary to generate event to a file.
+
+def track_event(track_events_to, event, sequence):
+    """Writes all details necessary to generate event to a file.
 
     Called each time an event occurs if the track_events_to variable of the CircuitEditor is not None.
 
     Example contents of the file:
     '<Motion>', serial = 329, state = 8, x = 643, y = 10
     '<Control-MouseWheel>', serial = 335, state = 12, x = 292, y = 239, delta = -120
-    
+
     Parameters
     ----------
     track_events_to:    string
@@ -35,56 +36,84 @@ def track_event(track_events_to, event,sequence):
     event:              Tkinter event
     sequence:           string
                         For example '<ButtonRelease-1>' or 'c'
-    '''
+    """
     # sequences to not save
     to_exclude = [
-        '<Enter>','<Leave>'] # Enter and leave will be triggered by mouse motion anyway
-                             # also, generating and enter event is useless since the CircuitEditor
-                             # will not know what circuit component was entered/left.
+        "<Enter>",
+        "<Leave>",
+    ]  # Enter and leave will be triggered by mouse motion anyway
+    # also, generating and enter event is useless since the CircuitEditor
+    # will not know what circuit component was entered/left.
 
     if sequence not in to_exclude:
 
-        # Event string constitutes all the arguments to be passed to 
+        # Event string constitutes all the arguments to be passed to
         # event_generate in order to reproduce the event
-        event_string = "'"+sequence+"'"
+        event_string = "'" + sequence + "'"
 
-        
-        for key,value in event.__dict__.items():
+        for key, value in event.__dict__.items():
             # Determining what parameters of the event to store here
             #
             # Allowed event_generate options are:
-            # must be -when, -above, -borderwidth, -button, -count, -data, -delta, -detail, 
-            # -focus, -height, -keycode, -keysym, -mode, -override, -place, -root, -rootx, 
-            # -rooty, -sendevent, -serial, -state, -subwindow, -time, -warp, -width, -window, 
+            # must be -when, -above, -borderwidth, -button, -count, -data, -delta, -detail,
+            # -focus, -height, -keycode, -keysym, -mode, -override, -place, -root, -rootx,
+            # -rooty, -sendevent, -serial, -state, -subwindow, -time, -warp, -width, -window,
             # -x, or -y
             #
             # Values '??' are not allowed
             #
             # event_generate also dosnt like getting delta values for non
             # MouseWheel events
-            if (key in ["when","above","borderwidth","button","count","data",
-                "detail","focus","height","keycode","keysym","mode","override","place",
-                "root","rootx","rooty","sendevent","serial","state","subwindow",
-                "warp","width","window","x","y"])\
-                or (key == "delta" and "MouseWheel" in sequence):
-                if value != '??':
-                    event_string+=(', '+key+' = '+repr(value))
+            if (
+                key
+                in [
+                    "when",
+                    "above",
+                    "borderwidth",
+                    "button",
+                    "count",
+                    "data",
+                    "detail",
+                    "focus",
+                    "height",
+                    "keycode",
+                    "keysym",
+                    "mode",
+                    "override",
+                    "place",
+                    "root",
+                    "rootx",
+                    "rooty",
+                    "sendevent",
+                    "serial",
+                    "state",
+                    "subwindow",
+                    "warp",
+                    "width",
+                    "window",
+                    "x",
+                    "y",
+                ]
+            ) or (key == "delta" and "MouseWheel" in sequence):
+                if value != "??":
+                    event_string += ", " + key + " = " + repr(value)
 
         # Append the event tracking file
-        with open(track_events_to,'a+') as event_tracking_file:
-            event_tracking_file.write(event_string+'\n')
+        with open(track_events_to, "a+") as event_tracking_file:
+            event_tracking_file.write(event_string + "\n")
 
-def track_scrollbar(track_events_to,direction,*args):
-    '''Writes all details necessary to reproduce a scrollbar event to a file.
+
+def track_scrollbar(track_events_to, direction, *args):
+    """Writes all details necessary to reproduce a scrollbar event to a file.
 
     Called at each use of the scroll bar if the track_events_to variable of the CircuitEditor is not None.
-    
+
     An x scrolling event will be stored as:
     #x, 'moveto', '-0.2517763964891542'
 
     And a y scrolling event will be stored as:
     #y, 'moveto', '0.07237927963277839'
-    
+
     Parameters
     ----------
     track_events_to:    string
@@ -94,49 +123,55 @@ def track_scrollbar(track_events_to,direction,*args):
     args:               List of strings
                         Automatically generated by a ttk.Scrollbar method:
                         ['moveto','<float>']
-                        
-    '''
 
-    # Event string constitutes all the arguments to be passed to 
+    """
+
+    # Event string constitutes all the arguments to be passed to
     # event_generate in order to reproduce the event
-    event_string = ''
+    event_string = ""
 
-    # We use #x, or #y, as a way to identify these 
+    # We use #x, or #y, as a way to identify these
     # events when reading the events file
-    event_string +='#'+direction
+    event_string += "#" + direction
 
     # Add contents of the args variable
     for a in args:
-        event_string +=', '+ repr(a)
+        event_string += ", " + repr(a)
 
     # Append the event tracking file
-    with open(track_events_to,'a+') as event_tracking_file:
-        event_tracking_file.write(event_string+'\n')
+    with open(track_events_to, "a+") as event_tracking_file:
+        event_tracking_file.write(event_string + "\n")
+
 
 class TrackableScrollbar(ttk.Scrollbar):
-    '''Scrollbars where we can keep track of a users scrolling.
+    """Scrollbars where we can keep track of a users scrolling.
 
-    Appends the ttk.Scrollbar such that scrolling events call the 
+    Appends the ttk.Scrollbar such that scrolling events call the
     track_scrollbar function if track_events_to is not None.
 
-    '''
-    def __init__(self, *arg,track_events_to = None,**kwarg):
+    """
+
+    def __init__(self, *arg, track_events_to=None, **kwarg):
 
         # track_events_to will be passed from the CircuitEditor
         # if it is None (default), we don't track scrolling events
         self.track_events_to = track_events_to
-        super(TrackableScrollbar, self).__init__(*arg,**kwarg)
+        super(TrackableScrollbar, self).__init__(*arg, **kwarg)
 
     def freeze(self):
-        '''Stops the scrollbars from scrolling
-        '''
-        def void(*args,**kwargs):
+        """Stops the scrollbars from scrolling
+        """
+
+        def void(*args, **kwargs):
             return None
-        super(TrackableScrollbar, self).configure(command = void)
+
+        super(TrackableScrollbar, self).configure(command=void)
+
     def unfreeze(self):
-        '''Makes the scrollbars scroll again
-        '''
-        super(TrackableScrollbar, self).configure(command = self.command)
+        """Makes the scrollbars scroll again
+        """
+        super(TrackableScrollbar, self).configure(command=self.command)
+
     def configure(self, **options):
 
         # If track_events_to is not None, for example when we
@@ -146,38 +181,38 @@ class TrackableScrollbar(ttk.Scrollbar):
 
             # the function that would be called
             # if we were not tracking
-            scroll_xy = options['command']
+            scroll_xy = options["command"]
 
             # either 'x' or 'y'
             x_or_y = scroll_xy.__name__[-1]
 
             def tracked_command(*args, **kwargs):
-                track_scrollbar(self.track_events_to,x_or_y,*args)
+                track_scrollbar(self.track_events_to, x_or_y, *args)
                 scroll_xy(*args, **kwargs)
 
-            options['command'] = tracked_command
+            options["command"] = tracked_command
 
-        self.command = options['command']
+        self.command = options["command"]
         super(TrackableScrollbar, self).configure(**options)
 
 
-
-# EEEEEEEEEEEEEEEEEEEEEE            d::::::d  iiii           tttt                                               
-# E::::::::::::::::::::E            d::::::d i::::i       ttt:::t                                               
-# E::::::::::::::::::::E            d::::::d  iiii        t:::::t                                               
-# EE::::::EEEEEEEEE::::E            d:::::d               t:::::t                                               
-#   E:::::E       EEEEEE    ddddddddd:::::d iiiiiii ttttttt:::::ttttttt       ooooooooooo   rrrrr   rrrrrrrrr   
-#   E:::::E               dd::::::::::::::d i:::::i t:::::::::::::::::t     oo:::::::::::oo r::::rrr:::::::::r  
-#   E::::::EEEEEEEEEE    d::::::::::::::::d  i::::i t:::::::::::::::::t    o:::::::::::::::or:::::::::::::::::r 
+# EEEEEEEEEEEEEEEEEEEEEE            d::::::d  iiii           tttt
+# E::::::::::::::::::::E            d::::::d i::::i       ttt:::t
+# E::::::::::::::::::::E            d::::::d  iiii        t:::::t
+# EE::::::EEEEEEEEE::::E            d:::::d               t:::::t
+#   E:::::E       EEEEEE    ddddddddd:::::d iiiiiii ttttttt:::::ttttttt       ooooooooooo   rrrrr   rrrrrrrrr
+#   E:::::E               dd::::::::::::::d i:::::i t:::::::::::::::::t     oo:::::::::::oo r::::rrr:::::::::r
+#   E::::::EEEEEEEEEE    d::::::::::::::::d  i::::i t:::::::::::::::::t    o:::::::::::::::or:::::::::::::::::r
 #   E:::::::::::::::E   d:::::::ddddd:::::d  i::::i tttttt:::::::tttttt    o:::::ooooo:::::orr::::::rrrrr::::::r
 #   E:::::::::::::::E   d::::::d    d:::::d  i::::i       t:::::t          o::::o     o::::o r:::::r     r:::::r
 #   E::::::EEEEEEEEEE   d:::::d     d:::::d  i::::i       t:::::t          o::::o     o::::o r:::::r     rrrrrrr
-#   E:::::E             d:::::d     d:::::d  i::::i       t:::::t          o::::o     o::::o r:::::r            
-#   E:::::E       EEEEEEd:::::d     d:::::d  i::::i       t:::::t    tttttto::::o     o::::o r:::::r            
-# EE::::::EEEEEEEE:::::Ed::::::ddddd::::::ddi::::::i      t::::::tttt:::::to:::::ooooo:::::o r:::::r            
-# E::::::::::::::::::::E d:::::::::::::::::di::::::i      tt::::::::::::::to:::::::::::::::o r:::::r            
-# E::::::::::::::::::::E  d:::::::::ddd::::di::::::i        tt:::::::::::tt oo:::::::::::oo  r:::::r            
-# EEEEEEEEEEEEEEEEEEEEEE   ddddddddd   dddddiiiiiiii          ttttttttttt     ooooooooooo    rrrrrrr            
+#   E:::::E             d:::::d     d:::::d  i::::i       t:::::t          o::::o     o::::o r:::::r
+#   E:::::E       EEEEEEd:::::d     d:::::d  i::::i       t:::::t    tttttto::::o     o::::o r:::::r
+# EE::::::EEEEEEEE:::::Ed::::::ddddd::::::ddi::::::i      t::::::tttt:::::to:::::ooooo:::::o r:::::r
+# E::::::::::::::::::::E d:::::::::::::::::di::::::i      tt::::::::::::::to:::::::::::::::o r:::::r
+# E::::::::::::::::::::E  d:::::::::ddd::::di::::::i        tt:::::::::::tt oo:::::::::::oo  r:::::r
+# EEEEEEEEEEEEEEEEEEEEEE   ddddddddd   dddddiiiiiiii          ttttttttttt     ooooooooooo    rrrrrrr
+
 
 class CircuitEditor(tk.Canvas):
     """
@@ -197,17 +232,17 @@ class CircuitEditor(tk.Canvas):
     Coordinate systems
     ==================
 
-    The Canvas widget uses two coordinate systems; 
+    The Canvas widget uses two coordinate systems;
     the window coordinate system, with (0, 0) in the upper left corner
-    and (canvas.winfo_width,canvas.winfo_height) in the lower right corner, 
+    and (canvas.winfo_width,canvas.winfo_height) in the lower right corner,
     and a canvas coordinate system which specify where the items are drawn.
 
-    By scrolling the canvas, you can specify which part of the canvas coordinate system 
+    By scrolling the canvas, you can specify which part of the canvas coordinate system
     to show in the window.
 
     To convert from window coordinates to canvas coordinates, use the canvasx and canvasy methods.
     For example the upper left corner of the window has canvas coordinates (canvasx(0),canvasy(0))
-    and the bottom right corner of the window has canvas coordinates 
+    and the bottom right corner of the window has canvas coordinates
     (canvasx(canvas.winfo_width), canvasy(canvas.winfo_height))
 
     A circuit component has thus a unique set of canvas coordinates (x_can, y_can).
@@ -216,11 +251,11 @@ class CircuitEditor(tk.Canvas):
 
     We use an additional set of coordinates called grid coordinates, where the horizontal and
     vertical directions are divided into discrete steps to the circuit components will snap to.
-    Any node of a circuit component can thus be assigned two (possible negative) integers, 
-    (x_grid,y_grid) corresponding to a number of horizontal and vertical steps away from an 
-    initially defined center. 
+    Any node of a circuit component can thus be assigned two (possible negative) integers,
+    (x_grid,y_grid) corresponding to a number of horizontal and vertical steps away from an
+    initially defined center.
     The center and the size of the step size is defined in canvas units (canvas.canvas_center and
-    canvas.grid_unit respectively) such that 
+    canvas.grid_unit respectively) such that
     x_can = canvas.canvas_center[0]+canvas.grid_unit*x_grid
     y_can = canvas.canvas_center[1]+canvas.grid_unit*y_grid
 
@@ -230,17 +265,17 @@ class CircuitEditor(tk.Canvas):
     ==============================
 
     All circuit components currently implemented have two nodes except the special case
-    of the ground element, which has one. 
-    Nodes are represented as full black circles in the editor. 
+    of the ground element, which has one.
+    Nodes are represented as full black circles in the editor.
 
     When a node (node 1) is placed on a wire, this wire automatically splits into two wires, each sharing
     a node with (node 1).
-    Conversely, when a wire is moved, or is created such that it crosses a node (node 1), it will 
+    Conversely, when a wire is moved, or is created such that it crosses a node (node 1), it will
     split into two wires, each sharing a node with (node 1).
-    
+
     However, if two wires cross, such that neither has a node placed on a wire, there will be no
     splitting of wires or creation of new nodes. This case implements a cros-over.
-    
+
     States
     ==============================
 
@@ -249,11 +284,11 @@ class CircuitEditor(tk.Canvas):
     The editor can be placed in certain states, which will activate
     or disactivate certain functionalities, and exit that state
     which may steer the system towards another state. For example,
-    when using the box selection tool, we do not want to allow the 
+    when using the box selection tool, we do not want to allow the
     user to create components, and as soon as the selection is done
     we go towards a state which allows it. The different states currently
     implemented are:
-    * 0:    The default state of the system, entered when starting up the 
+    * 0:    The default state of the system, entered when starting up the
             eidtor for example
     * 1:    Dragging a component
     * 2:    Frozen editor when another window is open
@@ -280,47 +315,59 @@ class CircuitEditor(tk.Canvas):
                         If True will print information about the Editors actions
 
     """
-    def __init__(self, master, grid_unit, netlist_filename,
-            track_events_to = None, unittesting = False,verbose = False,os_type = 'windows'):
+
+    def __init__(
+        self,
+        master,
+        grid_unit,
+        netlist_filename,
+        track_events_to=None,
+        unittesting=False,
+        verbose=False,
+        os_type="windows",
+    ):
 
         self.os_type = os_type
 
         # Set font size depending on OS type
-        if os_type == 'mac':
+        if os_type == "mac":
             self.font_size = 14
-        elif os_type == 'linux':
+        elif os_type == "linux":
             self.font_size = 10
         else:
             self.font_size = 8
 
-        self.graphics_extension = '.png'
+        self.graphics_extension = ".png"
         self.force_grab_set = False
         # for old versions of mac OS, use jpg rather than png
         # And force events to be routed to the editor
-        # when leaving the window by setting force_grab_set to True 
-        if platform.system() == 'Darwin':
-            if int(platform.mac_ver()[0].split('.')[0]) <= 10:
-                if int(platform.mac_ver()[0].split('.')[1]) <= 13:
-                    self.graphics_extension = '.jpg'
+        # when leaving the window by setting force_grab_set to True
+        if platform.system() == "Darwin":
+            if int(platform.mac_ver()[0].split(".")[0]) <= 10:
+                if int(platform.mac_ver()[0].split(".")[1]) <= 13:
+                    self.graphics_extension = ".jpg"
                     self.force_grab_set = True
 
         self.paired_sequences = []
-        if os_type == 'mac':
+        if os_type == "mac":
             self.paired_sequences += [
-                ['Control','Mod1'], # for OSX users
-                ['Delete','BackSpace'], # No delete button on OSX
-                ['-3','-2'], # button 2 (right-click on for OSX) same as MS/Unix right-click
+                ["Control", "Mod1"],  # for OSX users
+                ["Delete", "BackSpace"],  # No delete button on OSX
+                [
+                    "-3",
+                    "-2",
+                ],  # button 2 (right-click on for OSX) same as MS/Unix right-click
             ]
-        if os_type == 'linux':
+        if os_type == "linux":
             self.paired_sequences += [
-            ['MouseWheel','Button-5'], # wheel in linux
-            ['MouseWheel','Button-4'], # wheel in linux
-            ['Return','<KP_Enter>'], # Keypad enter in linux
+                ["MouseWheel", "Button-5"],  # wheel in linux
+                ["MouseWheel", "Button-4"],  # wheel in linux
+                ["Return", "<KP_Enter>"],  # Keypad enter in linux
             ]
-        '''
+        """
         Pair certain key-strokes or sequences which should have
         the same effect, for cross-platform compatibility
-        '''
+        """
 
         # The root window (tk.Tk())
         self.master = master
@@ -328,83 +375,83 @@ class CircuitEditor(tk.Canvas):
         self.state = -1
 
         self.track_events_to = track_events_to
-        '''
+        """
         path to the file where the details of all events
         will be stored. If no path is provided, events will
         not be saved. This is used in the gui construction
         of (unit)tests. Default is None
-        '''
+        """
 
         self.unittesting = unittesting
-        '''
+        """
         Set to True if the CircuitEditor will be controlled
         programmatically through "event_generate" calls.
         Default is False.
-        '''
+        """
 
         self.verbose = verbose
-        
+
         self.netlist_filename = netlist_filename
-        '''In the netlist file is stored at all times 
+        """In the netlist file is stored at all times
         (except whilst drag/dropping elements)
-        all the information necessary to re-construct 
-        the circuit as the user sees it.'''
+        all the information necessary to re-construct
+        the circuit as the user sees it."""
 
         self.grid_unit = int(grid_unit)
-        '''Sets the size, in pixels of the 
-        grid initially displayed upon opening 
-        the editor. This variable'''
+        """Sets the size, in pixels of the
+        grid initially displayed upon opening
+        the editor. This variable"""
 
         self.elements = []
-        '''List which stores all the circuit elements 
-        currently placed on the canvas'''
+        """List which stores all the circuit elements
+        currently placed on the canvas"""
 
         self.selected_elements = []
-        '''List which stores all the circuit elements 
-        currently placed on the canvas'''
+        """List which stores all the circuit elements
+        currently placed on the canvas"""
 
         self.in_creation = None
-        '''in_creation is None if no element is being created.
-        It is equal to a circuit element if that 
+        """in_creation is None if no element is being created.
+        It is equal to a circuit element if that
         particular element is under creation.
-        This allows us to handle zooming in/out 
-        during the creation of a component'''
+        This allows us to handle zooming in/out
+        during the creation of a component"""
 
         self.copied_elements = []
-        '''When elements are copied (or cut), 
+        """When elements are copied (or cut),
         deepcopies of these elements are made and
-        they are stored without being displayed 
-        in this list'''
+        they are stored without being displayed
+        in this list"""
 
         self.history = []
-        '''Everytime the user makes a change to the circuit, 
-        this list is appended with a string representation of 
+        """Everytime the user makes a change to the circuit,
+        this list is appended with a string representation of
         all the components in the circuit
-        hence allowing us to undo an arbitrary number of user actions '''
+        hence allowing us to undo an arbitrary number of user actions """
 
         self.history_location = -1
-        '''Informs us of what index of the self.history variable
-        the current circuit seen on the canvas corresponds'''
+        """Informs us of what index of the self.history variable
+        the current circuit seen on the canvas corresponds"""
 
         self.track_changes = False
-        '''We can cancel the appending of changes to the self.history
+        """We can cancel the appending of changes to the self.history
         variable (not to the netlist file)
         by setting this variable to True.
         This is useful for example when we want to delete all
         the components on the canvas: by calling undo afterwards
         we want to have them all reappear, not reappear one by one.
-        Since deleting a single component is logged in the history 
+        Since deleting a single component is logged in the history
         by default, we want to set track_changes to false, then
         delete all components, set track changes to true and finally
         save, which will add an entry to self.history.
-        '''
-        
+        """
+
         self.selection_rectangle_x_start = None
         self.selection_rectangle_y_start = None
-        '''If we start click and drag accross the 
-        canvas, and these are set to None, the 
+        """If we start click and drag accross the
+        canvas, and these are set to None, the
         selection rectangle will be instantiated
-        '''
+        """
 
         self.initialize_user_knowledge_tracking_variables()
         self.build_gridframe()
@@ -422,29 +469,28 @@ class CircuitEditor(tk.Canvas):
         self.track_changes = True
         self.save()
 
-        # Sets the "active window" in your OS, 
-        # the one towards which key strokes will be 
+        # Sets the "active window" in your OS,
+        # the one towards which key strokes will be
         # directed to be this circuit editor
         self.focus_force()
 
-        # Puts the Editor in state 0: 
+        # Puts the Editor in state 0:
         # sets all the right bindings, etc ...
         self.set_state(0)
 
-        
     ###########################
     # Initialization functions
     ###########################
-    
+
     def build_menubar(self):
-        '''
+        """
         Builds the File, Edit, ... menu bar situated at the top of
         the window.
-        
+
         All these menu actions generate a keystroke which is bound to
-        a function. In this way, when we are tracking the users actions, 
+        a function. In this way, when we are tracking the users actions,
         clicking a button can be easily stored as a keystroke.
-        '''
+        """
 
         # initialize the menubar object
         self.menubar = tk.Menu(self.frame)
@@ -455,18 +501,18 @@ class CircuitEditor(tk.Canvas):
         # File, Edit, ... are defined to have a width of 6 characters
         menu_label_template = "{:<6}"
 
-        # The items appearing in the cascade menu that appears when 
-        # clicking on File for example will have 15 characters width on the 
+        # The items appearing in the cascade menu that appears when
+        # clicking on File for example will have 15 characters width on the
         # left where the name of the functionality is provided and
         # 15 characters on the right where the keyboard shortcut is provided
         label_template = "{:<15}{:>15}"
 
         # The font for the cascading items is defined
-        # Note: for everything to be aligned the chosen font should 
-        # have a constant character width, the only one satisfying this 
+        # Note: for everything to be aligned the chosen font should
+        # have a constant character width, the only one satisfying this
         # condition is Courier new.
-        #TODO use images as cascade menu items with an aligned and pretty font
-        menu_font = Font(family="Courier New", size=self.font_size, weight='normal')
+        # TODO use images as cascade menu items with an aligned and pretty font
+        menu_font = Font(family="Courier New", size=self.font_size, weight="normal")
 
         ####################################
         # FILE cascade menu build
@@ -474,23 +520,24 @@ class CircuitEditor(tk.Canvas):
 
         # add new item to the menubar
         menu = tk.Menu(self.menubar, tearoff=0)
-        self.menubar.add_cascade(
-            label=menu_label_template.format("File"), 
-            menu=menu)
+        self.menubar.add_cascade(label=menu_label_template.format("File"), menu=menu)
 
         # add cascade menu items
         menu.add_command(
-            label=label_template.format("Open", "Ctrl+O"), 
-            command=(lambda: self.event_generate('<Control-o>')), 
-            font=menu_font)
+            label=label_template.format("Open", "Ctrl+O"),
+            command=(lambda: self.event_generate("<Control-o>")),
+            font=menu_font,
+        )
         menu.add_command(
-            label=label_template.format("Save", "Ctrl+S"), 
-            command=(lambda: self.event_generate('<Control-s>')), 
-            font=menu_font)
+            label=label_template.format("Save", "Ctrl+S"),
+            command=(lambda: self.event_generate("<Control-s>")),
+            font=menu_font,
+        )
         menu.add_command(
-            label=label_template.format("Exit", "Ctrl+Q"), 
-            command=(lambda: self.event_generate('<Control-q>')), 
-            font=menu_font)
+            label=label_template.format("Exit", "Ctrl+Q"),
+            command=(lambda: self.event_generate("<Control-q>")),
+            font=menu_font,
+        )
 
         ####################################
         # EDIT cascade menu build
@@ -498,230 +545,247 @@ class CircuitEditor(tk.Canvas):
 
         # add new item to the menubar
         menu = tk.Menu(self.menubar, tearoff=0)
-        self.menubar.add_cascade(
-            label=menu_label_template.format("Edit"), 
-            menu=menu)
+        self.menubar.add_cascade(label=menu_label_template.format("Edit"), menu=menu)
 
         # add cascade menu items
         menu.add_command(
-            label=label_template.format("Undo", "Ctrl+Z"), 
-            command=(lambda :self.event_generate('<Control-z>')), 
-            font=menu_font)
+            label=label_template.format("Undo", "Ctrl+Z"),
+            command=(lambda: self.event_generate("<Control-z>")),
+            font=menu_font,
+        )
         menu.add_command(
-            label=label_template.format("Redo", "Ctrl+Y"), 
-            command=(lambda :self.event_generate('<Control-y>')), 
-            font=menu_font)
+            label=label_template.format("Redo", "Ctrl+Y"),
+            command=(lambda: self.event_generate("<Control-y>")),
+            font=menu_font,
+        )
         menu.add_separator()
         menu.add_command(
-            label=label_template.format("Cut", "Ctrl+X"), 
-            command=(lambda :self.event_generate('<Control-x>')), 
-            font=menu_font)
+            label=label_template.format("Cut", "Ctrl+X"),
+            command=(lambda: self.event_generate("<Control-x>")),
+            font=menu_font,
+        )
         menu.add_command(
-            label=label_template.format("Copy", "Ctrl+C"), 
-            command=(lambda :self.event_generate('<Control-c>')), 
-            font=menu_font)
+            label=label_template.format("Copy", "Ctrl+C"),
+            command=(lambda: self.event_generate("<Control-c>")),
+            font=menu_font,
+        )
         menu.add_command(
-            label=label_template.format("Paste", "Ctrl+V"), 
-            command=(lambda :self.event_generate('<Control-v>')), 
-            font=menu_font)
+            label=label_template.format("Paste", "Ctrl+V"),
+            command=(lambda: self.event_generate("<Control-v>")),
+            font=menu_font,
+        )
         menu.add_separator()
         menu.add_command(
-            label=label_template.format("Select all", "Ctrl+A"), 
-            command=(lambda :self.event_generate('<Control-a>')), 
-            font=menu_font)
+            label=label_template.format("Select all", "Ctrl+A"),
+            command=(lambda: self.event_generate("<Control-a>")),
+            font=menu_font,
+        )
         menu.add_separator()
         menu.add_command(
-            label=label_template.format("Delete", "Del"), 
-            command=(lambda :self.event_generate('<Delete>')), 
-            font=menu_font)
+            label=label_template.format("Delete", "Del"),
+            command=(lambda: self.event_generate("<Delete>")),
+            font=menu_font,
+        )
 
         menu.add_command(
-            label=label_template.format("Rotate", "Drag+Arrows"), 
-            command=(lambda :self.event_generate('<Alt-r>')), 
-            font=menu_font)
+            label=label_template.format("Rotate", "Drag+Arrows"),
+            command=(lambda: self.event_generate("<Alt-r>")),
+            font=menu_font,
+        )
 
         def generate_delete_all_key_sequence():
-            self.event_generate('<Control-a>')
-            self.event_generate('<Delete>')
-        menu.add_command(
-            label=label_template.format("Delete all", ""), 
-            command=generate_delete_all_key_sequence, 
-            font=menu_font)
+            self.event_generate("<Control-a>")
+            self.event_generate("<Delete>")
 
+        menu.add_command(
+            label=label_template.format("Delete all", ""),
+            command=generate_delete_all_key_sequence,
+            font=menu_font,
+        )
 
         ####################################
         # INSERT cascade menu build
         ####################################
-        
+
         # add new item to the menubar
         menu = tk.Menu(self.menubar, tearoff=0)
-        self.menubar.add_cascade(
-            label=menu_label_template.format("Insert"), 
-            menu=menu)
+        self.menubar.add_cascade(label=menu_label_template.format("Insert"), menu=menu)
 
         # add cascade menu items
         menu.add_command(
-            label=label_template.format("Wire", "<W>"), 
-            command=(lambda: self.event_generate('w')), 
-            font=menu_font)
+            label=label_template.format("Wire", "<W>"),
+            command=(lambda: self.event_generate("w")),
+            font=menu_font,
+        )
         menu.add_command(
-            label=label_template.format("Junction", "<J>"), 
-            command=(lambda: self.event_generate('j')), 
-            font=menu_font)
+            label=label_template.format("Junction", "<J>"),
+            command=(lambda: self.event_generate("j")),
+            font=menu_font,
+        )
         menu.add_command(
-            label=label_template.format("Inductor", "<L>"), 
-            command=(lambda: self.event_generate('l')), 
-            font=menu_font)
+            label=label_template.format("Inductor", "<L>"),
+            command=(lambda: self.event_generate("l")),
+            font=menu_font,
+        )
         menu.add_command(
-            label=label_template.format("Capacitor", "<C>"), 
-            command=(lambda: self.event_generate('c')), 
-            font=menu_font)
+            label=label_template.format("Capacitor", "<C>"),
+            command=(lambda: self.event_generate("c")),
+            font=menu_font,
+        )
         menu.add_command(
-            label=label_template.format("Resistor", "<R>"), 
-            command=(lambda: self.event_generate('r')), 
-            font=menu_font)
+            label=label_template.format("Resistor", "<R>"),
+            command=(lambda: self.event_generate("r")),
+            font=menu_font,
+        )
         menu.add_command(
-            label=label_template.format("Ground", "<G>"), 
-            command=(lambda: self.event_generate('g')), 
-            font=menu_font)
+            label=label_template.format("Ground", "<G>"),
+            command=(lambda: self.event_generate("g")),
+            font=menu_font,
+        )
 
-        
         ####################################
         # VIEW cascade menu build
         ####################################
-        
+
         # add new item to the menubar
         menu = tk.Menu(self.menubar, tearoff=0)
-        self.menubar.add_cascade(
-            label=menu_label_template.format("View"), 
-            menu=menu)
+        self.menubar.add_cascade(label=menu_label_template.format("View"), menu=menu)
 
         # add cascade menu items
         menu.add_command(
-            label=label_template.format("Zoom in", "Ctrl+scroll"), 
-            command=(lambda: self.zoom('in')), 
-            font=menu_font)
+            label=label_template.format("Zoom in", "Ctrl+scroll"),
+            command=(lambda: self.zoom("in")),
+            font=menu_font,
+        )
         menu.add_command(
-            label=label_template.format("Zoom out", "Ctrl+scroll"), 
-            command=(lambda: self.zoom('out')), 
-            font=menu_font)
+            label=label_template.format("Zoom out", "Ctrl+scroll"),
+            command=(lambda: self.zoom("out")),
+            font=menu_font,
+        )
         menu.add_separator()
         menu.add_command(
-            label=label_template.format("Re-center", "Ctrl+R"), 
-            command=(lambda: self.event_generate('<Control-r>')), 
-            font=menu_font)
+            label=label_template.format("Re-center", "Ctrl+R"),
+            command=(lambda: self.event_generate("<Control-r>")),
+            font=menu_font,
+        )
 
         # Add the menubar to the application
         self.master.config(menu=self.menubar)
-    
+
     def build_gridframe(self):
-        '''
-        Builds the main area of the window (called a frame), 
-        which should stick to the edges of the window and 
+        """
+        Builds the main area of the window (called a frame),
+        which should stick to the edges of the window and
         expand as a user expands the window.
 
         This frame will be divided into a grid hosting the
         canvas, menubar, scrollbars
-        '''
+        """
 
         # Builds a new frame, which will be divided into a grid
         # hosting the canvas, menubar, scrollbars
         self.frame = ttk.Frame()
 
-        # Places the Frame widget self.frame in the parent 
+        # Places the Frame widget self.frame in the parent
         # widget (MainWindow) in a grid
-        self.frame.grid()  
+        self.frame.grid()
 
         # Configure the frames grid
-        self.frame.grid(sticky='nswe')  # make frame container sticky
+        self.frame.grid(sticky="nswe")  # make frame container sticky
         self.frame.rowconfigure(0, weight=1)  # make canvas expandable in x
         self.frame.columnconfigure(0, weight=1)  # make canvas expandable in y
-    
+
     def build_scrollbars(self):
-        '''
+        """
         Builds horizontal and vertical scrollbars and places
         them in the window
-        '''
-        
+        """
+
         # Vertical and horizontal scrollbars for canvas
-        self.hbar = TrackableScrollbar(self.frame, track_events_to = self.track_events_to, orient='horizontal')
-        self.vbar = TrackableScrollbar(self.frame, track_events_to = self.track_events_to, orient='vertical')
-        self.hbar.grid(row=1, column=0, sticky='we')
-        self.vbar.grid(row=0, column=1, sticky='ns')
+        self.hbar = TrackableScrollbar(
+            self.frame, track_events_to=self.track_events_to, orient="horizontal"
+        )
+        self.vbar = TrackableScrollbar(
+            self.frame, track_events_to=self.track_events_to, orient="vertical"
+        )
+        self.hbar.grid(row=1, column=0, sticky="we")
+        self.vbar.grid(row=0, column=1, sticky="ns")
 
     def build_canvas(self):
-        '''
-        Initializes the canvas from which this object inherits and 
+        """
+        Initializes the canvas from which this object inherits and
         places it in the grid of our window
 
         Actually in the previously called build_* functions, we have
         defined frames, menubars, etc.. which are seperate from the canvas.
         It is however convinient to do so since most of these definied buttons
         or scrollbars will be acting on the canvas itself.
-        '''
+        """
         tk.Canvas.__init__(
-            self, 
-            self.frame, 
-            bd=0, 
+            self,
+            self.frame,
+            bd=0,
             highlightthickness=0,
-            xscrollcommand=self.hbar.set, 
-            yscrollcommand=self.vbar.set, 
-            confine=False, 
-            bg="white")
+            xscrollcommand=self.hbar.set,
+            yscrollcommand=self.vbar.set,
+            confine=False,
+            bg="white",
+        )
 
-        self.grid(row=0, column=0, sticky='nswe')
+        self.grid(row=0, column=0, sticky="nswe")
 
         if not self.unittesting:
             self.message = ""
             self.messaging_time = 1
-            self.text_widget = tk.Label(self.frame, 
-                                text = '',
-                                font=Font(family='Helvetica', 
-                                size=self.font_size, 
-                                weight='normal'))
-            self.text_widget.grid(row=0, column=0, sticky='nw')
-        '''Parameters of the message to be displayed on the top left of the
+            self.text_widget = tk.Label(
+                self.frame,
+                text="",
+                font=Font(family="Helvetica", size=self.font_size, weight="normal"),
+            )
+            self.text_widget.grid(row=0, column=0, sticky="nw")
+        """Parameters of the message to be displayed on the top left of the
         canvas. The message string will be prepended, and ends of
         the string will be removed as messages appear/disappear.
-        '''
+        """
 
     def configure_scrollbars(self):
-        '''
+        """
         Define what functions the scrollbars should call
         when we interact with them.
-        '''
+        """
         self.hbar.configure(command=self.scroll_x)
         self.vbar.configure(command=self.scroll_y)
-    
+
     def set_canvas_center(self):
-        '''
-        Calculate the center of the canvas in 
-        canvas coordinates. This information is necessary to 
+        """
+        Calculate the center of the canvas in
+        canvas coordinates. This information is necessary to
         convert grid units to canvas units
 
-        '''
-        # Wait for the canvas to pop up before asking 
+        """
+        # Wait for the canvas to pop up before asking
         # for its window size below
-        self.update()  
+        self.update()
 
-        # winfo_width/height gives the 
+        # winfo_width/height gives the
         # width/height of the window in window units
-        # canvasx/y converts window units to 
+        # canvasx/y converts window units to
         # canvas units
         self.canvas_center = [
-            self.canvasx(self.winfo_width()/2.),
-            self.canvasy(self.winfo_height()/2.)]
-    
+            self.canvasx(self.winfo_width() / 2.0),
+            self.canvasy(self.winfo_height() / 2.0),
+        ]
+
     def configure_canvas(self):
-        '''
-        Configures the canvas. This is a collection of small things 
-        we still have to do to the canvas. And it is part of 
+        """
+        Configures the canvas. This is a collection of small things
+        we still have to do to the canvas. And it is part of
         setting state 0
-        '''
-        
-        # This function is only useful if we 
+        """
+
+        # This function is only useful if we
         # are tracking the actions of the user.
-        # Mouse motion is by default not binded to 
+        # Mouse motion is by default not binded to
         # any function, here we bind it to a function
         # which does nothing, but, if tracking is turned
         # on, this function will be appended with tracking
@@ -730,76 +794,75 @@ class CircuitEditor(tk.Canvas):
 
         # Ensure that the function "on_resize"
         # is called each time the user resizes
-        # the window. 
+        # the window.
         self.bind("<Configure>", self.on_resize)
-        
 
     def load_or_create_netlist_file(self):
-        '''
-        If the file called "self.netlist_filename" is found, load it, if not, create 
+        """
+        If the file called "self.netlist_filename" is found, load it, if not, create
         a blank one and load that.
-        '''
+        """
 
         try:
-            with open(self.netlist_filename, 'r') as f:
+            with open(self.netlist_filename, "r") as f:
                 # Tries to open file for reading
                 netlist_file_string = [line for line in f]
         except FileNotFoundError:
             netlist_file_string = []
-            with open(self.netlist_filename, 'w+') as f:
+            with open(self.netlist_filename, "w+") as f:
                 # will open file and erase contents, creating the file if needed
                 pass
         self.load_netlist(netlist_file_string)
 
     def initialize_user_knowledge_tracking_variables(self):
-        '''
+        """
         Initialize a set of variables which will allow us
         track what functionalities the user has employed so far.
-        This will allow us to provide hints telling the user 
+        This will allow us to provide hints telling the user
         how to do stuff that he hasnt done yet.
-        '''
-        
+        """
+
         self.used_arrows = False
-        '''If the user uses arrows to rotate an 
-        element whilst creating it, we set this variable 
+        """If the user uses arrows to rotate an
+        element whilst creating it, we set this variable
         to True, and hence stop hinting that he can do that.
-        '''
+        """
 
     #############################
     #  STATE settings
     ##############################
-    def set_state(self,n):
-        '''Puts Editor into state n
-        '''
+    def set_state(self, n):
+        """Puts Editor into state n
+        """
 
         if self.state != n:
             if self.verbose:
-                self.write_message('entering state %d'%n)
+                self.write_message("entering state %d" % n)
             # Save previous state, as we may go back
             # to it when exiting this state
-            self.previous_state = self.state 
+            self.previous_state = self.state
             self.state = n
-            exec("self.set_state_%d()"%n)
-    
+            exec("self.set_state_%d()" % n)
+
         for el in self.elements:
             el.set_state(n)
 
-    def exit_state(self,n):
-        '''Exits state n
-        '''
+    def exit_state(self, n):
+        """Exits state n
+        """
 
         if self.state == n:
             if self.verbose:
-                self.write_message('exiting state %d'%n)
-            exec("self.exit_state_%d()"%n)
-    
+                self.write_message("exiting state %d" % n)
+            exec("self.exit_state_%d()" % n)
+
         for el in self.elements:
             el.exit_state(n)
 
     def set_state_0(self):
-        '''
+        """
         Puts the editor in state 0, as it is upon opening
-        '''
+        """
 
         # No components are currently in creation
         self.in_creation = None
@@ -807,11 +870,11 @@ class CircuitEditor(tk.Canvas):
         # unset commong bindings that may have been created elsewhere
         self.unset_temporary_bindings()
 
-        # 
+        #
         self.configure_canvas()
 
         # The cursor should be an arrow
-        self.config(cursor='arrow')
+        self.config(cursor="arrow")
 
         # set all permenant bindings
         self.set_bindings(self.permenant_bindings)
@@ -822,40 +885,38 @@ class CircuitEditor(tk.Canvas):
         # Unfreeze scrollbars
         self.hbar.unfreeze()
         self.vbar.unfreeze()
-        
+
     def set_state_1(self):
-        '''To set before we start dragging
-        '''
+        """To set before we start dragging
+        """
 
         # reroute all mouse-movements (even outside of the editor)
-        # to the editor widget 
+        # to the editor widget
         if self.force_grab_set:
             self.grab_set()
 
         # unset nearly all bindings
-        self.unset_temporary_bindings(exceptions = ["<Motion>"])
+        self.unset_temporary_bindings(exceptions=["<Motion>"])
         self.unset_bindings(self.permenant_bindings)
 
         # Allow scrolling and zooming
-        self.set_bindings(
-            self.bindings_zoom+\
-            self.bindings_scroll)
+        self.set_bindings(self.bindings_zoom + self.bindings_scroll)
 
         # Unfreeze scrollbars
         self.hbar.unfreeze()
         self.vbar.unfreeze()
 
-        # Disactivate box selection and right clicking on 
-        # background when pasting elements by redrawing the 
+        # Disactivate box selection and right clicking on
+        # background when pasting elements by redrawing the
         # grid with no bindings
-        self.draw_grid(set_bindings = False)
+        self.draw_grid(set_bindings=False)
 
     def exit_state_1(self):
-        '''When finished dragging
-        '''
+        """When finished dragging
+        """
 
         # We just dragged and dropped a component
-        # so we check if nodes of that component 
+        # so we check if nodes of that component
         # intersect a wire
         self.track_changes = False
         self.add_nodes()
@@ -874,9 +935,9 @@ class CircuitEditor(tk.Canvas):
         self.set_state(0)
 
     def set_state_2(self):
-        '''Freeze the Editor
-        '''
-        
+        """Freeze the Editor
+        """
+
         # unset commong bindings that may have been created elsewhere
         self.unset_temporary_bindings()
 
@@ -884,68 +945,66 @@ class CircuitEditor(tk.Canvas):
         self.unset_bindings(self.permenant_bindings)
 
         # remove grid bindings
-        self.draw_grid(set_bindings = False)
+        self.draw_grid(set_bindings=False)
 
         # Freeze scrollbars
         self.hbar.freeze()
         self.vbar.freeze()
 
     def exit_state_2(self):
-        '''Un-freeze the Editor, go back to the state it 
+        """Un-freeze the Editor, go back to the state it
         was in upon freezing.
-        '''
+        """
         self.set_state(self.previous_state)
 
     def set_state_3(self):
-        '''When we are using the box selection tool
-        '''
-        
+        """When we are using the box selection tool
+        """
+
         # unset commong bindings that may have been created elsewhere
         self.unset_bindings(self.permenant_bindings)
 
         # Disactivate right-clicking the background
-        self.tag_bind( self.grid_id, "<Button-3>", lambda event:None)
+        self.tag_bind(self.grid_id, "<Button-3>", lambda event: None)
 
         # Freeze scrollbars
         self.hbar.freeze()
         self.vbar.freeze()
-        
+
     def exit_state_3(self):
-        '''When we have stopped using the box selection 
+        """When we have stopped using the box selection
         tool, go back to state 0.
-        '''
+        """
         self.set_state(0)
 
     def set_state_4(self):
-        '''To set before we start creating somthing
-        '''
+        """To set before we start creating somthing
+        """
 
         # reroute all mouse-movements (even outside of the editor)
-        # to the editor widget 
+        # to the editor widget
         if self.force_grab_set:
             self.grab_set()
 
         # unset bindings
         self.unset_temporary_bindings()
         self.unset_bindings(self.permenant_bindings)
-        
+
         # Allow scrolling and zooming
-        self.set_bindings(
-            self.bindings_zoom+\
-            self.bindings_scroll)
+        self.set_bindings(self.bindings_zoom + self.bindings_scroll)
 
         # Unfreeze scrollbars
         self.hbar.unfreeze()
         self.vbar.unfreeze()
 
-        # Disactivate box selection and right clicking on 
-        # background when pasting elements by redrawing the 
+        # Disactivate box selection and right clicking on
+        # background when pasting elements by redrawing the
         # grid with no bindings
-        self.draw_grid(set_bindings = False)
-        
+        self.draw_grid(set_bindings=False)
+
     def exit_state_4(self):
-        '''When finished creating something
-        '''
+        """When finished creating something
+        """
 
         # stop reroute all events (even outside of the editor)
         # to the editor widget, this allows us to use the edit bar again for example
@@ -954,7 +1013,7 @@ class CircuitEditor(tk.Canvas):
             self.grab_current()
 
         # We just dragged and dropped a component
-        # so we check if nodes of that component 
+        # so we check if nodes of that component
         # intersect a wire
         self.track_changes = False
         self.add_nodes()
@@ -971,46 +1030,48 @@ class CircuitEditor(tk.Canvas):
     ##############################
 
     def elements_list_to_netlist_string(self):
-        '''
+        """
         Maps the list of elements (self.elements)
-        to a string which can be saved in 
+        to a string which can be saved in
         a file and read either by the gui code
         or by the qucat code.
 
         Returns
         --------
         netlist_string: string
-            of the form 
+            of the form
             "C;0,1;0,0;1.000000e-13;
             J;1,1;1,0;;L_J
             etc..."
 
-        '''
+        """
         netlist_string = ""
         for el in self.elements:
             v, l = el.prop
             if v is None:
-                v = ''
+                v = ""
             else:
                 decimals = 1
-                v_string = '0'
-                while float(v_string)-v != 0 and decimals<15:
+                v_string = "0"
+                while float(v_string) - v != 0 and decimals < 15:
                     v_string = f"%.{decimals}e" % v
                     decimals += 1
                 v = v_string
 
             if l is None:
-                l = ''
+                l = ""
 
-            netlist_string += ("%s;%s;%s;%s;%s\n" % (
+            netlist_string += "%s;%s;%s;%s;%s\n" % (
                 type(el).__name__,
                 el.grid_to_node_string(el.x_minus, el.y_minus),
                 el.grid_to_node_string(el.x_plus, el.y_plus),
-                v, l))
+                v,
+                l,
+            )
         return netlist_string
 
-    def save(self, event=None, force_display_message = False):
-        '''
+    def save(self, event=None, force_display_message=False):
+        """
         Save the current state of the circuit to the file.
         If we are tracking changes (self.track_changes == True)
         also append the history list.
@@ -1023,10 +1084,10 @@ class CircuitEditor(tk.Canvas):
                                 in the network. However we want to always display the
                                 message when a user CTRL-S himself, to reassure him
                                 that his work is saved.
-        '''
+        """
 
-        # Obtain the string representation 
-        # of all the elements on the canvas       
+        # Obtain the string representation
+        # of all the elements on the canvas
         netlist_string = self.elements_list_to_netlist_string()
 
         try:
@@ -1034,29 +1095,28 @@ class CircuitEditor(tk.Canvas):
         except IndexError:
             # First time we save save: the history array is empty
             previously_saved_netlist_string = []
-        
+
         # If there actually was a change to the circuit
         if netlist_string != previously_saved_netlist_string:
 
             # Write that netlist string to the file
-            with open(self.netlist_filename, 'w+') as f:
+            with open(self.netlist_filename, "w+") as f:
                 # open file, erase contents and write new netlist
                 f.write(netlist_string)
 
             # If we are tracking the changes made to the circuit
             if self.track_changes:
 
-                
-                # In case we just used undo (ctrl-z), 
-                # we first want to delete the all entries 
+                # In case we just used undo (ctrl-z),
+                # we first want to delete the all entries
                 # in history which are after the current state of the circuit
-                del self.history[self.history_location+1:]
+                del self.history[self.history_location + 1 :]
 
                 # we append all the information about the current circuit
                 # to the history list
                 self.history.append(netlist_string)
 
-                # and increase our location in the history 
+                # and increase our location in the history
                 # lsit by one
                 self.history_location += 1
 
@@ -1066,7 +1126,7 @@ class CircuitEditor(tk.Canvas):
             self.write_message("Saving...")
 
     def load_netlist(self, lines):
-        '''
+        """
         Loads a circuit stored as a list of strings, each string
         representing a component of the circuit. The format of these
         strings is the same as that of the lines in the netlist file
@@ -1076,43 +1136,43 @@ class CircuitEditor(tk.Canvas):
         node_minus: list of strings
                     Each string should be in the format
                     <type> (C,L,R...);<x,y (node_minus in grid unit)>;<x,y (node_plus in grid unit)>;value;symbol
-        '''
+        """
 
         self.delete_all(track_changes=False)
         for el in lines:
-            el = el.replace('\n', '')
+            el = el.replace("\n", "")
             el = el.split(";")
 
-            #TODO replace this with 
+            # TODO replace this with
             # less verbose code?
-            if el[0] == 'W':
+            if el[0] == "W":
                 W(self, auto_place_info=el)
-            elif el[0] == 'R':
+            elif el[0] == "R":
                 R(self, auto_place_info=el)
-            elif el[0] == 'L':
+            elif el[0] == "L":
                 L(self, auto_place_info=el)
-            elif el[0] == 'J':
+            elif el[0] == "J":
                 J(self, auto_place_info=el)
-            elif el[0] == 'C':
+            elif el[0] == "C":
                 C(self, auto_place_info=el)
-            elif el[0] == 'G':
+            elif el[0] == "G":
                 G(self, auto_place_info=el)
 
     def on_resize(self, event=None):
-        '''
+        """
         Called when the user resizes the window, see configure_scrollregion
         and draw_grid for more detail
-        '''
+        """
         if self.verbose:
-            self.write_message('resize event')
+            self.write_message("resize event")
         self.configure_scrollregion()
         self.draw_grid(event)
 
-    def draw_grid(self, event=None, set_bindings = True):
-        '''
-        Called when the user resizes the window. 
+    def draw_grid(self, event=None, set_bindings=True):
+        """
+        Called when the user resizes the window.
         Will delete and rebuild the grid.
-        
+
         Parameters
         ----------
         set_bindings:   Boolean, optional
@@ -1121,91 +1181,105 @@ class CircuitEditor(tk.Canvas):
                         box (open a menu)
                         We want to set it to False in state1, when we
                         are drag/dropping or creating an element.
-        '''
+        """
         if self.verbose:
-            self.write_message('drawing grid with set_bindings = '+str(set_bindings))
-        
+            self.write_message("drawing grid with set_bindings = " + str(set_bindings))
 
         try:
             # Delete old grid
-            self.delete( self.grid_id)
+            self.delete(self.grid_id)
         except AttributeError:
             # First iteration of this method
             pass
-        
+
         # generate a tag for the grid based on a timestamp
         # this seems to be the only way to remove the tag bindings.
-        # if we would stick with a single grid_id, when we redraw the 
+        # if we would stick with a single grid_id, when we redraw the
         # grid without setting the bindings, it remembers the bindings
         # created in the past.
-        self.grid_id = 'grid_'+str(time.time())
+        self.grid_id = "grid_" + str(time.time())
 
         # Get visible area of the canvas in canvas units
-        box_canvas = (self.canvasx(0),  
-                      self.canvasy(0),
-                      self.canvasx(self.winfo_width()),
-                      self.canvasy(self.winfo_height()))
+        box_canvas = (
+            self.canvasx(0),
+            self.canvasy(0),
+            self.canvasx(self.winfo_width()),
+            self.canvasy(self.winfo_height()),
+        )
 
         # Create a white background
         # it is invisible, but we can assign actions to the user clicking on it
         self.background = self.create_rectangle(
-            *box_canvas, fill='white', outline='', tags= self.grid_id)
+            *box_canvas, fill="white", outline="", tags=self.grid_id
+        )
 
         # Create x and y coordinates for the grid
         grid_x = np.arange(
-            self.canvas_center[0], box_canvas[2], self.grid_unit).tolist()
-        grid_x += np.arange(self.canvas_center[0]-self.grid_unit,
-                            box_canvas[0], -self.grid_unit).tolist()
+            self.canvas_center[0], box_canvas[2], self.grid_unit
+        ).tolist()
+        grid_x += np.arange(
+            self.canvas_center[0] - self.grid_unit, box_canvas[0], -self.grid_unit
+        ).tolist()
         grid_y = np.arange(
-            self.canvas_center[1], box_canvas[3], self.grid_unit).tolist()
-        grid_y += np.arange(self.canvas_center[1]-self.grid_unit,
-                            box_canvas[1], -self.grid_unit).tolist()
+            self.canvas_center[1], box_canvas[3], self.grid_unit
+        ).tolist()
+        grid_y += np.arange(
+            self.canvas_center[1] - self.grid_unit, box_canvas[1], -self.grid_unit
+        ).tolist()
 
         # write the grid lines
         for x in grid_x:
             for y in grid_y:
-                self.create_line(x-1, y, x+2, y, tags= self.grid_id)
-                self.create_line(x, y-1, x, y+2, tags= self.grid_id)
+                self.create_line(x - 1, y, x + 2, y, tags=self.grid_id)
+                self.create_line(x, y - 1, x, y + 2, tags=self.grid_id)
 
         # Put the grid behind all other elements of the canvas
-        self.tag_lower( self.grid_id)
+        self.tag_lower(self.grid_id)
 
         # Determine what happens when the user clicks on the background
         if set_bindings:
 
             # Clicking on the background should deselect unless the user
             # is holding down shift/control
-            self.tag_bind( self.grid_id, '<ButtonPress-1>', self.on_click)
-            self.tag_bind( self.grid_id, '<Shift-ButtonPress-1>', lambda event:None)
-            self.tag_bind( self.grid_id, '<Control-ButtonPress-1>', lambda event:None)
+            self.tag_bind(self.grid_id, "<ButtonPress-1>", self.on_click)
+            self.tag_bind(self.grid_id, "<Shift-ButtonPress-1>", lambda event: None)
+            self.tag_bind(self.grid_id, "<Control-ButtonPress-1>", lambda event: None)
 
             # Dragging deselects + creates a selection rectangle
-            self.tag_bind( self.grid_id, "<B1-Motion>", self.expand_selection_field)
+            self.tag_bind(self.grid_id, "<B1-Motion>", self.expand_selection_field)
 
             # ctrl/shift+Dragging creates a selection rectangle (without deselecting)
-            self.tag_bind( self.grid_id, "<Shift-B1-Motion>", lambda event:self.expand_selection_field(event,deselect = False))
-            self.tag_bind( self.grid_id, "<Control-B1-Motion>", lambda event:self.expand_selection_field(event,deselect = False))
+            self.tag_bind(
+                self.grid_id,
+                "<Shift-B1-Motion>",
+                lambda event: self.expand_selection_field(event, deselect=False),
+            )
+            self.tag_bind(
+                self.grid_id,
+                "<Control-B1-Motion>",
+                lambda event: self.expand_selection_field(event, deselect=False),
+            )
 
             # right-clicking opens a menu
-            self.tag_bind( self.grid_id, "<Button-3>", self.right_click)
-        
+            self.tag_bind(self.grid_id, "<Button-3>", self.right_click)
+
     ###########################
     # BINDINGS
     ###########################
-    
-    def set_bindings(self,*args, exeptions = []):
+
+    def set_bindings(self, *args, exeptions=[]):
         for binding_list in args:
             for binding in binding_list:
                 if binding[0] not in exeptions:
                     self.bind(*binding)
 
-    def unset_bindings(self,*args, exceptions = []):
+    def unset_bindings(self, *args, exceptions=[]):
         for binding_list in args:
             for binding in binding_list:
                 self.unbind(binding[0])
 
     def bind(self, sequence=None, func=None, add=None):
-        '''
+        """
         Modifies the "bind" method of tk.Canvas such that
         the bound function also saves the details of an event
         if self.track_events_to is not None.
@@ -1214,27 +1288,28 @@ class CircuitEditor(tk.Canvas):
         to construct a (unit)test.
 
         We also pair certain key-strokes together, for example
-        when, <Control- ... > gets bound, 
+        when, <Control- ... > gets bound,
         we also bind <Command- ... > for OSX users
-        '''
+        """
 
-        for key,paired_key in self.paired_sequences:
+        for key, paired_key in self.paired_sequences:
             if key in sequence:
                 self.bind(
-                    sequence = sequence.replace(key,paired_key),
-                    func = func, 
-                    add = add)
+                    sequence=sequence.replace(key, paired_key), func=func, add=add
+                )
 
         if self.track_events_to is not None:
+
             def tracked_func(event):
-                track_event(self.track_events_to,event, sequence=sequence)
+                track_event(self.track_events_to, event, sequence=sequence)
                 func(event)
-            super(CircuitEditor, self).bind(sequence,tracked_func,add)
+
+            super(CircuitEditor, self).bind(sequence, tracked_func, add)
         else:
-            super(CircuitEditor, self).bind(sequence,func,add)
+            super(CircuitEditor, self).bind(sequence, func, add)
 
     def tag_bind(self, tagOrId, sequence=None, func=None, add=None):
-        '''
+        """
         Modifies the "tag_bind" method of tk.Canvas such that
         the bound function also saves the details of an event
         if self.track_events_to is not None.
@@ -1243,137 +1318,140 @@ class CircuitEditor(tk.Canvas):
         to construct a (unit)test.
 
         We also pair certain key-strokes together, for example
-        when, <Control- ... > gets bound, 
+        when, <Control- ... > gets bound,
         we also bind <Command- ... > for OSX users
-        '''
+        """
 
-        for key,paired_key in self.paired_sequences:
+        for key, paired_key in self.paired_sequences:
             if key in sequence:
-                self.tag_bind(tagOrId,
-                    sequence = sequence.replace(key,paired_key),
-                    func = func, 
-                    add = add)
+                self.tag_bind(
+                    tagOrId,
+                    sequence=sequence.replace(key, paired_key),
+                    func=func,
+                    add=add,
+                )
 
         if self.track_events_to is not None:
+
             def tracked_func(event):
-                track_event(self.track_events_to,event, sequence=sequence)
+                track_event(self.track_events_to, event, sequence=sequence)
                 func(event)
-            super(CircuitEditor, self).tag_bind(tagOrId,sequence,tracked_func,add)
+
+            super(CircuitEditor, self).tag_bind(tagOrId, sequence, tracked_func, add)
         else:
-            super(CircuitEditor, self).tag_bind(tagOrId,sequence,func,add)
+            super(CircuitEditor, self).tag_bind(tagOrId, sequence, func, add)
 
-    def unbind(self,sequence):
-        '''
+    def unbind(self, sequence):
+        """
         We pair certain key-strokes together, for example
-        When <Control- ... > gets unbound, 
+        When <Control- ... > gets unbound,
         we also unbind <Command- ... > for OSX users
-        '''
+        """
 
-        for key,paired_key in self.paired_sequences:
+        for key, paired_key in self.paired_sequences:
             if key in sequence:
-                self.unbind(sequence.replace(key,paired_key))
+                self.unbind(sequence.replace(key, paired_key))
         super(CircuitEditor, self).unbind(sequence)
 
     def define_permenant_bindings(self):
-        '''
+        """
         Assign keystrokes to functionalities
-        accessible in the FILE, EDIT, VIEW menus, 
-        as well as configure what happens when the 
+        accessible in the FILE, EDIT, VIEW menus,
+        as well as configure what happens when the
         user scrolls in combination with CTRL/SHIFT.
-        '''
+        """
         #############################
         # ELEMENT creation
         #############################
         self.bindings_element_creation = [
-            ['r', lambda event: R(self, event)],
-            ['l', lambda event: L(self, event)],
-            ['c', lambda event: C(self, event)],
-            ['j', lambda event: J(self, event)],
-            ['w', lambda event: W(self, event)],
-            ['g', lambda event: G(self, event)]
+            ["r", lambda event: R(self, event)],
+            ["l", lambda event: L(self, event)],
+            ["c", lambda event: C(self, event)],
+            ["j", lambda event: J(self, event)],
+            ["w", lambda event: W(self, event)],
+            ["g", lambda event: G(self, event)],
         ]
-        
+
         #############################
         # FILE menu functionalities
         #############################
-        self.bindings_quit = [
-        ['<Control-q>', lambda event: sys.exit()]]
-        self.bindings_open = [
-        ['<Control-o>', self.file_open]]
+        self.bindings_quit = [["<Control-q>", lambda event: sys.exit()]]
+        self.bindings_open = [["<Control-o>", self.file_open]]
         self.bindings_save = [
-        ['<Control-s>', lambda event: self.save(force_display_message=True)]]
-        self.bindings_file =\
-            self.bindings_quit+\
-            self.bindings_open+\
-            self.bindings_save
+            ["<Control-s>", lambda event: self.save(force_display_message=True)]
+        ]
+        self.bindings_file = (
+            self.bindings_quit + self.bindings_open + self.bindings_save
+        )
         #############################
         # EDIT menu functionalities
         #############################
-        self.bindings_delete = [
-        ['<Delete>', self.delete_selection]]
+        self.bindings_delete = [["<Delete>", self.delete_selection]]
         self.bindings_cut_copy_paste = [
-        ['<Control-c>', self.copy_selection],
-        ['<Control-x>', self.cut_selection],
-        ['<Control-v>', self.paste]]
-        self.bindings_select_all = [
-        ['<Control-a>', self.select_all]]
+            ["<Control-c>", self.copy_selection],
+            ["<Control-x>", self.cut_selection],
+            ["<Control-v>", self.paste],
+        ]
+        self.bindings_select_all = [["<Control-a>", self.select_all]]
         self.bindings_undo_redo = [
-        ['<Control-y>', self.ctrl_y],
-        ['<Control-z>', self.ctrl_z]]
-        self.bindings_rotate = [
-        ['<Alt-r>', self.rotate]]
-        self.bindings_edit =\
-            self.bindings_delete+\
-            self.bindings_cut_copy_paste+\
-            self.bindings_select_all+\
-            self.bindings_undo_redo+\
-            self.bindings_rotate
+            ["<Control-y>", self.ctrl_y],
+            ["<Control-z>", self.ctrl_z],
+        ]
+        self.bindings_rotate = [["<Alt-r>", self.rotate]]
+        self.bindings_edit = (
+            self.bindings_delete
+            + self.bindings_cut_copy_paste
+            + self.bindings_select_all
+            + self.bindings_undo_redo
+            + self.bindings_rotate
+        )
         #############################
         # VIEW menu functionalities
         #############################
-        self.bindings_view = [
-        ['<Control-r>', self.center_window_on_circuit]]
+        self.bindings_view = [["<Control-r>", self.center_window_on_circuit]]
         #############################
         # Mouse wheel functionalities
         #############################
-        self.bindings_zoom = [
-        ['<Control-MouseWheel>', self.scroll_zoom]]
+        self.bindings_zoom = [["<Control-MouseWheel>", self.scroll_zoom]]
         self.bindings_scroll = [
-        ['<Shift-MouseWheel>', self.scroll_x_wheel],
-        ['<MouseWheel>', self.scroll_y_wheel]]
+            ["<Shift-MouseWheel>", self.scroll_x_wheel],
+            ["<MouseWheel>", self.scroll_y_wheel],
+        ]
 
-        self.permenant_bindings =\
-            self.bindings_element_creation+\
-            self.bindings_file+\
-            self.bindings_edit+\
-            self.bindings_view+\
-            self.bindings_zoom+\
-            self.bindings_scroll
+        self.permenant_bindings = (
+            self.bindings_element_creation
+            + self.bindings_file
+            + self.bindings_edit
+            + self.bindings_view
+            + self.bindings_zoom
+            + self.bindings_scroll
+        )
 
-    def unset_temporary_bindings(self,exceptions=[]):
-        '''
+    def unset_temporary_bindings(self, exceptions=[]):
+        """
         Unsets all temporary bindings.
-        '''
+        """
         for sequence in [
             "<Escape>",
             "<Motion>",
-            '<Left>',
-            '<Right>',
-            '<Up>', 
-            '<Down>',
+            "<Left>",
+            "<Right>",
+            "<Up>",
+            "<Down>",
             "<ButtonPress-1>",
             "<ButtonRelease-1>",
             "<Shift-B1-Motion>",
             "<Control-B1-Motion>",
             "<B1-Motion>",
-            '<Shift-ButtonPress-1>',
-            '<Control-ButtonPress-1>',
-            '<Shift-ButtonRelease-1>',
-            '<Control-ButtonRelease-1>', 
-            '<Double-ButtonPress-1>', 
-            '<ButtonPress-3>',
-            '<ButtonRelease-3>', 
-            '<Return>']:
+            "<Shift-ButtonPress-1>",
+            "<Control-ButtonPress-1>",
+            "<Shift-ButtonRelease-1>",
+            "<Control-ButtonRelease-1>",
+            "<Double-ButtonPress-1>",
+            "<ButtonPress-3>",
+            "<ButtonRelease-3>",
+            "<Return>",
+        ]:
             if sequence not in exceptions:
                 self.unbind(sequence)
 
@@ -1381,29 +1459,29 @@ class CircuitEditor(tk.Canvas):
     # FILE menu functionalities
     ###########################
 
-    def file_open(self,event = None):
-        '''
+    def file_open(self, event=None):
+        """
         Triggered by the menu bar button File>Open.
         Opens a dialog window where the user can choose a file
         then loads the file.
-        '''
+        """
 
         # Prompt user for file name
-        netlist_filename = filedialog.askopenfilename(initialdir = os.getcwd())
+        netlist_filename = filedialog.askopenfilename(initialdir=os.getcwd())
 
-        if netlist_filename == '':
+        if netlist_filename == "":
             # User cancelled
             pass
         else:
 
             # open file
-            with open(netlist_filename, 'r') as f:
+            with open(netlist_filename, "r") as f:
 
                 # extract the netlist file string
                 netlist_file_string = [line for line in f]
-            
+
             # here we don't want to track changes
-            # as we're creating many components in one go, 
+            # as we're creating many components in one go,
             # we'll be saving the new circuit afterwards
             self.track_changes = False
             try:
@@ -1416,12 +1494,12 @@ class CircuitEditor(tk.Canvas):
                 print(e)
             else:
                 self.write_message("File succesfully loaded")
-            
+
             # Save changes and turn change tracker back on
             self.track_changes = True
             self.save()
-            
-            # Center window in case the other circuit was 
+
+            # Center window in case the other circuit was
             # built at a different location on the canvas
             self.center_window_on_circuit()
 
@@ -1432,14 +1510,14 @@ class CircuitEditor(tk.Canvas):
     ##############################
 
     def scroll_y_wheel(self, event):
-        '''
+        """
         Triggered by the user scrolling (in combination with no particular key presses).
-        '''
+        """
 
-        # Determine which direction the user is scrolling 
+        # Determine which direction the user is scrolling
         # if using windows, then event.delta has also a different
-        # amplitude depending on how fast the user is scrolling, 
-        # but we ignore that 
+        # amplitude depending on how fast the user is scrolling,
+        # but we ignore that
         if event.num == 5 or event.delta < 0:
             direction = 1
         if event.num == 4 or event.delta > 0:
@@ -1452,18 +1530,18 @@ class CircuitEditor(tk.Canvas):
         # can scroll
         self.configure_scrollregion()
 
-        # redraw the grid such that it fills the 
+        # redraw the grid such that it fills the
         # visible canvas
         self.draw_grid(event)
 
     def scroll_x_wheel(self, event):
-        '''
-        Triggered by the user is SHIFT+scrolling 
-        '''
+        """
+        Triggered by the user is SHIFT+scrolling
+        """
 
-        # Determine which direction the user is scrolling 
+        # Determine which direction the user is scrolling
         # if using windows, then event.delta has also a different
-        # amplitude depending on how fast the user is scrolling, 
+        # amplitude depending on how fast the user is scrolling,
         # but we ignore that.
         # Note: Linux -> event.num and  Windows -> event.delta
         if event.num == 5 or event.delta < 0:
@@ -1478,31 +1556,31 @@ class CircuitEditor(tk.Canvas):
         # can scroll
         self.configure_scrollregion()
 
-        # redraw the grid such that it fills the 
+        # redraw the grid such that it fills the
         # visible canvas
         self.draw_grid(event)
-    
+
     def scroll_zoom(self, event):
-        '''
+        """
         Called when the user ALT+Scrolls.
         Zooms in/out of the canvas.
         Zooming works by chaning the grid_unit of the canvas
         and re-plotting all the circuit elements.
         During zooming, we move the circuit and grid such that
         the position of the mouse on the grid remains constant
-        '''
-        
+        """
+
         # Sets the smallest/largest allowed grid_unit size
         smallest_grid_unit = 35
         largest_grid_unit = 100
 
-        # Determine which direction the user is scrolling 
+        # Determine which direction the user is scrolling
         # if using windows, then event.delta has also a different
-        # amplitude depending on how fast the user is scrolling, 
+        # amplitude depending on how fast the user is scrolling,
         # but we ignore that.
         # Note: Linux -> event.num and  Windows -> event.delta
         old_grid_unit = self.grid_unit
-        
+
         # Default scaling of the grid_unit for slow scrolling on windows
         # or all scrolling on other OS
         scaling = 1.08
@@ -1514,19 +1592,19 @@ class CircuitEditor(tk.Canvas):
         except:
             pass
 
-        # Determine which direction the user is scrolling 
+        # Determine which direction the user is scrolling
         # and scale the grid_unit accordingly
         # Note: Linux -> event.num and  Windows -> event.delta
         if event.num == 5 or event.delta < 0:  # scroll out, smaller
-            new_grid_unit = int(self.grid_unit/scaling)
+            new_grid_unit = int(self.grid_unit / scaling)
             if new_grid_unit == old_grid_unit:
                 new_grid_unit -= 1
         elif event.num == 4 or event.delta > 0:  # scroll in, bigger
-            new_grid_unit = int(self.grid_unit*scaling)
+            new_grid_unit = int(self.grid_unit * scaling)
             if new_grid_unit == old_grid_unit:
                 new_grid_unit += 1
 
-        # If the user is trying to go below/above the 
+        # If the user is trying to go below/above the
         # smallest/largest grid unit size, just
         # display a message
         if smallest_grid_unit > new_grid_unit:
@@ -1539,38 +1617,41 @@ class CircuitEditor(tk.Canvas):
             # position of the mouse when the scrolling occured
             # in old grid units
             grid_mouse_pos_old = self.canvas_to_grid(
-                [self.canvasx(event.x), self.canvasy(event.y)])
+                [self.canvasx(event.x), self.canvasy(event.y)]
+            )
 
             # change the grid unit
             self.grid_unit = new_grid_unit
 
-            
             # position of the mouse when the scrolling occured
             # in canvas units
             canvas_mouse_pos = self.grid_to_canvas(grid_mouse_pos_old)
 
-            # Amount we have to shift the canvas such that the 
+            # Amount we have to shift the canvas such that the
             # position of the mouse on the new and old grid remains constant
             canvas_center_shift = [
-                self.canvasx(event.x)-canvas_mouse_pos[0], 
-                self.canvasy(event.y)-canvas_mouse_pos[1]]
+                self.canvasx(event.x) - canvas_mouse_pos[0],
+                self.canvasy(event.y) - canvas_mouse_pos[1],
+            ]
 
-            # Shift the center of the canvas such that 
+            # Shift the center of the canvas such that
             # position of the mouse on the new and old grid remains constant
-            self.canvas_center = [self.canvas_center[0]+canvas_center_shift[0],
-                                  self.canvas_center[1]+canvas_center_shift[1]]
+            self.canvas_center = [
+                self.canvas_center[0] + canvas_center_shift[0],
+                self.canvas_center[1] + canvas_center_shift[1],
+            ]
 
-            # Move and scale all ALREADY CREATED elements to adapt to the 
+            # Move and scale all ALREADY CREATED elements to adapt to the
             # new grid
             for el in self.elements:
                 el.redraw()
 
-            # Move and scale all IN CREATION elements to adapt to the 
-            # new grid    
+            # Move and scale all IN CREATION elements to adapt to the
+            # new grid
             if self.in_creation is not None:
                 self.in_creation.init_redraw(event)
 
-            # redraw the grid such that it fills the 
+            # redraw the grid such that it fills the
             # visible canvas
             self.draw_grid(event)
 
@@ -1580,49 +1661,59 @@ class CircuitEditor(tk.Canvas):
 
     def configure_scrollregion(self):
 
-        '''
+        """
         Called every time some moving around or zooming occurs on the canvas
         Configures the range that is scrollable with the scrollbars
-        '''
+        """
 
-        extra_scrollable_region = 50 # in canvas units
-        '''
-        if the circuit fulls the visible canvas, there will 
+        extra_scrollable_region = 50  # in canvas units
+        """
+        if the circuit fulls the visible canvas, there will
         still be a small gap in the scrollbar to indicate to
-        the user he can use the scrollbars to scroll down by some 
+        the user he can use the scrollbars to scroll down by some
         small amount
-        '''
+        """
 
         # get visible area of the canvas in canvas units
-        box_canvas = [self.canvasx(0)-extra_scrollable_region,  
-                      self.canvasy(0)-extra_scrollable_region,
-                      self.canvasx(self.winfo_width())+extra_scrollable_region,
-                      self.canvasy(self.winfo_height())+extra_scrollable_region]
+        box_canvas = [
+            self.canvasx(0) - extra_scrollable_region,
+            self.canvasy(0) - extra_scrollable_region,
+            self.canvasx(self.winfo_width()) + extra_scrollable_region,
+            self.canvasy(self.winfo_height()) + extra_scrollable_region,
+        ]
 
         # If there are some drawn circuit elemnts
-        # set box_elemnts to describe the area filled by the circuit 
+        # set box_elemnts to describe the area filled by the circuit
         # in canvas units
         if len(self.elements) > 0:
-            xs = [el.x_minus for el in self.elements] + \
-                [el.x_plus for el in self.elements]
-            ys = [el.y_minus for el in self.elements] + \
-                [el.y_plus for el in self.elements]
+            xs = [el.x_minus for el in self.elements] + [
+                el.x_plus for el in self.elements
+            ]
+            ys = [el.y_minus for el in self.elements] + [
+                el.y_plus for el in self.elements
+            ]
             box_elements = self.grid_to_canvas(
-                [min(xs)-1, min(ys)-1])+self.grid_to_canvas([max(xs)+1, max(ys)+1])
+                [min(xs) - 1, min(ys) - 1]
+            ) + self.grid_to_canvas([max(xs) + 1, max(ys) + 1])
 
             # If there are some drawn circuit elemnts, the scrollable region
             # should show that the user has some circuit elements to discover
             # if he scrolls down/up/left/right
             self.configure(
-                scrollregion=[min(box_elements[0], box_canvas[0]), min(box_elements[1], box_canvas[1]),
-                              max(box_elements[2], box_canvas[2]), max(box_elements[3], box_canvas[3])])
+                scrollregion=[
+                    min(box_elements[0], box_canvas[0]),
+                    min(box_elements[1], box_canvas[1]),
+                    max(box_elements[2], box_canvas[2]),
+                    max(box_elements[3], box_canvas[3]),
+                ]
+            )
         else:
             # if there are no drawn circuit elements, just indicate
             # that the user can scroll down/up/left/right a little bit
             self.configure(scrollregion=box_canvas)
 
-    def zoom(self, direction = 'in'):
-        '''
+    def zoom(self, direction="in"):
+        """
         Generates an event which simulates the user
         scrolling by one increment
 
@@ -1631,37 +1722,37 @@ class CircuitEditor(tk.Canvas):
         direction:  string
                     'in' tp scroll in
                     'out' to scroll out
-        '''
+        """
 
         # Location at which the fake scrolling occurs
-        kwargs = {'x':0,'y':0}
+        kwargs = {"x": 0, "y": 0}
 
-        args = ['<Control-MouseWheel>']
-        if direction == 'in':
-            self.event_generate(*args, delta = 121, **kwargs)
-        if direction == 'out':
-            self.event_generate(*args, delta = -121, **kwargs)
+        args = ["<Control-MouseWheel>"]
+        if direction == "in":
+            self.event_generate(*args, delta=121, **kwargs)
+        if direction == "out":
+            self.event_generate(*args, delta=-121, **kwargs)
 
     def scroll_x(self, *args, **kwargs):
-        """ 
+        """
         Is called when the user interacts with the horizontal scroll bar
         """
 
         # shift canvas horizontally
         self.xview(*args)
 
-        # redraw the grid such that it fills the 
+        # redraw the grid such that it fills the
         # visible canvas
         self.draw_grid()
 
     def scroll_y(self, *args, **kwargs):
-        """ 
+        """
         Is called when the user interacts with the vertical scroll bar
         """
         # shift canvas vertically
         self.yview(*args)
 
-        # redraw the grid such that it fills the 
+        # redraw the grid such that it fills the
         # visible canvas
         self.draw_grid()
 
@@ -1670,41 +1761,41 @@ class CircuitEditor(tk.Canvas):
     ##############################
 
     def cut_selection(self, event=None):
-        '''
+        """
         Called on CTRL+X or Edit>Cut.
         Copies and deletes all selected elements.
-        '''
+        """
         self.copy_selection()
         self.delete_selection()
 
     def copy_selection(self, event=None):
-        '''
+        """
         Called on CTRL+C or Edit>Copy.
         Adds selected elements to the self.copied_elements variable.
-        '''
-        
+        """
+
         # Since deepcopying calls the __init__ of elements
         # we forbid any additions the history variable to be on the safe side
         self.track_changes = False
 
         to_copy = self.selected_elements
 
-        # If somthing has been copied 
+        # If somthing has been copied
         # and then you do CTRL-C with nothing selected
         # the previously copied elements remained copied
-        if len(to_copy)>0:
+        if len(to_copy) > 0:
             self.copied_elements = [deepcopy(el) for el in to_copy]
 
         self.track_changes = True
 
     def paste(self, event=None):
-        '''
+        """
         Called on CTRL+V or Edit>Paste.
         Creates all the elements in self.copied_elements
         and has them hover under the users mouse until
         he clicks somewhere, snapping them in place on the grid.
-        '''
-        
+        """
+
         if len(self.copied_elements) > 0:
             self.deselect_all()
 
@@ -1727,98 +1818,108 @@ class CircuitEditor(tk.Canvas):
 
                 # used to update the position of components label
                 el.add_or_replace_label()
-            
+
             #########################
             # Note: all the bindings below need only
             # be applied to a single element since
             # "on_motion", "release_motion" acts
             # on all the selected elements
-            # and we have set all the pasted elements to 
+            # and we have set all the pasted elements to
             # be selected above
             #########################
 
-            # Ensure that when the mouse moves, the selection 
+            # Ensure that when the mouse moves, the selection
             # moves such that the top left of the circuit lies
             # under the mouse, selection is released upon "<ButtonPress-1>"
-            self.bind("<Motion>", lambda event: el.on_motion(event, release_sequence = "ButtonPress-1"))
+            self.bind(
+                "<Motion>",
+                lambda event: el.on_motion(event, release_sequence="ButtonPress-1"),
+            )
 
-            # shift all elements in position 
+            # shift all elements in position
             # such that ''el'' lies under the mouse
-            self.event_generate('<Motion>', warp=False,
-                x=self.get_mouse_location(units='window')[0],
-                y=self.get_mouse_location(units='window')[1])
+            self.event_generate(
+                "<Motion>",
+                warp=False,
+                x=self.get_mouse_location(units="window")[0],
+                y=self.get_mouse_location(units="window")[1],
+            )
         else:
             self.write_message("Nothing to paste")
-
 
     #############################
     #  HISTORY MANAGEMENT
     ##############################
 
     def ctrl_z(self, event=None):
-        '''
+        """
         Called on CTRL+Z or Edit>Undo.
         Returns to the circuit configuration previously stored in the
-        self.history variable. 
+        self.history variable.
         A circuit is added to the self.history variable when self.save()
         is called and self.track_changes == True.
-        '''
+        """
 
         if self.history_location > 0:
             self.track_changes = False
             self.history_location -= 1
-            self.load_netlist(self.history[self.history_location].split('\n'))
+            self.load_netlist(self.history[self.history_location].split("\n"))
             self.save()
             self.track_changes = True
         else:
-            self.write_message('Nothing to undo')
+            self.write_message("Nothing to undo")
 
     def ctrl_y(self, event=None):
-        '''
+        """
         Called on CTRL+Y or Edit>Redo.
         Returns to the next circuit configuration available in the
-        self.history variable. 
-        This is possible if the user just undid (CTRL-Z) and did 
+        self.history variable.
+        This is possible if the user just undid (CTRL-Z) and did
         not yet create or move a component.
         Indeed if the user does the latter then self.save() should be
-        called with self.track_changes == True, which erases all future 
+        called with self.track_changes == True, which erases all future
         self.history entries.
         This function will then display the message 'Nothing to redo'.
-        '''
+        """
 
-        if 0 <= self.history_location < len(self.history)-1:
+        if 0 <= self.history_location < len(self.history) - 1:
             self.track_changes = False
             self.history_location += 1
-            self.load_netlist(self.history[self.history_location].split('\n'))
+            self.load_netlist(self.history[self.history_location].split("\n"))
             self.track_changes = True
         else:
-            self.write_message('Nothing to redo')
+            self.write_message("Nothing to redo")
 
     #############################
     #  RIGHT CLICK
     ##############################
 
     def right_click(self, event):
-        '''
-        Called when the user right clicks on the grid or on the 
+        """
+        Called when the user right clicks on the grid or on the
         background of the canvas.
         Deselects all components and opens the right click menu.
-        '''
+        """
         self.deselect_all()
         self.bind("<ButtonRelease-3>", self.open_right_click_menu)
 
     def open_right_click_menu(self, event):
-        '''
-        Menu opened when the user right clicks on the grid or on the 
+        """
+        Menu opened when the user right clicks on the grid or on the
         background of the canvas.
         Deselects all components and opens the right click menu.
-        '''
+        """
         label_template = "{:<15}{:>6}"
-        menu_font = Font(family="Courier New", size=self.canvas.font_size, weight='normal')
+        menu_font = Font(
+            family="Courier New", size=self.canvas.font_size, weight="normal"
+        )
 
         menu = tk.Menu(self, tearoff=0)
-        menu.add_command(label=label_template.format("Paste","Ctrl-V"), command=(lambda :self.event_generate('<Control-v>')),
-            font = menu_font)
+        menu.add_command(
+            label=label_template.format("Paste", "Ctrl-V"),
+            command=(lambda: self.event_generate("<Control-v>")),
+            font=menu_font,
+        )
         menu.tk_popup(event.x_root, event.y_root)
         self.bind("<ButtonRelease-3>", lambda event: None)
 
@@ -1827,18 +1928,18 @@ class CircuitEditor(tk.Canvas):
     ##############################
 
     def on_click(self, event):
-        '''
+        """
         Called when user clicks on the grid or the background of the canvas.
         Deselects all components
-        '''
+        """
         self.deselect_all()
 
-    def expand_selection_field(self, event, deselect = True):
-        '''
+    def expand_selection_field(self, event, deselect=True):
+        """
         Called when user clicks+drags the mouse
         on the grid or the background of the canvas.
 
-        Builds the dashed selection box (initially with zero area) 
+        Builds the dashed selection box (initially with zero area)
         where the one corner is located at the click position, and the other
         is located at the current mouses position.
 
@@ -1855,17 +1956,17 @@ class CircuitEditor(tk.Canvas):
         deselect:   Boolean, optional
                     When True (default), only components in the selection box will be selected
                     When False, components which where already selected remain selected
-        '''
-        
+        """
+
         if self.selection_rectangle_x_start is None:
             # Initialize the box-selection process
             ######################################
-            
+
             # Make all components and navigation
             # unresponsive
             self.set_state(3)
 
-            # Construct a list of all components which 
+            # Construct a list of all components which
             # where already selected
             if deselect:
                 self.selected_without_selection_rectangle = []
@@ -1873,8 +1974,7 @@ class CircuitEditor(tk.Canvas):
                 # use "list" to make a copy of selected_elements
                 self.selected_without_selection_rectangle = list(self.selected_elements)
 
-
-            # Store location at which the user clicks 
+            # Store location at which the user clicks
             # in canvas units.
             # This will form one corner of the selection box.
             self.selection_rectangle_x_start = self.canvasx(event.x)
@@ -1884,11 +1984,15 @@ class CircuitEditor(tk.Canvas):
             # The other corner of the selection box is determined by the position
             # the mouse (for the moment the box has zero area).
             self.selection_rectangle = self.create_rectangle(
-                self.canvasx(event.x), self.canvasy(event.y), self.canvasx(event.x), self.canvasy(event.y), 
-                dash=(3, 5))
-            
+                self.canvasx(event.x),
+                self.canvasy(event.y),
+                self.canvasx(event.x),
+                self.canvasy(event.y),
+                dash=(3, 5),
+            )
+
             # End the selection field when user releases his click
-            self.tag_bind( self.grid_id, "<ButtonRelease-1>", self.end_selection_field)
+            self.tag_bind(self.grid_id, "<ButtonRelease-1>", self.end_selection_field)
 
         # Deselect all components
         self.deselect_all()
@@ -1899,21 +2003,23 @@ class CircuitEditor(tk.Canvas):
             el.force_select()
 
         # Calculate coordinates of selection rectangle
-        self.coords(self.selection_rectangle,
-                    min(self.canvasx(event.x), self.selection_rectangle_x_start),
-                    min(self.canvasy(event.y), self.selection_rectangle_y_start),
-                    max(self.canvasx(event.x), self.selection_rectangle_x_start),
-                    max(self.canvasy(event.y), self.selection_rectangle_y_start))
+        self.coords(
+            self.selection_rectangle,
+            min(self.canvasx(event.x), self.selection_rectangle_x_start),
+            min(self.canvasy(event.y), self.selection_rectangle_y_start),
+            max(self.canvasx(event.x), self.selection_rectangle_x_start),
+            max(self.canvasy(event.y), self.selection_rectangle_y_start),
+        )
 
         # Select all components in the selection rectangle
         for el in self.elements:
             el.box_select(*self.coords(self.selection_rectangle))
 
     def end_selection_field(self, event):
-        '''
+        """
         Called when user releases a click on the grid or background of the canvas.
         Will delete the selection rectangle.
-        '''
+        """
         self.delete(self.selection_rectangle)
 
         # Resets the initial rectangle corner to None
@@ -1926,16 +2032,16 @@ class CircuitEditor(tk.Canvas):
         self.exit_state(3)
 
     def deselect_all(self, event=None):
-        '''
+        """
         Deselects all components on the canvas.
-        '''
+        """
         for el in self.elements:
             el.selected = False
 
     def select_all(self, event=None):
-        '''
+        """
         Selects all components on the canvas.
-        '''
+        """
         for el in self.elements:
             el.force_select()
 
@@ -1944,7 +2050,7 @@ class CircuitEditor(tk.Canvas):
     ##############################
 
     def delete_selection(self, event=None, track_changes=None):
-        '''
+        """
         Deletes selected components.
 
         Parameters
@@ -1955,7 +2061,7 @@ class CircuitEditor(tk.Canvas):
                         True (or False), force the function to keep track (or not) of the
                         deletion of all components, allowing the user to undo (or not) this
                         operation.
-        '''
+        """
 
         was_tracking_changes = self.track_changes
 
@@ -1964,14 +2070,14 @@ class CircuitEditor(tk.Canvas):
 
         # we have to define a to_delete list
         # which is a copy of the selected elements list
-        # so that we can delete elements without 
+        # so that we can delete elements without
         # messing up the for loop
         to_delete = list(self.selected_elements)
 
         for el in to_delete:
             el.delete()
 
-        # Append these changes to the history variable depending on the value 
+        # Append these changes to the history variable depending on the value
         # of the track_changes input parameters
         if track_changes is None:  # Just follow "was_tracking_changes"
             self.track_changes = was_tracking_changes
@@ -1983,12 +2089,12 @@ class CircuitEditor(tk.Canvas):
             self.save()
             self.track_changes = track_changes
 
-        # This may have deleted components out of the visible canvas, 
+        # This may have deleted components out of the visible canvas,
         # meaning that the scrollable region should be re-configured.
         self.configure_scrollregion()
 
     def delete_all(self, event=None, track_changes=None):
-        '''
+        """
         Selects all components, then deletes the selection
 
         Parameters
@@ -1999,7 +2105,7 @@ class CircuitEditor(tk.Canvas):
                         True (or False), force the function to keep track (or not) of the
                         deletion of all components, allowing the user to undo (or not) this
                         operation.
-        '''
+        """
         self.select_all()
         self.delete_selection(event, track_changes)
 
@@ -2008,9 +2114,9 @@ class CircuitEditor(tk.Canvas):
     ##############################
 
     def create_circle(self, x, y, r):
-        '''
-        Creates a filled black circle located at 
-        (x,y) with a radius r. 
+        """
+        Creates a filled black circle located at
+        (x,y) with a radius r.
 
         Parameters
         ----------
@@ -2025,16 +2131,16 @@ class CircuitEditor(tk.Canvas):
         -------
         object_id:  integer
             object ID of the circle (actually an tkinter oval)
-        '''
+        """
 
         x0 = x - r
         y0 = y - r
         x1 = x + r
         y1 = y + r
-        return self.create_oval(x0, y0, x1, y1, fill='black')
+        return self.create_oval(x0, y0, x1, y1, fill="black")
 
     def update_circle(self, circle, x, y, r):
-        '''
+        """
         Updates the position and size of a circle.
 
         Parameters
@@ -2047,7 +2153,7 @@ class CircuitEditor(tk.Canvas):
             vertical position of the center of the circle in canvas units
         r:  float
             radius of the circle in canvas units
-        '''
+        """
 
         x0 = x - r
         y0 = y - r
@@ -2060,7 +2166,7 @@ class CircuitEditor(tk.Canvas):
     ##############################
 
     def grid_to_canvas(self, pos):
-        '''
+        """
         Converts a position in grid units to canvas units
 
         Parameters
@@ -2072,13 +2178,15 @@ class CircuitEditor(tk.Canvas):
         -------
         [x_canvas,y_canvas]:    list of floats
                                 position in canvas units
-        '''
+        """
 
-        return [self.canvas_center[0]+self.grid_unit*pos[0],
-                self.canvas_center[1]+self.grid_unit*pos[1]]
+        return [
+            self.canvas_center[0] + self.grid_unit * pos[0],
+            self.canvas_center[1] + self.grid_unit * pos[1],
+        ]
 
     def canvas_to_grid(self, pos):
-        '''
+        """
         Converts a position in canvas units to grid units
 
         Parameters
@@ -2090,19 +2198,21 @@ class CircuitEditor(tk.Canvas):
         -------
         [x_grid,y_grid]:    list of floats
                             position in grid units
-        '''
+        """
 
-        return [(pos[0]-self.canvas_center[0])/self.grid_unit,
-                (pos[1]-self.canvas_center[1])/self.grid_unit]
-    
-    def get_mouse_location(self, units = 'canvas'):
-        '''
+        return [
+            (pos[0] - self.canvas_center[0]) / self.grid_unit,
+            (pos[1] - self.canvas_center[1]) / self.grid_unit,
+        ]
+
+    def get_mouse_location(self, units="canvas"):
+        """
         Returns the location of the mouse pointer in canvas units.
 
         Arguments
         ---------
         units   string, optional
-                units in which to return the location, 
+                units in which to return the location,
                 defaults to 'canvas', other option
                 is 'window'
 
@@ -2110,39 +2220,46 @@ class CircuitEditor(tk.Canvas):
         -------
         [x,y]:  List of floats
                 corresponding to the location of the mouse pointer in canvas units.
-        '''
-        if units == 'window':
-            return [self.winfo_pointerx() - self.winfo_rootx(),
-                    self.winfo_pointery() - self.winfo_rooty()]
-        elif units == 'canvas':
-            return [self.canvasx(self.winfo_pointerx())-self.winfo_rootx(), 
-                self.canvasy(self.winfo_pointery())-self.winfo_rooty()]
-    
-    def center_window_on_circuit(self, event = None):
-        '''
+        """
+        if units == "window":
+            return [
+                self.winfo_pointerx() - self.winfo_rootx(),
+                self.winfo_pointery() - self.winfo_rooty(),
+            ]
+        elif units == "canvas":
+            return [
+                self.canvasx(self.winfo_pointerx()) - self.winfo_rootx(),
+                self.canvasy(self.winfo_pointery()) - self.winfo_rooty(),
+            ]
+
+    def center_window_on_circuit(self, event=None):
+        """
         Called when the gui is opened or a new circuit is opened, or
         upon clicking View>Re-center.
 
-        Moves the canvas such that the top left point of the circuit 
+        Moves the canvas such that the top left point of the circuit
         is situated at the top left of the canvas.
-        '''
+        """
 
         margin = 3
-        '''
+        """
         Mrgin between the circuit and the upper and left edges of the canvas.
         In grid units.
-        '''
+        """
 
         if len(self.elements) > 0:
 
             # determine the coordinates of a box surrounding all
             # the circuit elements (plus a margin)
-            xs = [el.x_minus for el in self.elements] + \
-                [el.x_plus for el in self.elements]
-            ys = [el.y_minus for el in self.elements] + \
-                [el.y_plus for el in self.elements]
-            box_elements = self.grid_to_canvas([min(xs)-margin, min(ys)-margin])\
-                    +self.grid_to_canvas([max(xs)+margin, max(ys)+margin])
+            xs = [el.x_minus for el in self.elements] + [
+                el.x_plus for el in self.elements
+            ]
+            ys = [el.y_minus for el in self.elements] + [
+                el.y_plus for el in self.elements
+            ]
+            box_elements = self.grid_to_canvas(
+                [min(xs) - margin, min(ys) - margin]
+            ) + self.grid_to_canvas([max(xs) + margin, max(ys) + margin])
 
             # Set this box to be the scrollable region and
             # move to the upper left corner of that scrollable region
@@ -2150,17 +2267,17 @@ class CircuitEditor(tk.Canvas):
             self.xview_moveto(0)
             self.yview_moveto(0)
 
-        # Since the canvas has moved, 
-        # re-configure the scrollregion and 
+        # Since the canvas has moved,
+        # re-configure the scrollregion and
         # re-draw the grid
         self.configure_scrollregion()
         self.draw_grid()
 
-    def rotate(self,event = None, angle = 90, around = None,recentering_sequence = None):
-        '''Rotates the selection around the component 
+    def rotate(self, event=None, angle=90, around=None, recentering_sequence=None):
+        """Rotates the selection around the component
         ``around`` by an angle given in degrees
         where anti-clockwise is a positive angle.
-        '''
+        """
         if around is None and len(self.selected_elements) == 0:
             return
         elif around is None and len(self.selected_elements) > 0:
@@ -2169,48 +2286,50 @@ class CircuitEditor(tk.Canvas):
         elif around in self.selected_elements:
             to_rotate = self.selected_elements
         else:
-            to_rotate = around 
-        
+            to_rotate = around
+
         x0 = around.x_plus
         y0 = around.y_plus
 
         def transform(xy):
-            x = xy[0]-x0
-            y = xy[1]-y0
+            x = xy[0] - x0
+            y = xy[1] - y0
 
-            if angle%360 == 0:
-                return [x0+x,y0+y]
-            if angle%360 == 90:
-                return [x0-y,y0+x]
-            if angle%360 == 180:
-                return [x0-x,y0-y]
-            if angle%360 == 270:
-                return [x0+y,y0-x]
+            if angle % 360 == 0:
+                return [x0 + x, y0 + y]
+            if angle % 360 == 90:
+                return [x0 - y, y0 + x]
+            if angle % 360 == 180:
+                return [x0 - x, y0 - y]
+            if angle % 360 == 270:
+                return [x0 + y, y0 - x]
 
         self.track_changes = False
         for el in to_rotate:
-            el.pos = transform(el.pos[:2])+transform(el.pos[2:])
+            el.pos = transform(el.pos[:2]) + transform(el.pos[2:])
             el.redraw()
-        
+
         if recentering_sequence is not None:
             # shift the mouse by 0,0 such that if
-            # the elements were following the mouse, 
+            # the elements were following the mouse,
             # they would move under the mouse
             # Using B1 here seems to be necessary when
             # creating unittests
-            self.event_generate(recentering_sequence, warp=False,
-                x=self.get_mouse_location(units='window')[0],
-                y=self.get_mouse_location(units='window')[1])
-
+            self.event_generate(
+                recentering_sequence,
+                warp=False,
+                x=self.get_mouse_location(units="window")[0],
+                y=self.get_mouse_location(units="window")[1],
+            )
 
     #############################
     #  UTILITIES
     ##############################
-    
+
     def write_message(self, text):
-        '''
+        """
         Displays a message on the canvas.
-        Called each time the circuit is saved, or to 
+        Called each time the circuit is saved, or to
         inform the user he cannot zoom anymore, etc...
 
         When unittesting this functionality is switched off since the "after" method
@@ -2220,56 +2339,57 @@ class CircuitEditor(tk.Canvas):
         ----------
         text:   string
                 message to be displayed
-        
-        '''
+
+        """
         if not self.unittesting:
-            
+
             # Prepend text to message conten already on screen
-            self.message =  '\n'+text+self.message
+            self.message = "\n" + text + self.message
 
             # Upload that content to the on-screen text widget
             self.text_widget.config(text=self.message[1:])
 
             # Setup removal of message after a time
-            self.after(int(1000*self.messaging_time), self.end_message)
+            self.after(int(1000 * self.messaging_time), self.end_message)
 
     def end_message(self):
-        '''Removes the oldest message from the on-screen Text widget.
+        """Removes the oldest message from the on-screen Text widget.
         Called by write_message
-        '''
+        """
         if not self.unittesting:
-            self.message = ('\n').join((self.message.split('\n'))[:-1])
+            self.message = ("\n").join((self.message.split("\n"))[:-1])
             self.text_widget.config(text=self.message[1:])
 
-    def add_nodes(self, save_at_the_end = False):
-        '''Add nodes where a node of an element intersects a wire
-        '''
+    def add_nodes(self, save_at_the_end=False):
+        """Add nodes where a node of an element intersects a wire
+        """
+
         def to_iterate():
             for el in self.elements:
                 # Element method which goes through all other wires
-                # if the node of el intersects with a wire, 
+                # if the node of el intersects with a wire,
                 # a node will be added, the wire deleted, two wires placed
                 # in its stead, and added_a_node = True
                 # otherwise added_a_node = False
                 added_a_node = el.add_nodes()
 
-                # If a node was added, the list of elements is now 
+                # If a node was added, the list of elements is now
                 # different, so we start this routine from scratch
                 if added_a_node:
                     to_iterate()
                     return
+
         to_iterate()
         if save_at_the_end:
             self.save()
 
 
-                                                                          
-# EEEEEEEEEEEEEEEEEEEEEElllllll                                             
-# E::::::::::::::::::::El:::::l                                             
-# E::::::::::::::::::::El:::::l                                             
-# EE::::::EEEEEEEEE::::El:::::l                                             
-#   E:::::E       EEEEEE l::::l     eeeeeeeeeeee       mmmmmmm    mmmmmmm   
-#   E:::::E              l::::l   ee::::::::::::ee   mm:::::::m  m:::::::mm 
+# EEEEEEEEEEEEEEEEEEEEEElllllll
+# E::::::::::::::::::::El:::::l
+# E::::::::::::::::::::El:::::l
+# EE::::::EEEEEEEEE::::El:::::l
+#   E:::::E       EEEEEE l::::l     eeeeeeeeeeee       mmmmmmm    mmmmmmm
+#   E:::::E              l::::l   ee::::::::::::ee   mm:::::::m  m:::::::mm
 #   E::::::EEEEEEEEEE    l::::l  e::::::eeeee:::::eem::::::::::mm::::::::::m
 #   E:::::::::::::::E    l::::l e::::::e     e:::::em::::::::::::::::::::::m
 #   E:::::::::::::::E    l::::l e:::::::eeeee::::::em:::::mmm::::::mmm:::::m
@@ -2280,11 +2400,9 @@ class CircuitEditor(tk.Canvas):
 # E::::::::::::::::::::El::::::l e::::::::eeeeeeee  m::::m   m::::m   m::::m
 # E::::::::::::::::::::El::::::l  ee:::::::::::::e  m::::m   m::::m   m::::m
 # EEEEEEEEEEEEEEEEEEEEEEllllllll    eeeeeeeeeeeeee  mmmmmm   mmmmmm   mmmmmm
-                                                                          
-                                                                                                                                                                                                                
+
 
 class TwoNodeElement(object):
-
     def __init__(self, canvas, event=None, auto_place_info=None):
         self.canvas = canvas
         self.hover = False
@@ -2298,13 +2416,13 @@ class TwoNodeElement(object):
         self.y_plus = None
 
         # Radius of the node dot, in grid units
-        self.node_dot_radius = 1./30.
+        self.node_dot_radius = 1.0 / 30.0
 
         if auto_place_info is None and event is not None:
             self.manual_place(event)
         elif auto_place_info is not None and event is None:
             self.auto_place(auto_place_info)
-        
+
     def __deepcopy__(self, memo):
 
         # cls would be R if we are copying a resistor for example
@@ -2320,7 +2438,7 @@ class TwoNodeElement(object):
         newone.prop = deepcopy(self.prop)
         return newone
 
-    def delete(self,event=None):
+    def delete(self, event=None):
         if self.selected:
             self.canvas.selected_elements.remove(self)
         self.canvas.elements.remove(self)
@@ -2329,12 +2447,11 @@ class TwoNodeElement(object):
         self.canvas.save()
         del self
 
-
     #############################
     # POSITION and PROPERTIES
     # defined such that
     # the network is automatically
-    # saved each time these are 
+    # saved each time these are
     # modified
     ##############################
 
@@ -2365,40 +2482,42 @@ class TwoNodeElement(object):
     # CREATION
     ###########################################
 
-    def auto_place(self,auto_place_info):
-        '''
+    def auto_place(self, auto_place_info):
+        """
         Parse the auto_place_info list defined as:
         auto_place_info = [<type>, <minus_coords>, <plus_coords>, <value>, <label>]
-        '''
+        """
 
         v = auto_place_info[3]
         l = auto_place_info[4]
-        if l == '':
+        if l == "":
             l = None
 
-        if v == '':
+        if v == "":
             v = None
         else:
             v = float(v)
 
         self.prop = [v, l]
-        self.pos = self.node_string_to_grid(auto_place_info[1])+self.node_string_to_grid(auto_place_info[2])
+        self.pos = self.node_string_to_grid(
+            auto_place_info[1]
+        ) + self.node_string_to_grid(auto_place_info[2])
         self.create()
-    
-    def abort_creation(self,event = None, rerun_command = True):
-        '''
+
+    def abort_creation(self, event=None, rerun_command=True):
+        """
         Called after initializing the creation of a component if the user:
         * presses escape
-        * initialize the creation of a different componennt 
+        * initialize the creation of a different componennt
 
         Cancels the creation of the component, which will disappear.
-        '''
+        """
 
         # Remove all bindings related to element creation
         # and reinstate state 0
         self.canvas.set_state(0)
 
-        # If the user cancelled by pressing a circuit generating 
+        # If the user cancelled by pressing a circuit generating
         # key, then that circuit should appear
         try:
             if event.type == tk.EventType.KeyPress and rerun_command:
@@ -2414,147 +2533,192 @@ class TwoNodeElement(object):
     # STATE SETTING
     ###########################################
 
-    def set_state(self,n):
-        '''Puts Element into state n
-        '''
+    def set_state(self, n):
+        """Puts Element into state n
+        """
 
         if self.state != n:
             self.state = n
-            exec("self.set_state_%d()"%n)
+            exec("self.set_state_%d()" % n)
 
-    def exit_state(self,n):
-        '''Exits state n
-        '''
+    def exit_state(self, n):
+        """Exits state n
+        """
         pass
-            
 
-    
     def set_state_0(self):
-        '''Default state 
-        '''
+        """Default state
+        """
         self.canvas.tag_bind(self.binding_object, "<Enter>", self.hover_enter)
         self.canvas.tag_bind(self.binding_object, "<Leave>", self.hover_leave)
         self.canvas.tag_bind(self.binding_object, "<Button-3>", self.right_click)
 
     def set_state_1(self):
-        '''When dragging
-        '''
+        """When dragging
+        """
         self.hover_leave()
-        self.canvas.tag_bind(self.binding_object, "<Enter>", lambda event:None)
-        self.canvas.tag_bind(self.binding_object, "<Leave>", lambda event:None)
-        self.canvas.tag_bind(self.binding_object, "<Button-3>", lambda event:None)
+        self.canvas.tag_bind(self.binding_object, "<Enter>", lambda event: None)
+        self.canvas.tag_bind(self.binding_object, "<Leave>", lambda event: None)
+        self.canvas.tag_bind(self.binding_object, "<Button-3>", lambda event: None)
 
     def set_state_2(self):
-        '''When window freezes. Make element un-responsive
-        '''
-        self.canvas.tag_bind(self.binding_object, "<Enter>", lambda event:None)
-        self.canvas.tag_bind(self.binding_object, "<Leave>", lambda event:None)
-        self.canvas.tag_bind(self.binding_object, "<Button-3>", lambda event:None)
-        self.canvas.tag_bind(self.binding_object, "<ButtonPress-1>", lambda event:None)
-        self.canvas.tag_bind(self.binding_object, "<Shift-ButtonPress-1>",lambda event:None)
-        self.canvas.tag_bind(self.binding_object, "<Control-ButtonPress-1>",lambda event:None)
-        self.canvas.tag_bind(self.binding_object, "<B1-Motion>", lambda event:None)
-        self.canvas.tag_bind(self.binding_object, "<ButtonRelease-1>", lambda event:None)
-        self.canvas.tag_bind(self.binding_object, '<Double-ButtonPress-1>', lambda event:None)
-        self.canvas.tag_bind(self.binding_object, "<Shift-ButtonRelease-1>", lambda event: None)
-        self.canvas.tag_bind(self.binding_object, "<Control-ButtonRelease-1>", lambda event:None)
+        """When window freezes. Make element un-responsive
+        """
+        self.canvas.tag_bind(self.binding_object, "<Enter>", lambda event: None)
+        self.canvas.tag_bind(self.binding_object, "<Leave>", lambda event: None)
+        self.canvas.tag_bind(self.binding_object, "<Button-3>", lambda event: None)
+        self.canvas.tag_bind(self.binding_object, "<ButtonPress-1>", lambda event: None)
+        self.canvas.tag_bind(
+            self.binding_object, "<Shift-ButtonPress-1>", lambda event: None
+        )
+        self.canvas.tag_bind(
+            self.binding_object, "<Control-ButtonPress-1>", lambda event: None
+        )
+        self.canvas.tag_bind(self.binding_object, "<B1-Motion>", lambda event: None)
+        self.canvas.tag_bind(
+            self.binding_object, "<ButtonRelease-1>", lambda event: None
+        )
+        self.canvas.tag_bind(
+            self.binding_object, "<Double-ButtonPress-1>", lambda event: None
+        )
+        self.canvas.tag_bind(
+            self.binding_object, "<Shift-ButtonRelease-1>", lambda event: None
+        )
+        self.canvas.tag_bind(
+            self.binding_object, "<Control-ButtonRelease-1>", lambda event: None
+        )
 
     def set_state_3(self):
-        '''During box selection: make all the elements un-responsive
-        '''
-        self.canvas.tag_bind(self.binding_object, "<Enter>", lambda event:None)
-        self.canvas.tag_bind(self.binding_object, "<Leave>", lambda event:None)
-        self.canvas.tag_bind(self.binding_object, "<Button-3>", lambda event:None)
-        self.canvas.tag_bind(self.binding_object, "<ButtonPress-1>", lambda event:None)
-        self.canvas.tag_bind(self.binding_object, "<Shift-ButtonPress-1>",lambda event:None)
-        self.canvas.tag_bind(self.binding_object, "<Control-ButtonPress-1>",lambda event:None)
-        self.canvas.tag_bind(self.binding_object, "<B1-Motion>", lambda event:None)
-        self.canvas.tag_bind(self.binding_object, "<ButtonRelease-1>", lambda event:None)
-        self.canvas.tag_bind(self.binding_object, '<Double-ButtonPress-1>', lambda event:None)
-        self.canvas.tag_bind(self.binding_object, "<Shift-ButtonRelease-1>", lambda event: None)
-        self.canvas.tag_bind(self.binding_object, "<Control-ButtonRelease-1>", lambda event:None)
+        """During box selection: make all the elements un-responsive
+        """
+        self.canvas.tag_bind(self.binding_object, "<Enter>", lambda event: None)
+        self.canvas.tag_bind(self.binding_object, "<Leave>", lambda event: None)
+        self.canvas.tag_bind(self.binding_object, "<Button-3>", lambda event: None)
+        self.canvas.tag_bind(self.binding_object, "<ButtonPress-1>", lambda event: None)
+        self.canvas.tag_bind(
+            self.binding_object, "<Shift-ButtonPress-1>", lambda event: None
+        )
+        self.canvas.tag_bind(
+            self.binding_object, "<Control-ButtonPress-1>", lambda event: None
+        )
+        self.canvas.tag_bind(self.binding_object, "<B1-Motion>", lambda event: None)
+        self.canvas.tag_bind(
+            self.binding_object, "<ButtonRelease-1>", lambda event: None
+        )
+        self.canvas.tag_bind(
+            self.binding_object, "<Double-ButtonPress-1>", lambda event: None
+        )
+        self.canvas.tag_bind(
+            self.binding_object, "<Shift-ButtonRelease-1>", lambda event: None
+        )
+        self.canvas.tag_bind(
+            self.binding_object, "<Control-ButtonRelease-1>", lambda event: None
+        )
 
     def set_state_4(self):
-        '''When creating another component
-        '''
+        """When creating another component
+        """
         self.hover_leave()
-        self.canvas.tag_bind(self.binding_object, "<Enter>", lambda event:None)
-        self.canvas.tag_bind(self.binding_object, "<Leave>", lambda event:None)
-        self.canvas.tag_bind(self.binding_object, "<Button-3>", lambda event:None)
-
-
+        self.canvas.tag_bind(self.binding_object, "<Enter>", lambda event: None)
+        self.canvas.tag_bind(self.binding_object, "<Leave>", lambda event: None)
+        self.canvas.tag_bind(self.binding_object, "<Button-3>", lambda event: None)
 
     ###########################################
     # STATE 0 BEHAVIOUR
-    ###########################################    
+    ###########################################
 
-    def hover_enter(self, event = None):
+    def hover_enter(self, event=None):
         if self.canvas.verbose:
-            self.canvas.write_message('Hovering')
+            self.canvas.write_message("Hovering")
         self.hover = True
         self.update_graphic()
 
         self.canvas.tag_bind(self.binding_object, "<ButtonRelease-1>", self.select)
-        self.canvas.tag_bind(self.binding_object, "<Shift-ButtonRelease-1>", self.ctrl_shift_select)
-        self.canvas.tag_bind(self.binding_object, "<Control-ButtonRelease-1>",self.ctrl_shift_select)
-        self.canvas.tag_bind(self.binding_object, "<B1-Motion>", lambda event: self.on_motion(event,release_sequence="ButtonRelease-1"))
-        self.canvas.tag_bind(self.binding_object, '<Double-ButtonPress-1>', self.double_click)
+        self.canvas.tag_bind(
+            self.binding_object, "<Shift-ButtonRelease-1>", self.ctrl_shift_select
+        )
+        self.canvas.tag_bind(
+            self.binding_object, "<Control-ButtonRelease-1>", self.ctrl_shift_select
+        )
+        self.canvas.tag_bind(
+            self.binding_object,
+            "<B1-Motion>",
+            lambda event: self.on_motion(event, release_sequence="ButtonRelease-1"),
+        )
+        self.canvas.tag_bind(
+            self.binding_object, "<Double-ButtonPress-1>", self.double_click
+        )
 
-    def hover_leave(self, event = None):
+    def hover_leave(self, event=None):
         self.hover = False
         self.update_graphic()
 
     ###########################################
     # HOVER BEHAVIOUR
-    ###########################################  
+    ###########################################
 
     def right_click(self, event):
-        if len(self.canvas.selected_elements)>1 and self.selected:
+        if len(self.canvas.selected_elements) > 1 and self.selected:
             self.canvas.bind("<ButtonRelease-3>", self.open_right_click_menu)
         else:
             self.canvas.deselect_all()
             self.select()
             self.canvas.bind("<ButtonRelease-3>", self.open_right_click_menu)
 
-    
     def open_right_click_menu(self, event):
 
         label_template = "{:<10}{:>12}"
-        menu_font = Font(family="Courier New", size=self.canvas.font_size, weight='normal')
+        menu_font = Font(
+            family="Courier New", size=self.canvas.font_size, weight="normal"
+        )
 
         menu = tk.Menu(self.canvas, tearoff=0)
-        if len(self.canvas.selected_elements)==1 and not isinstance(self,W) and not isinstance(self,G) :
-            menu.add_command(label=label_template.format("Edit","Double-Click"), 
+        if (
+            len(self.canvas.selected_elements) == 1
+            and not isinstance(self, W)
+            and not isinstance(self, G)
+        ):
+            menu.add_command(
+                label=label_template.format("Edit", "Double-Click"),
                 command=self.modify_values,
-                font = menu_font)
-        menu.add_command(label=label_template.format("Rotate",r"Drag+Arrows"), 
-            command=(lambda :self.canvas.event_generate('<Alt-r>')),
-            font = menu_font)
-        menu.add_command(label=label_template.format("Delete","Del"), 
-            command=(lambda: self.canvas.event_generate('<Delete>')),
-            font = menu_font)
+                font=menu_font,
+            )
+        menu.add_command(
+            label=label_template.format("Rotate", r"Drag+Arrows"),
+            command=(lambda: self.canvas.event_generate("<Alt-r>")),
+            font=menu_font,
+        )
+        menu.add_command(
+            label=label_template.format("Delete", "Del"),
+            command=(lambda: self.canvas.event_generate("<Delete>")),
+            font=menu_font,
+        )
         menu.add_separator()
-        menu.add_command(label=label_template.format("Copy","Ctrl-C"), 
-            command=(lambda: self.canvas.event_generate('<Control-c>')),
-            font = menu_font)
-        menu.add_command(label=label_template.format("Cut","Ctrl-X"), 
-            command=(lambda: self.canvas.event_generate('<Control-x>')),
-            font = menu_font)
+        menu.add_command(
+            label=label_template.format("Copy", "Ctrl-C"),
+            command=(lambda: self.canvas.event_generate("<Control-c>")),
+            font=menu_font,
+        )
+        menu.add_command(
+            label=label_template.format("Cut", "Ctrl-X"),
+            command=(lambda: self.canvas.event_generate("<Control-x>")),
+            font=menu_font,
+        )
         menu.tk_popup(event.x_root, event.y_root)
         self.canvas.bind("<ButtonRelease-3>", lambda event: None)
 
     ###########################################
     # DRAGGING BEHAVIOUR
-    ###########################################  
-    
+    ###########################################
+
     def on_motion(self, event, release_sequence):
 
-        if self.state !=1:
+        if self.state != 1:
 
             # First iteration of this method
             self.canvas.set_state(1)
 
-            # If this element is not selected, 
+            # If this element is not selected,
             # we should deselect all others
             # and only move this one
             if not self.selected:
@@ -2573,19 +2737,50 @@ class TwoNodeElement(object):
                 recentering_sequence = "<B1-Motion>"
 
             # Enable rotation
-            self.canvas.bind('<Left>', lambda event: self.on_updownleftright(event, angle=WEST,recentering_sequence = recentering_sequence))
-            self.canvas.bind('<Right>', lambda event: self.on_updownleftright(event, angle=EAST,recentering_sequence = recentering_sequence))
-            self.canvas.bind('<Up>', lambda event: self.on_updownleftright(event, angle=NORTH,recentering_sequence = recentering_sequence))
-            self.canvas.bind('<Down>', lambda event: self.on_updownleftright(event, angle=SOUTH,recentering_sequence = recentering_sequence))
+            self.canvas.bind(
+                "<Left>",
+                lambda event: self.on_updownleftright(
+                    event, angle=WEST, recentering_sequence=recentering_sequence
+                ),
+            )
+            self.canvas.bind(
+                "<Right>",
+                lambda event: self.on_updownleftright(
+                    event, angle=EAST, recentering_sequence=recentering_sequence
+                ),
+            )
+            self.canvas.bind(
+                "<Up>",
+                lambda event: self.on_updownleftright(
+                    event, angle=NORTH, recentering_sequence=recentering_sequence
+                ),
+            )
+            self.canvas.bind(
+                "<Down>",
+                lambda event: self.on_updownleftright(
+                    event, angle=SOUTH, recentering_sequence=recentering_sequence
+                ),
+            )
 
             # Bind the release sequence to the release motion
-            self.canvas.tag_bind(self.binding_object, "<%s>"%release_sequence, self.release_motion)
+            self.canvas.tag_bind(
+                self.binding_object, "<%s>" % release_sequence, self.release_motion
+            )
             # ...even if typical modifiers are pressed
-            self.canvas.tag_bind(self.binding_object, "<Shift-%s>"%release_sequence, self.release_motion)
-            self.canvas.tag_bind(self.binding_object, "<Control-%s>"%release_sequence, self.release_motion)
-            self.canvas.tag_bind(self.binding_object, "<Alt-%s>"%release_sequence, self.release_motion)
+            self.canvas.tag_bind(
+                self.binding_object,
+                "<Shift-%s>" % release_sequence,
+                self.release_motion,
+            )
+            self.canvas.tag_bind(
+                self.binding_object,
+                "<Control-%s>" % release_sequence,
+                self.release_motion,
+            )
+            self.canvas.tag_bind(
+                self.binding_object, "<Alt-%s>" % release_sequence, self.release_motion
+            )
 
-        
         x, y = self.get_center_pos()
         dx = self.canvas.canvasx(event.x) - x
         dy = self.canvas.canvasy(event.y) - y
@@ -2593,17 +2788,22 @@ class TwoNodeElement(object):
         for el in self.elements_to_move:
             el.move(dx, dy)
 
-    def on_updownleftright(self, event, angle,recentering_sequence):
-        self.canvas.rotate(event = event,angle = angle-self.center_pos[2],around = self,recentering_sequence = recentering_sequence)
+    def on_updownleftright(self, event, angle, recentering_sequence):
+        self.canvas.rotate(
+            event=event,
+            angle=angle - self.center_pos[2],
+            around=self,
+            recentering_sequence=recentering_sequence,
+        )
 
     ###########################################
     # DROPPING BEHAVIOUR
-    ###########################################  
-    
-    def add_nodes(self, minus = True, plus = True):
-        '''
+    ###########################################
+
+    def add_nodes(self, minus=True, plus=True):
+        """
         Upon dropping an element check if one of its nodes intersects
-        a wire. If that is the case, split the wire into two, 
+        a wire. If that is the case, split the wire into two,
         such that the intersection point is now a node of each of the
         new wires.
 
@@ -2622,84 +2822,151 @@ class TwoNodeElement(object):
         -------
         added_a_node:   True if a node was created, False otherwise
                         This method is called until all nodes have been created
-        '''
+        """
 
-
-        # Check if one of the nodes of this component/wire 
+        # Check if one of the nodes of this component/wire
         # is on a wire
         to_nodify = []
         for el in self.canvas.elements:
             if type(el) == W and el != self:
                 to_nodify.append(el)
-    
+
         for w in to_nodify:
             if w.x_minus == w.x_plus == self.x_minus and minus:
                 # vertical wire, minus node
-                if self.y_minus in range(min(w.y_minus,w.y_plus)+1,
-                                    max(w.y_minus,w.y_plus)):
+                if self.y_minus in range(
+                    min(w.y_minus, w.y_plus) + 1, max(w.y_minus, w.y_plus)
+                ):
                     x = w.x_minus
                     ym = w.y_minus
                     yp = w.y_plus
                     w.delete()
-                    W(self.canvas,auto_place_info=['W','%d,%d'%(x,ym),
-                        '%d,%d'%(x,self.y_minus),'',''])
-                    W(self.canvas,auto_place_info=['W','%d,%d'%(x,yp),
-                        '%d,%d'%(x,self.y_minus),'',''])
+                    W(
+                        self.canvas,
+                        auto_place_info=[
+                            "W",
+                            "%d,%d" % (x, ym),
+                            "%d,%d" % (x, self.y_minus),
+                            "",
+                            "",
+                        ],
+                    )
+                    W(
+                        self.canvas,
+                        auto_place_info=[
+                            "W",
+                            "%d,%d" % (x, yp),
+                            "%d,%d" % (x, self.y_minus),
+                            "",
+                            "",
+                        ],
+                    )
                     return True
 
             if w.y_minus == w.y_plus == self.y_minus and minus:
                 # horizontal wire, minus node
-                if self.x_minus in range(min(w.x_minus,w.x_plus)+1,
-                                    max(w.x_minus,w.x_plus)):
+                if self.x_minus in range(
+                    min(w.x_minus, w.x_plus) + 1, max(w.x_minus, w.x_plus)
+                ):
                     xm = w.x_minus
                     xp = w.x_plus
                     y = w.y_minus
                     w.delete()
-                    W(self.canvas,auto_place_info=['W','%d,%d'%(xm,y),
-                        '%d,%d'%(self.x_minus,y),'',''])
-                    W(self.canvas,auto_place_info=['W','%d,%d'%(xp,y),
-                        '%d,%d'%(self.x_minus,y),'',''])
+                    W(
+                        self.canvas,
+                        auto_place_info=[
+                            "W",
+                            "%d,%d" % (xm, y),
+                            "%d,%d" % (self.x_minus, y),
+                            "",
+                            "",
+                        ],
+                    )
+                    W(
+                        self.canvas,
+                        auto_place_info=[
+                            "W",
+                            "%d,%d" % (xp, y),
+                            "%d,%d" % (self.x_minus, y),
+                            "",
+                            "",
+                        ],
+                    )
                     return True
 
             if w.x_minus == w.x_plus == self.x_plus and plus:
                 # vertical wire, positive node
-                if self.y_plus in range(min(w.y_minus,w.y_plus)+1,
-                                    max(w.y_minus,w.y_plus)):
+                if self.y_plus in range(
+                    min(w.y_minus, w.y_plus) + 1, max(w.y_minus, w.y_plus)
+                ):
                     x = w.x_minus
                     ym = w.y_minus
                     yp = w.y_plus
                     w.delete()
-                    W(self.canvas,auto_place_info=['W','%d,%d'%(x,ym),
-                        '%d,%d'%(x,self.y_plus),'',''])
-                    W(self.canvas,auto_place_info=['W','%d,%d'%(x,yp),
-                        '%d,%d'%(x,self.y_plus),'',''])
+                    W(
+                        self.canvas,
+                        auto_place_info=[
+                            "W",
+                            "%d,%d" % (x, ym),
+                            "%d,%d" % (x, self.y_plus),
+                            "",
+                            "",
+                        ],
+                    )
+                    W(
+                        self.canvas,
+                        auto_place_info=[
+                            "W",
+                            "%d,%d" % (x, yp),
+                            "%d,%d" % (x, self.y_plus),
+                            "",
+                            "",
+                        ],
+                    )
                     return True
 
             if w.y_minus == w.y_plus == self.y_plus and plus:
                 # horizontal wire, positive node
-                if self.x_plus in range(min(w.x_minus,w.x_plus)+1,
-                                    max(w.x_minus,w.x_plus)):
+                if self.x_plus in range(
+                    min(w.x_minus, w.x_plus) + 1, max(w.x_minus, w.x_plus)
+                ):
                     xm = w.x_minus
                     xp = w.x_plus
                     y = w.y_minus
                     w.delete()
-                    W(self.canvas,auto_place_info=['W','%d,%d'%(xm,y),
-                        '%d,%d'%(self.x_plus,y),'',''])
-                    W(self.canvas,auto_place_info=['W','%d,%d'%(xp,y),
-                        '%d,%d'%(self.x_plus,y),'',''])
+                    W(
+                        self.canvas,
+                        auto_place_info=[
+                            "W",
+                            "%d,%d" % (xm, y),
+                            "%d,%d" % (self.x_plus, y),
+                            "",
+                            "",
+                        ],
+                    )
+                    W(
+                        self.canvas,
+                        auto_place_info=[
+                            "W",
+                            "%d,%d" % (xp, y),
+                            "%d,%d" % (self.x_plus, y),
+                            "",
+                            "",
+                        ],
+                    )
                     return True
         return False
 
     def release_motion(self, event):
-        '''
+        """
         Called when:
         * dropping in a dragging/dropping action
         * pasting then dropping
         * just clicking (i.e. dropping without dragging)
 
         Bound when hovering over a component or upon pasting.
-        '''
-        
+        """
+
         self.canvas.track_changes = False
 
         # Snap all the released elements to the grid
@@ -2714,7 +2981,6 @@ class TwoNodeElement(object):
         # if self.was_moved:
         self.canvas.exit_state(1)
 
- 
     ###########################################
     # SELECTION
     ###########################################
@@ -2732,12 +2998,12 @@ class TwoNodeElement(object):
             self.canvas.selected_elements.remove(self)
             self._selected = next_selection_state
             self.update_graphic()
-            
-    def select(self, event = None):
+
+    def select(self, event=None):
         self.canvas.deselect_all()
         self.selected = True
 
-    def ctrl_shift_select(self, select = None):
+    def ctrl_shift_select(self, select=None):
         if self.selected:
             self.selected = False
         else:
@@ -2756,7 +3022,7 @@ class TwoNodeElement(object):
         return "%d,%d" % (int(x), int(y))
 
     def node_string_to_grid(self, node):
-        xy = node.split(',')
+        xy = node.split(",")
         x = int(xy[0])
         y = int(xy[1])
         return x, y
@@ -2768,104 +3034,111 @@ class TwoNodeElement(object):
     # (RE-)DRAWING
     ###########################################
 
-    def add_or_replace_node_dots(self, plus = True, minus = True):
+    def add_or_replace_node_dots(self, plus=True, minus=True):
         gu = self.canvas.grid_unit
-        canvas_coords_minus = self.grid_to_canvas([self.x_minus,self.y_minus])
+        canvas_coords_minus = self.grid_to_canvas([self.x_minus, self.y_minus])
 
         if minus:
             if self.dot_minus is None:
                 self.dot_minus = self.canvas.create_circle(
-                    *canvas_coords_minus, gu*self.node_dot_radius)
+                    *canvas_coords_minus, gu * self.node_dot_radius
+                )
             else:
-                self.canvas.update_circle(self.dot_minus,
-                    *canvas_coords_minus, gu*self.node_dot_radius)
+                self.canvas.update_circle(
+                    self.dot_minus, *canvas_coords_minus, gu * self.node_dot_radius
+                )
             self.canvas.tag_raise(self.dot_minus)
 
         if plus:
-            canvas_coords_plus = self.grid_to_canvas([self.x_plus,self.y_plus])
+            canvas_coords_plus = self.grid_to_canvas([self.x_plus, self.y_plus])
             if self.dot_plus is None:
                 self.dot_plus = self.canvas.create_circle(
-                    *canvas_coords_plus, gu*self.node_dot_radius)
+                    *canvas_coords_plus, gu * self.node_dot_radius
+                )
             else:
-                self.canvas.update_circle(self.dot_plus,
-                    *canvas_coords_plus, gu*self.node_dot_radius)
+                self.canvas.update_circle(
+                    self.dot_plus, *canvas_coords_plus, gu * self.node_dot_radius
+                )
 
             self.canvas.tag_raise(self.dot_plus)
-                                                                                           
-# WWWWWWWW                           WWWWWWWW  iiii                                          
-# W::::::W                           W::::::W i::::i                                         
-# W::::::W                           W::::::W  iiii                                          
-# W::::::W                           W::::::W                                                
-#  W:::::W           WWWWW           W:::::W iiiiiii rrrrr   rrrrrrrrr       eeeeeeeeeeee    
-#   W:::::W         W:::::W         W:::::W  i:::::i r::::rrr:::::::::r    ee::::::::::::ee  
+
+
+# WWWWWWWW                           WWWWWWWW  iiii
+# W::::::W                           W::::::W i::::i
+# W::::::W                           W::::::W  iiii
+# W::::::W                           W::::::W
+#  W:::::W           WWWWW           W:::::W iiiiiii rrrrr   rrrrrrrrr       eeeeeeeeeeee
+#   W:::::W         W:::::W         W:::::W  i:::::i r::::rrr:::::::::r    ee::::::::::::ee
 #    W:::::W       W:::::::W       W:::::W    i::::i r:::::::::::::::::r  e::::::eeeee:::::ee
 #     W:::::W     W:::::::::W     W:::::W     i::::i rr::::::rrrrr::::::re::::::e     e:::::e
 #      W:::::W   W:::::W:::::W   W:::::W      i::::i  r:::::r     r:::::re:::::::eeeee::::::e
-#       W:::::W W:::::W W:::::W W:::::W       i::::i  r:::::r     rrrrrrre:::::::::::::::::e 
-#        W:::::W:::::W   W:::::W:::::W        i::::i  r:::::r            e::::::eeeeeeeeeee  
-#         W:::::::::W     W:::::::::W         i::::i  r:::::r            e:::::::e           
-#          W:::::::W       W:::::::W         i::::::i r:::::r            e::::::::e          
-#           W:::::W         W:::::W          i::::::i r:::::r             e::::::::eeeeeeee  
-#            W:::W           W:::W           i::::::i r:::::r              ee:::::::::::::e  
-#             WWW             WWW            iiiiiiii rrrrrrr                eeeeeeeeeeeeee  
+#       W:::::W W:::::W W:::::W W:::::W       i::::i  r:::::r     rrrrrrre:::::::::::::::::e
+#        W:::::W:::::W   W:::::W:::::W        i::::i  r:::::r            e::::::eeeeeeeeeee
+#         W:::::::::W     W:::::::::W         i::::i  r:::::r            e:::::::e
+#          W:::::::W       W:::::::W         i::::::i r:::::r            e::::::::e
+#           W:::::W         W:::::W          i::::::i r:::::r             e::::::::eeeeeeee
+#            W:::W           W:::W           i::::::i r:::::r              ee:::::::::::::e
+#             WWW             WWW            iiiiiiii rrrrrrr                eeeeeeeeeeeeee
+
 
 class W(TwoNodeElement):
-
     def __init__(self, canvas, event=None, auto_place_info=None):
-        
+
         # Width of the wires in grid units
-        self.lw = 1./50.
+        self.lw = 1.0 / 50.0
 
         super(W, self).__init__(canvas, event, auto_place_info)
 
     @property
     def binding_object(self):
-        '''
+        """
         Object to which we bind all mehods
-        '''
+        """
         return self.line
-    
+
     def delete(self, event=None):
-        
+
         self.canvas.delete(self.line)
-        super(W,self).delete()
-    
+        super(W, self).delete()
+
     ###########################################
     # CREATION
-    ###########################################  
-    
-    def abort_creation(self, event=None, rerun_command = True):
+    ###########################################
+
+    def abort_creation(self, event=None, rerun_command=True):
         self.canvas.bind("<ButtonPress-1>", lambda event: None)
         self.canvas.bind("<Escape>", lambda event: None)
-        self.canvas.config(cursor='arrow')
+        self.canvas.config(cursor="arrow")
         if self.dot_minus is not None:
             # First node has been created
             self.canvas.bind("<Motion>", lambda event: None)
-            self.canvas.delete('temp')
+            self.canvas.delete("temp")
             self.canvas.delete(self.dot_minus)
-        super(W,self).abort_creation(event,rerun_command)
+        super(W, self).abort_creation(event, rerun_command)
 
     ###### Arranged in order of calling for a manual placement:
 
     def manual_place(self, event):
         self.canvas.set_state(4)
-        self.canvas.config(cursor='plus')
+        self.canvas.config(cursor="plus")
         self.canvas.bind("<ButtonPress-1>", self.start_line)
-        self.canvas.bind("<Escape>", lambda event: self.abort_creation(event, rerun_command = False))
-        self.canvas.bind('r', self.abort_creation)
-        self.canvas.bind('l', self.abort_creation)
-        self.canvas.bind('c', self.abort_creation)
-        self.canvas.bind('j', self.abort_creation)
-        self.canvas.bind('w', self.abort_creation)
-        self.canvas.bind('g', self.abort_creation)
+        self.canvas.bind(
+            "<Escape>", lambda event: self.abort_creation(event, rerun_command=False)
+        )
+        self.canvas.bind("r", self.abort_creation)
+        self.canvas.bind("l", self.abort_creation)
+        self.canvas.bind("c", self.abort_creation)
+        self.canvas.bind("j", self.abort_creation)
+        self.canvas.bind("w", self.abort_creation)
+        self.canvas.bind("g", self.abort_creation)
 
     def start_line(self, event):
-        '''
+        """
         Called when we place click to place the first (minus)
         node of the wire.
 
         Bound in "manual_place" to "<ButtonPress-1>"
-        '''
+        """
 
         # Set the coordinates of the first (minus) node of the wire
         self.x_minus, self.y_minus = self.init_minus_snap_to_grid(event)
@@ -2873,13 +3146,14 @@ class W(TwoNodeElement):
         # Place the circle representing the node
         gu = self.canvas.grid_unit
         self.dot_minus = self.canvas.create_circle(
-            *(self.canvas.grid_to_canvas([self.x_minus,self.y_minus])), gu*self.node_dot_radius)
-
+            *(self.canvas.grid_to_canvas([self.x_minus, self.y_minus])),
+            gu * self.node_dot_radius,
+        )
 
         self.canvas.bind("<Motion>", self.show_line)
         self.canvas.bind("<ButtonPress-1>", self.end_line)
         self.canvas.in_creation = self
-    
+
     def show_line(self, event):
         self.canvas.delete("temp")
 
@@ -2887,28 +3161,42 @@ class W(TwoNodeElement):
         xp = self.canvas.canvasx(event.x)
         yp = self.canvas.canvasy(event.y)
 
-        if abs(xm-xp) > abs(ym-yp):
+        if abs(xm - xp) > abs(ym - yp):
             # Horizontal line
-            self.line = self.canvas.create_line(xm, ym, xp, ym, tags='temp',
-            width= self.lw*self.canvas.grid_unit,
-            fill = light_black)
+            self.line = self.canvas.create_line(
+                xm,
+                ym,
+                xp,
+                ym,
+                tags="temp",
+                width=self.lw * self.canvas.grid_unit,
+                fill=light_black,
+            )
         else:
             # Vertical line
-            self.line = self.canvas.create_line(xm, ym, xm, yp, tags='temp',
-            width=self.lw*self.canvas.grid_unit,
-            fill = light_black)
- 
+            self.line = self.canvas.create_line(
+                xm,
+                ym,
+                xm,
+                yp,
+                tags="temp",
+                width=self.lw * self.canvas.grid_unit,
+                fill=light_black,
+            )
+
     def init_minus_snap_to_grid(self, event):
         gu = float(self.canvas.grid_unit)
         x0, y0 = self.canvas.canvas_center
-        return int(round(float(self.canvas.canvasx(event.x)-x0)/gu)),\
-            int(round(float(self.canvas.canvasy(event.y)-y0)/gu))
-    
+        return (
+            int(round(float(self.canvas.canvasx(event.x) - x0) / gu)),
+            int(round(float(self.canvas.canvasy(event.y) - y0) / gu)),
+        )
+
     def end_line(self, event):
         self.canvas.delete("temp")
         self.canvas.bind("<ButtonPress-1>", lambda event: None)
-        self.canvas.bind('<Motion>', lambda event: None)
-        self.canvas.config(cursor='arrow')
+        self.canvas.bind("<Motion>", lambda event: None)
+        self.canvas.config(cursor="arrow")
 
         self.init_plus_snap_to_grid(event)
         self.canvas.in_creation = None
@@ -2916,7 +3204,6 @@ class W(TwoNodeElement):
         # Check if elements are intersecting a wire
         # save, go back to state 0
         self.canvas.exit_state(4)
-        
 
     def init_plus_snap_to_grid(self, event):
 
@@ -2926,92 +3213,101 @@ class W(TwoNodeElement):
         gu = float(self.canvas.grid_unit)
         x0, y0 = self.canvas.canvas_center
 
-        if abs(xm-xp) > abs(ym-yp):
+        if abs(xm - xp) > abs(ym - yp):
             # Horizontal line
-            self.x_plus = int(round(float(self.canvas.canvasx(event.x)-x0)/gu))
+            self.x_plus = int(round(float(self.canvas.canvasx(event.x) - x0) / gu))
             self.y_plus = self.y_minus
         else:
             # Vertical line
             self.x_plus = self.x_minus
-            self.y_plus = int(round(float(self.canvas.canvasy(event.y)-y0)/gu))
-    
+            self.y_plus = int(round(float(self.canvas.canvasy(event.y) - y0) / gu))
+
     def create(self):
         canvas_coords_minus = self.grid_to_canvas(self.pos[:2])
         canvas_coords_plus = self.grid_to_canvas(self.pos[2:])
         self.line = self.canvas.create_line(
-            *(canvas_coords_minus+canvas_coords_plus),
-            width=self.lw*self.canvas.grid_unit,
-            fill = light_black)
+            *(canvas_coords_minus + canvas_coords_plus),
+            width=self.lw * self.canvas.grid_unit,
+            fill=light_black,
+        )
         self.add_or_replace_node_dots()
         self.canvas.elements.append(self)
 
         if canvas_coords_minus == canvas_coords_plus:
             self.delete()
 
- 
     ###########################################
     # HOVER BEHAVIOUR
-    ###########################################  
-    
+    ###########################################
+
     def double_click(self, event=None):
         pass
 
     ###########################################
     # DRAGGING BEHAVIOUR
-    ###########################################  
-    
+    ###########################################
+
     def move(self, dx, dy):
-        '''
+        """
         Input given in canvas units
-        '''
+        """
         self.canvas.move(self.line, dx, dy)
         self.canvas.move(self.dot_minus, dx, dy)
         self.canvas.move(self.dot_plus, dx, dy)
 
     ###########################################
     # DROPPING BEHAVIOUR
-    ###########################################   
-    
+    ###########################################
+
     def snap_to_grid(self):
         # in canvas coordinates
         xm, ym, xp, yp = self.canvas.coords(self.line)
         # snapped to grid units
-        xm, ym, xp, yp = [round(p) for p in self.canvas.canvas_to_grid(
-            [xm, ym])+self.canvas.canvas_to_grid([xp, yp])]
+        xm, ym, xp, yp = [
+            round(p)
+            for p in self.canvas.canvas_to_grid([xm, ym])
+            + self.canvas.canvas_to_grid([xp, yp])
+        ]
         self.pos = [xm, ym, xp, yp]
 
         # back to canvas units:
         xm, ym, xp, yp = self.canvas.grid_to_canvas(
-            [xm, ym])+self.canvas.grid_to_canvas([xp, yp])
+            [xm, ym]
+        ) + self.canvas.grid_to_canvas([xp, yp])
         self.canvas.coords(self.line, xm, ym, xp, yp)
         self.canvas.update_circle(
-            self.dot_minus, xm, ym, self.canvas.grid_unit*self.node_dot_radius)
+            self.dot_minus, xm, ym, self.canvas.grid_unit * self.node_dot_radius
+        )
         self.canvas.update_circle(
-            self.dot_plus, xp, yp, self.canvas.grid_unit*self.node_dot_radius)
- 
+            self.dot_plus, xp, yp, self.canvas.grid_unit * self.node_dot_radius
+        )
 
     ###########################################
     # SELECTION
     ###########################################
-    
+
     def box_select(self, x0, y0, x1, y1):
         xs = [x0, x1]
         ys = [y0, y1]
-        xm,ym = self.canvas.grid_to_canvas([self.x_minus,self.y_minus])
-        xp,yp = self.canvas.grid_to_canvas([self.x_plus,self.y_plus])
+        xm, ym = self.canvas.grid_to_canvas([self.x_minus, self.y_minus])
+        xp, yp = self.canvas.grid_to_canvas([self.x_plus, self.y_plus])
 
-        if min(xs) <= xm <= max(xs) and min(ys) <= ym <= max(ys)\
-                and min(xs) <= xp <= max(xs) and min(ys) <= yp <= max(ys):
+        if (
+            min(xs) <= xm <= max(xs)
+            and min(ys) <= ym <= max(ys)
+            and min(xs) <= xp <= max(xs)
+            and min(ys) <= yp <= max(ys)
+        ):
             self.force_select()
 
     ###########################################
     # POSITIONING
     ###########################################
-    
+
     def get_center_pos(self):
         # returns center in canvas units
         xm, ym, xp, yp = self.canvas.coords(self.line)
-        return [(xm+xp)/2., (ym+yp)/2.]
+        return [(xm + xp) / 2.0, (ym + yp) / 2.0]
 
     ###########################################
     # (RE-)DRAWING
@@ -3021,55 +3317,60 @@ class W(TwoNodeElement):
         pass
 
     def update_graphic(self):
-        
 
         if self.selected and self.hover:
-            lw_select_hover = 5.*self.lw
-            self.canvas.itemconfig(self.line, fill=blue, width=lw_select_hover*self.canvas.grid_unit)
+            lw_select_hover = 5.0 * self.lw
+            self.canvas.itemconfig(
+                self.line, fill=blue, width=lw_select_hover * self.canvas.grid_unit
+            )
         elif self.selected:
-            lw_select = 3.*self.lw
-            self.canvas.itemconfig(self.line, fill=light_blue, width=lw_select*self.canvas.grid_unit)
+            lw_select = 3.0 * self.lw
+            self.canvas.itemconfig(
+                self.line, fill=light_blue, width=lw_select * self.canvas.grid_unit
+            )
         elif self.hover:
-            lw_hover = 2.*self.lw
-            self.canvas.itemconfig(self.line, fill=light_black, width=lw_hover*self.canvas.grid_unit)
+            lw_hover = 2.0 * self.lw
+            self.canvas.itemconfig(
+                self.line, fill=light_black, width=lw_hover * self.canvas.grid_unit
+            )
         else:
-            self.canvas.itemconfig(self.line, fill=light_black, width=self.lw*self.canvas.grid_unit)
+            self.canvas.itemconfig(
+                self.line, fill=light_black, width=self.lw * self.canvas.grid_unit
+            )
 
     def redraw(self):
         canvas_coords_minus = self.grid_to_canvas(self.pos[:2])
         canvas_coords_plus = self.grid_to_canvas(self.pos[2:])
-        self.canvas.coords(
-            self.line, *(canvas_coords_minus+canvas_coords_plus))
+        self.canvas.coords(self.line, *(canvas_coords_minus + canvas_coords_plus))
         self.update_graphic()
         self.add_or_replace_node_dots()
 
     def init_redraw(self, event):
         self.show_line(event)
-        self.add_or_replace_node_dots(plus = False)
+        self.add_or_replace_node_dots(plus=False)
 
 
-
-#    CC:::::::::::::::C                                                             
-#   C:::::CCCCCCCC::::C                                                             
-#  C:::::C       CCCCCC   ooooooooooo      mmmmmmm    mmmmmmm   ppppp   ppppppppp   
-# C:::::C               oo:::::::::::oo  mm:::::::m  m:::::::mm p::::ppp:::::::::p  
-# C:::::C              o:::::::::::::::om::::::::::mm::::::::::mp:::::::::::::::::p 
+#    CC:::::::::::::::C
+#   C:::::CCCCCCCC::::C
+#  C:::::C       CCCCCC   ooooooooooo      mmmmmmm    mmmmmmm   ppppp   ppppppppp
+# C:::::C               oo:::::::::::oo  mm:::::::m  m:::::::mm p::::ppp:::::::::p
+# C:::::C              o:::::::::::::::om::::::::::mm::::::::::mp:::::::::::::::::p
 # C:::::C              o:::::ooooo:::::om::::::::::::::::::::::mpp::::::ppppp::::::p
 # C:::::C              o::::o     o::::om:::::mmm::::::mmm:::::m p:::::p     p:::::p
 # C:::::C              o::::o     o::::om::::m   m::::m   m::::m p:::::p     p:::::p
 # C:::::C              o::::o     o::::om::::m   m::::m   m::::m p:::::p     p:::::p
 #  C:::::C       CCCCCCo::::o     o::::om::::m   m::::m   m::::m p:::::p    p::::::p
 #   C:::::CCCCCCCC::::Co:::::ooooo:::::om::::m   m::::m   m::::m p:::::ppppp:::::::p
-#    CC:::::::::::::::Co:::::::::::::::om::::m   m::::m   m::::m p::::::::::::::::p 
-#      CCC::::::::::::C oo:::::::::::oo m::::m   m::::m   m::::m p::::::::::::::pp  
-#         CCCCCCCCCCCCC   ooooooooooo   mmmmmm   mmmmmm   mmmmmm p::::::pppppppp    
-#                                                                p:::::p            
-#                                                                p:::::p            
-#                                                               p:::::::p           
-#                                                               p:::::::p           
-#                                                               p:::::::p           
-#                                                               ppppppppp           
-                                                                                 
+#    CC:::::::::::::::Co:::::::::::::::om::::m   m::::m   m::::m p::::::::::::::::p
+#      CCC::::::::::::C oo:::::::::::oo m::::m   m::::m   m::::m p::::::::::::::pp
+#         CCCCCCCCCCCCC   ooooooooooo   mmmmmm   mmmmmm   mmmmmm p::::::pppppppp
+#                                                                p:::::p
+#                                                                p:::::p
+#                                                               p:::::::p
+#                                                               p:::::::p
+#                                                               p:::::::p
+#                                                               ppppppppp
+
 
 class Component(TwoNodeElement):
     def __init__(self, canvas, event=None, auto_place_info=None):
@@ -3081,12 +3382,12 @@ class Component(TwoNodeElement):
         self._y_center = None
         self._angle = None
         super(Component, self).__init__(canvas, event, auto_place_info)
-    
+
     def delete(self, event=None):
         self.canvas.delete(self.image)
         if self.text is not None:
             self.canvas.delete(self.text)
-        super(Component,self).delete()
+        super(Component, self).delete()
 
     @property
     def binding_object(self):
@@ -3096,28 +3397,28 @@ class Component(TwoNodeElement):
     # POSITION and PROPERTIES
     # defined such that
     # the network is automatically
-    # saved each time these are 
+    # saved each time these are
     # modified
     ##############################
 
     @property
     def center_pos(self):
-        xm,ym,xp,yp = self.pos
+        xm, ym, xp, yp = self.pos
 
         if xm is None:
-            return [None,None,self.init_angle]
+            return [None, None, self.init_angle]
 
         if xm == xp:
             # increasing y = SOUTH in tkinter
             if ym < yp:
-                return [xm, (ym+yp)/2, SOUTH]
+                return [xm, (ym + yp) / 2, SOUTH]
             else:
-                return [xm, (ym+yp)/2, NORTH]
+                return [xm, (ym + yp) / 2, NORTH]
         elif ym == yp:
             if xm < xp:
-                return [(xm+xp)/2, ym, EAST]
+                return [(xm + xp) / 2, ym, EAST]
             else:
-                return [(xm+xp)/2, ym, WEST]
+                return [(xm + xp) / 2, ym, WEST]
 
     @center_pos.setter
     def center_pos(self, center_pos):
@@ -3127,13 +3428,33 @@ class Component(TwoNodeElement):
         self._y_center = center_pos[1]
 
         if self._angle == SOUTH:
-            self.pos = [center_pos[0],center_pos[1]-0.5,center_pos[0],center_pos[1]+0.5]
+            self.pos = [
+                center_pos[0],
+                center_pos[1] - 0.5,
+                center_pos[0],
+                center_pos[1] + 0.5,
+            ]
         elif self._angle == NORTH:
-            self.pos = [center_pos[0],center_pos[1]+0.5,center_pos[0],center_pos[1]-0.5]
+            self.pos = [
+                center_pos[0],
+                center_pos[1] + 0.5,
+                center_pos[0],
+                center_pos[1] - 0.5,
+            ]
         elif self._angle == EAST:
-            self.pos = [center_pos[0]-0.5,center_pos[1],center_pos[0]+0.5,center_pos[1]]
+            self.pos = [
+                center_pos[0] - 0.5,
+                center_pos[1],
+                center_pos[0] + 0.5,
+                center_pos[1],
+            ]
         elif self._angle == WEST:
-            self.pos = [center_pos[0]+0.5,center_pos[1],center_pos[0]-0.5,center_pos[1]]
+            self.pos = [
+                center_pos[0] + 0.5,
+                center_pos[1],
+                center_pos[0] - 0.5,
+                center_pos[1],
+            ]
 
     @property
     def prop(self):
@@ -3150,92 +3471,103 @@ class Component(TwoNodeElement):
     # STATE SETTING
     ###########################################
 
-    
     def set_state_0(self):
-        '''Default state 
-        '''
+        """Default state
+        """
         super(Component, self).set_state_0()
 
         # If mouse is on top of component,
         # act as if one had hovered on top of component
 
-        x,y = self.canvas.get_mouse_location()
+        x, y = self.canvas.get_mouse_location()
 
         # bounding box of image
-        xm,ym,xp,yp = self.canvas.bbox(self.image)
+        xm, ym, xp, yp = self.canvas.bbox(self.image)
 
-        if xm<x<xp and ym<y<yp:
+        if xm < x < xp and ym < y < yp:
             self.hover_enter()
         else:
             self.hover_leave()
 
-
     ###########################################
     # CREATION
-    ###########################################  
+    ###########################################
 
     def create(self):
         x, y, angle = self.center_pos
         self.import_image()
         self.image = self.canvas.create_image(
-            *self.grid_to_canvas([x, y]), image=self.tk_image)
+            *self.grid_to_canvas([x, y]), image=self.tk_image
+        )
         self.add_or_replace_label()
         self.add_or_replace_node_dots()
         self.canvas.elements.append(self)
         self.canvas.set_state(0)
-     
-    def abort_creation(self, event=None, rerun_command = True):
+
+    def abort_creation(self, event=None, rerun_command=True):
         self.canvas.delete(self.image)
         self.canvas.delete(self.dot_minus)
         self.canvas.delete(self.dot_plus)
         self.canvas.exit_state(4)
-        super(Component,self).abort_creation(event, rerun_command)
+        super(Component, self).abort_creation(event, rerun_command)
 
-    ###### Arranged in order of calling for a manual placement:    
-    
+    ###### Arranged in order of calling for a manual placement:
+
     def manual_place(self, event):
         self.canvas.set_state(4)
         self.init_create_component(event)
         self.canvas.in_creation = self
 
-    def init_create_component(self, event, angle=0.):
+    def init_create_component(self, event, angle=0.0):
 
-        # If the user has not used arrows to rotate a component, 
+        # If the user has not used arrows to rotate a component,
         # provide a help message.
-        if angle == 0. and  not self.canvas.used_arrows:
+        if angle == 0.0 and not self.canvas.used_arrows:
             self.canvas.write_message("Use arrows to rotate")
-        if angle != 0.:
+        if angle != 0.0:
             self.canvas.used_arrows = True
 
         self.init_angle = angle
 
         # Import the image and plot it on the canvas
         self.import_image()
-        self.image = self.canvas.create_image(*self.canvas.get_mouse_location(), image=self.tk_image)
+        self.image = self.canvas.create_image(
+            *self.canvas.get_mouse_location(), image=self.tk_image
+        )
 
         self.canvas.bind("<ButtonRelease-1>", self.init_release)
-        self.canvas.bind('<Motion>', self.init_on_motion)
-        self.canvas.bind('<Escape>', lambda event: self.abort_creation(event, rerun_command = False))
-        self.canvas.bind('r', self.abort_creation)
-        self.canvas.bind('l', self.abort_creation)
-        self.canvas.bind('c', self.abort_creation)
-        self.canvas.bind('j', self.abort_creation)
-        self.canvas.bind('w', self.abort_creation)
-        self.canvas.bind('g', self.abort_creation)
-        self.canvas.bind('<Left>', lambda event: self.init_create_component(event, angle=WEST))
-        self.canvas.bind('<Right>', lambda event: self.init_create_component(event, angle=EAST))
-        self.canvas.bind('<Up>', lambda event: self.init_create_component(event, angle=NORTH))
-        self.canvas.bind('<Down>', lambda event: self.init_create_component(event, angle=SOUTH))
+        self.canvas.bind("<Motion>", self.init_on_motion)
+        self.canvas.bind(
+            "<Escape>", lambda event: self.abort_creation(event, rerun_command=False)
+        )
+        self.canvas.bind("r", self.abort_creation)
+        self.canvas.bind("l", self.abort_creation)
+        self.canvas.bind("c", self.abort_creation)
+        self.canvas.bind("j", self.abort_creation)
+        self.canvas.bind("w", self.abort_creation)
+        self.canvas.bind("g", self.abort_creation)
+        self.canvas.bind(
+            "<Left>", lambda event: self.init_create_component(event, angle=WEST)
+        )
+        self.canvas.bind(
+            "<Right>", lambda event: self.init_create_component(event, angle=EAST)
+        )
+        self.canvas.bind(
+            "<Up>", lambda event: self.init_create_component(event, angle=NORTH)
+        )
+        self.canvas.bind(
+            "<Down>", lambda event: self.init_create_component(event, angle=SOUTH)
+        )
 
     def init_on_motion(self, event):
         x, y = self.canvas.coords(self.image)
         dx = self.canvas.canvasx(event.x) - x
         dy = self.canvas.canvasy(event.y) - y
         self.canvas.move(self.image, dx, dy)
-    
+
     def init_release(self, event):
-        
-        self.canvas.bind('<Motion>', lambda event:None)
+
+        self.canvas.bind("<Motion>", lambda event: None)
         self.canvas.track_changes = False
         self.snap_to_grid()
         self.request_value_label()
@@ -3243,21 +3575,21 @@ class Component(TwoNodeElement):
 
         # Case where the user clicks cancel in the popup window
         if self.prop[0] is None and self.prop[1] is None:
-            self.abort_creation(rerun_command = False)
+            self.abort_creation(rerun_command=False)
             return
 
         self.add_or_replace_label()
         self.canvas.elements.append(self)
         self.canvas.exit_state(4)
-        
+
     ###########################################
     # DRAGGING BEHAVIOUR
-    ###########################################  
-    
+    ###########################################
+
     def move(self, dx, dy):
-        '''
+        """
         Input given in canvas units
-        '''
+        """
 
         self.canvas.move(self.image, dx, dy)
         if self.dot_minus is not None:
@@ -3267,34 +3599,34 @@ class Component(TwoNodeElement):
             self.canvas.delete(self.dot_plus)
             self.dot_plus = None
         self.add_or_replace_label()
- 
+
     ###########################################
     # DROPPING BEHAVIOUR
-    ###########################################   
+    ###########################################
 
     def snap_to_grid(self, event=None):
-        '''
+        """
         Called in release_motion or init_release
-        '''
+        """
         x, y = self.canvas.coords(self.image)
         x0, y0 = self.canvas.canvas_center
         gu = float(self.canvas.grid_unit)
 
-
-        if self.center_pos[2] % 180. == 90.:
+        if self.center_pos[2] % 180.0 == 90.0:
             self.center_pos = [
-                round(float(x-x0)/gu),
-                round(float(y-y0-gu/2.)/gu) + 0.5,
-                self.center_pos[2]]
+                round(float(x - x0) / gu),
+                round(float(y - y0 - gu / 2.0) / gu) + 0.5,
+                self.center_pos[2],
+            ]
             self.canvas.coords(self.image, *self.grid_to_canvas(self.center_pos[:2]))
 
-        elif self.center_pos[2] % 180. == 0.:
+        elif self.center_pos[2] % 180.0 == 0.0:
             self.center_pos = [
-                0.5 + round(float(x-x0-gu/2.)/gu),
-                round(float(y-y0)/gu),
-                self.center_pos[2]]
+                0.5 + round(float(x - x0 - gu / 2.0) / gu),
+                round(float(y - y0) / gu),
+                self.center_pos[2],
+            ]
             self.canvas.coords(self.image, *self.grid_to_canvas(self.center_pos[:2]))
-
 
         # Add circles at the nodes of the component
         self.add_or_replace_node_dots()
@@ -3306,30 +3638,29 @@ class Component(TwoNodeElement):
     def box_select(self, x0, y0, x1, y1):
         xs = [x0, x1]
         ys = [y0, y1]
-        x,y = self.get_center_pos()
+        x, y = self.get_center_pos()
 
         if min(xs) <= x <= max(xs) and min(ys) <= y <= max(ys):
             self.force_select()
-    
+
     ###########################################
     # POSITIONING
     ###########################################
-    
+
     def get_center_pos(self):
         # returns center in canvas units
         return self.canvas.coords(self.image)
-    
 
     ###########################################
     # (RE-)DRAWING
     ###########################################
-    
+
     def import_image(self):
         img_name = type(self).__name__
         if self.hover:
-            img_name += '_hover'
+            img_name += "_hover"
         if self.selected:
-            img_name += '_selected'
+            img_name += "_selected"
         img_name += self.canvas.graphics_extension
 
         if self.center_pos[2] is None:
@@ -3340,22 +3671,22 @@ class Component(TwoNodeElement):
         # Location to store the inductor/capacitor/.. graphics
         img_directory = os.path.join(os.path.dirname(__file__), ".graphics")
         img = Image.open(os.path.join(img_directory, img_name))
-        size = int(self.canvas.grid_unit*(1-1*self.node_dot_radius))
-        img = img.resize((size, int(size/2)))
-        img = img.rotate(angle,expand = True)
+        size = int(self.canvas.grid_unit * (1 - 1 * self.node_dot_radius))
+        img = img.resize((size, int(size / 2)))
+        img = img.rotate(angle, expand=True)
         self.tk_image = ImageTk.PhotoImage(img)
-      
+
     def update_graphic(self):
         self.import_image()
         self.canvas.itemconfig(self.image, image=self.tk_image)
-    
+
     def redraw(self):
         self.update_graphic()
         self.canvas.coords(self.image, *self.grid_to_canvas(self.center_pos[:2]))
         self.add_or_replace_label()
         self.add_or_replace_node_dots()
-    
-    def init_redraw(self,event):
+
+    def init_redraw(self, event):
         self.update_graphic()
 
     def add_or_replace_label(self):
@@ -3363,30 +3694,32 @@ class Component(TwoNodeElement):
         _, _, angle = self.center_pos
         x, y = self.canvas.coords(self.image)
         value, label = self.prop
-        text = to_string(self.unit, label, value,
-                         use_unicode=True,
-                         maximum_info = True)
-        font = Font(family='Helvetica', size=int(self.canvas.font_size*gu/60), weight='normal')
-        text_position = (0.2)*gu
-        if angle % 180. == 90. and self.text is None:
+        text = to_string(self.unit, label, value, use_unicode=True, maximum_info=True)
+        font = Font(
+            family="Helvetica",
+            size=int(self.canvas.font_size * gu / 60),
+            weight="normal",
+        )
+        text_position = (0.2) * gu
+        if angle % 180.0 == 90.0 and self.text is None:
             self.text = self.canvas.create_text(
-                x+text_position, y, text=text, anchor=tk.W, font=font)
-        elif angle % 180. == 90. and self.text is not None:
-            self.canvas.coords(self.text, x+text_position, y)
-            self.canvas.itemconfig(self.text,
-                                   text=text, anchor=tk.W, font=font)
-        elif angle % 180. == 0. and self.text is None:
+                x + text_position, y, text=text, anchor=tk.W, font=font
+            )
+        elif angle % 180.0 == 90.0 and self.text is not None:
+            self.canvas.coords(self.text, x + text_position, y)
+            self.canvas.itemconfig(self.text, text=text, anchor=tk.W, font=font)
+        elif angle % 180.0 == 0.0 and self.text is None:
             self.text = self.canvas.create_text(
-                x, y+text_position, text=text, anchor=tk.N, font=font)
-        elif angle % 180. == 0. and self.text is not None:
-            self.canvas.coords(self.text, x, y+text_position)
-            self.canvas.itemconfig(self.text,
-                                   text=text, anchor=tk.N, font=font)
-    
+                x, y + text_position, text=text, anchor=tk.N, font=font
+            )
+        elif angle % 180.0 == 0.0 and self.text is not None:
+            self.canvas.coords(self.text, x, y + text_position)
+            self.canvas.itemconfig(self.text, text=text, anchor=tk.N, font=font)
+
     ###########################################
     # EDITING VALUE/LABEL
     ###########################################
-  
+
     def double_click(self, event):
         self.modify_values(self)
 
@@ -3397,7 +3730,7 @@ class Component(TwoNodeElement):
             self.prop = old_prop
         else:
             self.add_or_replace_label()
-    
+
     def request_value_label(self):
         if (self.canvas.track_events_to is None) and (self.canvas.unittesting == False):
             window = RequestValueLabelWindow(self.canvas.master, self)
@@ -3405,50 +3738,55 @@ class Component(TwoNodeElement):
             self.canvas.master.wait_window(window)
             self.canvas.exit_state(2)
         else:
-            self.prop = [1, 'X']
+            self.prop = [1, "X"]
+
 
 class R(Component):
     """docstring for R"""
 
     def __init__(self, canvas, event=None, auto_place_info=None):
-        self.unit = u'\u03A9'
+        self.unit = "\u03A9"
         super(R, self).__init__(canvas, event, auto_place_info)
+
 
 class L(Component):
     """docstring for L"""
 
     def __init__(self, canvas, event=None, auto_place_info=None):
-        self.unit = 'H'
+        self.unit = "H"
         super(L, self).__init__(canvas, event, auto_place_info)
+
 
 class C(Component):
     """docstring for C"""
 
     def __init__(self, canvas, event=None, auto_place_info=None):
-        self.unit = 'F'
+        self.unit = "F"
         super(C, self).__init__(canvas, event, auto_place_info)
+
 
 class J(Component):
     """docstring for J"""
 
     def __init__(self, canvas, event=None, auto_place_info=None):
-        self.unit = 'H'
+        self.unit = "H"
         super(J, self).__init__(canvas, event, auto_place_info)
+
 
 class G(Component):
     """docstring for J"""
 
     def __init__(self, canvas, event=None, auto_place_info=None):
-        self.unit = ''
+        self.unit = ""
         super(G, self).__init__(canvas, event, auto_place_info)
 
     ###########################################
-    # Adapt to the fact that 
+    # Adapt to the fact that
     # has no properties
     ###########################################
     @property
     def prop(self):
-        return [None, '']
+        return [None, ""]
 
     @prop.setter
     def prop(self, prop):
@@ -3461,7 +3799,7 @@ class G(Component):
         pass
 
     ###########################################
-    # Adapt to the fact that 
+    # Adapt to the fact that
     # has no properties
     ###########################################
 
@@ -3469,15 +3807,16 @@ class G(Component):
         pass
 
     ###########################################
-    # Adapt to the fact that 
+    # Adapt to the fact that
     # it has only one node
     ###########################################
 
     def add_or_replace_node_dots(self):
-        super(G,self).add_or_replace_node_dots(minus = False)
+        super(G, self).add_or_replace_node_dots(minus=False)
 
-    def add_nodes(self, minus = False, plus = True):   
-        super(G,self).add_nodes( minus = minus, plus = plus)       
+    def add_nodes(self, minus=False, plus=True):
+        super(G, self).add_nodes(minus=minus, plus=plus)
+
 
 class RequestValueLabelWindow(tk.Toplevel):
     def __init__(self, master, component):
@@ -3488,50 +3827,52 @@ class RequestValueLabelWindow(tk.Toplevel):
         # Determine values v(value) and l(label) fields
         v, l = self.component.prop
 
-        # if we are creating this component 
-        # we want to re-direct the events away from the editor and onto 
+        # if we are creating this component
+        # we want to re-direct the events away from the editor and onto
         # this widget
         # This will be cancelled upon exiting state 4
         if v is None and l is None and self.component.canvas.force_grab_set:
             self.grab_set()
 
         if v is None:
-            v = ''
+            v = ""
         else:
             decimals = 1
-            v_string = '0'
-            while float(v_string)-v != 0 and decimals<15:
+            v_string = "0"
+            while float(v_string) - v != 0 and decimals < 15:
                 v_string = f"%.{decimals}e" % v
                 decimals += 1
             v = v_string
 
         if l is None:
-            l = ''
+            l = ""
         field_values = [v, l]
 
         # Information to be displayed
-        if isinstance(self.component,C):
-            info_text = 'Specify label and/or capacitance (in units of Farad)'
-            self.value_string = 'Capacitance'
-        elif isinstance(self.component,J):
-            self.value_string = 'Inductance'
-            info_text = 'Specify label and/or Josephson inductance (in units of Henry)'
-            info_text += '\nNote that L = (hbar/2/e)**2/[Josephson Energy in Joules]'
-        elif isinstance(self.component,L):
-            self.value_string = 'Inductance'
-            info_text = 'Specify label and/or inductance (in units of Henry)'
-        elif isinstance(self.component,R):
-            self.value_string = 'Resistance'
-            info_text = 'Specify label and/or resistance (in units of Ohm)'
+        if isinstance(self.component, C):
+            info_text = "Specify label and/or capacitance (in units of Farad)"
+            self.value_string = "Capacitance"
+        elif isinstance(self.component, J):
+            self.value_string = "Inductance"
+            info_text = "Specify label and/or Josephson inductance (in units of Henry)"
+            info_text += "\nNote that L = (hbar/2/e)**2/[Josephson Energy in Joules]"
+        elif isinstance(self.component, L):
+            self.value_string = "Inductance"
+            info_text = "Specify label and/or inductance (in units of Henry)"
+        elif isinstance(self.component, R):
+            self.value_string = "Resistance"
+            info_text = "Specify label and/or resistance (in units of Ohm)"
 
         # Entry field strings
-        fields = self.value_string, 'Label'
+        fields = self.value_string, "Label"
 
         info_font = ("Helvetica", self.component.canvas.font_size, "normal italic")
 
         # Add information field
         row = tk.Frame(self)
-        lab = tk.Label(row, text=info_text, anchor='sw',justify=tk.LEFT,font = info_font)
+        lab = tk.Label(
+            row, text=info_text, anchor="sw", justify=tk.LEFT, font=info_font
+        )
         row.pack(side=tk.TOP, fill=tk.X, padx=5, pady=5)
         lab.pack(side=tk.LEFT, expand=tk.YES, fill=tk.X)
 
@@ -3539,7 +3880,7 @@ class RequestValueLabelWindow(tk.Toplevel):
         self.entries = []
         for i, field in enumerate(fields):
             row = tk.Frame(self)
-            lab = tk.Label(row, width=12, text=field, anchor='w')
+            lab = tk.Label(row, width=12, text=field, anchor="w")
             ent = tk.Entry(row)
             ent.insert(tk.END, field_values[i])
             row.pack(side=tk.TOP, fill=tk.X, padx=5, pady=5)
@@ -3551,11 +3892,11 @@ class RequestValueLabelWindow(tk.Toplevel):
         self.entries[0][1].focus()
 
         # Bind Return, OK and cancel buttons
-        self.bind('<Return>', lambda event: self.ok())
-        self.bind('<KP_Enter>', lambda event: self.ok()) # Keypad enter on linux
-        ok_button = tk.Button(self, text='  OK  ', command=self.ok)
+        self.bind("<Return>", lambda event: self.ok())
+        self.bind("<KP_Enter>", lambda event: self.ok())  # Keypad enter on linux
+        ok_button = tk.Button(self, text="  OK  ", command=self.ok)
         ok_button.pack(side=tk.RIGHT, padx=5, pady=5)
-        cancel_button = tk.Button(self, text='Cancel', command=self.cancel)
+        cancel_button = tk.Button(self, text="Cancel", command=self.cancel)
         cancel_button.pack(side=tk.RIGHT, padx=5, pady=5)
 
     def ok(self):
@@ -3565,7 +3906,7 @@ class RequestValueLabelWindow(tk.Toplevel):
         label = self.entries[1][1].get()
 
         # Remove spaces from value and check if it is empty
-        if value.replace(' ', '') == "":
+        if value.replace(" ", "") == "":
             v = None
 
         else:
@@ -3575,40 +3916,52 @@ class RequestValueLabelWindow(tk.Toplevel):
                 v = float(value)
             except ValueError:
                 messagebox.showinfo(
-                    "Incorrect %s"%self.value_string.lower(), "%s should be a python style float, for example: 1e-2 or 0.01"%self.value_string)
+                    "Incorrect %s" % self.value_string.lower(),
+                    "%s should be a python style float, for example: 1e-2 or 0.01"
+                    % self.value_string,
+                )
                 self.focus_force()
                 return None
-                
+
             # Check its not too big, too small, or negative
             # Note that values above max(min)_float would then
             # be interpreted as infinity (or zero)
-            if v>max_float:
+            if v > max_float:
                 messagebox.showinfo(
-                    "Too large %s"%self.value_string.lower(), "Maximum allowed %s is %.2e"%(self.value_string.lower(),max_float))
+                    "Too large %s" % self.value_string.lower(),
+                    "Maximum allowed %s is %.2e"
+                    % (self.value_string.lower(), max_float),
+                )
                 self.focus_force()
                 return None
-            elif v<0:
+            elif v < 0:
                 messagebox.showinfo(
-                    "Negative %s"%self.value_string.lower(), "%s should be a positive float"%self.value_string)
+                    "Negative %s" % self.value_string.lower(),
+                    "%s should be a positive float" % self.value_string,
+                )
                 self.focus_force()
                 return None
-            elif 0<=v<min_float:
+            elif 0 <= v < min_float:
                 messagebox.showinfo(
-                    "Too small %s"%self.value_string.lower(), "Minimum allowed %s is %.2e"%(self.value_string.lower(),min_float))
+                    "Too small %s" % self.value_string.lower(),
+                    "Minimum allowed %s is %.2e"
+                    % (self.value_string.lower(), min_float),
+                )
                 self.focus_force()
                 return None
 
         # Remove spaces in the label
-        if label.replace(' ', '') == "":
+        if label.replace(" ", "") == "":
             l = None
         else:
             l = label
 
-        # Make sure at least one label or one value was 
+        # Make sure at least one label or one value was
         # provided
         if l is None and v is None:
             messagebox.showinfo(
-                "No inputs", "Enter a %s or a label or both"%self.value_string.lower())
+                "No inputs", "Enter a %s or a label or both" % self.value_string.lower()
+            )
             self.focus_force()
             return None
         else:
@@ -3621,18 +3974,19 @@ class RequestValueLabelWindow(tk.Toplevel):
     def cancel(self):
         self.destroy()
 
+
 class GuiWindow(ttk.Frame):
     """
     GuiWindow inherits from the tkinter Frame class.
     A Frame is a rectangular region on the screen.
-    This Frame just plays the role of placeholder for another 
+    This Frame just plays the role of placeholder for another
     Frame defined in the CircuitEditor which will
     host the canvas, menubar, scrollbars.
 
     In this class we manage the launching of the GUI
     and properties pertaining to the opened window
     such as the titlebar and initial window size
-    
+
     Parameters
     ----------
     netlist_filename:   string
@@ -3647,65 +4001,78 @@ class GuiWindow(ttk.Frame):
                         path to the file used to save the network constructed
                         in the GUI
     _verbose:           Boolean, optional
-                        If True, the editor will print information about the state of the 
+                        If True, the editor will print information about the state of the
                         Editor
     """
 
-    def __init__(self, netlist_filename, 
-        _verbose = False,
-        _unittesting = False, 
-        _track_events_to = None, 
-        _os_type = None):
+    def __init__(
+        self,
+        netlist_filename,
+        _verbose=False,
+        _unittesting=False,
+        _track_events_to=None,
+        _os_type=None,
+    ):
 
         # Find out what kind of system the gui is running on
         if _os_type is None:
-            if platform.system() == 'Darwin':
-                _os_type = 'mac'
-            elif platform.system() == 'Linux':
-                _os_type = 'linux'
+            if platform.system() == "Darwin":
+                _os_type = "mac"
+            elif platform.system() == "Linux":
+                _os_type = "linux"
             else:
-                _os_type = 'windows'
+                _os_type = "windows"
         # Initialize the frame, inside the root window (tk.Tk())
         ttk.Frame.__init__(self, master=tk.Tk())
 
         # Set the name to appear in the title bar
-        self.master.title('Circuit Editor')
+        self.master.title("Circuit Editor")
 
         # Set the initial size of the window in pixels
-        self.master.geometry('800x600')
+        self.master.geometry("800x600")
 
         # Load the logo to the title bar
         # TODO: enable for all os
-        if _os_type == 'windows':
+        if _os_type == "windows":
             try:
-                self.master.iconbitmap(os.path.join(os.path.dirname(os.path.dirname(__file__)),'artwork','logo.ico'))
+                self.master.iconbitmap(
+                    os.path.join(
+                        os.path.dirname(os.path.dirname(__file__)),
+                        "artwork",
+                        "logo.ico",
+                    )
+                )
             except Exception as e:
                 if _verbose:
-                    print("There has been an error loading the applications icon:\n"+str(e))
+                    print(
+                        "There has been an error loading the applications icon:\n"
+                        + str(e)
+                    )
 
         # Make the fram a 1x1 expandable grid
         self.master.rowconfigure(0, weight=1)
         self.master.columnconfigure(0, weight=1)
 
         if _track_events_to is not None:
-            with open(_track_events_to,'w+'):
+            with open(_track_events_to, "w+"):
                 # Creates the file or, if the file was already used, clears it of content
                 pass
 
         # Populate that grid with the circuit editor
         self.canvas = CircuitEditor(
-            self.master, 
-            netlist_filename=netlist_filename, 
-            grid_unit=60, 
-            track_events_to=_track_events_to, 
-            unittesting = _unittesting,
-            verbose = _verbose,
-            os_type = _os_type)
+            self.master,
+            netlist_filename=netlist_filename,
+            grid_unit=60,
+            track_events_to=_track_events_to,
+            unittesting=_unittesting,
+            verbose=_verbose,
+            os_type=_os_type,
+        )
 
         # Bring the window to the front
         self.master.lift()
-        self.master.attributes('-topmost', True)
-        self.master.attributes('-topmost', False)
+        self.master.attributes("-topmost", True)
+        self.master.attributes("-topmost", False)
 
         if _unittesting:
             self.update()
@@ -3713,10 +4080,14 @@ class GuiWindow(ttk.Frame):
             try:
                 self.mainloop()
             except UnicodeDecodeError:
-                messagebox.showinfo("","Oops.. Circuit editor crashed.\n\n"+\
-                    "This can happen when scrolling on MacOS with an out-dated version of Python: you may want to upgrade to the latest Python version\n\n"+\
-                    "If that is not the source of error, please submit a bug report, and we will try and solve the problem as fast as possible:\n"+\
-                    "https://qucat.org/report_a_bug.html")
+                messagebox.showinfo(
+                    "",
+                    "Oops.. Circuit editor crashed.\n\n"
+                    + "This can happen when scrolling on MacOS with an out-dated version of Python: you may want to upgrade to the latest Python version\n\n"
+                    + "If that is not the source of error, please submit a bug report, and we will try and solve the problem as fast as possible:\n"
+                    + "https://qucat.org/report_a_bug.html",
+                )
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     GuiWindow(sys.argv[1])

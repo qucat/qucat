@@ -25,6 +25,7 @@
         <script type="text/javascript" src="../../_static/underscore.js"></script>
         <script type="text/javascript" src="../../_static/doctools.js"></script>
         <script type="text/javascript" src="../../_static/language_data.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
         <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
         <script type="text/x-mathjax-config">MathJax.Hub.Config({"tex2jax": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true, "ignoreClass": "document", "processClass": "math|output_area"}})</script>
     
@@ -88,8 +89,8 @@
 <li class="toctree-l1"><a class="reference internal" href="../../about.html">About</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../citing.html">Citing this project</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../installation.html">Installation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../tutorials/tutorials.html">Tutorials</a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="../API.html">List of functions</a><ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../tutorials/index.html">Tutorials</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../index.html">List of functions</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="../builders.html">Creating a circuit</a></li>
 <li class="toctree-l2 current"><a class="reference internal" href="../circuit_functions.html">Circuit analysis</a><ul class="current">
 <li class="toctree-l3"><a class="reference internal" href="eigenfrequencies.html"> Calculating eigen-frequencies</a></li>
@@ -107,6 +108,7 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../contact.html">Contact</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../report_a_bug.html">Report a bug</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../devs/index.html">Developer Guide</a></li>
 </ul>
 
             
@@ -152,7 +154,7 @@
     
       <li><a href="../../index.html">Docs</a> &raquo;</li>
         
-          <li><a href="../API.html">Index of functions</a> &raquo;</li>
+          <li><a href="../index.html">Index of functions</a> &raquo;</li>
         
           <li><a href="../circuit_functions.html">Circuit analysis</a> &raquo;</li>
         
@@ -203,24 +205,20 @@
 <h1>Plotting the circuit<a class="headerlink" href="#plotting-the-circuit" title="Permalink to this headline">¶</a></h1>
 <dl class="method">
 <dt id="qucat.Qcircuit.show">
-<code class="descclassname">Qcircuit.</code><code class="descname">show</code><span class="sig-paren">(</span><em>plot=True</em>, <em>return_fig_ax=False</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qucat/core.html#Qcircuit.show"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#qucat.Qcircuit.show" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">Qcircuit.</code><code class="sig-name descname">show</code><span class="sig-paren">(</span><em class="sig-param">plot=True</em>, <em class="sig-param">return_fig_ax=False</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qucat/core.html#Qcircuit.show"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#qucat.Qcircuit.show" title="Permalink to this definition">¶</a></dt>
 <dd><p>Plots the circuit.</p>
 <p>Only works if the circuit was created using the GUI.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>plot</strong> (<em>Boolean</em><em>, </em><em>optional</em>) – If set to True (default), the function will call
-plt.show() to display the circuit</li>
-<li><strong>return_fig_ax</strong> (<em>Boolean</em><em>, </em><em>optional</em>) – If set to True (default is False), the function will
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>plot</strong> (<em>Boolean</em><em>, </em><em>optional</em>) – If set to True (default), the function will call
+plt.show() to display the circuit</p></li>
+<li><p><strong>return_fig_ax</strong> (<em>Boolean</em><em>, </em><em>optional</em>) – If set to True (default is False), the function will
 return figure and axis for further processing using
-matplotlib.</li>
+matplotlib.</p></li>
 </ul>
-</td>
-</tr>
-</tbody>
-</table>
+</dd>
+</dl>
 </dd></dl>
 
 </div>

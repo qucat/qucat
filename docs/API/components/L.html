@@ -25,6 +25,7 @@
         <script type="text/javascript" src="../../_static/underscore.js"></script>
         <script type="text/javascript" src="../../_static/doctools.js"></script>
         <script type="text/javascript" src="../../_static/language_data.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
         <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
         <script type="text/x-mathjax-config">MathJax.Hub.Config({"tex2jax": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true, "ignoreClass": "document", "processClass": "math|output_area"}})</script>
     
@@ -88,8 +89,8 @@
 <li class="toctree-l1"><a class="reference internal" href="../../about.html">About</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../citing.html">Citing this project</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../installation.html">Installation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../tutorials/tutorials.html">Tutorials</a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="../API.html">List of functions</a><ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../tutorials/index.html">Tutorials</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../index.html">List of functions</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="../builders.html">Creating a circuit</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../circuit_functions.html">Circuit analysis</a></li>
 <li class="toctree-l2 current"><a class="reference internal" href="../components.html">Circuit components</a><ul class="current">
@@ -103,6 +104,7 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../contact.html">Contact</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../report_a_bug.html">Report a bug</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../devs/index.html">Developer Guide</a></li>
 </ul>
 
             
@@ -148,7 +150,7 @@
     
       <li><a href="../../index.html">Docs</a> &raquo;</li>
         
-          <li><a href="../API.html">Index of functions</a> &raquo;</li>
+          <li><a href="../index.html">Index of functions</a> &raquo;</li>
         
           <li><a href="../components.html">Circuit components</a> &raquo;</li>
         
@@ -199,16 +201,14 @@
 <span id="id1"></span><h1>Inductor<a class="headerlink" href="#inductor" title="Permalink to this headline">¶</a></h1>
 <dl class="class">
 <dt id="qucat.L">
-<em class="property">class </em><code class="descclassname">qucat.</code><code class="descname">L</code><span class="sig-paren">(</span><em>node_minus</em>, <em>node_plus</em>, <em>*args</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qucat/core.html#L"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#qucat.L" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">qucat.</code><code class="sig-name descname">L</code><span class="sig-paren">(</span><em class="sig-param">node_minus</em>, <em class="sig-param">node_plus</em>, <em class="sig-param">*args</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qucat/core.html#L"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#qucat.L" title="Permalink to this definition">¶</a></dt>
 <dd><p>A class representing an inductor</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>node_minus</strong> (<em>integer</em>) – Index corresponding to one node of inductor</li>
-<li><strong>node_minus</strong> – Index corresponding to the other node of the inductor</li>
-<li><strong>args</strong> (<em>&lt;float&gt;</em><em> or </em><em>&lt;str&gt;</em><em> or </em><em>&lt;float&gt;</em><em>,</em><em>&lt;str&gt;</em>) – Other arguments should be a float corresponding to the
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>node_minus</strong> (<em>integer</em>) – Index corresponding to one node of inductor</p></li>
+<li><p><strong>node_minus</strong> – Index corresponding to the other node of the inductor</p></li>
+<li><p><strong>args</strong> (<em>&lt;float&gt;</em><em> or </em><em>&lt;str&gt;</em><em> or </em><em>&lt;float&gt;</em><em>,</em><em>&lt;str&gt;</em>) – Other arguments should be a float corresponding to the
 inductance, a string corresponding to the
 name of that value (ex: <cite>“L”</cite>), or both.
 If only a label is provided,
@@ -219,42 +219,36 @@ This is the best way to proceed if one wants to sweep the value of this
 inductor. Indeed, the most computationally expensive part of the
 analysis is performed upon initializing the circuit, subsequently
 changing the value of a component and re-calculating a quantity
-such as the frequency or anharmonicity can be performed much faster.</li>
+such as the frequency or anharmonicity can be performed much faster.</p></li>
 </ul>
-</td>
-</tr>
-</tbody>
-</table>
+</dd>
+</dl>
 <dl class="method">
 <dt id="qucat.L.zpf">
-<code class="descname">zpf</code><span class="sig-paren">(</span><em>mode</em>, <em>quantity</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#qucat.L.zpf" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">zpf</code><span class="sig-paren">(</span><em class="sig-param">mode</em>, <em class="sig-param">quantity</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#qucat.L.zpf" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns contribution of a mode to the zero-point fluctuations of a quantity for this component.</p>
 <p>The quantity can be current (in units of Ampere),
 voltage (in Volts),
 charge (in electron charge),
 or flux (in units of the reduced flux quantum, <span class="math notranslate nohighlight">\(\hbar/2e\)</span>).</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>mode</strong> (<em>integer</em>) – Determine what mode to consider, where 0 designates
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>mode</strong> (<em>integer</em>) – Determine what mode to consider, where 0 designates
 the lowest frequency mode, and the others
-are arranged in order of increasing frequency</li>
-<li><strong>quantity</strong> (<em>string</em>) – One of ‘current’, ‘flux’, ‘charge’, ‘voltage’</li>
-<li><strong>kwargs</strong> – Values for un-specified circuit components,
-ex: <code class="docutils literal notranslate"><span class="pre">L=1e-9</span></code>.</li>
+are arranged in order of increasing frequency</p></li>
+<li><p><strong>quantity</strong> (<em>string</em>) – One of ‘current’, ‘flux’, ‘charge’, ‘voltage’</p></li>
+<li><p><strong>kwargs</strong> – Values for un-specified circuit components,
+ex: <code class="docutils literal notranslate"><span class="pre">L=1e-9</span></code>.</p></li>
 </ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">contribution of the <code class="docutils literal notranslate"><span class="pre">mode</span></code> to the zero-point fluctuations of the <code class="docutils literal notranslate"><span class="pre">quantity</span></code></p>
-</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last"><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.7)">float</a></p>
-</td>
-</tr>
-</tbody>
-</table>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>contribution of the <code class="docutils literal notranslate"><span class="pre">mode</span></code> to the zero-point fluctuations of the <code class="docutils literal notranslate"><span class="pre">quantity</span></code></p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.8)">float</a></p>
+</dd>
+</dl>
 <p class="rubric">Notes</p>
 <p>This quantity is calculated by multiplying the
 voltage transfer function <span class="math notranslate nohighlight">\(T_{rc}\)</span> (between a reference component <span class="math notranslate nohighlight">\(r\)</span>
