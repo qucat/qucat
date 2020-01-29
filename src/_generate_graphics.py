@@ -6,6 +6,8 @@ from plotting_settings import *
 from plotting_settings import plotting_parameters_GUI
 import matplotlib.pyplot as plt
 from matplotlib.patches import Rectangle
+from PIL import Image
+
 
 png_directory = os.path.join(os.path.dirname(__file__), ".graphics")
 try:
@@ -65,16 +67,11 @@ def generate_icon(comp, hover=False, selected=False):
     for i in range(len(xs)):
         ax.plot(xs[i], ys[i], color=pp["color"], lw=pp[line_type[i]]["lw"])
 
+    filename = os.path.join(png_directory, comp.__class__.__name__ + state_string)
     fig.savefig(
-        os.path.join(png_directory, comp.__class__.__name__ + state_string + ".png"),
-        transparent=True,
-        dpi=dpi,
+        filename + ".png", transparent=True, dpi=dpi,
     )
-    fig.savefig(
-        os.path.join(png_directory, comp.__class__.__name__ + state_string + ".jpg"),
-        transparent=True,
-        dpi=dpi,
-    )
+    Image.open(filename + ".png").convert("RGB").save(filename + ".jpg", "JPEG")
     plt.close()
 
 
