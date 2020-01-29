@@ -1,3 +1,5 @@
+from typing import Iterable, List
+
 import sympy as sp
 from sympy.utilities.lambdify import lambdify
 import numpy as np
@@ -12,6 +14,7 @@ import inspect
 import matplotlib.pyplot as plt
 import time
 from warnings import warn
+import io
 
 try:
     from ._constants import *
@@ -34,7 +37,7 @@ PROFILING = False
 
 def timeit(method):
     """
-    Decorator which prints the time
+    Decorator which prints the time 
     a function took to execute.
     Only works the global variable PROFILING is set to True.
     """
@@ -57,9 +60,9 @@ def string_to_component(s, *arg, **kwarg):
     Parameters
     ----------
     s : string
-        One of 'W', 'R', 'L', 'J', 'C', 'G', dicatates the type
+        One of 'W', 'R', 'L', 'J', 'C', 'G', dicatates the type 
         of component to create
-    args, kwargs :
+    args, kwargs : 
         Arguments needed for the component creation
 
     Returns
@@ -84,7 +87,7 @@ class Qcircuit(object):
     """A class representing a quantum circuit.
 
     Attributes:
-        components (dict): Dictionary of components having a label, such that a component
+        components (dict): Dictionary of components having a label, such that a component 
             with label 'L_1' can be obtained by ``Qcircuit.components['L_1']``
         Q_min (float): Modes with have a quality factor below Q_min will not ignored
         inductors (list): List of inductor objects present in the circuit
@@ -92,7 +95,7 @@ class Qcircuit(object):
         junctions (list): List of junction objects present in the circuit
         capacitors (list): List of capacitor objects present in the circuit
         netlist (list): List of all components present in the circuit
-        ref_elt (J or L): list of junction or inductor component used as a reference for the calculation
+        ref_elt (J or L): list of junction or inductor component used as a reference for the calculation 
                         of zero-point fluctations, each index of the list corresponds to a different mode
     """
 
@@ -182,7 +185,7 @@ class Qcircuit(object):
     @property
     def _pp(self):
         """
-        Returns the plotting parameters used
+        Returns the plotting parameters used 
             * in the Qcircuit.show method (if self._plotting_normal_mode is False)
             * in the Qcircuit.show_normal_modes() method (if self._plotting_normal_mode is True)
         """
@@ -193,16 +196,16 @@ class Qcircuit(object):
 
     def _parse_kwargs(self, **kwargs):
         """
-        Raises a ValueError
+        Raises a ValueError 
         * if one of the kwargs is not the label of a circuit element
-        * if a component without a value has not had its value specified in the kwargs
+        * if a component without a value has not had its value specified in the kwargs 
 
         Called in all functions accepting keyword arguments (for un-specified circuit components).
-
+        
         Parameters
         ----------
-        kwargs:
-                    Values for un-specified circuit components,
+        kwargs:     
+                    Values for un-specified circuit components, 
                     ex: ``L=1e-9``.
         """
         for key in kwargs:
@@ -228,8 +231,8 @@ class Qcircuit(object):
 
         Parameters
         ----------
-        kwargs:
-                    Values for un-specified circuit components,
+        kwargs:     
+                    Values for un-specified circuit components, 
                     ex: ``L=1e-9``.
         """
         try:
@@ -382,14 +385,6 @@ class Qcircuit(object):
                 ref_elt.append(inductive_elements[ref_elt_index])
         zeta = np.array(zeta)
 
-        if len(zeta) == 0:
-            error_message = (
-                ("No normal modes with a quality factor >%f were found.\n" % self.Q_min)
-                + "This could be because a small resistor is shorting the circuit "
-                + "or because a large resistor is creating an open circuit."
-            )
-            raise ValueError(error_message)
-
         self.zeta = zeta
         self.ref_elt = ref_elt
 
@@ -402,8 +397,8 @@ class Qcircuit(object):
 
         Parameters
         ----------
-        kwargs:
-                    Values for un-specified circuit components,
+        kwargs:     
+                    Values for un-specified circuit components, 
                     ex: ``L=1e-9``.
 
         Returns
@@ -422,13 +417,13 @@ class Qcircuit(object):
     def eigenfrequencies(self, **kwargs):
         """Returns the normal mode frequencies of the circuit.
 
-        Frequencies are provided in units of Hertz,
+        Frequencies are provided in units of Hertz, 
         not in angular frequency.
 
         Parameters
         ----------
-        kwargs:
-                    Values for un-specified circuit components,
+        kwargs:     
+                    Values for un-specified circuit components, 
                     ex: ``L=1e-9``.
 
         Returns
@@ -449,13 +444,13 @@ class Qcircuit(object):
 
         :math:`\hat{H} = \sum_m hf_m\hat{a}_m^\dagger\hat{a}_m + \hat{U}`,
 
-        where :math:`h` is Plancks constant,
+        where :math:`h` is Plancks constant, 
         :math:`\hat{a}_m` is the annihilation operator of the m-th
-        normal mode of the circuit and :math:`f_m` is the frequency of
+        normal mode of the circuit and :math:`f_m` is the frequency of 
         the m-th normal mode. The frequencies :math:`f_m` would
         be the resonance frequencies of the circuit if all junctions
-        were replaced with linear inductors. In that case the
-        non-linear part of the Hamiltonian :math:`\hat{U}`,
+        were replaced with linear inductors. In that case the 
+        non-linear part of the Hamiltonian :math:`\hat{U}`, 
         originating in the junction non-linearity, would be 0.
 
         For more information on the underlying theory, see https://arxiv.org/pdf/1908.10342.pdf.
@@ -469,13 +464,13 @@ class Qcircuit(object):
 
         The array is ordered ordered with increasing normal mode frequencies
         such that the first element of the array corresponds to the loss
-        rate of the lowest frequency mode. Losses are provided in units of Hertz,
+        rate of the lowest frequency mode. Losses are provided in units of Hertz, 
         **not in angular frequency**.
 
         Parameters
         ----------
-        kwargs:
-                    Values for un-specified circuit components,
+        kwargs:     
+                    Values for un-specified circuit components, 
                     ex: ``L=1e-9``.
 
         Returns
@@ -492,19 +487,19 @@ class Qcircuit(object):
         calculated between the nodes of an inductor or josephon junction.
 
         For further details on the underlying theory, see https://arxiv.org/pdf/1908.10342.pdf.
-
+        
         The dynamics of the circuit can be studied in QuTiP
-        by considering collapse operators for the m-th mode
-        :math:`\sqrt{2\pi\kappa_m(n_{th,m}+1)}\hat{a}_m` and
+        by considering collapse operators for the m-th mode 
+        :math:`\sqrt{2\pi\kappa_m(n_{th,m}+1)}\hat{a}_m` and 
         :math:`\sqrt{2\pi\kappa_m(n_{th,m})}\hat{a}_m^\dagger`
         where :math:`n_{th,m}` is the average thermal occupation
         of mode :math:`m` and :math:`\hat{a}_m` is the annihilation operator of the m-th
         normal mode of the circuit.
         Note that dissipation rates that are obtained from this function
         have to be converted to angular frequencies through the factor :math:`2\pi`.
-        If you are also using a hamiltonian generated from qucat,
-        then it too should be converted to angular frequencies by multiplying
-        the entire Hamiltonian by :math:`2\pi` when performing time-dependant
+        If you are also using a hamiltonian generated from qucat, 
+        then it too should be converted to angular frequencies by multiplying 
+        the entire Hamiltonian by :math:`2\pi` when performing time-dependant 
         simulations.
         """
         self._set_zeta(**kwargs)
@@ -515,16 +510,16 @@ class Qcircuit(object):
         r"""Returns the anharmonicity of the circuit normal modes.
 
         The array is ordered ordered with increasing normal mode frequencies
-        such that the first element of the array corresponds to the
-        anharmonicity of the lowest frequency mode.
-        Anharmonicities are provided in units of Hertz,
+        such that the first element of the array corresponds to the 
+        anharmonicity of the lowest frequency mode. 
+        Anharmonicities are provided in units of Hertz, 
         not in angular frequency.
 
 
         Parameters
         ----------
-        kwargs:
-                    Values for un-specified circuit components,
+        kwargs:     
+                    Values for un-specified circuit components, 
                     ex: ``L=1e-9``.
 
         Returns
@@ -540,12 +535,12 @@ class Qcircuit(object):
 
         valid for weak anharmonicity :math:`\chi_{mn},A_m\ll \omega_m`.
 
-        Here
+        Here 
 
         * :math:`\omega_m` are the frequencies of the normal modes of the circuit where all junctions have been replaced with inductors characterized by their Josephson inductance
-
+        
         * :math:`A_m` is the anharmonicity of mode :math:`m` , the difference in frequency of the first two transitions of the mode
-
+        
         * :math:`\chi_{mn}` is the shift in mode :math:`m` that incurs if an excitation is created in mode :math:`n`
 
         This function returns the values of :math:`A_m`.
@@ -563,16 +558,16 @@ class Qcircuit(object):
         anharmonicity (or self-Kerr) of mode ``m``.
         An off-diagonal component ``K[m,n]`` corresponds to the cross-Kerr coupling
         between modes ``m`` and ``n``.
-        The modes are indexed with increasing normal mode frequencies,
+        The modes are indexed with increasing normal mode frequencies, 
         for example ``K[0,1]`` corresponds to the cross-Kerr interaction
         between the lowest frequency mode and next highest frequency mode.
-        Kerr parameters are provided in units of Hertz,
+        Kerr parameters are provided in units of Hertz, 
         not in angular frequency.
 
         Parameters
         ----------
-        kwargs:
-                    Values for un-specified circuit components,
+        kwargs:     
+                    Values for un-specified circuit components, 
                     ex: ``L=1e-9``.
 
         Returns
@@ -588,12 +583,12 @@ class Qcircuit(object):
 
         valid for weak anharmonicity :math:`\chi_{mn},A_m\ll \omega_m`.
 
-        Here
+        Here 
 
         * :math:`\omega_m` are the frequencies of the normal modes of the circuit where all junctions have been replaced with inductors characterized by their Josephson inductance
-
+        
         * :math:`A_m` is the anharmonicity of mode :math:`m` , the difference in frequency of the first two transitions of the mode
-
+        
         * :math:`\chi_{mn}` is the shift in mode :math:`m` that incurs if an excitation is created in mode :math:`n`
 
         This function returns the values of :math:`A_m` and :math:`\chi_{mn}` .
@@ -630,14 +625,14 @@ class Qcircuit(object):
         return Ks
 
     def f_k_A_chi(self, pretty_print=False, **kwargs):
-        r"""Returns the eigenfrequency, loss-rates, anharmonicity, and Kerr parameters of the circuit.
+        r"""Returns the eigenfrequency, loss-rates, anharmonicity, and Kerr parameters of the circuit. 
 
         Returns these quantities in the form ``[[f_0,f_1,..],[k_0,k_1,..],[A_0,A_1,..],[[A_0,chi_01,..],[chi_10,A_1,..]..]]``
 
-        Each quantity is returned as a numpy arrays,
-        where each index corresponds to a normal mode, ordered with
+        Each quantity is returned as a numpy arrays, 
+        where each index corresponds to a normal mode, ordered with 
         increasing normal mode frequency.
-        All quantities are provided in units of Hertz,
+        All quantities are provided in units of Hertz, 
         not in angular frequency.
 
         This method is equivalent to calling
@@ -659,8 +654,8 @@ class Qcircuit(object):
         pretty_print:   Boolean, optional
                         If set to True, this method will print a summary
                         of the system parameters as a table.
-        kwargs:
-                    Values for un-specified circuit components,
+        kwargs:     
+                    Values for un-specified circuit components, 
                     ex: ``L=1e-9``.
 
         Returns
@@ -741,13 +736,13 @@ class Qcircuit(object):
         self, modes="all", taylor=4, excitations=6, return_ops=False, **kwargs
     ):
         r"""Returns the circuits Hamiltonian for further analysis with QuTiP.
-        The Hamiltonian is provided in units of frequency (not angular frequency),
+        The Hamiltonian is provided in units of frequency (not angular frequency), 
         such that :math:`h=1`.
 
         Parameters
         ----------
         modes:      array of integers, optional
-                    List of modes to consider, where the modes are
+                    List of modes to consider, where the modes are 
                     ordered with increasing frequency, such that
                     ``modes = [0,1]`` would lead to considering only
                     the two lowest frequency modes of the circuit.
@@ -756,9 +751,9 @@ class Qcircuit(object):
                     Order to which the potential of all josephson
                     junctions should be taylor-expanded. Default
                     is `4`.
-        excitations:integer or array of integers, optional
+        excitations:integer or array of integers, optional  
                     Number of energy levels considered for each
-                    junction. If one number is given, all modes
+                    junction. If one number is given, all modes 
                     have the same number of levels, if an array
                     is given, its length should match the number
                     of modes considered. For example if ``modes = [0,1]`` and
@@ -767,32 +762,32 @@ class Qcircuit(object):
         return_ops: Boolean, optional
                     If set to True, a list of the annihilation operators
                     will be returned along with the hamiltonian in the form
-                    ``<Hamiltonian>, <list of operators>``.
+                    ``<Hamiltonian>, <list of operators>``. 
                     The form of the return is then ``H,[a_0,a_1,..]``
                     where ``a_i`` is the annihilation operator of the
                     i-th considered mode, a QuTiP Qobj
-        kwargs:
-                    Values for un-specified circuit components,
+        kwargs:     
+                    Values for un-specified circuit components, 
                     ex: ``L=1e-9``.
 
         Returns
         -------
         qutip.qobj
             Hamiltonian of the circuit
-
+        
         Notes
         -----
-
+        
         The Hamiltonian of the circuit, with the non-linearity of the Josephson junctions
         Taylor-expanded, is given in the limit of low dissipation by
 
         :math:`\hat{H} = \sum_{m\in\text{modes}} \hbar \omega_m\hat{a}_m^\dagger\hat{a}_m + \sum_j\sum_{2n\le\text{taylor}}E_j\frac{(-1)^{n+1}}{(2n)!}\left[\frac{\phi_{zpf,m,j}}{\phi_0}(\hat{a}_m^\dagger+\hat{a}_m)\right]^{2n}`,
-
+        
         where :math:`\hat{a}_m` is the annihilation operator of the m-th
-        normal mode of the circuit, :math:`\omega_m` is the frequency of
+        normal mode of the circuit, :math:`\omega_m` is the frequency of 
         the m-th normal mode, :math:`E_j` is the Josephson energy of
-        the j-th junction and :math:`\phi_0 = \hbar/2e` and :math:`\phi_{zpf,m,j}`
-        is the zero point fluctuation of mode
+        the j-th junction and :math:`\phi_0 = \hbar/2e` and :math:`\phi_{zpf,m,j}` 
+        is the zero point fluctuation of mode 
         :math:`m` through junction :math:`j`.
 
         In the expression above, ``modes`` and ``taylor`` are arguments of the ``hamiltonian`` function.
@@ -870,14 +865,14 @@ class Qcircuit(object):
 
         Only works if the circuit was created using the GUI.
 
-
+        
         Parameters
         ----------
         plot:           Boolean, optional
                         If set to True (default), the function will call
                         plt.show() to display the circuit
         return_fig_ax:  Boolean, optional
-                        If set to True (default is False), the function will
+                        If set to True (default is False), the function will 
                         return figure and axis for further processing using
                         matplotlib.
         """
@@ -955,19 +950,19 @@ class Qcircuit(object):
         r"""Plots a visual representation of a normal mode.
 
         Only works if the circuit was created using the GUI.
-        Plots a schematic of the circuit overlayed with
-        arrows representing the complex amplitude of a certain quantity
+        Plots a schematic of the circuit overlayed with 
+        arrows representing the complex amplitude of a certain quantity 
         :math:`X` which can be flux, current, charge or voltage.
 
-        More specifically, the complex amplitude of :math:`X` if a
+        More specifically, the complex amplitude of :math:`X` if a 
         single-photon amplitude coherent state were populating a given mode ``mode``.
 
-        Current is shown in units of Ampere, voltage in Volts,
+        Current is shown in units of Ampere, voltage in Volts, 
         charge in electron charge, and flux in units of the
-        reduced flux quantum
+        reduced flux quantum 
         (defined as :math:`\hbar/2e`)
 
-        The direction of the arrows show what we are defining
+        The direction of the arrows show what we are defining 
         as positive current for that component.
 
         Parameters
@@ -983,16 +978,16 @@ class Qcircuit(object):
                         If set to True (default), the function will call
                         plt.show() to display the circuit
         return_fig_ax:  Boolean, optional
-                        If set to True (default is False), the function will
+                        If set to True (default is False), the function will 
                         return figure and axis for further processing using
                         matplotlib.
         add_title:      Boolean, optional
-                        If set to True (default), the function will
+                        If set to True (default), the function will 
                         add a title detailing the modes frequency, anharmonicity
                         and dissipation rate
         add_legend:     Boolean, optional
-                        If set to True (default), the function will
-                        add a legend detailing the definition of
+                        If set to True (default), the function will 
+                        add a legend detailing the definition of 
                         arrow size and arrow direction
 
         Notes
@@ -1002,7 +997,7 @@ class Qcircuit(object):
         voltage transfer function :math:`T_{rc}` (between a reference component :math:`r`
         and the annotated component  :math:`c` ), with
         :math:`X_{zpf,m,r}`, the zero-point fluctuations of :math:`\hat{X}` at the reference component.
-
+        
         Note that resistors make the transfer function :math:`T_{rc}`, and hence the phasors complex.
 
         Since this is plotted for a single-photon amplitude coherent state, the absolute value
@@ -1283,7 +1278,7 @@ class Qcircuit(object):
 class Network(Qcircuit):
     r"""Constructs a Qcircuit object from a list of components without resorting to a graphical user interface.
 
-    The list can be composed of instances of the :class:`qucat.L`, :class:`qucat.C`,
+    The list can be composed of instances of the :class:`qucat.L`, :class:`qucat.C`, 
     :class:`qucat.R` or :class:`qucat.J` classes
     for inductors, capacitors, resistors or junctions respectively.
 
@@ -1291,14 +1286,14 @@ class Network(Qcircuit):
     the circuit of the GUI class.
     On could, for example, construct an array of LC-resonators using a python ``for`` loop, which
     would be tedious using a graphical user interface.
-    The disadvantage is that one cannot use the plotting tools :meth:`show` or
+    The disadvantage is that one cannot use the plotting tools :meth:`show` or 
     :meth:`show_normal_modes` to visualize the circuit or its innerworkings.
 
     Parameters
     ----------
     netlist:    list of :class:`qucat.Component`
                 See examples
-
+                
     Returns
     -------
     qucat.Qcircuit
@@ -1315,8 +1310,8 @@ class Network(Qcircuit):
 
     >>> from qucat import Network, R,L,C,J
 
-    Note that the components (R,L,C,J) accept node indexes as their two first arguments,
-    here we will use the node ``0`` to designate ground. The last arguments should be
+    Note that the components (R,L,C,J) accept node indexes as their two first arguments, 
+    here we will use the node ``0`` to designate ground. The last arguments should be 
     a label (``str``) or a value (``float``) or both, the order in which these
     arguments are provided are unimportant.
 
@@ -1328,17 +1323,17 @@ class Network(Qcircuit):
     ... R(2,0,50) # Add a 50 Ohm resistance to ground
     ... ])
 
-    The junction was parametrized only by a string ``L_J`` ,
-    this is the best way to proceed if one wants to sweep the value of a
-    component. Indeed, the most computationally expensive part of the
+    The junction was parametrized only by a string ``L_J`` , 
+    this is the best way to proceed if one wants to sweep the value of a 
+    component. Indeed, the most computationally expensive part of the 
     analysis is performed upon initializing the Network, subsequently
-    changing the value of a component and re-calculating a quantity
+    changing the value of a component and re-calculating a quantity 
     such as the frequency or anharmonicity can be performed much faster.
 
     For example, we can compute the eigenfrequency, loss-rates, anharmonicity, and Kerr parameters of the circuit
     for a specific junction inductance.
 
-    >>> circuit.f_k_A_chi(L_J = 1e-9)
+    >>> circuit.f_k_A_chi(L_J = 1e-9) 
 
     """
 
@@ -1363,7 +1358,7 @@ class GUI(Qcircuit):
     print_network:  Boolean
                     If True (default), a text description of the constructed
                     network will be printed.
-
+            
     Returns
     -------
     qucat.Qcircuit
@@ -1374,23 +1369,23 @@ class GUI(Qcircuit):
 
     All the necessary information about the circuit generated by the graphical user interface application
     is stored in a human-readable format at the specified path.
-
+    
     Each line of this text file is in the format:
 
     ``type`` ; ``x_minus`` , ``y_minus`` ; ``x_plus`` , ``y_plus`` ; ``value`` ; ``label``
 
     and represents a circuit component, wire or ground element.
 
-    ``type`` can take the values ``L``, ``C``, ``R``, ``J``, ``W`` or ``G`` for
+    ``type`` can take the values ``L``, ``C``, ``R``, ``J``, ``W`` or ``G`` for 
     inductor, capacitor, resistor, junction, wire or ground respectively.
 
     ``value`` will be a float representing the value of the component or will be empty
-
+    
     ``label`` will be a string corresponding to the label of the component or will be empty
 
     ``x/y_minus`` (``x/y_plus``) represents the horizontal/vertical location of the minus (plus) node of the component.
     Negative value are allowed and components have a length of 1 unit.
-
+    
     For example, the circuit below, is described by the following text file
 
     ::
@@ -1404,13 +1399,43 @@ class GUI(Qcircuit):
 
 
     .. image:: Network_example_circuit.png
-
-
     """
 
     def __init__(
-        self, filename, edit=True, plot=True, print_network=False, _unittesting=False
+        self, filename, edit=True, plot=True, print_network=False, _unittesting=False,
     ):
+
+        edit = edit or self._try_to_open_and_create_if_needed(filename)
+
+        if edit:
+            run(
+                [
+                    sys.executable,
+                    os.path.join(os.path.dirname(__file__), "_gui.py"),
+                    filename,
+                ]
+            )
+
+        with open(filename, "r") as stream:
+            self._load(stream, plot, print_network)
+
+    @staticmethod
+    def _try_to_open_and_create_if_needed(filename: str) -> bool:
+        """Try to open a file representing a network, and create if needed.
+
+        Parameters
+        ----------
+        filename : str
+            Path to the file
+
+        Returns
+        -------
+        bool
+            If the file wasn't found and we had to create it, we return True,
+                indicating that the file has been edited. Otherwise we return
+                False.
+        """
+        edit = False
 
         # Note: this will also give a valid path if filename was specified using
         # an absolute path
@@ -1427,31 +1452,11 @@ class GUI(Qcircuit):
             # ... and file
             with open(filename, "w") as f:
                 pass
+        return edit
 
-        if edit:
-            run(
-                [
-                    sys.executable,
-                    os.path.join(os.path.dirname(__file__), "_gui.py"),
-                    filename,
-                ]
-            )
+    def _load(self, stream, plot, print_network):
 
-        netlist = []
-        with open(filename, "r") as f:
-            for el in f:
-                el = el.replace("\n", "")
-                el = el.split(";")
-                if el[3] == "":
-                    v = None
-                else:
-                    v = float(el[3])
-                if el[4] == "":
-                    l = None
-                else:
-                    l = el[4]
-                netlist.append(string_to_component(el[0], el[1], el[2], v, l))
-
+        netlist = self._parse_file(stream)
         super(GUI, self).__init__(netlist)
         for el in self.netlist:
             el._set_plot_coordinates()
@@ -1472,11 +1477,72 @@ class GUI(Qcircuit):
                 )
             print("\n")
 
+    @staticmethod
+    def _parse_file(stream):
+        """Parse string representation of a network into a list of Component.
+
+        Parameters
+        ----------
+        stream
+            Something like an open file, where iteration yields a sequence of
+                strings, each one representing a single Component.
+
+        Returns
+        -------
+        List[Component]
+        """
+        netlist = []
+        for el in stream:
+            el = el.replace("\n", "")
+            el = el.split(";")
+            if el[3] == "":
+                v = None
+            else:
+                v = float(el[3])
+            if el[4] == "":
+                l = None
+            else:
+                l = el[4]
+            netlist.append(string_to_component(el[0], el[1], el[2], v, l))
+        return netlist
+
+    @classmethod
+    def from_string(cls, text, plot=True, print_network=False) -> "GUI":
+        """Construct the network from text in the format described in the class docstring.
+
+        This function can be used to create a GUI object, and utilize its unique methods 
+        (show and show_normal_mode) without actually opening the graphical 
+        user interface or having a text file where the circuit details are stored.
+
+        Parameters
+        ----------
+        text : string
+            Text representation of the network, this is the same text as 
+            is saved in a text file when using the GUI.
+        plot : bool
+            See class docstring
+        print_network : bool
+            See class docstring
+
+        Returns
+        -------
+        GUI
+
+        Examples
+        --------
+        >>> from qucat import GUI
+        >>> circuit = GUI.from_string("C;-1,-2;0,-2;1.0e-13;\nJ;-1,-1;0,-1;1.0e-08;\nW;-1,-1;-1,-2;;\nW;0,-1;0,-2;;")
+        >>> circuit.show()
+        """
+        inst = cls.__new__(cls)
+        inst._load(io.StringIO(text), plot, print_network)
+        return inst
+
 
 class _Network(object):
     """
     The _Network class parses network arrays generated by the GUI
-    or written manually by the user.
+    or written manually by the user. 
     It allows the computation of the R, L and C matrices, the
     admittance Y of the network between
     two nodes as well as the voltage transfer function of the network
@@ -1510,12 +1576,12 @@ class _Network(object):
     def is_connected(self, nodes_encountered=None, start_node=None):
         """
         Determines if a nework is connected (graph theory term).
-
-        Starting at "start_node",
+        
+        Starting at "start_node", 
         the algorithm will go from neighbouring node
         to neighbouring node, adding all encountered
-        nodes to the encountered_nodes list.
-
+        nodes to the encountered_nodes list. 
+        
         At then end we check if
         all the nodes of the network were encountered
         by checking the length of this list with respect
@@ -1540,13 +1606,13 @@ class _Network(object):
 
     def has_shorts(self):
         """
-        Determines if there is an short circuit.
+        Determines if there is an short circuit. 
 
         For each node, we construct the network where
-        that node has been removed.
+        that node has been removed. 
 
-        If the removal of that node leads to two distinct,
-        non-connected circuits, then that node was a point
+        If the removal of that node leads to two distinct, 
+        non-connected circuits, then that node was a point 
         at which the circuit was being shorted.
         """
         for node_to_remove in range(len(self.net_dict)):
@@ -1567,15 +1633,15 @@ class _Network(object):
 
     def has_opens(self):
         """
-        Determines if there is an open connection in the
-        circuit.
+        Determines if there is an open connection in the 
+        circuit. 
 
-        If there are only two nodes in the circuit, it cannot be open.
+        If there are only two nodes in the circuit, it cannot be open. 
         This is because through another check we are imposing that the circuit has at least
         two types of components, one inductive, one capacitive.
         So a two node circuit will at minimum be an LC or JC circuit.
 
-        If there are more than two nodes, and one of the nodes is connected
+        If there are more than two nodes, and one of the nodes is connected 
         to only one other, the circuit is open.
         """
         for _, connections in self.net_dict.items():
@@ -1660,7 +1726,7 @@ class _Network(object):
             ----------
             plot_node:  typically a string or an integer, but could be any
                         hashable object
-                        For GUI generated networks,
+                        For GUI generated networks, 
                         this is a string 'x,y' that determines the position
                         of the node when plotting it.
 
@@ -1668,9 +1734,9 @@ class _Network(object):
             -------
             i:          integer, a unique number corresponding to all nodes
                         connected via a wire or ground.
-                        ``i`` is one of [0,..,N-1] where N is the number of
+                        ``i`` is one of [0,..,N-1] where N is the number of 
                         nodes in the circuit stripped of all wires.
-
+        
             """
             i = 0
             # if plot_node is already in a chain,
@@ -1802,10 +1868,10 @@ class _Network(object):
         """
         Modifies the ``net_dict`` variable such that ``node_minus``
         and ``node_plus`` are marked as connected in future calculations.
-        ``net_dict`` is a dictionary such that
-        ``net_dict[node_A][node_B]`` gives the non-wire circuit
+        ``net_dict`` is a dictionary such that  
+        ``net_dict[node_A][node_B]`` gives the non-wire circuit 
         component connecting ``node_A`` and ``node_B``.
-        If ``node_A`` and ``node_B`` are not connected,
+        If ``node_A`` and ``node_B`` are not connected, 
         calling ``net_dict[node_A][node_B]`` will raise a KeyError
 
         Parameters
@@ -1814,7 +1880,7 @@ class _Network(object):
         node_minus: integer
                     negative node of the element
         node_plus: integer
-                    positive node of the element
+                    positive node of the element        
         """
 
         # Connect node minus to node plus
@@ -1838,15 +1904,15 @@ class _Network(object):
     def remove_node(self, node_to_remove):
         """
         Makes use of the star-mesh transform to remove the ``node_to_remove`` from the network.
-        A node N=``node_to_remove`` connected to nodes A,B,C,.. through impedances
-        Z_A,Z_B,... (the star) can be eliminated
+        A node N=``node_to_remove`` connected to nodes A,B,C,.. through impedances 
+        Z_A,Z_B,... (the star) can be eliminated 
         if we interconnect nodes A,B,C,.. with impedances Z_{AB},Z_{AC},Z_{BC},...
-        given by Z_{XY} = Z_XZ_Y\sum_M1/Z_M.
+        given by Z_{XY} = Z_XZ_Y\sum_M1/Z_M. 
         The resulting network is called the mesh.
 
         Parameters
         ----------
-        node: integer, node to be removed of the network stored in ``net_dict``
+        node: integer, node to be removed of the network stored in ``net_dict`` 
         """
 
         # List of (connecting_nodes, connecting_components) connecting the
@@ -1879,13 +1945,13 @@ class _Network(object):
     @timeit
     def admittance(self, node_minus, node_plus):
         """
-        Compute the admittance of the network between two nodes
-        ``node_plus`` and ``node_minus``
+        Compute the admittance of the network between two nodes 
+        ``node_plus`` and ``node_minus`` 
         by removing all other nodes through star-mesh transformations.
 
         Parameters
         ----------
-        node_minus: integer
+        node_minus: integer 
         node_plus: integer
         """
         if node_minus == node_plus:
@@ -1921,7 +1987,7 @@ class _Network(object):
 
         Parameters
         ----------
-        node_1: integer
+        node_1: integer 
         node_2: integer
         """
         if node_1 == node_2:
@@ -1936,14 +2002,14 @@ class _Network(object):
         self, node_left_minus, node_left_plus, node_right_minus, node_right_plus
     ):
         """
-        Returns the transfer function V_right/V_left relating the voltage on
+        Returns the transfer function V_right/V_left relating the voltage on 
         a port 'right' defined by ``node_right_minus`` and ``node_right_plus``
         and a port 'left' defined by ``node_left_minus`` and ``node_left_plus``
         We proceed by constructing an ABCD matrix and returning V_right/V_left = 1/A
 
         Parameters
         ----------
-        node_left_minus: integer
+        node_left_minus: integer 
         node_left_plus: integer
         node_right_minus: integer
         node_right_plus: integer
@@ -2298,9 +2364,9 @@ class Component(Circuit):
     def zpf(self, mode, quantity, **kwargs):
         r"""Returns contribution of a mode to the zero-point fluctuations of a quantity for this component.
 
-        The quantity can be current (in units of Ampere),
-        voltage (in Volts),
-        charge (in electron charge),
+        The quantity can be current (in units of Ampere), 
+        voltage (in Volts), 
+        charge (in electron charge), 
         or flux (in units of the reduced flux quantum, :math:`\hbar/2e`).
 
         Parameters
@@ -2311,8 +2377,8 @@ class Component(Circuit):
                         are arranged in order of increasing frequency
         quantity:       string
                         One of 'current', 'flux', 'charge', 'voltage'
-        kwargs:
-                    Values for un-specified circuit components,
+        kwargs:     
+                    Values for un-specified circuit components, 
                     ex: ``L=1e-9``.
 
         Returns
@@ -2326,7 +2392,7 @@ class Component(Circuit):
         voltage transfer function :math:`T_{rc}` (between a reference component :math:`r`
         and the annotated component  :math:`c` ), with
         :math:`X_{zpf,m,r}`, the zero-point fluctuations of :math:`\hat{X}` at the reference component.
-
+        
         Note that resistors make the transfer function :math:`T_{rc}`, and hence this quantity, complex.
 
         For more detail on the underlying theory, see https://arxiv.org/pdf/1908.10342.pdf.
@@ -2452,7 +2518,7 @@ class G(W):
 
 class L(Component):
     """A class representing an inductor
-
+    
     Parameters
     ----------
     node_minus:     integer
@@ -2461,16 +2527,16 @@ class L(Component):
                     Index corresponding to the other node of the inductor
     args:           <float> or <str> or <float>,<str>
                     Other arguments should be a float corresponding to the
-                    inductance, a string corresponding to the
+                    inductance, a string corresponding to the 
                     name of that value (ex: `"L"`), or both.
-                    If only a label is provided,
+                    If only a label is provided, 
                     a value for should be passed
                     as a keyword argument in subsequent function calls
-                    (ex: `L = 1e-9`)
+                    (ex: `L = 1e-9`)   
                     This is the best way to proceed if one wants to sweep the value of this
-                    inductor. Indeed, the most computationally expensive part of the
+                    inductor. Indeed, the most computationally expensive part of the 
                     analysis is performed upon initializing the circuit, subsequently
-                    changing the value of a component and re-calculating a quantity
+                    changing the value of a component and re-calculating a quantity 
                     such as the frequency or anharmonicity can be performed much faster.
     """
 
@@ -2547,10 +2613,10 @@ class L(Component):
     def _compute_flux_zpf_r(self):
         """
         Generate the L._flux_zpf_r function which
-        takes as an argument an angular frequency (and keyword arguments
-        if component values need to be specified) and returns the
-        derivative of the admittance evaluated at the nodes of the inductor,
-        which is effective capacitance at that frequency.
+        takes as an argument an angular frequency (and keyword arguments 
+        if component values need to be specified) and returns the 
+        derivative of the admittance evaluated at the nodes of the inductor, 
+        which is effective capacitance at that frequency.         
         """
         # Compute a sympy expression for the admittance
         # at the nodes of the reference element
@@ -2606,7 +2672,7 @@ class L(Component):
 
 class J(L):
     """A class representing a junction
-
+    
     Parameters
     ----------
     node_minus:     integer
@@ -2616,16 +2682,16 @@ class J(L):
     args:           <float> or <str> or <float>,<str>
                     Other arguments should be a float which by default
                     corresponds to the Josephson inductance of the
-                    junction, a string corresponding to the
+                    junction, a string corresponding to the 
                     name of that value (ex: `"L_J"`), or both.
-                    If only a label is provided,
+                    If only a label is provided, 
                     a value for this junction should be passed
                     as a keyword argument in subsequent function calls
                     (ex: `L_J = 10e-9`).
                     This is the best way to proceed if one wants to sweep the value of this
-                    junction. Indeed, the most computationally expensive part of the
+                    junction. Indeed, the most computationally expensive part of the 
                     analysis is performed upon initializing the circuit, subsequently
-                    changing the value of a component and re-calculating a quantity
+                    changing the value of a component and re-calculating a quantity 
                     such as the frequency or anharmonicity can be performed much faster.
     use_E:          Boolean
                     If set to True, the junction will be parametrized by
@@ -2678,10 +2744,10 @@ class J(L):
 
         Parameters
         ----------
-        kwargs:
-                    Values for un-specified circuit components,
+        kwargs:     
+                    Values for un-specified circuit components, 
                     ex: ``L=1e-9``.
-
+        
         mode:           integer
                         where 0 designates
                         the lowest frequency mode, and the others
@@ -2690,12 +2756,12 @@ class J(L):
         -------
         float
             contribution of this junction to the anharmonicity of a given normal mode
-
+        
         Notes
         -----
         The quantity returned is the anharmonicity
         of the mode ``m`` if this junction were the only junction
-        present in the circuit (i.e. if all the
+        present in the circuit (i.e. if all the 
         others were replaced by linear inductors).
 
         The total anharmonicity of a mode (in first order perturbation theory) is obtained
@@ -2738,7 +2804,7 @@ class J(L):
 
 class R(Component):
     """A class representing a resistor
-
+    
     Parameters
     ----------
     node_minus:     integer
@@ -2747,16 +2813,16 @@ class R(Component):
                     Index corresponding to the other node of the resistor
     args:           <float> or <str> or <float>,<str>
                     Other arguments should be a float corresponding to the
-                    resistance, a string corresponding to the
+                    resistance, a string corresponding to the 
                     name of that value (ex: `"R"`), or both.
-                    If only a label is provided,
+                    If only a label is provided, 
                     a value for should be passed
                     as a keyword argument in subsequent function calls
-                    (ex: `R = 1e-9`)
+                    (ex: `R = 1e-9`)   
                     This is the best way to proceed if one wants to sweep the value of this
-                    resistor. Indeed, the most computationally expensive part of the
+                    resistor. Indeed, the most computationally expensive part of the 
                     analysis is performed upon initializing the circuit, subsequently
-                    changing the value of a component and re-calculating a quantity
+                    changing the value of a component and re-calculating a quantity 
                     such as the dissipation rate can be performed much faster.
     """
 
@@ -2835,7 +2901,7 @@ class R(Component):
 
 class C(Component):
     """A class representing a capacitor
-
+    
     Parameters
     ----------
     node_minus:     integer
@@ -2844,16 +2910,16 @@ class C(Component):
                     Index corresponding to the other node of the capacitor
     args:           <float> or <str> or <float>,<str>
                     Other arguments should be a float corresponding to the
-                    capacitance, a string corresponding to the
+                    capacitance, a string corresponding to the 
                     name of that value (ex: `"C"`), or both.
-                    If only a label is provided,
+                    If only a label is provided, 
                     a value for should be passed
                     as a keyword argument in subsequent function calls
-                    (ex: `C = 1e-9`)
+                    (ex: `C = 1e-9`)   
                     This is the best way to proceed if one wants to sweep the value of this
-                    capacitor. Indeed, the most computationally expensive part of the
+                    capacitor. Indeed, the most computationally expensive part of the 
                     analysis is performed upon initializing the circuit, subsequently
-                    changing the value of a component and re-calculating a quantity
+                    changing the value of a component and re-calculating a quantity 
                     such as the anharmonicity can be performed much faster.
     """
 
