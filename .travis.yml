@@ -1,22 +1,15 @@
-# check syntax with https://config.travis-ci.com/explore
 language: python
 
 # this is needed to run tests requiring a graphical user interface
 # see https://docs.travis-ci.com/user/gui-and-headless-browsers/
 dist: xenial
-
 services:
   - xvfb
-
-addons:
-  apt_packages:
-    # required to build the documentation
-    - pandoc
 
 python:
   - "3.7.3"
 
-install:
+install: 
 
   # setup conda, which is necessary to install qutip
   # just copied in the conda code from https://docs.conda.io/projects/conda/en/latest/user-guide/tasks/use-conda-with-travis-ci.html#
@@ -28,38 +21,24 @@ install:
   - conda update -q conda
   - conda info -a
 
-  # environment in which we will be testing the pip installation from the package index
-  - conda create -q -n pip-environment-index python=$TRAVIS_PYTHON_VERSION
-
-  # environment in which we will be running developper functionalities
-  - conda create -q -n dev-environment python=$TRAVIS_PYTHON_VERSION sphinx
+  # environment in which we will be testing the pip installation
+  - conda create -q -n pip-environment python=$TRAVIS_PYTHON_VERSION 
 
   # environment in which we will be running the tests
   # Here we also install all dependencies of qucat manually
   - conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION numpy scipy matplotlib sympy pillow nbformat pytest pytest-cov codecov
-
+  
   # Install qutip
   - source activate test-environment
   - conda config --append channels conda-forge
   - conda install qutip
 
-script:
-  
-  # Test documentation build and syntax
-  - source activate dev-environment
-  - pip install .
-  - python -c "import qucat"
-  - pip install -r requirements-dev.txt
-  - black --check src/
-  - black --diff src/
-  - python build_docs.py
-
-  # Test pip installation from the index
-  - source activate pip-environment-index
-  - pip install qucat
-  - python -c "import qucat"
-
+script: 
   # Run tests
   - source activate test-environment
   - pytest --cov=src
   - codecov
+
+  # Test pip installation
+  - source activate pip-environment
+  - pip install .

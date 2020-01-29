@@ -29,7 +29,7 @@ A selection of tutorials is available [here](https://qucat.org/tutorials/tutoria
 Build status and test coverage
 ------------------------------
 
-Master branch:
+Master branch: 
 [![Build Status](https://travis-ci.com/qucat/qucat.svg?branch=master)](https://travis-ci.com/qucat/qucat)
 [![codecov](https://codecov.io/gh/qucat/qucat/branch/master/graph/badge.svg)](https://codecov.io/gh/qucat/qucat)
 
@@ -39,10 +39,8 @@ Development branch: [![Build Status](https://travis-ci.com/qucat/qucat.svg?branc
 Contribute
 ----------
 
-You are most welcome to contribute to QuCAT by sending pull requests to merge your
-fork of the repository to the ``develop`` branch.
-
-A guide for developers is available  [here](https://qucat.org/devs/index.html).
+You are most welcome to contribute to QuCAT development by forking this
+repository and sending pull requests.
 
 Filing bug reports, proposing changes or additional features can be done on our
 [issues page](https://github.com/qucat/qucat/issues/new/choose)
