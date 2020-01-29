@@ -6,7 +6,7 @@ A quantum circuit can be built or created in two different ways:
 
 .. toctree::
    :maxdepth: 3
-  
+
    Graphically <gui>
    Programmatically <network>
 

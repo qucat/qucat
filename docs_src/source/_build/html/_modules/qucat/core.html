@@ -5,21 +5,21 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  
+
   <title>qucat.core &mdash; qucat  documentation</title>
-  
 
-  
-  
-  
-  
 
-  
+
+
+
+
+
+
   <script type="text/javascript" src="../../_static/js/modernizr.min.js"></script>
-  
-    
+
+
       <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
         <script type="text/javascript" src="../../_static/jquery.js"></script>
         <script type="text/javascript" src="../../_static/underscore.js"></script>
@@ -28,42 +28,42 @@
         <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
         <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
         <script type="text/x-mathjax-config">MathJax.Hub.Config({"tex2jax": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true, "ignoreClass": "document", "processClass": "math|output_area"}})</script>
-    
+
     <script type="text/javascript" src="../../_static/js/theme.js"></script>
 
-    
 
-  
+
+
   <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
     <link rel="author" title="About these documents" href="../../about.html" />
     <link rel="index" title="Index" href="../../genindex.html" />
-    <link rel="search" title="Search" href="../../search.html" /> 
+    <link rel="search" title="Search" href="../../search.html" />
 </head>
 
 <body class="wy-body-for-nav">
 
-   
+
   <div class="wy-grid-for-nav">
-    
+
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-          
 
-          
+
+
             <a href="../../index.html" class="icon icon-home"> qucat
-          
 
-          
+
+
           </a>
 
-          
-            
-            
-          
 
-          
+
+
+
+
+
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" />
@@ -72,16 +72,16 @@
   </form>
 </div>
 
-          
+
         </div>
 
         <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
-          
-            
-            
-              
-            
-            
+
+
+
+
+
+
               <p class="caption"><span class="caption-text">Contents:</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../about.html">About</a></li>
@@ -94,28 +94,28 @@
 <li class="toctree-l1"><a class="reference internal" href="../../devs/index.html">Developer Guide</a></li>
 </ul>
 
-            
-          
+
+
         </div>
       </div>
     </nav>
 
     <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
 
-      
+
       <nav class="wy-nav-top" aria-label="top navigation">
-        
+
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
           <a href="../../index.html">qucat</a>
-        
+
       </nav>
 
 
       <div class="wy-nav-content">
-        
+
         <div class="rst-content">
-        
-          
+
+
 
 
 
@@ -134,26 +134,26 @@
 <div role="navigation" aria-label="breadcrumbs navigation">
 
   <ul class="wy-breadcrumbs">
-    
+
       <li><a href="../../index.html">Docs</a> &raquo;</li>
-        
+
           <li><a href="../index.html">Module code</a> &raquo;</li>
-        
+
       <li>qucat.core</li>
-    
-    
+
+
       <li class="wy-breadcrumbs-aside">
-        
+
       </li>
-    
+
   </ul>
 
-  
+
   <hr/>
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
-            
+
   <h1>Source code for qucat.core</h1><div class="highlight"><pre>
 <span></span><span class="kn">import</span> <span class="nn">sympy</span> <span class="k">as</span> <span class="nn">sp</span>
 <span class="kn">from</span> <span class="nn">sympy.utilities.lambdify</span> <span class="k">import</span> <span class="n">lambdify</span>
@@ -246,11 +246,11 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">Q_min</span> <span class="o">=</span> <span class="mi">1</span> <span class="c1"># Modes with have a quality factor below Q_min will not ignored</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">warn_discarded_mode</span> <span class="o">=</span> <span class="kc">True</span> <span class="c1"># If this is set to True, the user will be notified when a mode is discarded.</span>
-        
+
         <span class="c1"># After an initial estimation of the complex eigenfrequenceis using a diaglinalization</span>
         <span class="c1"># of the companion matrix, the frequencies are polishd to a tolerence</span>
         <span class="c1"># self.root_relative_tolerance using a gradient based root finder, with a maximum number of iterations self.root_max_iterations</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">root_max_iterations</span> <span class="o">=</span> <span class="mf">1e4</span> 
+        <span class="bp">self</span><span class="o">.</span><span class="n">root_max_iterations</span> <span class="o">=</span> <span class="mf">1e4</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">root_relative_tolerance</span> <span class="o">=</span> <span class="mf">1e-12</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_plotting_normal_mode</span> <span class="o">=</span> <span class="kc">False</span> <span class="c1"># Used to keep track of which imported plotting_settings to use </span>
@@ -263,7 +263,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_network</span> <span class="o">=</span> <span class="n">_Network</span><span class="p">(</span><span class="n">netlist</span><span class="p">)</span> <span class="c1"># Converts the list of components into a network object</span>
                 <span class="c1"># The Network object has methods to compute of the admittance between two nodes</span>
                 <span class="c1"># or the tranfer function between two nodes and two others</span>
-        
+
         <span class="c1"># We construct (enpty) lists of all the different type of </span>
         <span class="c1"># components that could be present in the circuit</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">inductors</span> <span class="o">=</span> <span class="p">[]</span>
@@ -299,7 +299,7 @@
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
                 <span class="s2">&quot;There should be at least one capacitor in the circuit&quot;</span><span class="p">)</span>
 
-                
+
         <span class="c1"># define the function which returns the inverse of dY</span>
         <span class="c1"># where Y is the admittance at the nodes of an inductive element</span>
         <span class="k">for</span> <span class="n">inductive_element</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">inductors</span><span class="o">+</span><span class="bp">self</span><span class="o">.</span><span class="n">junctions</span><span class="p">:</span>
@@ -316,7 +316,7 @@
 
         <span class="c1"># define the functions which returns the components of the characteristic polynomial</span>
         <span class="c1"># (the roots of which are the eigen-frequencies)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_char_poly_coeffs</span> <span class="o">=</span> <span class="p">[</span><span class="n">lambdify</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_no_value_components</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="s1">&#39;numpy&#39;</span><span class="p">)</span> 
+        <span class="bp">self</span><span class="o">.</span><span class="n">_char_poly_coeffs</span> <span class="o">=</span> <span class="p">[</span><span class="n">lambdify</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_no_value_components</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="s1">&#39;numpy&#39;</span><span class="p">)</span>
             <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_network</span><span class="o">.</span><span class="n">compute_char_poly_coeffs</span><span class="p">(</span><span class="n">is_lossy</span> <span class="o">=</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">resistors</span><span class="p">)</span><span class="o">&gt;</span><span class="mi">0</span><span class="p">))]</span>
 
     <span class="nd">@property</span>
@@ -379,7 +379,7 @@
         <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
             <span class="k">pass</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_kwargs_previous</span> <span class="o">=</span> <span class="n">kwargs</span>
-        
+
         <span class="c1"># Check if the kwargs provided are correct</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_parse_kwargs</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
@@ -388,9 +388,9 @@
             <span class="c1"># Compute the coefficients of the characteristic polynomial.</span>
             <span class="c1"># The roots of this polynomial will provide the complex eigenfrequencies</span>
             <span class="n">char_poly</span> <span class="o">=</span> <span class="n">npPoly</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">coeff</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">))</span> <span class="k">for</span> <span class="n">coeff</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_char_poly_coeffs</span><span class="p">])</span>
-            
+
             <span class="c1"># char_poly = remove_multiplicity(char_poly)</span>
-        
+
             <span class="c1"># In this case, the variable of the characteristic polynomial is \omega^2</span>
             <span class="c1"># And we can safely take the real part of the solution as there are no</span>
             <span class="c1"># resistors in the circuit.</span>
@@ -464,7 +464,7 @@
         <span class="n">ref_elt</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="n">zeta_copy</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">zeta</span><span class="p">)</span>
         <span class="n">zeta</span> <span class="o">=</span> <span class="p">[]</span>
-        
+
         <span class="k">for</span> <span class="n">w</span> <span class="ow">in</span> <span class="n">zeta_copy</span><span class="p">:</span>
             <span class="n">largest_dYm1</span> <span class="o">=</span> <span class="mi">0</span>
             <span class="n">ref_elt_index</span> <span class="o">=</span> <span class="kc">None</span>
@@ -474,7 +474,7 @@
                 <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
                     <span class="c1"># Computation of dYm1 failed for some reason</span>
                     <span class="n">dYm1</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
-                    
+
                 <span class="k">if</span> <span class="n">dYm1</span><span class="o">&gt;</span><span class="n">largest_dYm1</span><span class="p">:</span>
                     <span class="n">ref_elt_index</span> <span class="o">=</span> <span class="n">ind_index</span>
                     <span class="n">largest_dYm1</span> <span class="o">=</span> <span class="n">dYm1</span>
@@ -518,7 +518,7 @@
 <span class="sd">        &#39;&#39;&#39;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_set_zeta</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
         <span class="k">return</span> <span class="p">[[</span><span class="n">j</span><span class="o">.</span><span class="n">anharmonicity</span><span class="p">(</span><span class="n">mode</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="k">for</span> <span class="n">mode</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">zeta</span><span class="p">))]</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">junctions</span><span class="p">]</span>
-    
+
 <div class="viewcode-block" id="Qcircuit.eigenfrequencies"><a class="viewcode-back" href="../../API/circuit_functions/eigenfrequencies.html#qucat.Qcircuit.eigenfrequencies">[docs]</a>    <span class="nd">@vectorize_kwargs</span>
     <span class="k">def</span> <span class="nf">eigenfrequencies</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="sd">&#39;&#39;&#39;Returns the normal mode frequencies of the circuit.</span>
@@ -563,7 +563,7 @@
 <span class="sd">        &#39;&#39;&#39;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_set_zeta</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">zeta</span><span class="p">)</span><span class="o">/</span><span class="mf">2.</span><span class="o">/</span><span class="n">pi</span></div>
-    
+
 <div class="viewcode-block" id="Qcircuit.loss_rates"><a class="viewcode-back" href="../../API/circuit_functions/loss_rates.html#qucat.Qcircuit.loss_rates">[docs]</a>    <span class="nd">@vectorize_kwargs</span>
     <span class="k">def</span> <span class="nf">loss_rates</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="sd">&#39;&#39;&#39;Returns the loss rates of the circuit normal modes.</span>
@@ -610,7 +610,7 @@
 <span class="sd">        &#39;&#39;&#39;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_set_zeta</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
         <span class="k">return</span> <span class="mi">2</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">imag</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">zeta</span><span class="p">)</span><span class="o">/</span><span class="mf">2.</span><span class="o">/</span><span class="n">pi</span></div>
-    
+
 <div class="viewcode-block" id="Qcircuit.anharmonicities"><a class="viewcode-back" href="../../API/circuit_functions/anharmonicities.html#qucat.Qcircuit.anharmonicities">[docs]</a>    <span class="nd">@vectorize_kwargs</span>
     <span class="k">def</span> <span class="nf">anharmonicities</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="sa">r</span><span class="sd">&#39;&#39;&#39;Returns the anharmonicity of the circuit normal modes.</span>
@@ -655,7 +655,7 @@
 <span class="sd">        &#39;&#39;&#39;</span>
         <span class="n">Ks</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">kerr</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">Ks</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">Ks</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])])</span></div>
-    
+
 <div class="viewcode-block" id="Qcircuit.kerr"><a class="viewcode-back" href="../../API/circuit_functions/kerr.html#qucat.Qcircuit.kerr">[docs]</a>    <span class="nd">@vectorize_kwargs</span>
     <span class="k">def</span> <span class="nf">kerr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="sa">r</span><span class="sd">&#39;&#39;&#39;Returns the Kerr parameters for the circuit normal modes.</span>
@@ -769,7 +769,7 @@
 <span class="sd">        List of numpy arrays</span>
 <span class="sd">            ``[[f_0,f_1,..],[k_0,k_1,..],[A_0,A_1,..],[[A_0,chi_01,..],[chi_10,A_1,..]..]]``</span>
 <span class="sd">        &#39;&#39;&#39;</span>
-        
+
         <span class="c1"># Quantity to be returned: </span>
         <span class="c1"># eigenfrequency, loss-rates, anharmonicity, and Kerr parameters of the circuit</span>
         <span class="n">to_return</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">eigenfrequencies</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">),</span>\
@@ -800,7 +800,7 @@
                     <span class="n">to_return</span><span class="p">[</span><span class="n">j</span><span class="p">][</span><span class="n">i</span><span class="p">],</span> <span class="n">use_unicode</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span><span class="o">+</span><span class="s1">&#39;Hz&#39;</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">3</span><span class="p">)])</span>
 
             <span class="n">to_print</span> <span class="o">+=</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Kerr coefficients (diagonal = Kerr, off-diagonal = cross-Kerr)</span><span class="se">\n</span><span class="s2">&quot;</span>
-            
+
             <span class="c1"># Setup template for the rows of the Kerr coefficients table row</span>
             <span class="c1"># in the form `` 7 spaces | 7 spaces | ...``</span>
             <span class="n">table_line</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
@@ -931,9 +931,9 @@
 
             <span class="k">for</span> <span class="n">j</span><span class="p">,</span> <span class="n">junction</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">junctions</span><span class="p">):</span>
                 <span class="c1"># Note that zpf returns the flux in units of phi_0 = hbar/2./e</span>
-                <span class="n">phi</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">+=</span> <span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">junction</span><span class="o">.</span><span class="n">zpf</span><span class="p">(</span><span class="n">quantity</span><span class="o">=</span><span class="s1">&#39;flux&#39;</span><span class="p">,</span><span class="n">mode</span><span class="o">=</span><span class="n">mode</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">))</span><span class="o">*</span><span class="p">(</span><span class="n">a</span><span class="o">+</span><span class="n">a</span><span class="o">.</span><span class="n">dag</span><span class="p">())</span> 
+                <span class="n">phi</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">+=</span> <span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">junction</span><span class="o">.</span><span class="n">zpf</span><span class="p">(</span><span class="n">quantity</span><span class="o">=</span><span class="s1">&#39;flux&#39;</span><span class="p">,</span><span class="n">mode</span><span class="o">=</span><span class="n">mode</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">))</span><span class="o">*</span><span class="p">(</span><span class="n">a</span><span class="o">+</span><span class="n">a</span><span class="o">.</span><span class="n">dag</span><span class="p">())</span>
                 <span class="c1"># a = x+iy =&gt; -i*(a-a^) = -i(iy+iy) = --1</span>
-                <span class="n">phi</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">+=</span> <span class="o">-</span><span class="mi">1</span><span class="n">j</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">imag</span><span class="p">(</span><span class="n">junction</span><span class="o">.</span><span class="n">zpf</span><span class="p">(</span><span class="n">quantity</span><span class="o">=</span><span class="s1">&#39;flux&#39;</span><span class="p">,</span><span class="n">mode</span><span class="o">=</span><span class="n">mode</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">))</span><span class="o">*</span><span class="p">(</span><span class="n">a</span><span class="o">-</span><span class="n">a</span><span class="o">.</span><span class="n">dag</span><span class="p">())</span> 
+                <span class="n">phi</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">+=</span> <span class="o">-</span><span class="mi">1</span><span class="n">j</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">imag</span><span class="p">(</span><span class="n">junction</span><span class="o">.</span><span class="n">zpf</span><span class="p">(</span><span class="n">quantity</span><span class="o">=</span><span class="s1">&#39;flux&#39;</span><span class="p">,</span><span class="n">mode</span><span class="o">=</span><span class="n">mode</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">))</span><span class="o">*</span><span class="p">(</span><span class="n">a</span><span class="o">-</span><span class="n">a</span><span class="o">.</span><span class="n">dag</span><span class="p">())</span>
 
         <span class="k">for</span> <span class="n">j</span><span class="p">,</span> <span class="n">junction</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">junctions</span><span class="p">):</span>
             <span class="n">n</span> <span class="o">=</span> <span class="mi">2</span>
@@ -975,7 +975,7 @@
 <span class="s1">            Plotting functions not available if the circuit was not constructed</span>
 <span class="s1">            using the GUI.</span>
 <span class="s1">            &#39;&#39;&#39;</span><span class="p">)</span>
-        
+
 
         <span class="n">xs</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="n">ys</span> <span class="o">=</span> <span class="p">[]</span>
@@ -1023,12 +1023,12 @@
         <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">()</span></div>
 
 <div class="viewcode-block" id="Qcircuit.show_normal_mode"><a class="viewcode-back" href="../../API/circuit_functions/show_normal_mode.html#qucat.Qcircuit.show_normal_mode">[docs]</a>    <span class="nd">@refuse_vectorize_kwargs</span><span class="p">(</span><span class="n">exclude</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;quantity&#39;</span><span class="p">])</span>
-    <span class="k">def</span> <span class="nf">show_normal_mode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> 
-        <span class="n">mode</span><span class="p">,</span> 
+    <span class="k">def</span> <span class="nf">show_normal_mode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+        <span class="n">mode</span><span class="p">,</span>
         <span class="n">quantity</span><span class="o">=</span><span class="s1">&#39;current&#39;</span><span class="p">,</span>
         <span class="n">plot</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
         <span class="n">return_fig_ax</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-        <span class="n">add_title</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> 
+        <span class="n">add_title</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
         <span class="n">add_legend</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
         <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="sa">r</span><span class="sd">&#39;&#39;&#39;Plots a visual representation of a normal mode.</span>
@@ -1242,8 +1242,8 @@
                     <span class="c1"># Arrow x position</span>
                     <span class="n">x_arrow</span> <span class="o">=</span> <span class="n">x</span><span class="o">-</span><span class="n">pp</span><span class="p">[</span><span class="s2">&quot;normal_mode_label&quot;</span><span class="p">][</span><span class="s2">&quot;y_arrow&quot;</span><span class="p">]</span>
                     <span class="n">dx_arrow</span> <span class="o">=</span> <span class="mf">0.</span>
-                    
-                    
+
+
                     <span class="c1"># Arrow position in y</span>
                     <span class="k">if</span> <span class="n">el</span><span class="o">.</span><span class="n">angle</span><span class="o">==</span><span class="n">NORTH</span><span class="p">:</span>
                         <span class="c1"># Define the direction for positive values</span>
@@ -1265,7 +1265,7 @@
                     <span class="n">value</span> <span class="o">=</span> <span class="o">-</span><span class="n">value</span>
                 <span class="k">else</span><span class="p">:</span>
                     <span class="n">arrow_coords</span> <span class="o">=</span> <span class="p">[</span><span class="n">x_arrow</span><span class="p">,</span> <span class="n">y_arrow</span><span class="p">,</span> <span class="n">dx_arrow</span><span class="p">,</span> <span class="n">dy_arrow</span><span class="p">]</span>
-                
+
                 <span class="n">ax</span><span class="o">.</span><span class="n">arrow</span><span class="p">(</span><span class="o">*</span><span class="n">arrow_coords</span><span class="p">,</span>
                         <span class="n">fc</span><span class="o">=</span><span class="n">pp</span><span class="p">[</span><span class="s1">&#39;normal_mode_arrow&#39;</span><span class="p">][</span><span class="s1">&#39;color&#39;</span><span class="p">],</span>
                         <span class="n">ec</span><span class="o">=</span><span class="n">pp</span><span class="p">[</span><span class="s1">&#39;normal_mode_arrow&#39;</span><span class="p">][</span><span class="s1">&#39;color&#39;</span><span class="p">],</span>
@@ -1289,9 +1289,9 @@
                 <span class="n">horizontalalignment</span><span class="o">=</span><span class="s1">&#39;left&#39;</span><span class="p">,</span>
                 <span class="n">verticalalignment</span><span class="o">=</span><span class="s1">&#39;top&#39;</span><span class="p">,</span>
                 <span class="n">xycoords</span><span class="o">=</span><span class="s1">&#39;axes fraction&#39;</span><span class="p">,</span>
-                <span class="n">fontsize</span><span class="o">=</span><span class="mi">12</span><span class="p">,</span> 
+                <span class="n">fontsize</span><span class="o">=</span><span class="mi">12</span><span class="p">,</span>
                 <span class="n">weight</span><span class="o">=</span><span class="s1">&#39;bold&#39;</span><span class="p">)</span>
-                
+
             <span class="n">ax</span><span class="o">.</span><span class="n">annotate</span><span class="p">(</span><span class="s1">&#39;populated by single-photon amplitude coherent state&#39;</span><span class="p">,</span>
                 <span class="n">xy</span><span class="o">=</span><span class="p">(</span><span class="mf">0.05</span><span class="p">,</span> <span class="mf">0.97</span><span class="o">-</span><span class="mf">0.045</span><span class="p">),</span>
                 <span class="n">horizontalalignment</span><span class="o">=</span><span class="s1">&#39;left&#39;</span><span class="p">,</span>
@@ -1309,29 +1309,29 @@
             <span class="k">elif</span> <span class="n">quantity</span> <span class="o">==</span> <span class="s1">&#39;charge&#39;</span><span class="p">:</span>
                 <span class="n">value_text</span><span class="o">=</span> <span class="s2">&quot;|Q|&quot;</span>
             <span class="n">value_text</span> <span class="o">+=</span> <span class="sa">u</span><span class="s2">&quot;exp(i</span><span class="se">\u03B8</span><span class="s2">)&quot;</span>
-        
+
             <span class="n">x_legend</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">get_xlim</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span><span class="o">+</span><span class="mf">0.4</span>
             <span class="n">y_legend</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">get_ylim</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span><span class="o">+</span><span class="mf">0.25</span>
 
             <span class="n">legend_text_kwargs</span> <span class="o">=</span> <span class="p">{</span>
                 <span class="s1">&#39;ha&#39;</span><span class="p">:</span><span class="s1">&#39;center&#39;</span><span class="p">,</span>
                 <span class="s1">&#39;va&#39;</span><span class="p">:</span><span class="s1">&#39;center&#39;</span><span class="p">,</span>
-                <span class="s1">&#39;fontsize&#39;</span><span class="p">:</span><span class="mi">12</span><span class="p">,</span> 
+                <span class="s1">&#39;fontsize&#39;</span><span class="p">:</span><span class="mi">12</span><span class="p">,</span>
                 <span class="s1">&#39;weight&#39;</span><span class="p">:</span><span class="s1">&#39;normal&#39;</span>
             <span class="p">}</span>
-            
+
             <span class="n">ax</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="n">x_legend</span><span class="p">,</span> <span class="n">y_legend</span><span class="p">,</span>
                 <span class="n">value_text</span><span class="p">,</span>
                 <span class="o">**</span><span class="n">legend_text_kwargs</span><span class="p">)</span>
 
             <span class="n">v01</span> <span class="o">=</span> <span class="mf">0.7</span>
-            <span class="n">ax</span><span class="o">.</span><span class="n">arrow</span><span class="p">(</span><span class="n">x_legend</span><span class="o">-</span><span class="n">arrow_width</span><span class="p">(</span><span class="n">value_01</span> <span class="o">=</span> <span class="n">v01</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span> 
+            <span class="n">ax</span><span class="o">.</span><span class="n">arrow</span><span class="p">(</span><span class="n">x_legend</span><span class="o">-</span><span class="n">arrow_width</span><span class="p">(</span><span class="n">value_01</span> <span class="o">=</span> <span class="n">v01</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span>
                     <span class="n">y_legend</span><span class="o">-</span><span class="mf">0.15</span><span class="p">,</span>
                     <span class="n">arrow_width</span><span class="p">(</span><span class="n">value_01</span> <span class="o">=</span> <span class="n">v01</span><span class="p">),</span> <span class="mi">0</span><span class="p">,</span>
                     <span class="n">fc</span><span class="o">=</span><span class="n">pp</span><span class="p">[</span><span class="s1">&#39;normal_mode_arrow&#39;</span><span class="p">][</span><span class="s1">&#39;color&#39;</span><span class="p">],</span>
-                    <span class="n">ec</span><span class="o">=</span><span class="n">pp</span><span class="p">[</span><span class="s1">&#39;normal_mode_arrow&#39;</span><span class="p">][</span><span class="s1">&#39;color&#39;</span><span class="p">],</span> 
+                    <span class="n">ec</span><span class="o">=</span><span class="n">pp</span><span class="p">[</span><span class="s1">&#39;normal_mode_arrow&#39;</span><span class="p">][</span><span class="s1">&#39;color&#39;</span><span class="p">],</span>
                     <span class="o">**</span><span class="n">arrow_kwargs</span><span class="p">(</span><span class="n">value_01</span> <span class="o">=</span><span class="n">v01</span><span class="p">))</span>
-       
+
 
         <span class="k">if</span> <span class="n">plot</span> <span class="o">==</span> <span class="kc">True</span><span class="p">:</span>
             <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
@@ -1553,8 +1553,8 @@
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Your circuit appears to be open or shorted making the analysis impossible&quot;</span><span class="p">)</span>
 
     <span class="nd">@timeit</span>
-    <span class="k">def</span> <span class="nf">is_connected</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> 
-        <span class="n">nodes_encountered</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> 
+    <span class="k">def</span> <span class="nf">is_connected</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+        <span class="n">nodes_encountered</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">start_node</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
         <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">        Determines if a nework is connected (graph theory term).</span>
@@ -1572,7 +1572,7 @@
 
         <span class="n">encountered_nodes</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="n">start_node</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">net_dict</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> <span class="c1"># Starting point of the algo</span>
-        
+
 
         <span class="k">def</span> <span class="nf">add_neighboors_to_encountered_nodes</span><span class="p">(</span><span class="n">node</span><span class="p">):</span>
             <span class="k">if</span> <span class="n">node</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">encountered_nodes</span><span class="p">:</span>
@@ -1606,14 +1606,14 @@
             <span class="k">for</span> <span class="n">other_node</span> <span class="ow">in</span> <span class="n">partial_network</span><span class="o">.</span><span class="n">net_dict</span><span class="p">[</span><span class="n">node_to_remove</span><span class="p">]:</span>
                 <span class="k">del</span> <span class="n">partial_network</span><span class="o">.</span><span class="n">net_dict</span><span class="p">[</span><span class="n">other_node</span><span class="p">][</span><span class="n">node_to_remove</span><span class="p">]</span>
             <span class="k">del</span> <span class="n">partial_network</span><span class="o">.</span><span class="n">net_dict</span><span class="p">[</span><span class="n">node_to_remove</span><span class="p">]</span>
-            
+
             <span class="c1"># check if that network is connected</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="n">partial_network</span><span class="o">.</span><span class="n">is_connected</span><span class="p">():</span>
                 <span class="k">return</span> <span class="kc">True</span>
 
         <span class="c1"># No shorts were found</span>
         <span class="k">return</span> <span class="kc">False</span>
-        
+
     <span class="k">def</span> <span class="nf">has_opens</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">        Determines if there is an open connection in the </span>
@@ -1653,7 +1653,7 @@
 
             <span class="c1"># Go through all the wires (note: grounds are instances of wires)</span>
             <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">el</span><span class="p">,</span><span class="n">W</span><span class="p">):</span>
-                
+
                 <span class="c1"># If this element is a ground, call it&#39;s negative node &#39;__ground&#39;</span>
                 <span class="n">np</span> <span class="o">=</span> <span class="n">el</span><span class="o">.</span><span class="n">node_plus</span>
                 <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">el</span><span class="p">)</span> <span class="ow">is</span> <span class="n">G</span><span class="p">:</span>
@@ -1686,7 +1686,7 @@
                             <span class="c1"># otherwise add plus node to chain &#39;ch&#39;</span>
                             <span class="n">ch</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="p">)</span>
                             <span class="n">added</span> <span class="o">=</span> <span class="kc">True</span>
-                    
+
                     <span class="c1"># same check for the plus node</span>
                     <span class="k">elif</span> <span class="p">(</span><span class="n">np</span> <span class="ow">in</span> <span class="n">ch</span><span class="p">):</span>
                         <span class="k">for</span> <span class="n">j</span><span class="p">,</span> <span class="n">ch2</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">chains</span><span class="p">):</span>
@@ -1696,7 +1696,7 @@
                         <span class="k">if</span> <span class="n">added</span> <span class="o">==</span> <span class="kc">False</span><span class="p">:</span>
                             <span class="n">ch</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">nm</span><span class="p">)</span>
                             <span class="n">added</span> <span class="o">=</span> <span class="kc">True</span>
-                
+
                 <span class="c1"># if none of the nodes were present in chains, </span>
                 <span class="c1"># create a new chain linking the two nodes of the wire</span>
                 <span class="k">if</span> <span class="n">added</span> <span class="o">==</span> <span class="kc">False</span><span class="p">:</span>
@@ -1751,7 +1751,7 @@
                     <span class="k">if</span> <span class="n">n</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">nodes</span><span class="p">:</span>
                         <span class="bp">self</span><span class="o">.</span><span class="n">nodes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
 
-        
+
         <span class="c1"># build ``net_dict``, a dictionary such that  </span>
         <span class="c1"># ``net_dict[node_A][node_B]`` gives the non-wire circuit </span>
         <span class="c1"># component connecting ``node_A`` and ``node_B``.</span>
@@ -1766,7 +1766,7 @@
 
     <span class="nd">@timeit</span>
     <span class="k">def</span> <span class="nf">compute_char_poly_coeffs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">is_lossy</span> <span class="o">=</span> <span class="kc">True</span><span class="p">):</span>
-        
+
         <span class="nd">@timeit</span>
         <span class="k">def</span> <span class="nf">determinant</span><span class="p">(</span><span class="n">matrix</span><span class="p">):</span>
             <span class="k">return</span> <span class="n">matrix</span><span class="o">.</span><span class="n">berkowitz_det</span><span class="p">()</span>
@@ -1785,7 +1785,7 @@
                 <span class="n">char_poly</span><span class="p">,</span> <span class="n">gen</span><span class="o">=</span><span class="n">w</span><span class="p">)</span>  <span class="c1"># Order of the polynomial</span>
             <span class="c1"># Get polynomial coefficients, index 0 = lowest order term</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">char_poly_coeffs_analytical</span> <span class="o">=</span>\
-                <span class="p">[</span><span class="n">char_poly</span><span class="o">.</span><span class="n">coeff</span><span class="p">(</span><span class="n">w</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">char_poly_order</span><span class="o">+</span><span class="mi">1</span><span class="p">)]</span> 
+                <span class="p">[</span><span class="n">char_poly</span><span class="o">.</span><span class="n">coeff</span><span class="p">(</span><span class="n">w</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">char_poly_order</span><span class="o">+</span><span class="mi">1</span><span class="p">)]</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">w2</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">Symbol</span><span class="p">(</span><span class="s1">&#39;w2&#39;</span><span class="p">)</span>
             <span class="n">char_poly</span> <span class="o">=</span> <span class="n">determinant</span><span class="p">((</span><span class="o">-</span><span class="n">ntr</span><span class="o">.</span><span class="n">RLC_matrices</span><span class="p">[</span><span class="s1">&#39;L&#39;</span><span class="p">]</span><span class="o">+</span><span class="n">w2</span><span class="o">*</span><span class="n">ntr</span><span class="o">.</span><span class="n">RLC_matrices</span><span class="p">[</span><span class="s1">&#39;C&#39;</span><span class="p">]))</span>
@@ -1793,9 +1793,9 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">char_poly_order</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">polys</span><span class="o">.</span><span class="n">polytools</span><span class="o">.</span><span class="n">degree</span><span class="p">(</span><span class="n">char_poly</span><span class="p">,</span> <span class="n">gen</span><span class="o">=</span><span class="n">w2</span><span class="p">)</span>  <span class="c1"># Order of the polynomial</span>
             <span class="c1"># Get polynomial coefficients, index 0 = lowest order term</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">char_poly_coeffs_analytical</span> <span class="o">=</span>\
-                <span class="p">[</span><span class="n">char_poly</span><span class="o">.</span><span class="n">coeff</span><span class="p">(</span><span class="n">w2</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">char_poly_order</span><span class="o">+</span><span class="mi">1</span><span class="p">)]</span>  
-                
-        
+                <span class="p">[</span><span class="n">char_poly</span><span class="o">.</span><span class="n">coeff</span><span class="p">(</span><span class="n">w2</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">char_poly_order</span><span class="o">+</span><span class="mi">1</span><span class="p">)]</span>
+
+
         <span class="c1"># Divide by w if possible</span>
         <span class="n">n</span><span class="o">=</span><span class="mi">0</span>
         <span class="k">while</span> <span class="bp">self</span><span class="o">.</span><span class="n">char_poly_coeffs_analytical</span><span class="p">[</span><span class="n">n</span><span class="p">]</span><span class="o">==</span><span class="mi">0</span><span class="p">:</span>
@@ -1934,7 +1934,7 @@
         <span class="n">nodes</span> <span class="o">=</span> <span class="p">[</span><span class="n">key</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">ntr</span><span class="o">.</span><span class="n">net_dict</span><span class="p">]</span>
         <span class="n">nodes_order</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argsort</span><span class="p">([</span><span class="nb">len</span><span class="p">(</span><span class="n">ntr</span><span class="o">.</span><span class="n">net_dict</span><span class="p">[</span><span class="n">key</span><span class="p">])</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">nodes</span><span class="p">])</span>
         <span class="n">nodes_sorted</span> <span class="o">=</span> <span class="p">[</span><span class="n">nodes</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">nodes_order</span><span class="p">]</span>
-        
+
         <span class="c1"># Remove all nodes except from node_minus, node_plus</span>
         <span class="c1"># through star-mesh transforms with the remove_node function</span>
         <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">nodes_sorted</span><span class="p">:</span>
@@ -2002,7 +2002,7 @@
 
         <span class="c1"># Create a temporary copy of the network which will be reduced        </span>
         <span class="n">ntr</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="c1"># ntr stands for Network To Reduce</span>
-        
+
         <span class="c1"># # order nodes from the node with the least amount of connections</span>
         <span class="c1"># # to the one with the most</span>
         <span class="n">nodes</span> <span class="o">=</span> <span class="p">[</span><span class="n">key</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">ntr</span><span class="o">.</span><span class="n">net_dict</span><span class="p">]</span>
@@ -2117,7 +2117,7 @@
 
             <span class="c1"># Using Mathematica, we compute simplify the expressions for </span>
             <span class="c1"># A_lattice and B_lattice to:</span>
-            
+
             <span class="n">A_lattice</span> <span class="o">=</span> <span class="p">(</span><span class="n">Ya</span> <span class="o">+</span> <span class="n">Yb</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="n">Yd</span> <span class="o">+</span> <span class="n">Yc</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="n">Ya</span><span class="o">*</span><span class="n">Yd</span><span class="o">-</span><span class="n">Yb</span><span class="o">*</span><span class="n">Yc</span><span class="p">)</span>
             <span class="n">B_lattice</span> <span class="o">=</span> <span class="p">(</span><span class="n">Ya</span> <span class="o">+</span> <span class="n">Yb</span> <span class="o">+</span> <span class="n">Yc</span> <span class="o">+</span> <span class="n">Yd</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="n">Ya</span><span class="o">*</span><span class="n">Yd</span><span class="o">-</span><span class="n">Yb</span><span class="o">*</span><span class="n">Yc</span><span class="p">)</span>
 
@@ -2194,7 +2194,7 @@
         <span class="k">return</span> <span class="n">Add</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">left</span><span class="o">.</span><span class="n">_admittance</span><span class="p">(),</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">right</span><span class="o">.</span><span class="n">_admittance</span><span class="p">())</span>
-    
+
     <span class="k">def</span> <span class="nf">_get_RLC_matrix_components</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">RLC_matrix_components</span> <span class="o">=</span> <span class="p">{</span>
             <span class="s1">&#39;R&#39;</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span>
@@ -2280,7 +2280,7 @@
             <span class="n">tr</span> <span class="o">=</span> <span class="n">lambdify</span><span class="p">([</span><span class="s1">&#39;w&#39;</span><span class="p">]</span><span class="o">+</span><span class="bp">self</span><span class="o">.</span><span class="n">_circuit</span><span class="o">.</span><span class="n">_no_value_components</span><span class="p">,</span><span class="n">tr_analytical</span><span class="p">,</span> <span class="s2">&quot;numpy&quot;</span><span class="p">)</span>
             <span class="k">def</span> <span class="nf">tr_minus</span><span class="p">(</span><span class="n">w</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
                 <span class="k">return</span> <span class="o">-</span><span class="n">tr</span><span class="p">(</span><span class="n">w</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-            
+
             <span class="bp">self</span><span class="o">.</span><span class="n">_circuit</span><span class="o">.</span><span class="n">_flux_transformation_dict</span><span class="p">[</span>
                                         <span class="bp">self</span><span class="o">.</span><span class="n">_circuit</span><span class="o">.</span><span class="n">ref_elt</span><span class="p">[</span><span class="n">mode</span><span class="p">]</span><span class="o">.</span><span class="n">node_minus</span><span class="p">,</span>
                                         <span class="bp">self</span><span class="o">.</span><span class="n">_circuit</span><span class="o">.</span><span class="n">ref_elt</span><span class="p">[</span><span class="n">mode</span><span class="p">]</span><span class="o">.</span><span class="n">node_plus</span><span class="p">,</span>
@@ -2294,7 +2294,7 @@
         <span class="c1"># we assume the losses to be neglegible by </span>
         <span class="c1"># removing the imaginary part of the eigenfrequency</span>
         <span class="c1"># w = np.real(w)</span>
-        
+
         <span class="c1"># Calculation of phi_zpf of the reference junction/inductor</span>
         <span class="c1">#  = sqrt(hbar/w/ImdY[w])</span>
         <span class="c1"># The minus is there since 1/Im(Y)  = -Im(1/Y)</span>
@@ -2355,7 +2355,7 @@
             <span class="n">phi_zpf</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_flux_zpf</span><span class="p">(</span><span class="n">mode</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
             <span class="c1"># The above will set the eigenfrequencies</span>
             <span class="n">w</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_circuit</span><span class="o">.</span><span class="n">zeta</span><span class="p">)[</span><span class="n">mode</span><span class="p">]</span>
-            
+
             <span class="k">return</span> <span class="n">phi_zpf</span><span class="o">*</span><span class="mi">1</span><span class="n">j</span><span class="o">*</span><span class="n">w</span>
         <span class="k">if</span> <span class="n">quantity</span> <span class="o">==</span> <span class="s1">&#39;current&#39;</span><span class="p">:</span>
             <span class="n">Vzpf</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">zpf</span><span class="p">(</span><span class="n">mode</span><span class="p">,</span><span class="s1">&#39;voltage&#39;</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
@@ -2572,7 +2572,7 @@
             <span class="n">P</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">collect</span><span class="p">(</span><span class="n">sp</span><span class="o">.</span><span class="n">expand</span><span class="p">(</span><span class="n">P</span><span class="p">),</span> <span class="n">w</span><span class="p">)</span>
 
             <span class="c1"># Obtain the order of the polynomial </span>
-            <span class="n">P_order</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">polys</span><span class="o">.</span><span class="n">polytools</span><span class="o">.</span><span class="n">degree</span><span class="p">(</span><span class="n">P</span><span class="p">,</span> <span class="n">gen</span><span class="o">=</span><span class="n">w</span><span class="p">)</span> 
+            <span class="n">P_order</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">polys</span><span class="o">.</span><span class="n">polytools</span><span class="o">.</span><span class="n">degree</span><span class="p">(</span><span class="n">P</span><span class="p">,</span> <span class="n">gen</span><span class="o">=</span><span class="n">w</span><span class="p">)</span>
 
             <span class="c1"># Compute list of coefficients</span>
             <span class="n">P_coeffs_analytical</span> <span class="o">=</span> <span class="p">[</span><span class="n">P</span><span class="o">.</span><span class="n">coeff</span><span class="p">(</span><span class="n">w</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">P_order</span><span class="o">+</span><span class="mi">1</span><span class="p">)[::</span><span class="o">-</span><span class="mi">1</span><span class="p">]]</span>
@@ -2582,10 +2582,10 @@
                         <span class="k">for</span> <span class="n">n</span><span class="p">,</span> <span class="n">a</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">P_coeffs_analytical</span><span class="p">)])</span>
 
             <span class="n">derivatives</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">dP</span><span class="p">)</span>
-        
+
         <span class="n">du</span> <span class="o">=</span> <span class="n">derivatives</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
         <span class="c1"># dv = derivatives[1]</span>
-        
+
         <span class="c1"># Convert the sympy expression for v/du to a function</span>
         <span class="c1"># Note the function arguments are the angular frequency </span>
         <span class="c1"># and component values that need to be specified</span>
@@ -2661,7 +2661,7 @@
     <span class="k">def</span> <span class="nf">_set_component_lists</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">(</span><span class="n">L</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">_set_component_lists</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_circuit</span><span class="o">.</span><span class="n">junctions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
-    
+
 <div class="viewcode-block" id="J.anharmonicity"><a class="viewcode-back" href="../../API/components/J.html#qucat.J.anharmonicity">[docs]</a>    <span class="nd">@vectorize_kwargs</span><span class="p">(</span><span class="n">exclude</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;mode&#39;</span><span class="p">])</span>
     <span class="k">def</span> <span class="nf">anharmonicity</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mode</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="sa">r</span><span class="sd">&#39;&#39;&#39;Returns the contribution of this junction to the anharmonicity of a given normal mode.</span>
@@ -2755,18 +2755,18 @@
 
     <span class="k">def</span> <span class="nf">_admittance</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="mi">1</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_value</span><span class="p">()</span>
-    
+
     <span class="k">def</span> <span class="nf">_set_component_lists</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">(</span><span class="n">R</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">_set_component_lists</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_circuit</span><span class="o">.</span><span class="n">resistors</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
-    
+
     <span class="k">def</span> <span class="nf">_get_RLC_matrix_components</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="p">{</span>
             <span class="s1">&#39;R&#39;</span><span class="p">:</span><span class="mi">1</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_value</span><span class="p">(),</span>
             <span class="s1">&#39;L&#39;</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span>
             <span class="s1">&#39;C&#39;</span><span class="p">:</span><span class="mi">0</span>
         <span class="p">}</span>
-    
+
     <span class="k">def</span> <span class="nf">_draw</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">pp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_circuit</span><span class="o">.</span><span class="n">_pp</span>
 
@@ -2900,10 +2900,10 @@
 </pre></div>
 
            </div>
-           
+
           </div>
           <footer>
-  
+
 
   <hr/>
 
@@ -2913,7 +2913,7 @@
 
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
 
 </footer>
 
@@ -2923,7 +2923,7 @@
     </section>
 
   </div>
-  
+
 
 
   <script type="text/javascript">
@@ -2932,10 +2932,10 @@
       });
   </script>
 
-  
-  
-    
-   
+
+
+
+
 
 </body>
 </html>
