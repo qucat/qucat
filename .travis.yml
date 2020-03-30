@@ -8,6 +8,11 @@ dist: xenial
 services:
   - xvfb
 
+addons:
+  apt_packages:
+    # required to build the documentation
+    - pandoc
+
 python:
   - "3.7.3"
 
@@ -27,7 +32,7 @@ install:
   - conda create -q -n pip-environment-index python=$TRAVIS_PYTHON_VERSION
 
   # environment in which we will be running developper functionalities
-  - conda create -q -n dev-environment python=$TRAVIS_PYTHON_VERSION
+  - conda create -q -n dev-environment python=$TRAVIS_PYTHON_VERSION sphinx
 
   # environment in which we will be running the tests
   # Here we also install all dependencies of qucat manually
@@ -40,13 +45,14 @@ install:
 
 script:
   
-  # Test dev stuff
+  # Test documentation build and syntax
   - source activate dev-environment
   - pip install .
   - python -c "import qucat"
   - pip install -r requirements-dev.txt
   - black --check src/
   - black --diff src/
+  - python build_docs.py
 
   # Test pip installation from the index
   - source activate pip-environment-index

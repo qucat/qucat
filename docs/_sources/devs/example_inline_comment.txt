@@ -1,0 +1,2 @@
+# Size (in units of pt) of arrow heads for plots of normal-mode current distributions
+a_head = 3
