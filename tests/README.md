@@ -29,4 +29,3 @@ Naming conventions
 test files: test_*.py
 unittest class names: Test*
 unittest class test methods: test_*
-
