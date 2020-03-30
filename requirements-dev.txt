@@ -1,0 +1,6 @@
+sphinx
+nbsphinx
+recommonmark
+sphinx_rtd_theme
+black==19.10b0
+pre-commit
