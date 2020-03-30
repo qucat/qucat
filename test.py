@@ -1,10 +1,10 @@
-import sys,os
-sys.path.append(os.path.join(os.path.dirname(__file__),'src'))
+import sys, os
 
-import numpy as np
+sys.path.append(os.path.join(os.path.dirname(__file__), "src"))
 
-from core import Network,GUI,J,L,C,R
-from time import time
-import matplotlib.pyplot as plt
-c = GUI('test.txt', edit = True,plot = False)
-c.f_k_A_chi(pretty_print=True)
+from core import Network, GUI, J, L, C, R
+
+
+c = Network([C(0, 1, 100e-15), L(1, 2, 10e-9), R(0, 2, 0.1),])
+c.Q_min = 1
+print(c.eigenfrequencies())
