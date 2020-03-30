@@ -1,0 +1,245 @@
+{
+ "cells": [
+  {
+   "cell_type": "code",
+   "execution_count": 1,
+   "metadata": {
+    "ExecuteTime": {
+     "end_time": "2019-08-27T13:42:34.045300Z",
+     "start_time": "2019-08-27T13:42:32.998300Z"
+    }
+   },
+   "outputs": [],
+   "source": [
+    "import numpy as np\n",
+    "import matplotlib.pyplot as plt\n",
+    "from qucat import GUI"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "# Designing a classical microwave filter"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "In this application we show how QuCAT can be used to design classical microwave components. \n",
+    "We study here a band pass filter made from two LC oscillators with the inductor inline and a capacitive shunt to ground.\n",
+    "we are interested in the loss rate of a LC resonator connected through this filter to a 50 $\\Omega$ load, which could emulate a typical microwave transmission line.\n",
+    "\n",
+    "![alt text](graphics/filter_circuit.png \"\")\n",
+    "\n",
+    "We start by opening the GUI and building this circuit."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 2,
+   "metadata": {
+    "ExecuteTime": {
+     "end_time": "2019-08-27T13:43:11.600300Z",
+     "start_time": "2019-08-27T13:42:35.101300Z"
+    }
+   },
+   "outputs": [
+    {
+     "data": {
+      "image/png": "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\n",
+      "text/plain": [
+       "<Figure size 600x177.48 with 1 Axes>"
+      ]
+     },
+     "metadata": {
+      "needs_background": "light"
+     },
+     "output_type": "display_data"
+    }
+   ],
+   "source": [
+    "# Build circuit\n",
+    "filtered_cavity = GUI('circuits/filtered_cavity.txt', # location of the circuit file\n",
+    "        edit=True, # open the GUI to edit the circuit\n",
+    "        plot=True, # plot the circuit after having edited it\n",
+    "        print_network=False) # print the network"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "Since the values of $C$ and $L$ were not specified in the construction of the circuit, their values have to be passed as keyword arguments in subsequent functions."
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "To get an initial idea of the different modes of the circuit, let us display their resonance frequencies and dissipation rates for a 0.3uH inductance and 1pF capacitance."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 10,
+   "metadata": {
+    "ExecuteTime": {
+     "end_time": "2019-08-27T13:47:28.838700Z",
+     "start_time": "2019-08-27T13:47:28.809700Z"
+    }
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "         mode |       freq.  |       diss.  |       anha.  |\n",
+      "            0 |      173 MHz |     18.8 MHz |          0Hz |\n",
+      "            1 |      464 MHz |     7.76 MHz |          0Hz |\n",
+      "            2 |     5.28 GHz |     68.2 mHz |          0Hz |\n",
+      "\n",
+      "Kerr coefficients (diagonal = Kerr, off-diagonal = cross-Kerr)\n",
+      "         mode |         0    |         1    |         2    |\n",
+      "            0 |          0Hz |              |              |\n",
+      "            1 |          0Hz |          0Hz |              |\n",
+      "            2 |          0Hz |          0Hz |          0Hz |\n",
+      "\n"
+     ]
+    }
+   ],
+   "source": [
+    "f,k,A,chi = filtered_cavity.f_k_A_chi(pretty_print=True, L = 0.3e-6, C = 1e-12)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "Since the filter capacitance and inductance is large relative to the capacitance and inductance of the resonator, the two modes associated with the filter will have a much lower frequency, and very high dissipation rates. \n",
+    "\n",
+    "We can thus access the loss rate of the resonator by always selecting the last element of the array of loss rates returned by the function `loss_rates`"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 3,
+   "metadata": {
+    "ExecuteTime": {
+     "end_time": "2019-08-23T14:36:23.660400Z",
+     "start_time": "2019-08-23T14:36:16.708400Z"
+    },
+    "scrolled": true
+   },
+   "outputs": [
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "C:\\Anaconda3\\lib\\site-packages\\qucat\\core.py:2499: RuntimeWarning: invalid value encountered in sqrt\n",
+      "  return np.sqrt(hbar/np.real(z)/np.imag(dY(z,**kwargs)))\n"
+     ]
+    }
+   ],
+   "source": [
+    "# The resonance modes of the filter\n",
+    "# have a very low quality factors, which make \n",
+    "# them inadequate for quantization\n",
+    "# by default QuCAT will discard these modes\n",
+    "# and notify the user with a warning, here \n",
+    "# we disactivate these warnings\n",
+    "filtered_cavity.warn_discarded_mode = False\n",
+    "\n",
+    "# Build a list of inductances and capacitances\n",
+    "points = 31\n",
+    "C_list = np.logspace(-13.5,-11.8,points)\n",
+    "L_list = np.logspace(-8.5,-6.8,points)\n",
+    "\n",
+    "# Initialize an array to store the resonator loss rates\n",
+    "k = np.zeros((points,points))\n",
+    "\n",
+    "# Sweep over capacitances and inductances\n",
+    "for i,capacitance in enumerate(C_list):\n",
+    "    for j,inductance in enumerate(L_list):\n",
+    "        # Calculate loss rates (for all modes)\n",
+    "        k_all_modes = filtered_cavity.loss_rates(\n",
+    "                    C = capacitance, \n",
+    "                    L = inductance)\n",
+    "        # Store the resonator loss rate\n",
+    "        k[i,j] = k_all_modes[-1]"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "The obtained dissipation rates are plotted below"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 4,
+   "metadata": {
+    "ExecuteTime": {
+     "end_time": "2019-08-23T14:36:24.878400Z",
+     "start_time": "2019-08-23T14:36:23.663400Z"
+    }
+   },
+   "outputs": [
+    {
+     "data": {
+      "image/png": "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\n",
+      "text/plain": [
+       "<Figure size 432x288 with 2 Axes>"
+      ]
+     },
+     "metadata": {
+      "needs_background": "light"
+     },
+     "output_type": "display_data"
+    }
+   ],
+   "source": [
+    "plt.pcolor(C_list,L_list,k)\n",
+    "cbar = plt.colorbar()\n",
+    "plt.xscale('log')\n",
+    "plt.yscale('log')"
+   ]
+  }
+ ],
+ "metadata": {
+  "kernelspec": {
+   "display_name": "Python 3",
+   "language": "python",
+   "name": "python3"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 3
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython3",
+   "version": "3.7.3"
+  },
+  "toc": {
+   "base_numbering": 1,
+   "nav_menu": {},
+   "number_sections": true,
+   "sideBar": true,
+   "skip_h1_title": false,
+   "title_cell": "Table of Contents",
+   "title_sidebar": "Contents",
+   "toc_cell": false,
+   "toc_position": {},
+   "toc_section_display": true,
+   "toc_window_display": false
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 2
+}
