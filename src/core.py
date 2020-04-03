@@ -884,7 +884,6 @@ class Qcircuit(object):
         modes="all",
         taylor=2,
         excitations=6,
-        return_ops=False,
         **kwargs
     ):
         r"""Scattering parameters. 
@@ -946,41 +945,52 @@ class Qcircuit(object):
         TODO: document input-output theory
         TODO: implement aRWA (actually not adaptive, but call it optimal)
         """
-
         R_in = self.components[R_in_label]
         R_out = self.components[R_out_label]
 
-        I_in = parse_current(drive_power, drive_phase=0, power_unit="dBm")
+        # Un-driven hamiltonian
+        H_bare = self.hamiltonian(modes, taylor, excitations, **kwargs)
+
+        # Current phasor of the input
+        I_in = R_in._P_to_I(drive_power, drive_phase, power_unit)
 
         # TODO: parse temperature
-        nth = []
+        if temperature == 0:
+            nth = [0 for i in range(len(self.hamiltonian_modes))]
 
+        H_drive = R_in._drive_hamiltonian(I_in, **kwargs)
+
+        # Collapse operators
         k = self.loss_rates(**kwargs)
-
-        H = self.hamiltonian(modes, taylor, excitations, **kwargs)
-        H += R_in._drive_hamiltonian(drive_power, **kwargs)
-
         c_ops = []
-        for index, mode in self.hamiltonian_modes:
-            a = self.a[index]
-            c_ops.append(np.sqrt(k[mode] * (1 + nth[index])) * a)
+        for index, mode in enumerate(self.hamiltonian_modes):
+            c_ops.append(np.sqrt(k[mode] * (1 + nth[index])) * self.a[index])
             if nth[index] > 0:
-                c_ops.append(np.sqrt(k[mode] * nth[index]) * a.dag())
+                c_ops.append(np.sqrt(k[mode] * nth[index]) * self.a[index].dag())
 
         # TODO: move to rotating frame (using only harmonic modes for the moment)
         for index, mode in enumerate(self.hamiltonian_modes):
-            H -= drive_frequencies * self.a[index].dag() * self.a[index]
+            H_bare_rot = (
+                H_bare - drive_frequencies * self.a[index].dag() * self.a[index]
+            )
 
-        from qutip import steadystate, trace
+        from qutip import steadystate, expect, commutator
 
-        rho = steadystate(H, c_ops)
+        rho = steadystate(H_bare_rot + H_drive, c_ops)
 
-        i_out_operator = R_out._i_out()
-        i_out_operator = move_to_frame(i_out_operator)
-        I_out_operator = i_out_operator(0) + 1j * i_out_operator(
-            -pi / 2 / drive_frequencies
-        )
-        I_out = trace(rho, I_out_operator)
+        I_out_operator = 0
+        for index, mode in enumerate(self.hamiltonian_modes):
+            zpf = R_out.zpf(mode, "flux", **kwargs)
+            R_out_value = R_out._get_value(**kwargs)
+            I_out_operator += (
+                -np.conj(zpf)
+                * 2
+                * 1j
+                / R_out_value
+                * commutator(self.a[index].dag(), 2 * pi * H_bare)
+            )
+
+        I_out = expect(rho, I_out_operator)
 
         if R_in == R_out:
             return -1 + I_out / I_in
@@ -2989,6 +2999,36 @@ class R(Component):
 
     def _get_RLC_matrix_components(self):
         return {"R": 1 / self._get_value(), "L": 0, "C": 0}
+
+    def _P_to_I(self, drive_power, drive_phase=0, power_unit="dBm"):
+        r"""Turns a drive power and a phase into a current phasor.
+
+        Note
+        -----
+        0 phase will correspond to a sin.
+        So the phasor is actually |I|e^i([drive_phase]+pi/2)
+        """
+        if power_unit == "dBm":
+            P_watt = np.power(10, ((drive_power - 30) / 10))
+
+        I = np.sqrt(2 * P_watt / self._get_value())
+
+        return I * np.exp(1j * (drive_phase + pi / 2))
+
+    def _drive_hamiltonian(self, I_in, **kwargs):
+        r"""Computes the drive Hamiltonian.
+
+        For the moment, we are applying a rotating-wave approximation,
+        TODO: provide mathematical details
+        """
+
+        Hdr = 0
+        a = self._circuit.a
+        for index, mode in enumerate(self._circuit.hamiltonian_modes):
+            eps = 1 / h * I_in * self.zpf(mode, "flux")
+            Hdr += -1j * (eps * a[index] - np.conj(eps) * a[index].dag())
+
+        return Hdr
 
     def _draw(self):
         pp = self._circuit._pp

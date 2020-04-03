@@ -89,7 +89,7 @@ def refuse_vectorize_kwargs(func_to_evaluate=None, *, exclude=[]):
             non_iterables = {}
             iterables = {}
             for kw, arg in kwargs.items():
-                if kw not in exclude:
+                if (kw not in exclude) and (type(arg) != str):
                     try:
                         iter(arg)
                         raise ValueError(
