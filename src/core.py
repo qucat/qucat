@@ -870,6 +870,123 @@ class Qcircuit(object):
             return H, self.a
         return H
 
+    @refuse_vectorize_kwargs(exclude=["modes", "taylor", "excitations", "return_ops"])
+    def S(
+        self,
+        R_out_label,
+        R_in_label,
+        drive_frequencies,
+        drive_power,
+        drive_phase=0,
+        power_unit="dBm",
+        temperature=0,
+        temperature_unit="kelvin",
+        modes="all",
+        taylor=2,
+        excitations=6,
+        return_ops=False,
+        **kwargs
+    ):
+        r"""Scattering parameters. 
+        TODO: description
+
+        Parameters
+        ----------
+        drive_frequencies:
+                    TODO: vectorize
+        drive_power:
+                    TODO: vectorize
+                    TODO: accept drive power 'sub-photon'
+        power_unit:
+                    TODO: accept dBm, dB, W
+        temperature: 
+                    TODO: either array per mode, or one temperature
+        temperature_unit:
+                    TODO: either kelvin or photon
+        modes:      array of integers, optional
+                    List of modes to consider, where the modes are 
+                    ordered with increasing frequency, such that
+                    ``modes = [0,1]`` would lead to considering only
+                    the two lowest frequency modes of the circuit.
+                    By default all modes are considered.
+        taylor:     integer, optional
+                    Order to which the potential of all josephson
+                    junctions should be taylor-expanded. Default
+                    is `4`.
+        excitations:integer or array of integers, optional  
+                    Number of energy levels considered for each
+                    junction. If one number is given, all modes 
+                    have the same number of levels, if an array
+                    is given, its length should match the number
+                    of modes considered. For example if ``modes = [0,1]`` and
+                    ``excitations = [5,10]``, then we will consider
+                    5 excitation levels for mode 0 and 10 for mode 1.
+        return_ops: Boolean, optional
+                    If set to True, a list of the annihilation operators
+                    will be returned along with the hamiltonian in the form
+                    ``<Hamiltonian>, <list of operators>``. 
+                    The form of the return is then ``H,[a_0,a_1,..]``
+                    where ``a_i`` is the annihilation operator of the
+                    i-th considered mode, a QuTiP Qobj
+        kwargs:     
+                    Values for un-specified circuit components, 
+                    ex: ``L=1e-9``.
+
+        Returns
+        -------
+        TODO:   photon occupations per mode
+                frequency, power and S_xy
+                (optional) density matrices
+        
+        TODO: warn when photon occupation is too high
+        
+        Notes
+        -----
+        
+        TODO: document input-output theory
+        TODO: implement aRWA (actually not adaptive, but call it optimal)
+        """
+
+        R_in = self.components[R_in_label]
+        R_out = self.components[R_out_label]
+
+        I_in = parse_current(drive_power, drive_phase=0, power_unit="dBm")
+
+        # TODO: parse temperature
+        nth = []
+
+        k = self.loss_rates(**kwargs)
+
+        H = self.hamiltonian(modes, taylor, excitations, **kwargs)
+        H += R_in._drive_hamiltonian(drive_power, **kwargs)
+
+        c_ops = []
+        for index, mode in self.hamiltonian_modes:
+            a = self.a[index]
+            c_ops.append(np.sqrt(k[mode] * (1 + nth[index])) * a)
+            if nth[index] > 0:
+                c_ops.append(np.sqrt(k[mode] * nth[index]) * a.dag())
+
+        # TODO: move to rotating frame (using only harmonic modes for the moment)
+        for index, mode in enumerate(self.hamiltonian_modes):
+            H -= drive_frequencies * self.a[index].dag() * self.a[index]
+
+        from qutip import steadystate, trace
+
+        rho = steadystate(H, c_ops)
+
+        i_out_operator = R_out._i_out()
+        i_out_operator = move_to_frame(i_out_operator)
+        I_out_operator = i_out_operator(0) + 1j * i_out_operator(
+            -pi / 2 / drive_frequencies
+        )
+        I_out = trace(rho, I_out_operator)
+
+        if R_in == R_out:
+            return -1 + I_out / I_in
+        else:
+            return I_out / I_in
+
     @refuse_vectorize_kwargs(exclude=["plot", "return_fig_ax"])
     def show(self, plot=True, return_fig_ax=False, **kwargs):
         """Plots the circuit.
