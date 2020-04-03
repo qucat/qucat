@@ -128,11 +128,20 @@ class Transmon(TestCaseAppended):
         Lj = 10e-9
         junction = core.J(0, 1, Lj)
         circuit = core.Network([core.C(0, 1, Cj), junction, core.R(0, 1, 1e6)])
+        Z = np.sqrt(Lj / Cj)
+        phi_zpf = np.sqrt(hbar * Z / 2)
+        self.assertRelativelyClose(phi_zpf, junction.zpf(mode=0, quantity="flux"))
+
+    def test_phase_zpf(self):
+        Cj = 100e-15
+        Lj = 10e-9
+        junction = core.J(0, 1, Lj)
+        circuit = core.Network([core.C(0, 1, Cj), junction, core.R(0, 1, 1e6)])
         phi_0 = hbar / 2 / e
         Z = np.sqrt(Lj / Cj)
         phi_zpf = np.sqrt(hbar * Z / 2)
         self.assertRelativelyClose(
-            phi_zpf / phi_0, junction.zpf(mode=0, quantity="flux")
+            phi_zpf / phi_0, junction.zpf(mode=0, quantity="phase")
         )
 
     def test_q_zpf(self):

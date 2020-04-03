@@ -731,6 +731,53 @@ class Qcircuit(object):
 
         return to_return
 
+    def _set_operators(self, modes, excitations, **kwargs):
+
+        # Get the eigenfrequencies
+        fs = self.eigenfrequencies(**kwargs)
+
+        # Parse and verify the "modes" argument
+        if modes == "all":
+            modes = range(len(fs))
+        for m in modes:
+            try:
+                fs[m]
+            except IndexError:
+                error_message = (
+                    "There are only %d modes in the circuit, and you specified mode index %d "
+                    % (len(fs), m)
+                )
+                error_message += "corresponding to the %d-th mode." % (m + 1)
+                # error_message +="\nNote that the numer of modes may change as one sweeps a parameter"
+                # error_message +=" for example if a 0 frequency, spurious mode becomes negative due to "
+                # error_message +="numerical imprecision. Adding a resistance to the circuit may help with this."
+                raise ValueError(error_message)
+
+        # Parse and verify the "excitations" argument
+        if not isinstance(excitations, list):
+            excitations = [int(excitations) for i in modes]
+        else:
+            if len(excitations) != len(modes):
+                raise ValueError("excitations and modes should have the same length")
+
+        # Store these Hamiltonian-setup parameters
+        self.hamiltonian_modes = modes
+        self.hamiltonian_excitations = excitations
+
+        # TODO: try and import, if cannot,
+        # link to QuTiP installation page
+        from qutip import destroy, qeye, tensor
+
+        # Build annihilation operators
+        annihilation_operators = []
+        qeye_list = [qeye(n) for n in excitations]
+        for index, mode in enumerate(self.hamiltonian_modes):
+            a_to_tensor = deepcopy(qeye_list)
+            a_to_tensor[index] = destroy(excitations[index])
+            a = tensor(a_to_tensor)
+            annihilation_operators.append(a)
+        self.a = annihilation_operators
+
     @refuse_vectorize_kwargs(exclude=["modes", "taylor", "excitations", "return_ops"])
     def hamiltonian(
         self, modes="all", taylor=4, excitations=6, return_ops=False, **kwargs
@@ -794,65 +841,29 @@ class Qcircuit(object):
 
         For more details on the underlying theory, see https://arxiv.org/pdf/1908.10342.pdf
         """
-        from qutip import destroy, qeye, tensor
 
-        self.hamiltonian_modes = modes
-        self.hamiltonian_taylor = taylor
-        self.hamiltonian_excitations = excitations
+        # Define annihilation operators
+        self._set_operators(modes, excitations, **kwargs)
 
+        # Get the eigenfrequencies
         fs = self.eigenfrequencies(**kwargs)
 
-        if modes == "all":
-            modes = range(len(fs))
-        for m in modes:
-            try:
-                fs[m]
-            except IndexError:
-                error_message = (
-                    "There are only %d modes in the circuit, and you specified mode index %d "
-                    % (len(fs), m)
-                )
-                error_message += "corresponding to the %d-th mode." % (m + 1)
-                # error_message +="\nNote that the numer of modes may change as one sweeps a parameter"
-                # error_message +=" for example if a 0 frequency, spurious mode becomes negative due to "
-                # error_message +="numerical imprecision. Adding a resistance to the circuit may help with this."
-                raise ValueError(error_message)
-
-        if not isinstance(excitations, list):
-            excitations = [int(excitations) for i in modes]
-        else:
-            if len(excitations) != len(modes):
-                raise ValueError("excitations and modes should have the same length")
-
         H = 0
-        operators = []
-        phi = [0 for junction in self.junctions]
-        qeye_list = [qeye(n) for n in excitations]
+        for index, mode in enumerate(self.hamiltonian_modes):
 
-        for index, mode in enumerate(modes):
-            a_to_tensor = deepcopy(qeye_list)
-            a_to_tensor[index] = destroy(excitations[index])
-            a = tensor(a_to_tensor)
-            operators.append(a)
-            H += fs[mode] * a.dag() * a
+            # Harmonic part
+            H += fs[mode] * self.a[index].dag() * self.a[index]
 
-            for j, junction in enumerate(self.junctions):
-                # Note that zpf returns the flux in units of phi_0 = hbar/2./e
-                phi[j] += np.real(
-                    junction.zpf(quantity="flux", mode=mode, **kwargs)
-                ) * (a + a.dag())
-                # a = x+iy => -i*(a-a^) = -i(iy+iy) = --1
-                phi[j] += (
-                    -1j
-                    * np.imag(junction.zpf(quantity="flux", mode=mode, **kwargs))
-                    * (a - a.dag())
-                )
-
-        for j, junction in enumerate(self.junctions):
+        for junction in self.junctions:
             n = 2
             EJ = (hbar / 2.0 / e) ** 2 / (junction._get_value(**kwargs) * h)
             while 2 * n <= taylor:
-                H += (-1) ** (n + 1) * EJ / factorial(2 * n) * phi[j] ** (2 * n)
+                H += (
+                    (-1) ** (n + 1)
+                    * EJ
+                    / factorial(2 * n)
+                    * junction._operator("phase", **kwargs) ** (2 * n)
+                )
                 n += 1
 
         if return_ops:
@@ -1007,6 +1018,11 @@ class Qcircuit(object):
         For more detail on the underlying theory, see https://arxiv.org/pdf/1908.10342.pdf.
         """
 
+        # We always express flux in units of the reduced flux quantum
+        # So we are actully showing the phase
+        if quantity == "flux":
+            quantity = "phase"
+
         # This changes the default plotting settings
         # to those defined in plotting_settings.py
         # under plotting_parameters_normal_modes
@@ -1029,7 +1045,7 @@ class Qcircuit(object):
         def pretty(v, quantity):
             # Utility function to print a pretty
             # value for the phasor
-            if quantity == "flux":
+            if quantity == "phase":
                 return pretty_value(v, is_complex=True) + u"\u03A6_0"
             elif quantity == "charge":
                 return pretty_value(v, is_complex=True, use_power_10=True) + "e"
@@ -1237,7 +1253,7 @@ class Qcircuit(object):
                 value_text = "|I|"
             elif quantity == "voltage":
                 value_text = u"|V|"
-            if quantity == "flux":
+            if quantity == "phase":
                 value_text = u"|\u03A6|"
             elif quantity == "charge":
                 value_text = "|Q|"
@@ -2341,19 +2357,9 @@ class Component(Circuit):
                 self.node_minus,
             ] = tr_minus
 
-        # Following Black-box quantization,
-        # we assume the losses to be neglegible by
-        # removing the imaginary part of the eigenfrequency
-        # w = np.real(w)
-
-        # Calculation of phi_zpf of the reference junction/inductor
-        #  = sqrt(hbar/w/ImdY[w])
-        # The minus is there since 1/Im(Y)  = -Im(1/Y)
+        # Note that the flux defined here is complex.
         phi_zpf_r = self._circuit.ref_elt[mode]._flux_zpf_r(w, **kwargs)
-
-        # Note that the flux defined here
         phi = tr(w, **kwargs) * phi_zpf_r
-        # is complex.
 
         return phi
 
@@ -2367,7 +2373,7 @@ class Component(Circuit):
         The quantity can be current (in units of Ampere), 
         voltage (in Volts), 
         charge (in electron charge), 
-        or flux (in units of the reduced flux quantum, :math:`\hbar/2e`).
+        flux or phase (i.e. flux in units of the reduced flux quantum, :math:`\hbar/2e`).
 
         Parameters
         ----------
@@ -2376,7 +2382,7 @@ class Component(Circuit):
                         the lowest frequency mode, and the others
                         are arranged in order of increasing frequency
         quantity:       string
-                        One of 'current', 'flux', 'charge', 'voltage'
+                        One of 'current', 'flux', 'phase', 'charge', 'voltage'
         kwargs:     
                     Values for un-specified circuit components, 
                     ex: ``L=1e-9``.
@@ -2398,6 +2404,8 @@ class Component(Circuit):
         For more detail on the underlying theory, see https://arxiv.org/pdf/1908.10342.pdf.
         """
         if quantity == "flux":
+            return self._flux_zpf(mode, **kwargs)
+        if quantity == "phase":
             phi_0 = hbar / 2.0 / e
             return self._flux_zpf(mode, **kwargs) / phi_0
         if quantity == "voltage":
@@ -2424,6 +2432,31 @@ class Component(Circuit):
 
             w = np.real(self._circuit.zeta)[mode]
             return Izpf / 1j / w / e
+
+    def _operator(self, quantity, **kwargs):
+        if quantity not in ["phase", "flux"]:
+            raise ValueError("Operators other than flux and phase not implemented.")
+
+        # Verify if the operators have been built
+        try:
+            self._circuit.a[0]
+        except AttributeError as e:
+            error_message = str(e)
+            error_message += "\n A function which specifies the Hilbert "
+            error_message += "space should be called first to define "
+            error_message += "annihilation operators."
+            raise AttributeError(error_message)
+
+        # Build the flux operator mode by mode
+        operator = 0
+        for index, mode in enumerate(self._circuit.hamiltonian_modes):
+            zpf = self.zpf(mode, quantity, **kwargs)
+            a = self._circuit.a[index]
+
+            operator += np.real(zpf) * (a + a.dag())
+            operator += -1 / 1j * np.imag(zpf) * (a - a.dag())
+
+        return operator
 
 
 class W(Component):
@@ -2772,7 +2805,7 @@ class J(L):
         return (
             self._get_Ej(**kwargs)
             / 2
-            * np.absolute(self.zpf(mode, quantity="flux", **kwargs)) ** 4
+            * np.absolute(self.zpf(mode, quantity="phase", **kwargs)) ** 4
         )
 
     def _draw(self):
