@@ -867,7 +867,7 @@ class Qcircuit(object):
                 n += 1
 
         if return_ops:
-            return H, operators
+            return H, self.a
         return H
 
     @refuse_vectorize_kwargs(exclude=["plot", "return_fig_ax"])
