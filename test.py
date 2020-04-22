@@ -42,7 +42,11 @@ for fd in freqs:
 
 import matplotlib.pyplot as plt
 
-plt.plot(np.real(S11), np.imag(S11), label="qucat")
 plt.plot(np.real(S11_ana(freqs)), np.imag(S11_ana(freqs)), label="analytical")
+plt.plot(np.real(S11), np.imag(S11), label="qucat")
+plt.plot(np.real(S11[0]), np.imag(S11[0]), "o", label="qucat")
+plt.plot(
+    np.real(S11_ana(freqs))[0], np.imag(S11_ana(freqs))[0], "o", label="analytical"
+)
 plt.legend()
 plt.show()

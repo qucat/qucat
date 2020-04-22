@@ -978,7 +978,7 @@ class Qcircuit(object):
 
         from qutip import steadystate, expect, commutator
 
-        # Usin gth Scipy solver to avoid the
+        # Using the scipy solver to avoid the
         # "access violation reading 0xFFFFFFFFFFFFFFFF" error
         # when using the mkl solver
         # TODO: get to the bottom of this issue
@@ -991,8 +991,9 @@ class Qcircuit(object):
                 np.conj(zpf)
                 * 2
                 * 1j
+                / (1 / 2 / pi)  # 1/hbar in our units where h=1
                 / R_out_value
-                * commutator(2 * pi * H_bare, self.a[index].dag())
+                * commutator(H_bare, self.a[index].dag())
             )
 
         I_out = expect(rho, I_out_operator)
@@ -3027,7 +3028,7 @@ class R(Component):
         a = self._circuit.a
         for index, mode in enumerate(self._circuit.hamiltonian_modes):
             eps = 1 / h * I_in * self.zpf(mode, "flux")
-            Hdr += eps * a[index] + np.conj(eps) * a[index].dag()
+            Hdr -= eps * a[index] + np.conj(eps) * a[index].dag()
 
         return Hdr
 
