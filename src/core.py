@@ -62,7 +62,6 @@ def string_to_component(s, *arg, **kwarg):
     A component of type ``s``
     '''
     
-    print(arg)
     l = [c for c in arg]
     for i,c in enumerate(arg):
         if type(c) in [float, int]:
