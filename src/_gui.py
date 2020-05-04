@@ -642,6 +642,11 @@ class CircuitEditor(tk.Canvas):
             command=(lambda: self.event_generate("g")),
             font=menu_font,
         )
+        menu.add_command(
+            label=label_template.format("Port", "<P>"),
+            command=(lambda: self.event_generate("p")),
+            font=menu_font,
+        )
 
         ####################################
         # VIEW cascade menu build
@@ -1157,6 +1162,8 @@ class CircuitEditor(tk.Canvas):
                 C(self, auto_place_info=el)
             elif el[0] == "G":
                 G(self, auto_place_info=el)
+            elif el[0] == "P":
+                P(self, auto_place_info=el)
 
     def on_resize(self, event=None):
         """
@@ -1363,6 +1370,7 @@ class CircuitEditor(tk.Canvas):
         #############################
         # ELEMENT creation
         #############################
+        # TODO: replace this with less verbose code
         self.bindings_element_creation = [
             ["r", lambda event: R(self, event)],
             ["l", lambda event: L(self, event)],
@@ -1370,6 +1378,7 @@ class CircuitEditor(tk.Canvas):
             ["j", lambda event: J(self, event)],
             ["w", lambda event: W(self, event)],
             ["g", lambda event: G(self, event)],
+            ["p", lambda event: P(self, event)],
         ]
 
         #############################
@@ -3749,6 +3758,14 @@ class R(Component):
         super(R, self).__init__(canvas, event, auto_place_info)
 
 
+class P(Component):
+    """docstring for the port component"""
+
+    def __init__(self, canvas, event=None, auto_place_info=None):
+        self.unit = "\u03A9"
+        super(P, self).__init__(canvas, event, auto_place_info)
+
+
 class L(Component):
     """docstring for L"""
 
@@ -3862,6 +3879,9 @@ class RequestValueLabelWindow(tk.Toplevel):
         elif isinstance(self.component, R):
             self.value_string = "Resistance"
             info_text = "Specify label and/or resistance (in units of Ohm)"
+        elif isinstance(self.component, P):
+            self.value_string = "Impedance"
+            info_text = "Specify label and/or impedance (in units of Ohm)"
 
         # Entry field strings
         fields = self.value_string, "Label"
@@ -3952,7 +3972,16 @@ class RequestValueLabelWindow(tk.Toplevel):
 
         # Remove spaces in the label
         if label.replace(" ", "") == "":
-            l = None
+            # No label
+            if isinstance(self.component, P):
+                messagebox.showinfo(
+                    "Enter label",
+                    "Ports must be labelled.\nIn the Label entry enter P1 for Port 1 for example.",
+                )
+                self.focus_force()
+                return None
+            else:
+                l = None
         else:
             l = label
 

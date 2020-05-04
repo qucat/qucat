@@ -20,7 +20,7 @@ plotting_parameters_show = {
     "J": {"width": 0.22, "lw": 6},
     "L": {"width": 0.7, "height": 0.25, "N_points": 150, "N_turns": 5, "lw": 2},
     "R": {"width": 0.6, "height": 0.25, "N_points": 150, "N_ridges": 4, "lw": 2},
-    "P": {"side_wire_width": 0.25},
+    "P": {"width": 0.33, "height": 0.2, "N_points": 150, "N_ridges": 3, "lw": 2},
     "node": {"diameter": 12},
     "W": {"lw": 1},
     "label": {
@@ -46,6 +46,8 @@ pp["L"]["width"] /= scale
 pp["L"]["height"] /= scale
 pp["R"]["width"] /= scale
 pp["R"]["height"] /= scale
+pp["P"]["width"] /= scale
+pp["P"]["height"] /= scale
 pp["label"] = {
     "fontsize": 10,
     "text_position_horizontal": [0.0, -pp["C"]["height"] / 2 - 0.07],
@@ -89,6 +91,6 @@ plotting_parameters_GUI = {
     "J": {"width": 0.25, "lw": 6},
     "L": {"width": 0.7, "height": 0.25, "N_points": 150, "N_turns": 5, "lw": 2},
     "R": {"width": 0.6, "height": 0.25, "N_points": 150, "N_ridges": 4, "lw": 2},
-    "P": {"side_wire_width": 0.25},
+    "P": {"width": 0.33, "height": 0.2, "N_points": 150, "N_ridges": 3, "lw": 2},
     "W": {"lw": 2},
 }

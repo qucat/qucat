@@ -60,7 +60,7 @@ def string_to_component(s, *arg, **kwarg):
     Parameters
     ----------
     s : string
-        One of 'W', 'R', 'L', 'J', 'C', 'G', dicatates the type 
+        One of 'W', 'R', 'L', 'J', 'C', 'G', 'P' dicatates the type 
         of component to create
     args, kwargs : 
         Arguments needed for the component creation
@@ -81,6 +81,8 @@ def string_to_component(s, *arg, **kwarg):
         return C(*arg, **kwarg)
     elif s == "G":
         return G(*arg, **kwarg)
+    elif s == "P":
+        return P(*arg, **kwarg)
 
 
 class Qcircuit(object):
@@ -131,6 +133,7 @@ class Qcircuit(object):
         self.capacitors = []
         self.junctions = []
         self.resistors = []
+        self.ports = []
         self._wire = []
         self._grounds = []
 
@@ -3166,3 +3169,144 @@ class Admittance(Component):
 
     def _admittance(self):
         return self.Y
+
+
+class P(R):
+    """A class representing a port comprising of an AC source, receiver and its resistive load
+    
+    Parameters
+    ----------
+    node_minus:     integer
+                    Index corresponding to the negative node of the port
+    node_minus:     integer
+                    Index corresponding to the positive node of the port
+    args:           <str> or <float>,<str>
+                    A string must be entered, identifying the port (ex: `"P1"`).
+                    A value for the impedance may also be entered, in units of Ohms.
+                    If no value for the impedance is specified here, it should be specified
+                    as a keyword argument in subsequent function calls (ex: `P1 = 50`)   
+                    This is the best way to proceed if one wants to sweep the value of this
+                    impedance. Indeed, the most computationally expensive part of the 
+                    analysis is performed upon initializing the circuit, subsequently
+                    changing the value of a component and re-calculating a quantity 
+                    such as the dissipation rate can be performed much faster.
+    
+    Examples
+    --------
+    To construct a port between nodes 0 and 1, 
+    with a 50 Ohm impedance,
+    and labelled by the string 'P1', one should write:
+
+    >>> P(0,1,'S1',50)
+    """
+
+    def __init__(self, node_minus, node_plus, *args):
+        super(P, self).__init__(node_minus, node_plus, *args)  # defines the unit as Ohm
+        if self.label is None:
+            raise ValueError(
+                "A string labelling the port is required as an input of the P function."
+            )
+
+    def _set_component_lists(self):
+        super(
+            P, self
+        )._set_component_lists()  # will append this component to the list of resistors
+        self._circuit.ports.append(self)
+
+    def _draw(self):
+        pp = self._circuit._pp
+
+        x = np.array(
+            [-0.25]
+            + [i * 0.5 for i in range(2 * pp["P"]["N_ridges"])]
+            + [pp["P"]["N_ridges"] - 0.25],
+            dtype="float64",
+        )
+        y = np.array(
+            [0] + [((i + 1) % 2) * 2 - 1 for i in range(2 * pp["P"]["N_ridges"])] + [0],
+            dtype="float64",
+        )
+
+        line_type = []
+        line_type.append("R")
+
+        # reset leftmost point to 0
+        x_min = x[0]
+        x -= x_min
+
+        # rescale width
+        x_max = x[-1]
+        x *= pp["P"]["width"] / x_max
+
+        # set height of resistor
+        y *= pp["P"]["height"] / 2.0
+
+        # right side of resistor in center
+        x *= -1
+
+        # add side wire connections
+        x_list = [x]
+        # add side wire connections
+        y_list = [y]
+
+        # Source circle
+        theta = np.linspace(0, 1, pp["P"]["N_points"])
+        x_list += [0.25 + pp["P"]["height"] / 2 * np.cos(2 * np.pi * theta)]
+        y_list += [0.0 + pp["P"]["height"] / 2 * np.sin(2 * np.pi * theta)]
+        line_type.append("W")
+
+        # Source wiggle
+        theta = np.linspace(0, 0.5, int(pp["P"]["N_points"] / 2))
+        x_list += [0.25 + pp["P"]["height"] / 8 * np.sin(2 * np.pi * theta)]
+        y_list += [
+            -pp["P"]["height"] / 8 + pp["P"]["height"] / 8 * np.cos(2 * np.pi * theta)
+        ]
+        line_type.append("P")
+
+        x_list += [0.25 + pp["P"]["height"] / 8 * np.sin(-2 * np.pi * theta)]
+        y_list += [
+            pp["P"]["height"] / 8 + pp["P"]["height"] / 8 * np.cos(2 * np.pi * theta)
+        ]
+        line_type.append("P")
+
+        # Add wires
+        x_list += [np.array([-0.5, -pp["P"]["width"]])]
+        y_list += [np.array([0.0, 0.0])]
+        line_type.append("W")
+
+        x_list += [np.array([0, (0.5 - pp["P"]["height"]) / 2])]
+        y_list += [np.array([0.0, 0.0])]
+        line_type.append("W")
+
+        x_list += [np.array([0.5 - (0.5 - pp["P"]["height"]) / 2, 0.5])]
+        y_list += [np.array([0.0, 0.0])]
+        line_type.append("W")
+
+        # Add box
+        d = (0.5 - pp["P"]["width"]) / 2
+        x_list += [np.array([-0.5 + d, -0.5 + d, 0.5 - d, 0.5 - d, -0.5 + d])]
+        y_list += [
+            np.array(
+                [
+                    -pp["P"]["height"] / 2 - d / 2,
+                    pp["P"]["height"] / 2 + d / 2,
+                    pp["P"]["height"] / 2 + d / 2,
+                    -pp["P"]["height"] / 2 - d / 2,
+                    -pp["P"]["height"] / 2 - d / 2,
+                ]
+            )
+        ]
+        line_type.append("W")
+
+        if self.angle % 180.0 == 0.0:
+            return (
+                shift(x_list, self.x_plot_center),
+                shift(y_list, self.y_plot_center),
+                line_type,
+            )
+        if self.angle % 180.0 == 90.0:
+            return (
+                shift(y_list, self.x_plot_center),
+                shift(x_list, self.y_plot_center),
+                line_type,
+            )

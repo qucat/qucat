@@ -75,7 +75,7 @@ def generate_icon(comp, hover=False, selected=False):
     plt.close()
 
 
-for el in ["R", "C", "L", "J", "G"]:
+for el in ["R", "C", "L", "J", "G", "P"]:
     generate_icon(string_to_component(el, None, None, ""))
     generate_icon(string_to_component(el, None, None, ""), hover=True)
     generate_icon(string_to_component(el, None, None, ""), selected=True)
