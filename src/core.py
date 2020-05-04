@@ -2650,7 +2650,6 @@ class J(L):
 
     def _get_Ej(self, i, **kwargs):
         if i == 0:
-            print((hbar/2./e)**2/(self._get_value(i, **kwargs)*h))
             return (hbar/2./e)**2/(self._get_value(i, **kwargs)*h)
         else:
             return super(J, self)._get_value(i, **kwargs)
