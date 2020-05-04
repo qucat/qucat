@@ -411,5 +411,112 @@ class TestNetworkAnalysis(TestCaseAppended):
             )
 
 
+class TestIO(TestCaseAppended):
+    def parallel_ZRLC(self, Z0, Ri, Li, Ci, f, P=0):
+        # input is assumed to be in dBm
+        P_watt = np.power(10, ((P - 30) / 10))
+
+        w = f * 2 * np.pi
+        w0 = 1 / np.sqrt(Li * Ci)
+        # This is a more accurate replacement for
+        # Delta = w - w0
+        # TODO: proove
+        Delta = w0 / 2 * (w / w0 - w0 / w)
+
+        # Daniel 1.2.2
+        ki = Z0 / (Ri + Z0) * (1 / Ri / Ci + 1 / Z0 / Ci)
+        ke = Ri / Z0 * ki
+        k = ki + ke
+        Zin = Ri / (1 + 1j * w0 / ki * (w / w0 - w0 / w))
+        S11 = (Zin - Z0) / (Zin + Z0)
+
+        # Aspelmeyer review, Eq. (7), https://arxiv.org/pdf/1303.0733.pdf
+        # Probably assumes Delta << w0, replaced with accurate expression above
+        n = ke * P_watt / (Delta ** 2 + (k / 2) ** 2) / hbar / w
+        return S11, n
+
+    def test_port_instancation(self):
+        core.P(0, 1, 50, "S1")
+        core.P(0, 1, "S1")
+        with self.assertRaises(ValueError):
+            core.P(0, 1, 50)
+
+    def test_S11(self):
+
+        Ci = 100e-15
+        Li = 10e-9
+        Ri = 1e9
+        Z0 = 2e9
+
+        c = core.Network(
+            [
+                core.C(0, 1, Ci),
+                core.R(0, 1, Ri),
+                core.L(0, 1, Li),
+                core.P(0, 1, Z0, "p"),
+            ]
+        )
+
+        f, k, _, _ = c.f_k_A_chi()
+        fd = f[0] + 238 * k[0]  # random value close to resonance
+        for delta_k, Pd in [[0, -200], [0.16, -200], [4.87, -190], [276, -150]]:
+            fd = f[0] + delta_k * k[0]  # random value close to resonance
+
+            S11_qucat = c.S(
+                "p",
+                "p",
+                fd,
+                Pd,
+                drive_phase=0,
+                power_unit="dBm",
+                temperature=0,
+                temperature_unit="kelvin",
+                modes="all",
+                taylor=2,
+                excitations=3,
+            )
+            S11_ana, _ = self.parallel_ZRLC(Z0, Ri, Li, Ci, fd, Pd)
+            self.assertRelativelyClose(S11_qucat, S11_ana, digits=5)
+
+    def test_photon_number(self):
+
+        Ci = 100e-15
+        Li = 10e-9
+        Ri = 1e9
+        Z0 = 2e9
+
+        c = core.Network(
+            [
+                core.C(0, 1, Ci),
+                core.R(0, 1, Ri),
+                core.L(0, 1, Li),
+                core.P(0, 1, Z0, "p"),
+            ]
+        )
+
+        f, k, _, _ = c.f_k_A_chi()
+
+        for delta_k, Pd in [[0, -200], [0.16, -200], [4.87, -190], [276, -150]]:
+            fd = f[0] + delta_k * k[0]  # random value close to resonance
+
+            res = c.S(
+                "p",
+                "p",
+                fd,
+                Pd,
+                drive_phase=0,
+                power_unit="dBm",
+                temperature=0,
+                temperature_unit="kelvin",
+                modes="all",
+                taylor=2,
+                excitations=3,
+                full_output=True,
+            )
+            n_av_qucat = res["n_av"][0]
+            _, n_av_ana = self.parallel_ZRLC(Z0, Ri, Li, Ci, fd, Pd)
+            self.assertRelativelyClose(n_av_qucat, n_av_ana)
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -16,8 +16,42 @@ plt.ion()
 
 
 def cutoff_digits(f, digits):
-    float_format = "%%.%de" % digits
-    return float(float_format % (np.real(f))) + 1j * float(float_format % (np.imag(f)))
+
+    float_format_non_cpx = "%%.%de" % digits
+
+    r = np.real(f)
+    i = np.imag(f)
+
+    if i == 0 and r == 0:
+        return 0.0
+    elif i == 0:
+        return float(float_format_non_cpx % r)
+    elif r == 0:
+        return 1j * float(float_format_non_cpx % i)
+
+    lr = np.log10(np.absolute(np.real(f)))
+    li = np.log10(np.absolute(np.imag(f)))
+
+    if lr > li:
+        if lr - li > digits:
+            return float(float_format_non_cpx % r)
+        else:
+            digits_r = digits
+            digits_i = digits - int(lr - li)
+    elif lr < li:
+        if li - lr > digits:
+            return 1j * float(float_format_non_cpx % i)
+        else:
+            digits_r = digits - int(li - lr)
+            digits_i = digits
+    elif r == i:
+        digits_r = digits
+        digits_i = digits
+
+    float_format_r = "%%.%de" % digits_r
+    float_format_i = "%%.%de" % digits_i
+
+    return float(float_format_r % r) + 1j * float(float_format_i % i)
 
 
 class TestCaseAppended(unittest.TestCase):

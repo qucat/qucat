@@ -1,5 +1,4 @@
 from typing import Iterable, List
-
 import sympy as sp
 from sympy.utilities.lambdify import lambdify
 import numpy as np
@@ -15,6 +14,16 @@ import matplotlib.pyplot as plt
 import time
 from warnings import warn
 import io
+
+
+def import_and_setup_qutip():
+    # TODO: try and import, if cannot,
+    # link to QuTiP installation page
+    global qt
+    import qutip as qt
+
+    qt.settings.auto_tidyup = False
+
 
 try:
     from ._constants import *
@@ -767,17 +776,15 @@ class Qcircuit(object):
         self.hamiltonian_modes = modes
         self.hamiltonian_excitations = excitations
 
-        # TODO: try and import, if cannot,
-        # link to QuTiP installation page
-        from qutip import destroy, qeye, tensor
+        import_and_setup_qutip()
 
         # Build annihilation operators
         annihilation_operators = []
-        qeye_list = [qeye(n) for n in excitations]
+        qeye_list = [qt.qeye(n) for n in excitations]
         for index, mode in enumerate(self.hamiltonian_modes):
             a_to_tensor = deepcopy(qeye_list)
-            a_to_tensor[index] = destroy(excitations[index])
-            a = tensor(a_to_tensor)
+            a_to_tensor[index] = qt.destroy(excitations[index])
+            a = qt.tensor(a_to_tensor)
             annihilation_operators.append(a)
         self.a = annihilation_operators
 
@@ -887,6 +894,7 @@ class Qcircuit(object):
         modes="all",
         taylor=2,
         excitations=6,
+        full_output=False,
         **kwargs
     ):
         r"""Scattering parameters. 
@@ -923,13 +931,12 @@ class Qcircuit(object):
                     of modes considered. For example if ``modes = [0,1]`` and
                     ``excitations = [5,10]``, then we will consider
                     5 excitation levels for mode 0 and 10 for mode 1.
-        return_ops: Boolean, optional
-                    If set to True, a list of the annihilation operators
-                    will be returned along with the hamiltonian in the form
-                    ``<Hamiltonian>, <list of operators>``. 
-                    The form of the return is then ``H,[a_0,a_1,..]``
-                    where ``a_i`` is the annihilation operator of the
-                    i-th considered mode, a QuTiP Qobj
+        full_output: Boolean, optional
+                    TODO: add maybe more output info, give more info on dict construction
+                    If set to True (default is False), 
+                    will return a dictionary containing the
+                    scattering parameters, steady-state density matrix, 
+                    average photon-number in the different modes, ..
         kwargs:     
                     Values for un-specified circuit components, 
                     ex: ``L=1e-9``.
@@ -979,13 +986,13 @@ class Qcircuit(object):
                 H_bare - drive_frequencies * self.a[index].dag() * self.a[index]
             )
 
-        from qutip import steadystate, expect, commutator
+        import_and_setup_qutip()
 
         # Using the scipy solver to avoid the
         # "access violation reading 0xFFFFFFFFFFFFFFFF" error
         # when using the mkl solver
         # TODO: get to the bottom of this issue
-        rho = steadystate(H_bare_rot + H_drive, c_ops, solver="scipy")
+        rho = qt.steadystate(H_bare_rot + H_drive, c_ops, solver="scipy")
 
         I_out_operator = 0
         for index, mode in enumerate(self.hamiltonian_modes):
@@ -996,15 +1003,30 @@ class Qcircuit(object):
                 * 1j
                 / (1 / 2 / pi)  # 1/hbar in our units where h=1
                 / R_out_value
-                * commutator(H_bare, self.a[index].dag())
+                * qt.commutator(H_bare, self.a[index].dag())
             )
 
-        I_out = expect(rho, I_out_operator)
+        I_out = qt.expect(rho, I_out_operator)
 
         if R_in == R_out:
-            return -1 + (R_out_value * I_out) / (R_in_value * I_in)
+            S_parameter = -1 + (R_out_value * I_out) / (R_in_value * I_in)
         else:
-            return (R_out_value * I_out) / (R_in_value * I_in)
+            S_parameter = (R_out_value * I_out) / (R_in_value * I_in)
+
+        if full_output:
+            # modes not considered in the simulation have no occupation
+            n_av = [0 for n in range(len(k))]
+            for index, mode in enumerate(self.hamiltonian_modes):
+                n_av[index] = qt.expect(rho, self.a[index].dag() * self.a[index])
+
+            return {
+                "rho": rho,
+                "n_av": n_av,
+                # TODO: add all other easily optainable scattering parameters too
+                "S": S_parameter,
+            }
+        else:
+            return S_parameter
 
     @refuse_vectorize_kwargs(exclude=["plot", "return_fig_ax"])
     def show(self, plot=True, return_fig_ax=False, **kwargs):
