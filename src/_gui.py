@@ -19,6 +19,8 @@ from copy import deepcopy
 import time
 import platform
 
+element_creation_keys = ["r", "c", "l", "j", "g", "w", "p"]
+
 
 def track_event(track_events_to, event, sequence):
     """Writes all details necessary to generate event to a file.
@@ -3134,12 +3136,8 @@ class W(TwoNodeElement):
         self.canvas.bind(
             "<Escape>", lambda event: self.abort_creation(event, rerun_command=False)
         )
-        self.canvas.bind("r", self.abort_creation)
-        self.canvas.bind("l", self.abort_creation)
-        self.canvas.bind("c", self.abort_creation)
-        self.canvas.bind("j", self.abort_creation)
-        self.canvas.bind("w", self.abort_creation)
-        self.canvas.bind("g", self.abort_creation)
+        for s in element_creation_keys:
+            self.canvas.bind(s, self.abort_creation)
 
     def start_line(self, event):
         """
@@ -3549,12 +3547,8 @@ class Component(TwoNodeElement):
         self.canvas.bind(
             "<Escape>", lambda event: self.abort_creation(event, rerun_command=False)
         )
-        self.canvas.bind("r", self.abort_creation)
-        self.canvas.bind("l", self.abort_creation)
-        self.canvas.bind("c", self.abort_creation)
-        self.canvas.bind("j", self.abort_creation)
-        self.canvas.bind("w", self.abort_creation)
-        self.canvas.bind("g", self.abort_creation)
+        for s in element_creation_keys:
+            self.canvas.bind(s, self.abort_creation)
         self.canvas.bind(
             "<Left>", lambda event: self.init_create_component(event, angle=WEST)
         )
