@@ -76,6 +76,8 @@ def string_to_component(s, *arg, **kwarg):
         return L(*arg, **kwarg)
     elif s == 'J':
         return J(*arg, **kwarg)
+    elif s == 'D':
+        return D(*arg, **kwarg)
     elif s == 'C':
         return C(*arg, **kwarg)        
     elif s == 'G':
@@ -95,7 +97,7 @@ class Qcircuit(object):
         junctions (list): List of junction objects present in the circuit
         capacitors (list): List of capacitor objects present in the circuit
         netlist (list): List of all components present in the circuit
-        ref_elt (J or L): list of junction or inductor component used as a reference for the calculation 
+        ref_elt (J or L or D): list of junction or inductor component used as a reference for the calculation 
                         of zero-point fluctations, each index of the list corresponds to a different mode
     """
 
@@ -2545,7 +2547,7 @@ class J(L):
 
     def _get_value(self, i, **kwargs):
         # Returns the Josephson inductance
-        value = super(J, self)._get_value(i, **kwargs)
+        value = super(J, self)._get_value(0, **kwargs) #Only 1 value specified
         if (self.use_E == False) and (self.use_I == False):
             return value
         elif (self.use_E == True) and (self.use_I == False):
@@ -2557,7 +2559,7 @@ class J(L):
         else:
             raise ValueError("Cannot set both use_E and use_I to True")
 
-    def _get_Ej(self, **kwargs):
+    def _get_Ej(self, i, **kwargs):
         return (hbar/2./e)**2/(self._get_value(0, **kwargs)*h)
 
     def _set_component_lists(self):
@@ -2597,7 +2599,7 @@ class J(L):
 
         For more details, see https://arxiv.org/pdf/1908.10342.pdf
         '''
-        return self._get_Ej(**kwargs)/2*np.absolute(self.zpf(mode,quantity='flux',**kwargs))**4
+        return self._get_Ej(i, **kwargs)/2*np.absolute(self.zpf(mode,quantity='flux',**kwargs))**4
 
 
     def _draw(self):
@@ -2628,12 +2630,12 @@ class J(L):
         if self.angle%180. == 90.:
             return shift(y, self.x_plot_center), shift(x, self.y_plot_center), line_type
         
-class J(L):
+class D(L):
     
 
             
     def __init__(self, node_minus, node_plus, *args):
-        super(J, self).__init__(node_minus, node_plus, *args)
+        super(D, self).__init__(node_minus, node_plus, *args)
         self.unit = 'Hz'
 
 
@@ -2641,7 +2643,7 @@ class J(L):
 
         
     def _get_value(self, i, **kwargs):
-        value = super(J, self)._get_value(i, **kwargs)
+        value = super(D, self)._get_value(i, **kwargs)
 
         L = (hbar/2./e)**2/(value*h)  # E is assumed to be provided in Hz
         return L
@@ -2651,10 +2653,10 @@ class J(L):
         if i == 0:
             return (hbar/2./e)**2/(self._get_value(i, **kwargs)*h)
         else:
-            return super(J, self)._get_value(i, **kwargs)
+            return super(D, self)._get_value(i, **kwargs)
     
     def _set_component_lists(self):
-        super(J, self)._set_component_lists()
+        super(D, self)._set_component_lists()
         self._circuit.junctions.append(self)
         
     
@@ -2738,19 +2740,19 @@ class J(L):
         line_type = []
         x = [
             np.array([0., 1.]),
-            np.array([(1.-pp['J']['width'])/2.,
-                      (1.+pp['J']['width'])/2.]),
-            np.array([(1.-pp['J']['width'])/2.,
-                      (1.+pp['J']['width'])/2.])
+            np.array([(1.-pp['D']['width'])/2.,
+                      (1.+pp['D']['width'])/2.]),
+            np.array([(1.-pp['D']['width'])/2.,
+                      (1.+pp['D']['width'])/2.])
         ]
         y = [
             np.array([0., 0.]),
-            np.array([-1., 1.])*pp['J']['width']/2.,
-            np.array([1., -1.])*pp['J']['width']/2.
+            np.array([-1., 1.])*pp['D']['width']/2.,
+            np.array([1., -1.])*pp['D']['width']/2.
         ]
         line_type.append('W')
-        line_type.append('J')
-        line_type.append('J')
+        line_type.append('D')
+        line_type.append('D')
 
         # center in x and y
         x = shift(x, -1./2.)

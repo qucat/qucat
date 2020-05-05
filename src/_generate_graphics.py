@@ -45,6 +45,8 @@ def generate_icon(comp, hover=False, selected=False):
         pp['L']['lw'] += pp['hover_increment']
         pp['R']['lw'] += pp['hover_increment']
         pp['J']['lw'] += pp['hover_increment']
+        pp['D']['lw'] += pp['hover_increment']
+
         state_string = '_hover_selected'
         ax.add_patch(Rectangle(*rect_args, edgecolor=blue, **rect_kwargs))
     elif hover:
@@ -53,6 +55,7 @@ def generate_icon(comp, hover=False, selected=False):
         pp['L']['lw'] += pp['hover_increment']
         pp['R']['lw'] += pp['hover_increment']
         pp['J']['lw'] += pp['hover_increment']
+        pp['D']['lw'] += pp['hover_increment']
         state_string = '_hover'
         # ax.add_patch(Rectangle(*rect_args,edgecolor=lighter_blue,**rect_kwargs))
     elif selected:
