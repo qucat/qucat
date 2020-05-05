@@ -1378,7 +1378,7 @@ class GUI(Qcircuit):
         netlist = []
         with open(filename, 'r') as f:
             for el in f:
-                el = el.replace('\n', '')
+                el = el.replace('\n', '').replace(' ', '')
                 el = el.split(";")
                 if el[3] == '':
                     v = None
