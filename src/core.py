@@ -2652,6 +2652,8 @@ class D(L):
     def _get_Ej(self, i, **kwargs):
         if i == 0:
             return (hbar/2./e)**2/(self._get_value(i, **kwargs)*h)
+        elif i == 2:
+            return -super(D, self)._get_value(i, **kwargs)
         else:
             return super(D, self)._get_value(i, **kwargs)
     
