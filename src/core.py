@@ -594,7 +594,7 @@ class Qcircuit(object):
                         Ks[i, j] += 2. * np.sqrt(As[k][i]*As[k][j])
         return Ks
 
-    @vectorize_kwargs
+    @vectorize_kwargs(exclude = ['mode1', 'mode2', 'mode3'] )
     def three_waves(self, mode1, mode2, mode3, **kwargs):
         # Compute three terms per junction ``As``
         # where ``As[j,m1, m2, m3]`` corresponds to the contribution of junction ``j``
@@ -2658,7 +2658,7 @@ class D(L):
             return super(D, self)._get_value(i, **kwargs)
     
     def _set_component_lists(self):
-        super(D, self)._set_component_lists()
+        super(L, self)._set_component_lists()
         self._circuit.junctions.append(self)
         
     
