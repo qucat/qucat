@@ -1392,7 +1392,7 @@ class GUI(Qcircuit):
                 if el[4] == '':
                     l = None
                 else:                    
-                    l = el[4][1:-1].split(",")
+                    l = el[4].split(",")
 
 
 

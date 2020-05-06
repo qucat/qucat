@@ -3539,7 +3539,7 @@ class RequestValueLabelWindow(tk.Toplevel):
 
         elif isinstance(self.component,D):
             self.value_string = 'Energy'
-            info_text = 'Specify a list of three labels for the dipole (the 2nd, 3rd and 4th derivatives of the inductance energy)'
+            info_text = "Specify at least three labels separated by ',' for the dipole (the 2nd, 3rd and 4th derivatives of the inductance energy)"
             info_text += '\nDo not specify any value, they have to be passed as kwargs in further computations'
         elif isinstance(self.component,L):
             self.value_string = 'Inductance'
