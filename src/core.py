@@ -821,9 +821,14 @@ class Qcircuit(object):
 
         for j, junction in enumerate(self.junctions):
             n = 2
-            EJ = (hbar/2./e)**2/(junction._get_value(0, **kwargs)*h)
             while 2*n <= taylor:
+                EJ = junction._get_Ej(2*n-2, **kwargs)
                 H += (-1)**(n+1)*EJ/factorial(2*n)*phi[j]**(2*n)
+                n += 1
+            n = 1
+            while 2*n+1 <= taylor:
+                EJ = junction._get_Ej(2*n-1, **kwargs)
+                H += EJ/factorial(2*n+1)*phi[j]**(2*n+1)
                 n += 1
 
         if return_ops:
@@ -2097,13 +2102,13 @@ class Parallel(Circuit):
 
 class Component(Circuit):
 
-    def __init__(self, node_minus, node_plus, *args):
+    def __init__(self, node_minus, node_plus, *args, n_taylor = 3):
         super(Component, self).__init__(node_minus, node_plus)
         self.label = None
         self.value = None
         self.__flux = None
-        self.labels = [None for c in range(3)]
-        self.values = [None for c in range(3)]
+        self.labels = [None for c in range(n_taylor)]
+        self.values = [None for c in range(n_taylor)]
         
         if len(args)==0:
             raise ValueError("Specify either a value or a label")
@@ -2560,7 +2565,7 @@ class J(L):
             raise ValueError("Cannot set both use_E and use_I to True")
 
     def _get_Ej(self, i, **kwargs):
-        return (hbar/2./e)**2/(self._get_value(0, **kwargs)*h)
+        return (hbar/2./e)**2/(self._get_value(0, **kwargs)*h)*((i+1)%2)
 
     def _set_component_lists(self):
         super(L, self)._set_component_lists()
@@ -2599,7 +2604,7 @@ class J(L):
 
         For more details, see https://arxiv.org/pdf/1908.10342.pdf
         '''
-        return self._get_Ej(i, **kwargs)/2*np.absolute(self.zpf(mode,quantity='flux',**kwargs))**4
+        return self._get_Ej(0, **kwargs)/2*np.absolute(self.zpf(mode,quantity='flux',**kwargs))**4
 
 
     def _draw(self):
@@ -2643,17 +2648,15 @@ class D(L):
 
         
     def _get_value(self, i, **kwargs):
-        value = super(D, self)._get_value(i, **kwargs)
+        value = super(D, self)._get_value(0, **kwargs)
 
         L = (hbar/2./e)**2/(value*h)  # E is assumed to be provided in Hz
         return L
         
 
     def _get_Ej(self, i, **kwargs):
-        if i == 0:
-            return (hbar/2./e)**2/(self._get_value(i, **kwargs)*h)
-        elif i == 2:
-            return -super(D, self)._get_value(i, **kwargs)
+        if i%2 == 0:
+            return (-1)**(i//2) * super(D, self)._get_value(i, **kwargs) # to match the cosine developement of a Josephson junction in hamiltonian
         else:
             return super(D, self)._get_value(i, **kwargs)
     
