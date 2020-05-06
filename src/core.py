@@ -2102,13 +2102,13 @@ class Parallel(Circuit):
 
 class Component(Circuit):
 
-    def __init__(self, node_minus, node_plus, *args, n_taylor = 3):
+    def __init__(self, node_minus, node_plus, *args):
         super(Component, self).__init__(node_minus, node_plus)
         self.label = None
         self.value = None
         self.__flux = None
-        self.labels = [None for c in range(n_taylor)]
-        self.values = [None for c in range(n_taylor)]
+        self.labels = [None for c in range(10)]
+        self.values = [None for c in range(10)]
         
         if len(args)==0:
             raise ValueError("Specify either a value or a label")
