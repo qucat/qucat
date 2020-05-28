@@ -10,6 +10,9 @@ If you wish to contribute to this project, if you need support to use
 this software in your project, or if you simply wish to express your support,
 don't hesitate to send Mario an email at mario.gely@qucat.org.
 
+If you have questions about installing or using QuCAT, please ask a question on
+`our forum <https://groups.google.com/forum/#!forum/qucat>`_.
+
 If you are using the software and think you have found a bug, or if you
 would like to see additional features developped, please use
 our dedicated platform `at this link <https://github.com/qucat/qucat/issues/new/choose>`_.
