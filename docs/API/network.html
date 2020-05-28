@@ -226,14 +226,14 @@ The disadvantage is that one cannot use the plotting tools <code class="xref py 
 on one end and connected at the other end through a capacitor to a 50 Ohm resistor to ground.</p>
 <img alt="../_images/Network_example_circuit.png" src="../_images/Network_example_circuit.png" />
 <p>Import the Network class, and the components we will need</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">qucat</span> <span class="k">import</span> <span class="n">Network</span><span class="p">,</span> <span class="n">R</span><span class="p">,</span><span class="n">L</span><span class="p">,</span><span class="n">C</span><span class="p">,</span><span class="n">J</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">qucat</span> <span class="kn">import</span> <span class="n">Network</span><span class="p">,</span> <span class="n">R</span><span class="p">,</span><span class="n">L</span><span class="p">,</span><span class="n">C</span><span class="p">,</span><span class="n">J</span>
 </pre></div>
 </div>
 <p>Note that the components (R,L,C,J) accept node indexes as their two first arguments,
 here we will use the node <code class="docutils literal notranslate"><span class="pre">0</span></code> to designate ground. The last arguments should be
 a label (<code class="docutils literal notranslate"><span class="pre">str</span></code>) or a value (<code class="docutils literal notranslate"><span class="pre">float</span></code>) or both, the order in which these
 arguments are provided are unimportant.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">circuit</span> <span class="o">=</span> <span class="n">Network</span><span class="p">([</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">circuit</span> <span class="o">=</span> <span class="n">Network</span><span class="p">([</span>
 <span class="gp">... </span><span class="n">L</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="s1">&#39;L&#39;</span><span class="p">,</span><span class="mf">1e-9</span><span class="p">),</span> <span class="c1"># Add the inductor between ground and node 1</span>
 <span class="gp">... </span><span class="n">C</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mf">100e-15</span><span class="p">,</span><span class="s1">&#39;C&#39;</span><span class="p">),</span> <span class="c1"># Add the capacitor</span>
 <span class="gp">... </span><span class="n">J</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="s1">&#39;L_J&#39;</span><span class="p">),</span> <span class="c1"># Add the junction</span>
@@ -250,7 +250,7 @@ changing the value of a component and re-calculating a quantity
 such as the frequency or anharmonicity can be performed much faster.</p>
 <p>For example, we can compute the eigenfrequency, loss-rates, anharmonicity, and Kerr parameters of the circuit
 for a specific junction inductance.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">circuit</span><span class="o">.</span><span class="n">f_k_A_chi</span><span class="p">(</span><span class="n">L_J</span> <span class="o">=</span> <span class="mf">1e-9</span><span class="p">)</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">circuit</span><span class="o">.</span><span class="n">f_k_A_chi</span><span class="p">(</span><span class="n">L_J</span> <span class="o">=</span> <span class="mf">1e-9</span><span class="p">)</span>
 </pre></div>
 </div>
 </dd></dl>
