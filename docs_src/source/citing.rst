@@ -7,7 +7,7 @@ Citing this project
 As with anyone in academics, the life and death of QuCAT developpers is determined entirely by citations and paper count. 
 Therefore, if you find QuCAT useful, please consider citing this project as:
 
-Mario F. Gely and Gary A. Steele, QuCAT: Quantum Circuit Analyzer Tool in Python. Preprint at https://arxiv.org/pdf/1908.10342.pdf (2019).
+Mario F. Gely and Gary A. Steele. "QuCAT: quantum circuit analyzer tool in Python." New Journal of Physics 22.1 (2020): 013025.
 
 This will also help us secure future funding supporting the development of this software. 
 
