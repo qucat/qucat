@@ -1,1 +1,0 @@
-RMDIR /s/q build & RMDIR /s/q dist & python setup.py clean & python setup.py sdist bdist_wheel & python -m twine upload --repository-url https://test.pypi.org/legacy/ dist/* & pip uninstall qucat & pip install --index-url https://test.pypi.org/simple/ --no-deps qucat
