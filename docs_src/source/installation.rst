@@ -4,6 +4,8 @@ Installation
 
 .. note:: QuCAT only supports python 3
 
+.. note:: If you don't succeed in installing QuCAT following the instructions below, ask for help on `our forum <https://groups.google.com/forum/#!forum/qucat>`_.
+
 Installing via pip
 ==================
 

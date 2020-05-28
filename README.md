@@ -9,6 +9,8 @@ QuCAT features an intuitive graphical or programmatical interface to create circ
 
 **If you find QuCAT useful, please consider citing it in your publications, see: https://qucat.org/citing.html.**
 
+If you have questions concerning the usage or installation of QuCAT, please ask questions on [our forum](https://groups.google.com/forum/#!forum/qucat).
+
 Installation
 ------------
 
