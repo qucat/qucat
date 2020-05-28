@@ -6,7 +6,7 @@ Contributing to QuCAT
 
 You can submit pull requests `on our Github <https://github.com/qucat/qucat/>`_, or contact Mario if you want to bring big contributions to the project.
 
-If you implement any new features in QuCAT, any new function should contain
+If you implement any new features in QuCAT, any new function should contain 
 a docstring and some comments,
 tests should be implemented to automatically verify your contribution,
 and additional online documentation may be needed.

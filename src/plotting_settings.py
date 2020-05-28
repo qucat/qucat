@@ -3,10 +3,10 @@ from copy import deepcopy
 # Colors
 gray = "#666666"
 light_black = "#1c1c1c"
-blue = "#7b9ff9"
-light_blue = "#baceff"
-lighter_blue = "#cfdbf7"
-orange = "#ee8467"
+blue = '#7b9ff9'
+light_blue = '#baceff'
+lighter_blue = '#cfdbf7'
+orange = '#ee8467'
 
 #################################
 # Parameters for the show function
@@ -16,18 +16,43 @@ plotting_parameters_show = {
     "color": light_black,
     "x_fig_margin": 1,
     "y_fig_margin": 0.5,
-    "C": {"gap": 0.2, "height": 0.25, "lw": 6},
-    "J": {"width": 0.22, "lw": 6},
-    "L": {"width": 0.7, "height": 0.25, "N_points": 150, "N_turns": 5, "lw": 2},
-    "R": {"width": 0.6, "height": 0.25, "N_points": 150, "N_ridges": 4, "lw": 2},
-    "P": {"side_wire_width": 0.25},
-    "node": {"diameter": 12},
-    "W": {"lw": 1},
+    "C": {
+        "gap": 0.2,
+        "height": 0.25,
+        "lw": 6
+    },
+    "J": {
+        "width": 0.22,
+        "lw": 6
+    },
+    "L": {
+        "width": 0.7,
+        "height": 0.25,
+        "N_points": 150,
+        "N_turns": 5,
+        "lw": 2
+    },
+    "R": {
+        "width": 0.6,
+        "height": 0.25,
+        "N_points": 150,
+        "N_ridges": 4,
+        "lw": 2
+    },
+    "P": {
+        "side_wire_width": 0.25
+    },
+    "node": {
+        "diameter": 12
+    },
+    "W": {
+        "lw": 1
+    },
     "label": {
         "fontsize": 10,
-        "text_position_horizontal": [0.0, -0.22],
-        "text_position_vertical": [0.22, 0.0],
-    },
+        "text_position_horizontal": [0.,-0.22],
+        "text_position_vertical": [0.22,0.]
+    }
 }
 
 #################################
@@ -35,7 +60,7 @@ plotting_parameters_show = {
 #################################
 
 pp = deepcopy(plotting_parameters_show)
-pp["y_fig_margin"] = 0.7
+pp["y_fig_margin"]= 0.7
 
 scale = 1.5
 pp["figsize_scaling"] = scale
@@ -46,27 +71,27 @@ pp["L"]["width"] /= scale
 pp["L"]["height"] /= scale
 pp["R"]["width"] /= scale
 pp["R"]["height"] /= scale
-pp["label"] = {
-    "fontsize": 10,
-    "text_position_horizontal": [0.0, -pp["C"]["height"] / 2 - 0.07],
-    "text_position_vertical": [pp["C"]["height"] / 2 + 0.05, -0.05],
-}
-pp["normal_mode_label"] = {
-    "fontsize": 10,
-    "color": blue,
-    "y_arrow": pp["C"]["height"] / 2 + 0.08,
-    "text_position_horizontal": [0.0, pp["C"]["height"] / 2 + 0.25],
-    "text_position_vertical": [-pp["C"]["height"] / 2 - 0.15, +0.07],
-}
-pp["normal_mode_arrow"] = {
-    "min_width": 0.1,
-    "max_width": 0.4,
-    "min_lw": 1,
-    "max_lw": 3,
-    "min_head": 0.05,
-    "max_head": 0.071,
-    "color": blue,
-}
+pp["label"]= {
+        "fontsize": 10,
+        "text_position_horizontal": [0.,-pp["C"]["height"]/2-0.07],
+        "text_position_vertical": [pp["C"]["height"]/2+0.05,-0.05]
+    }
+pp["normal_mode_label"]= {
+        "fontsize": 10,
+        "color": blue,
+        "y_arrow": pp["C"]["height"]/2+0.08,
+        "text_position_horizontal": [0.,pp["C"]["height"]/2+0.25],
+        "text_position_vertical": [-pp["C"]["height"]/2-0.15,+0.07]
+    }
+pp["normal_mode_arrow"]= {
+        "min_width": 0.1,
+        "max_width": 0.4,
+        "min_lw": 1,
+        "max_lw": 3,
+        "min_head": 0.05,
+        "max_head": 0.071,
+        "color": blue
+    }
 plotting_parameters_normal_modes = pp
 
 #######################################
@@ -74,21 +99,44 @@ plotting_parameters_normal_modes = pp
 #######################################
 
 plotting_parameters_GUI = {
-    "hover_increment": 1.5,
-    "rect_args": [(0.1, -0.22), 0.8, 0.44],
-    "rect_kwargs": {"linewidth": 2, "facecolor": "none"},
-    "element_width": 1.0,
-    "element_width": 1.0,
-    "element_height": 1.0,
-    "margin": 0.0,
-    "figsize_scaling": 1,
-    "color": [0.15, 0.15, 0.15],
-    "x_fig_margin": 0.0,
-    "y_fig_margin": 0.25,
-    "C": {"gap": 0.2, "height": 0.25, "lw": 6},
-    "J": {"width": 0.25, "lw": 6},
-    "L": {"width": 0.7, "height": 0.25, "N_points": 150, "N_turns": 5, "lw": 2},
-    "R": {"width": 0.6, "height": 0.25, "N_points": 150, "N_ridges": 4, "lw": 2},
-    "P": {"side_wire_width": 0.25},
-    "W": {"lw": 2},
-}
+        "hover_increment": 1.5,
+        "rect_args": [(0.1,-0.22),0.8,0.44],
+        "rect_kwargs": {'linewidth':2,'facecolor':'none'},
+        "element_width": 1.,
+        "element_width": 1.,
+        "element_height": 1.,
+        "margin": 0.,
+        "figsize_scaling": 1,
+        "color": [0.15, 0.15, 0.15],
+        "x_fig_margin": 0.,
+        "y_fig_margin": 0.25,
+        "C": {
+            "gap": 0.2,
+            "height": 0.25,
+            "lw": 6
+        },
+        "J": {
+            "width": 0.25,
+            "lw": 6
+        },
+        "L": {
+            "width": 0.7,
+            "height": 0.25,
+            "N_points": 150,
+            "N_turns": 5,
+            "lw": 2
+        },
+        "R": {
+            "width": 0.6,
+            "height": 0.25,
+            "N_points": 150,
+            "N_ridges": 4,
+            "lw": 2
+        },
+        "P": {
+            "side_wire_width": 0.25
+        },
+        "W": {
+            "lw": 2
+        }
+    }

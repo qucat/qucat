@@ -1,45 +1,8 @@
 .. _commenting:
 
 =========================
-Formatting
+Commenting and docstrings 
 =========================
-
-Formatting
-----------
-
-Your code should conform to the Black code style.
-By using `Black <https://black.readthedocs.io/en/stable/>`_,
-the formatting can
-be performed automatically at each commit.
-To set this up,
-
-``pip install black==19.10b0 pre-commit``
-
-or
-
-``pip install -r requirements-dev.txt``
-
-then navigate to the root of the repository and run
-
-``pre-commit install``
-
-Now each time you commit, your code will automatically be formatted in the correct way.
-To check if the formatting is correct, you can always run
-
-``black --check src/``
-
-Aternatively, one can run the Black formatter manually
-on all source files before each commit
-
-``black src/``
-
-.. note:: The specifics of the formatting are determined by the 
-    version of Black which is used. 
-    Make sure you use the version specified above or
-    in the requirements-dev.txt
-
-Comments
---------
 
 Commenting your code should come in two flavors.
 
@@ -64,7 +27,7 @@ As an example, this docstring
 
 .. literalinclude:: example_docstring.txt
    :language: python
-
+    
 
 Translates to the following website content
 

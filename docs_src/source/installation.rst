@@ -18,15 +18,15 @@ The latest source code is available on our Github repository
 
 `<https://github.com/qucat/qucat>`_
 
-To install from source, download or clone the source code,
-open a terminal and navigate to the qucat folder, and run
+To install from source, download or clone the source code, 
+open a terminal and navigate to the qucat folder, and run 
 ``pip install .``
 
 
 Requirements
 ============
 
-Qucat depends on several open-source libraries.
+Qucat depends on several open-source libraries. 
 The following packages are currently required:
 
 * Python 3, tested on version 3.7
@@ -42,6 +42,6 @@ Performance of Sympy and thus QuCAT is enhanced by using
 
 * `gmpy2 <https://gmpy2.readthedocs.io/en/latest/>`_
 
-We recommend installing python and these packages by
-downloading and installing
+We recommend installing python and these packages by 
+downloading and installing 
 `Anaconda <https://www.anaconda.com/distribution/>`_.
