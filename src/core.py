@@ -880,7 +880,16 @@ class Qcircuit(object):
             return H, self.a
         return H
 
-    @vectorize_kwargs(exclude=["modes", "taylor", "excitations", "return_ops"])
+    @vectorize_kwargs(
+        exclude=[
+            "modes",
+            "taylor",
+            "excitations",
+            "return_ops",
+            "temperature",
+            "temperature_unit",
+        ]
+    )
     def S(
         self,
         port_out_label,
@@ -970,8 +979,14 @@ class Qcircuit(object):
         I_in = R_in._P_to_I(drive_power, drive_phase, power_unit)
 
         # TODO: parse temperature
-        if temperature == 0:
-            nth = [0 for i in range(len(self.hamiltonian_modes))]
+        # options for the moment: list of nth, or float 0
+        try:
+            temperature = list(temperature)
+            nth = temperature
+        except TypeError:
+            # only single value was given
+            if temperature == 0:
+                nth = [0 for i in range(len(self.hamiltonian_modes))]
 
         H_drive = R_in._drive_hamiltonian(I_in, **kwargs)
 
