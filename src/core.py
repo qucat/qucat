@@ -984,12 +984,9 @@ class Qcircuit(object):
                 c_ops.append(np.sqrt(k[mode] * nth[index]) * self.a[index].dag())
 
         # TODO: move to rotating frame (using only harmonic modes for the moment)
+        H_bare_rot = H_bare
         for index, mode in enumerate(self.hamiltonian_modes):
-            H_bare_rot = (
-                H_bare - drive_frequencies * self.a[index].dag() * self.a[index]
-            )
-
-        import_and_setup_qutip()
+            H_bare_rot -= drive_frequencies * self.a[index].dag() * self.a[index]
 
         # Using the scipy solver to avoid the
         # "access violation reading 0xFFFFFFFFFFFFFFFF" error
