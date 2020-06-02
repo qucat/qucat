@@ -963,6 +963,9 @@ class Qcircuit(object):
         # Un-driven hamiltonian
         H_bare = self.hamiltonian(modes, taylor, excitations, **kwargs)
 
+        # Rotating wave approximation
+        H_bare = qt.Qobj(np.diag(H_bare.diag()), dims=H_bare.dims)
+
         # Current phasor of the input
         I_in = R_in._P_to_I(drive_power, drive_phase, power_unit)
 
