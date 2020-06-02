@@ -883,8 +883,8 @@ class Qcircuit(object):
     @vectorize_kwargs(exclude=["modes", "taylor", "excitations", "return_ops"])
     def S(
         self,
-        R_out_label,
-        R_in_label,
+        port_out_label,
+        port_in_label,
         drive_frequencies,
         drive_power,
         drive_phase=0,
@@ -955,8 +955,8 @@ class Qcircuit(object):
         TODO: document input-output theory
         TODO: implement aRWA (actually not adaptive, but call it optimal)
         """
-        R_in = self.components[R_in_label]
-        R_out = self.components[R_out_label]
+        R_in = self.components[port_in_label]
+        R_out = self.components[port_out_label]
         R_in_value = R_in._get_value(**kwargs)
         R_out_value = R_out._get_value(**kwargs)
 
