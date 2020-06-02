@@ -880,7 +880,7 @@ class Qcircuit(object):
             return H, self.a
         return H
 
-    @refuse_vectorize_kwargs(exclude=["modes", "taylor", "excitations", "return_ops"])
+    @vectorize_kwargs(exclude=["modes", "taylor", "excitations", "return_ops"])
     def S(
         self,
         R_out_label,
