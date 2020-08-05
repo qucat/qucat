@@ -2733,7 +2733,7 @@ class D(L):
         '''
         return self._get_Ej(1, **kwargs)*(self.zpf(mode1,quantity='flux',**kwargs)
                                                        *self.zpf(mode2,quantity='flux',**kwargs)
-                                                       *self.zpf(mode3,quantity='flux',**kwargs))
+                                                       *np.conj(self.zpf(mode3,quantity='flux',**kwargs)))
 
     @vectorize_kwargs(exclude = ['mode'])
     def anharmonicity(self, mode, **kwargs):
