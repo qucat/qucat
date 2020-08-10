@@ -2171,14 +2171,22 @@ class Component(Circuit):
             
             if a in ["", '', ' ', 'None', None]:
                 pass
-            else:
+            #checks if a is a list of labels/values
+            elif type(a) in [list, tuple, np.ndarray]:
                 for i, c in enumerate(a):
                     if c is None:
                         pass
                     elif type(c) is str:
                         self.labels[i] = c
                     else:
-                        self.values[i] = c   
+                        self.values[i] = c
+            else:
+                if type(a) is str:
+                    self.labels[0] = a
+                    self.label = a
+                else:
+                    self.values[0] = a
+                    self.value = a
 
     def __hash__(self, i):
         if self.labels[i] is None:
