@@ -61,6 +61,7 @@ script:
 
   # Run tests
   - source activate test-environment
+  - pip install . # Make sure you have the right versions of all packages
   - pytest --cov=src
   - codecov
 

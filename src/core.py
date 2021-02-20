@@ -1,3 +1,14 @@
+import pkg_resources
+sympy_version = pkg_resources.get_distribution("sympy").version
+from distutils.version import StrictVersion
+if StrictVersion(sympy_version) > StrictVersion("1.6.1"):
+    msg = 'Your version of Sympy (%s) is too recent, and features '%sympy_version
+    msg += 'issues which render it unusable (see https://github.com/qucat/qucat/issues/79).\n'
+    msg += 'To keep using QuCAT downgrade to sympy v1.6.1 by uninstalling and reinstalling QuCAT with\n'
+    msg += 'pip uninstall qucat\n'
+    msg += 'pip install qucat'
+    raise(ImportError(msg))
+
 import sympy as sp
 from sympy.utilities.lambdify import lambdify
 import numpy as np
