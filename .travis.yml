@@ -61,7 +61,7 @@ script:
 
   # Run tests
   - source activate test-environment
-  - pip install qucat # Make sure you have the right versions of all packages
+  - pip install . # Make sure you have the right versions of all packages
   - pytest --cov=src
   - codecov
 
