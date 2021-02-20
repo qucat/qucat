@@ -1,5 +1,5 @@
 import setuptools
-from distutils.dir_util import remove_tree
+import pkg_resources
 
 setuptools.setup(
     name="qucat",
@@ -24,7 +24,7 @@ setuptools.setup(
         "numpy",
         "scipy",
         "matplotlib",
-        "sympy",
+        "sympy==1.6.1",
         "pillow",
     ],
 )
