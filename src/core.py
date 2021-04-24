@@ -2109,8 +2109,9 @@ class Component(Circuit):
 
         if self.value is None and self.label not in ['', ' ', 'None', None]:
             if self.label in self._circuit._no_value_components:
-                raise ValueError(
-                    "Two components may not have the same label '%s'" % self.label)
+                # raise ValueError(
+                #     "Two components may not have the same name %s" % self.label)
+                pass
             else:
                 self._circuit._no_value_components.append(self.label)
 
