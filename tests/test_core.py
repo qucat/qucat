@@ -69,7 +69,14 @@ class Other(TestCaseAppended):
         f,k,A,chi = circuit.f_k_A_chi()
         f_expected = 1/np.sqrt(L*C)/2/np.pi
         self.assertRelativelyClose(f_expected,f)
-        
+
+class Errors(TestCaseAppended):
+    def identical_labels(self):
+        with self.assertRaises(ValueError):
+            cir = core.Network([
+                core.L(0,1,'C'),
+                core.C(0,1,'C')])
+
 class TransmonResonator(TestCaseAppended):
 
     def parameters(self,Cj,Lj,Cc,Cr,Lr):
