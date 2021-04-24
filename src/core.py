@@ -192,8 +192,15 @@ class Qcircuit(object):
             if key in self._no_value_components:
                 kwargs[key]  = kwargs[key]
             else:
-                raise ValueError(
-                    '%s is not the label of a circuit element' % key)
+                if key in self.components:
+                    raise ValueError(
+                        f"A value for the component labelled '{key}' " 
+                        "has already been specified when building the circuit. "
+                        "To be able to change it, you should re-build the circuit "
+                        "without specifying its value." )
+                else:
+                    raise ValueError(
+                        '%s is not the label of a circuit element' % key)
 
         for label in self._no_value_components:
             try:
