@@ -1,14 +1,3 @@
-import pkg_resources
-sympy_version = pkg_resources.get_distribution("sympy").version
-from distutils.version import StrictVersion
-if StrictVersion(sympy_version) > StrictVersion("1.6.1"):
-    msg = 'Your version of Sympy (%s) is too recent, and features '%sympy_version
-    msg += 'issues which render it unusable (see https://github.com/qucat/qucat/issues/79).\n'
-    msg += 'To keep using QuCAT downgrade to sympy v1.6.1 by uninstalling and reinstalling QuCAT with\n'
-    msg += 'pip uninstall qucat\n'
-    msg += 'pip install qucat'
-    raise(ImportError(msg))
-
 import sympy as sp
 from sympy.utilities.lambdify import lambdify
 import numpy as np
@@ -203,8 +192,15 @@ class Qcircuit(object):
             if key in self._no_value_components:
                 kwargs[key]  = kwargs[key]
             else:
-                raise ValueError(
-                    '%s is not the label of a circuit element' % key)
+                if key in self.components:
+                    raise ValueError(
+                        f"A value for the component labelled '{key}' " 
+                        "has already been specified when building the circuit. "
+                        "To be able to change it, you should re-build the circuit "
+                        "without specifying its value." )
+                else:
+                    raise ValueError(
+                        '%s is not the label of a circuit element' % key)
 
         for label in self._no_value_components:
             try:
@@ -225,6 +221,10 @@ class Qcircuit(object):
                     Values for un-specified circuit components, 
                     ex: ``L=1e-9``.
         '''
+
+        # Check if the kwargs provided are correct
+        self._parse_kwargs(**kwargs)
+
         try:
             if kwargs == self._kwargs_previous:
                 # Avoid doing the same thing two
@@ -233,9 +233,6 @@ class Qcircuit(object):
         except AttributeError:
             pass
         self._kwargs_previous = kwargs
-        
-        # Check if the kwargs provided are correct
-        self._parse_kwargs(**kwargs)
 
         if len(self.resistors) == 0:
 

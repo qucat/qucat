@@ -50,6 +50,23 @@ class SeriesRLC(TestCaseAppended):
         cpx_w = (1j*C*R + np.sqrt(4*C*L - C**2*R**2))/(2.*C*L)
         self.assertRelativelyClose(2*np.imag(cpx_w)/2/np.pi,k)
 
+class Errors(TestCaseAppended):
+    def revaluing_labelled_valued_component_twice(self):
+        '''
+        Adressing last error appearing in issue #83
+        '''
+        cir = core.Network([
+            core.L(0,1,1),
+            core.C(0,1,1),
+            core.R(0,1,'R',1)])
+        try:
+            cir.loss_rates(R=1)
+        except Exception:
+            pass
+
+        with self.assertRaises(ValueError):
+            cir.loss_rates(R=1)
+
 class Other(TestCaseAppended):
 
     def multiplicity_removal(self):

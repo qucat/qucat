@@ -24,7 +24,7 @@ setuptools.setup(
         "numpy",
         "scipy",
         "matplotlib",
-        "sympy==1.6.1",
+        "sympy>=1.8",
         "pillow",
     ],
 )
