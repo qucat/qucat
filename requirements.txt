@@ -1,5 +1,1 @@
-numpy
-scipy
-matplotlib
-sympy
-pillow
+.
