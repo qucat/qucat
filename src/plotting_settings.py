@@ -25,10 +25,6 @@ plotting_parameters_show = {
         "width": 0.22,
         "lw": 6
     },
-    "D": {
-        "width": 0.22,
-        "lw": 6
-    },
     "L": {
         "width": 0.7,
         "height": 0.25,
@@ -71,7 +67,6 @@ pp["figsize_scaling"] = scale
 pp["C"]["gap"] /= scale
 pp["C"]["height"] /= scale
 pp["J"]["width"] /= scale
-pp["D"]["width"] /= scale
 pp["L"]["width"] /= scale
 pp["L"]["height"] /= scale
 pp["R"]["width"] /= scale
@@ -121,10 +116,6 @@ plotting_parameters_GUI = {
             "lw": 6
         },
         "J": {
-            "width": 0.25,
-            "lw": 6
-        },
-        "D": {
             "width": 0.25,
             "lw": 6
         },
