@@ -35,9 +35,6 @@ Master branch:
 [![Build Status](https://travis-ci.com/qucat/qucat.svg?branch=master)](https://travis-ci.com/qucat/qucat)
 [![codecov](https://codecov.io/gh/qucat/qucat/branch/master/graph/badge.svg)](https://codecov.io/gh/qucat/qucat)
 
-Development branch: [![Build Status](https://travis-ci.com/qucat/qucat.svg?branch=develop)](https://travis-ci.com/qucat/qucat)
-[![codecov](https://codecov.io/gh/qucat/qucat/branch/develop/graph/badge.svg)](https://codecov.io/gh/qucat/qucat)
-
 Contribute
 ----------
 
