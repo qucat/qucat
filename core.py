@@ -1,7 +1,6 @@
 import sympy as sp
 import scipy
-from sympy.utilities.lambdify import lambdify
-from sympy import Function
+J(from sympy import Function
 import numpy as np
 from numpy.polynomial.polynomial import Polynomial as npPoly
 from sympy.core.mul import Mul, Pow, Add
@@ -24,15 +23,11 @@ except ImportError:
     from _utility import *
     from plotting_settings import plotting_parameters_show,plotting_parameters_normal_modes
     
-<<<<<<< HEAD
-from sympy.physics.secondquant import Dagger, B, Bd
-=======
 from scipy.optimize import minimize as mini
 from numpy import cos, sin
->>>>>>> master
 
-    
 PROFILING = False
+
 def timeit(method):
     '''
     Decorator which prints the time 
@@ -65,13 +60,6 @@ def string_to_component(s, *arg, **kwarg):
     -------
     A component of type ``s``
     '''
-    
-    l = [c for c in arg]
-    for i,c in enumerate(arg):
-        if type(c) in [float, int]:
-            l[i] = [c]
-    arg = l
-            
     if s == 'W':
         return W(*arg, **kwarg)
     elif s == 'R':
@@ -101,7 +89,7 @@ class Qcircuit(object):
         junctions (list): List of junction objects present in the circuit
         capacitors (list): List of capacitor objects present in the circuit
         netlist (list): List of all components present in the circuit
-        ref_elt (J or L or D): list of junction or inductor component used as a reference for the calculation 
+        ref_elt (J or L): list of junction or inductor component used as a reference for the calculation 
                         of zero-point fluctations, each index of the list corresponds to a different mode
     """
 
@@ -216,15 +204,8 @@ class Qcircuit(object):
             if key in self._no_value_components:
                 kwargs[key]  = kwargs[key]
             else:
-                if key in self.components:
-                    raise ValueError(
-                        f"A value for the component labelled '{key}' " 
-                        "has already been specified when building the circuit. "
-                        "To be able to change it, you should re-build the circuit "
-                        "without specifying its value." )
-                else:
-                    raise ValueError(
-                        '%s is not the label of a circuit element' % key)
+                raise ValueError(
+                    '%s is not the label of a circuit element' % key)
 
         for label in self._no_value_components:
             try:
@@ -245,10 +226,6 @@ class Qcircuit(object):
                     Values for un-specified circuit components, 
                     ex: ``L=1e-9``.
         '''
-
-        # Check if the kwargs provided are correct
-        self._parse_kwargs(**kwargs)
-
         try:
             if kwargs == self._kwargs_previous:
                 # Avoid doing the same thing two
@@ -257,13 +234,16 @@ class Qcircuit(object):
         except AttributeError:
             pass
         self._kwargs_previous = kwargs
+        
+        # Check if the kwargs provided are correct
+        self._parse_kwargs(**kwargs)
 
         if len(self.resistors) == 0:
 
             # Compute the coefficients of the characteristic polynomial.
             # The roots of this polynomial will provide the complex eigenfrequencies
             char_poly = npPoly([np.real(coeff(**kwargs)) for coeff in self._char_poly_coeffs])
-
+            
             # char_poly = remove_multiplicity(char_poly)
         
             # In this case, the variable of the characteristic polynomial is \omega^2
@@ -393,7 +373,6 @@ class Qcircuit(object):
         '''
         self._set_zeta(**kwargs)
         return [[j.anharmonicity(mode, **kwargs) for mode in range(len(self.zeta))] for j in self.junctions]
-    
     
     @vectorize_kwargs
     def eigenfrequencies(self, **kwargs):
@@ -603,31 +582,8 @@ class Qcircuit(object):
                         # Note that taking the square root here is fine
                         # since Ks[i, j]~phi_ki^2*phi_kj^2 is necessarily a positive real
                         # since phi_ki,phi_kj are real numbers
-                        Ks[i, j] += 2. * np.sqrt(As[k][i]*As[k][j]) * (np.sign(self.junctions[k]._get_Ej(2, **kwargs)))
+                        Ks[i, j] += 2. * np.sqrt(As[k][i]*As[k][j])
         return Ks
-
-    @vectorize_kwargs(exclude = ['mode1', 'mode2', 'mode3'] )
-    def three_waves(self, mode1, mode2, mode3, **kwargs):
-        # Compute three terms per junction ``As``
-        # where ``As[j,m1, m2, m3]`` corresponds to the contribution of junction ``j``
-        # to the three_wave mixing term of modes m1, m2, m3
-        self._set_zeta(**kwargs)
-        
-        # Number of junctions in the circuit
-        N_junctions = len(self.junctions)
-
-        # initialize the vector of Kerr coefficients
-        Tw = 0
-        for j in self.junctions:
-            Tw += j.three_term(mode1, mode2, mode3, **kwargs)
-        return Tw
-        
-<<<<<<< HEAD
-=======
-    
-
-        
->>>>>>> master
 
     def f_k_A_chi(self, pretty_print=False, **kwargs):
         r'''Returns the eigenfrequency, loss-rates, anharmonicity, and Kerr parameters of the circuit. 
@@ -836,72 +792,13 @@ class Qcircuit(object):
 
         for j, junction in enumerate(self.junctions):
             n = 2
+            EJ = (hbar/2./e)**2/(junction._get_value(0, **kwargs)*h)
             while 2*n <= taylor:
-                EJ = junction._get_Ej(2*n-2, **kwargs)
                 H += (-1)**(n+1)*EJ/factorial(2*n)*phi[j]**(2*n)
-                n += 1
-            n = 1
-            while 2*n+1 <= taylor:
-                EJ = junction._get_Ej(2*n-1, **kwargs)
-                H += EJ/factorial(2*n+1)*phi[j]**(2*n+1)
                 n += 1
 
         if return_ops:
             return H, operators
-        return H
-
-    @refuse_vectorize_kwargs(exclude = ['modes','taylor','excitations','return_ops'])
-    def hamiltonian_sym(self, modes='all', taylor=4, **kwargs):
-
-        self.hamiltonian_modes = modes
-        self.hamiltonian_taylor = taylor
-
-        fs = self.eigenfrequencies(**kwargs)
-
-        if modes == 'all':
-            modes = range(len(fs))
-        modes = [c%len(fs) for c in modes]
-        ops = [B("m" + str(c)) for c in modes]
-        for m in modes:
-            try:
-                fs[m]
-            except IndexError:
-                error_message ="There are only %d modes in the circuit, and you specified mode index %d "%(len(fs),m)
-                error_message +="corresponding to the %d-th mode."%(m+1)
-                # error_message +="\nNote that the numer of modes may change as one sweeps a parameter"
-                # error_message +=" for example if a 0 frequency, spurious mode becomes negative due to "
-                # error_message +="numerical imprecision. Adding a resistance to the circuit may help with this."
-                raise ValueError(error_message)
-
-
-
-        H = 0
-        operators = []
-        phi = [0 for junction in self.junctions]
-        
-        for index,mode in enumerate(modes):
-
-            a = ops[index]
-            operators.append(ops)
-            H += fs[mode]*Dagger(a)*a
-
-            for j, junction in enumerate(self.junctions):
-                # Note that zpf returns the flux in units of phi_0 = hbar/2./e
-                phi[j] += np.real(junction.zpf(quantity='flux',mode=mode, **kwargs))*(a+Dagger(a)) 
-                # a = x+iy => -i*(a-a^) = -i(iy+iy) = --1
-                phi[j] += -1j*np.imag(junction.zpf(quantity='flux',mode=mode, **kwargs))*(a-Dagger(a)) 
-
-        for j, junction in enumerate(self.junctions):
-            n = 2
-            while 2*n <= taylor:
-                EJ = junction._get_Ej(2*n-2, **kwargs)
-                H += (-1)**(n+1)*EJ/factorial(2*n)*phi[j]**(2*n)
-                n += 1
-            n = 1
-            while 2*n+1 <= taylor:
-                EJ = junction._get_Ej(2*n-1, **kwargs)
-                H += EJ/factorial(2*n+1)*phi[j]**(2*n+1)
-                n += 1
         return H
 
     @refuse_vectorize_kwargs(exclude = ['plot','return_fig_ax'])
@@ -1452,7 +1349,7 @@ class GUI(Qcircuit):
         netlist = []
         with open(filename, 'r') as f:
             for el in f:
-                el = el.replace('\n', '').replace(' ', '')
+                el = el.replace('\n', '')
                 el = el.split(";")
                 if el[3] == '':
                     v = None
@@ -1460,12 +1357,8 @@ class GUI(Qcircuit):
                     v = float(el[3])
                 if el[4] == '':
                     l = None
-                else:                    
-                    l = el[4].split(",")
-
-
-
-
+                else:
+                    l = el[4]
                 netlist.append(
                     string_to_component(el[0], el[1], el[2], v, l))
 
@@ -2176,42 +2069,24 @@ class Component(Circuit):
         self.label = None
         self.value = None
         self.__flux = None
-        self.labels = [None for c in range(10)]
-        self.values = [None for c in range(10)]
-        
+        self.labels = [None for c in range(3)]
+        self.values = [None for c in range(3)]
+
         if len(args)==0:
             raise ValueError("Specify either a value or a label")
         
         for a in args: 
             
             if a in ["", '', ' ', 'None', None]:
-                pass
-<<<<<<< HEAD
-            #checks if a is a list of labels/values
-            elif type(a) in [list, tuple, np.ndarray]:
-                for i, c in enumerate(a):
-                    if c is None:
-                        pass
-                    elif type(c) is str:
-                        self.labels[i] = c
-                    else:
-                        self.values[i] = c
-            else:
-                if type(a) is str:
-                    self.labels[0] = a
-                    self.label = a
+                break
+            for i, c in enumerate(a):
+                if c is None:
+                    pass
+                elif type(c) is str:
+                    self.labels[i] = c
                 else:
-                    self.values[0] = a
-                    self.value = a
-=======
-            else:
-                for i, c in enumerate(a):
-                    if c is None:
-                        pass
-                    elif type(c) is str:
-                        self.labels[i] = c
-                    else:
-                        self.values[i] = c   
+                    self.values[i] = c                
+            
 
                 # Check its not too big, too small, or negative
                 # Note that values above max(min)_float would then
@@ -2223,25 +2098,18 @@ class Component(Circuit):
                 # elif 0<=self.value<min_float:
                 #     raise ValueError("Minimum allowed value is %.2e"%min_float)
                 
->>>>>>> master
 
-    def __hash__(self, i):
-        if self.labels[i] is None:
-            return hash(str(self.values[i])+self.unit)
+    def __hash__(self):
+        if self.label is None:
+            return hash(str(self.value)+self.unit)
         else:
-            if self.values[i] is None:
-                return hash(self.labels[i]+self.unit)
+            if self.value is None:
+                return hash(self.label+self.unit)
             else:
-                return hash(str(self.values[i])+self.labels[i]+self.unit)
+                return hash(str(self.value)+self.label+self.unit)
 
-<<<<<<< HEAD
-    def _get_value(self, i, **kwargs):
-
-=======
 
     def _get_value(self, i, **kwargs):
-
->>>>>>> master
         if self.values[i] is not None:
             return self.values[i]
         elif self.values[i] is None and kwargs is not None:
@@ -2249,11 +2117,8 @@ class Component(Circuit):
                 return kwargs[self.labels[i]]
 
         return sp.Symbol(self.labels[i])
-<<<<<<< HEAD
-=======
     
     
->>>>>>> master
 
     def _set_component_lists(self):
         for i, c in enumerate(self.labels):
@@ -2648,11 +2513,13 @@ class J(L):
 
     def _get_value(self, i, **kwargs):
         # Returns the Josephson inductance
-        value = super(J, self)._get_value(0, **kwargs) #Only 1 value specified
+        value = super(J, self)._get_value(i, **kwargs)
         if (self.use_E == False) and (self.use_I == False):
+            print(value)
             return value
         elif (self.use_E == True) and (self.use_I == False):
             L = (hbar/2./e)**2/(value*h)  # E is assumed to be provided in Hz
+            print(L)
             return L
         elif (use_E == False) and (use_I == True):
             L = (hbar/2./e)/value
@@ -2660,20 +2527,13 @@ class J(L):
         else:
             raise ValueError("Cannot set both use_E and use_I to True")
 
-    def _get_Ej(self, i, **kwargs):
-<<<<<<< HEAD
-        return (hbar/2./e)**2/(self._get_value(0, **kwargs)*h)*((i+1)%2) #zero if i odd
-=======
-        return (hbar/2./e)**2/(self._get_value(0, **kwargs)*h)*((i+1)%2)
->>>>>>> master
+    def _get_Ej(self, **kwargs):
+        return (hbar/2./e)**2/(self._get_value(0, **kwargs)*h)
 
     def _set_component_lists(self):
         super(L, self)._set_component_lists()
         self._circuit.junctions.append(self)
-        
-    def three_term(self, mode1, mode2, mode3, **kwargs):
-        return 0
-        
+    
     @vectorize_kwargs(exclude = ['mode'])
     def anharmonicity(self, mode, **kwargs):
         r'''Returns the contribution of this junction to the anharmonicity of a given normal mode.
@@ -2707,7 +2567,7 @@ class J(L):
 
         For more details, see https://arxiv.org/pdf/1908.10342.pdf
         '''
-        return self._get_Ej(0, **kwargs)/2*np.absolute(self.zpf(mode,quantity='flux',**kwargs))**4
+        return self._get_Ej(**kwargs)/2*np.absolute(self.zpf(mode,quantity='flux',**kwargs))**4
 
 
     def _draw(self):
@@ -2738,12 +2598,12 @@ class J(L):
         if self.angle%180. == 90.:
             return shift(y, self.x_plot_center), shift(x, self.y_plot_center), line_type
         
-class D(L):
+class J(L):
     
 
             
     def __init__(self, node_minus, node_plus, *args):
-        super(D, self).__init__(node_minus, node_plus, *args)
+        super(J, self).__init__(node_minus, node_plus, *args)
         self.unit = 'Hz'
 
 
@@ -2751,60 +2611,22 @@ class D(L):
 
         
     def _get_value(self, i, **kwargs):
-        value = super(D, self)._get_value(0, **kwargs)
+        value = super(J, self)._get_value(i, **kwargs)
 
         L = (hbar/2./e)**2/(value*h)  # E is assumed to be provided in Hz
         return L
         
 
     def _get_Ej(self, i, **kwargs):
-        if i%2 == 0:
-            return (-1)**(i//2) * super(D, self)._get_value(i, **kwargs) # to match the cosine developement of a Josephson junction in hamiltonian
+        if i == 0:
+            print((hbar/2./e)**2/(self._get_value(i, **kwargs)*h))
+            return (hbar/2./e)**2/(self._get_value(i, **kwargs)*h)
         else:
-            return super(D, self)._get_value(i, **kwargs)
+            return super(J, self)._get_value(i, **kwargs)
     
     def _set_component_lists(self):
-        super(L, self)._set_component_lists()
+        super(J, self)._set_component_lists()
         self._circuit.junctions.append(self)
-        
-    
-    
-    @vectorize_kwargs(exclude = ['mode1', 'mode2', 'mode3'])
-    def three_term(self, mode1, mode2, mode3, **kwargs):
-        r'''Returns the contribution of this junction to the three waves-mixing coeeficient of a normal mode
-
-        Returned in units of Hertz, not angular frequency.
-
-        Parameters
-        ----------
-        kwargs:     
-                    Values for un-specified circuit components, 
-                    ex: ``L=1e-9``.
-        
-        mode:           integer
-                        where 0 designates
-                        the lowest frequency mode, and the others
-                        are arranged in order of increasing frequency
-        Returns
-        -------
-        float
-            contribution of this junction to the anharmonicity of a given normal mode
-        
-        Notes
-        -----
-        The quantity returned is the anharmonicity
-        of the mode ``m`` if this junction were the only junction
-        present in the circuit (i.e. if all the 
-        others were replaced by linear inductors).
-
-        The total anharmonicity of a mode (in first order perturbation theory) is obtained
-        by summing these contribution over all modes.
-
-        For more details, see https://arxiv.org/pdf/1908.10342.pdf
-        '''
-        return self._get_Ej(1, **kwargs)/6*np.absolute(self.zpf(mode1,quantity='flux',**kwargs)
-                                                       *self.zpf(mode2,quantity='flux',**kwargs)
-                                                       *self.zpf(mode3,quantity='flux',**kwargs))
     
     @vectorize_kwargs(exclude = ['mode'])
     def anharmonicity(self, mode, **kwargs):
@@ -2840,7 +2662,7 @@ class D(L):
         For more details, see https://arxiv.org/pdf/1908.10342.pdf
         '''
         return self._get_Ej(2, **kwargs)/2*np.absolute(self.zpf(mode,quantity='flux',**kwargs))**4
-    
+
 
     def _draw(self):
         pp = self._circuit._pp
@@ -2848,10 +2670,10 @@ class D(L):
         line_type = []
         x = [
             np.array([0., 1.]),
-            np.array([(1.-pp['D']['width'])/2.,
-                      (1.+pp['D']['width'])/2.]),
-            np.array([(1.-pp['D']['width'])/2.,
-                      (1.+pp['D']['width'])/2.])
+            np.array([(1.-pp['J']['width'])/2.,
+                      (1.+pp['J']['width'])/2.]),
+            np.array([(1.-pp['J']['width'])/2.,
+                      (1.+pp['J']['width'])/2.])
         ]
         y = [
             np.array([0., 0.]),
@@ -2859,8 +2681,8 @@ class D(L):
             np.array([1., -1.])*pp['D']['width']/2.
         ]
         line_type.append('W')
-        line_type.append('D')
-        line_type.append('D')
+        line_type.append('J')
+        line_type.append('J')
 
         # center in x and y
         x = shift(x, -1./2.)
@@ -2868,136 +2690,6 @@ class D(L):
         if self.angle%180. == 0.:
             return shift(x, self.x_plot_center), shift(y, self.y_plot_center), line_type
         if self.angle%180. == 90.:
-            return shift(y, self.x_plot_center), shift(x, self.y_plot_center), line_type
-
-
-
-class D(L):    
-    def __init__(self, node_minus, node_plus, *args):
-        super(D, self).__init__(node_minus, node_plus, *args)
-        self.unit = 'Hz'
-
-    def _get_value(self, i, **kwargs):
-        value = super(D, self)._get_value(0, **kwargs)
-        L = (hbar/2./e)**2/(value*h)  # E is assumed to be provided in Hz
-        return L
-
-    def _get_Ej(self, i, **kwargs):
-        if i%2 == 0:
-            return (-1)**((i+2)//2+1) * super(D, self)._get_value(i, **kwargs) # to match the developement of a Josephson junction hamiltonian
-        else:
-            return super(D, self)._get_value(i, **kwargs)
-
-    def _set_component_lists(self):
-        super(L, self)._set_component_lists()
-        self._circuit.junctions.append(self)
-        
-    @vectorize_kwargs(exclude = ['mode1', 'mode2', 'mode3'])
-    def three_term(self, mode1, mode2, mode3, **kwargs):
-        r'''Returns the contribution of this junction to the three waves-mixing coeficient of a normal mode
-
-        Returned in units of Hertz, not angular frequency.
-
-        Parameters
-        ----------
-        kwargs:     
-                    Values for un-specified circuit components, 
-        
-        mode:           integer
-                        where 0 designates
-                        the lowest frequency mode, and the others
-                        are arranged in order of increasing frequency
-        Returns
-        -------
-        float
-            contribution of this junction to the three waves-mixing coeficient of a given normal mode
-        
-        Notes
-        -----
-        The quantity returned is the three waves-mixing coeficient
-        of the modes ``m_1``, `m_2`` and `m_3`` if this junction were the only junction
-        present in the circuit (i.e. if all the 
-        others were replaced by linear inductors). This is the coefficient for :math: ``a_1 a_2 a^\dagger_3``.
-
-        The total three wave coefficient (in first order perturbation theory) is obtained
-        by summing these contribution over all modes.
-
-        For more details, see https://arxiv.org/pdf/1908.10342.pdf
-        '''
-        return self._get_Ej(1, **kwargs)*(self.zpf(mode1,quantity='flux',**kwargs)
-                                                       *self.zpf(mode2,quantity='flux',**kwargs)
-                                                       *np.conj(self.zpf(mode3,quantity='flux',**kwargs)))
-
-    @vectorize_kwargs(exclude = ['mode'])
-    def anharmonicity(self, mode, **kwargs):
-        r'''Returns the contribution of this junction to the anharmonicity of a given normal mode.
-
-        Returned in units of Hertz, not angular frequency.
-
-        Parameters
-        ----------
-        kwargs:     
-                    Values for un-specified circuit components, 
-                    ex: ``L=1e-9``.
-        
-        mode:           integer
-                        where 0 designates
-                        the lowest frequency mode, and the others
-                        are arranged in order of increasing frequency
-        Returns
-        -------
-        float
-            contribution of this junction to the anharmonicity of a given normal mode
-        
-        Notes
-        -----
-        The quantity returned is the anharmonicity
-        of the mode ``m`` if this junction were the only junction
-        present in the circuit (i.e. if all the 
-        others were replaced by linear inductors).
-
-        The total anharmonicity of a mode (in first order perturbation theory) is obtained
-        by summing these contribution over all modes.
-
-        For more details, see https://arxiv.org/pdf/1908.10342.pdf
-        '''
-        return self._get_Ej(2, **kwargs)/2*np.absolute(self.zpf(mode,quantity='flux',**kwargs))**4
-
-    def _draw(self):
-        pp = self._circuit._pp
-
-        line_type = []
-        x = [
-            np.array([0., 1.]),
-            np.array([(1.-pp['D']['width'])/2.,
-                      (1.+pp['D']['width'])/2.,
-                      (1.-pp['D']['width'])/2., 
-                      (1.-pp['D']['width'])/2.]),
-            np.array([(1.-pp['D']['width'])/2.,
-                     (1.+pp['D']['width'])/2.,
-                      (1.-pp['D']['width'])/2., 
-                      (1.-pp['D']['width'])/2.
-                      ])
-        ]
-        y = [
-            np.array([0., 0.]),
-            np.array([0., 0., -1., 0])*pp['D']['width']/2.,
-            np.array([0., 0., 1., 0])*pp['D']['width']/2.
-        ]
-        line_type.append('W')
-        line_type.append('D')
-        line_type.append('D')
-
-        # center in x and y
-        x = shift(x, -1./2.)
-
-        if self.angle == WEST:
-            return shift(x, self.x_plot_center), shift(y, self.y_plot_center), line_type
-        elif self.angle == NORTH:
-            return shift(y, self.x_plot_center), shift([-xx for xx in x], self.y_plot_center), line_type
-        elif self.angle == EAST:
-            return shift([-xx for xx in x], self.x_plot_center), shift(y, self.y_plot_center), line_type
-        elif self.angle == SOUTH:
             return shift(y, self.x_plot_center), shift(x, self.y_plot_center), line_type
 
 
