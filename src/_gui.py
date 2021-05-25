@@ -569,13 +569,8 @@ class CircuitEditor(tk.Canvas):
             command=(lambda: self.event_generate('j')), 
             font=menu_font)
         menu.add_command(
-<<<<<<< HEAD
             label=label_template.format("Dipole", "<D>"),
             command=(lambda: self.event_generate('d')),
-=======
-            label=label_template.format("Dipole", "<D>"), 
-            command=(lambda: self.event_generate('d')), 
->>>>>>> master
             font=menu_font)
         menu.add_command(
             label=label_template.format("Inductor", "<L>"), 
@@ -3534,19 +3529,11 @@ class RequestValueLabelWindow(tk.Toplevel):
         if isinstance(self.component,C):
             info_text = 'Specify label and/or capacitance (in units of Farad)'
             self.value_string = 'Capacitance'
-<<<<<<< HEAD
-=======
-            info_text += '\nPut the label between []: [label]'
->>>>>>> master
 
         elif isinstance(self.component,J):
             self.value_string = 'Inductance'
             info_text = 'Specify label and/or Josephson inductance (in units of Henry)'
             info_text += '\nNote that L = (hbar/2/e)**2/[Josephson Energy in Joules]'
-<<<<<<< HEAD
-=======
-            info_text += '\nPut the label between []: [label]'
->>>>>>> master
 
         elif isinstance(self.component,D):
             self.value_string = 'Energy'
@@ -3555,12 +3542,9 @@ class RequestValueLabelWindow(tk.Toplevel):
         elif isinstance(self.component,L):
             self.value_string = 'Inductance'
             info_text = 'Specify label and/or inductance (in units of Henry)'
-            info_text += '\nPut the label between []: [label]'
         elif isinstance(self.component,R):
             self.value_string = 'Resistance'
             info_text = 'Specify label and/or resistance (in units of Ohm)'
-            info_text += '\nPut the label between []: [label]'
-
 
 
         # Entry field strings

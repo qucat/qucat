@@ -1,7 +1,5 @@
 import sympy as sp
-import scipy
 from sympy.utilities.lambdify import lambdify
-from sympy import Function
 import numpy as np
 from numpy.polynomial.polynomial import Polynomial as npPoly
 from sympy.core.mul import Mul, Pow, Add
@@ -24,12 +22,7 @@ except ImportError:
     from _utility import *
     from plotting_settings import plotting_parameters_show,plotting_parameters_normal_modes
     
-<<<<<<< HEAD
 from sympy.physics.secondquant import Dagger, B, Bd
-=======
-from scipy.optimize import minimize as mini
-from numpy import cos, sin
->>>>>>> master
 
     
 PROFILING = False
@@ -179,7 +172,7 @@ class Qcircuit(object):
 
         # define the functions which returns the components of the characteristic polynomial
         # (the roots of which are the eigen-frequencies)
-        self._char_poly_coeffs = [lambdify(self._no_value_components, c, ['numpy']) 
+        self._char_poly_coeffs = [lambdify(self._no_value_components, c, 'numpy') 
             for c in self._network.compute_char_poly_coeffs(is_lossy = (len(self.resistors)>0))]
         
 #self.no_value_components : array de tous les labels non spécifiés
@@ -622,12 +615,6 @@ class Qcircuit(object):
             Tw += j.three_term(mode1, mode2, mode3, **kwargs)
         return Tw
         
-<<<<<<< HEAD
-=======
-    
-
-        
->>>>>>> master
 
     def f_k_A_chi(self, pretty_print=False, **kwargs):
         r'''Returns the eigenfrequency, loss-rates, anharmonicity, and Kerr parameters of the circuit. 
@@ -2186,7 +2173,6 @@ class Component(Circuit):
             
             if a in ["", '', ' ', 'None', None]:
                 pass
-<<<<<<< HEAD
             #checks if a is a list of labels/values
             elif type(a) in [list, tuple, np.ndarray]:
                 for i, c in enumerate(a):
@@ -2203,27 +2189,6 @@ class Component(Circuit):
                 else:
                     self.values[0] = a
                     self.value = a
-=======
-            else:
-                for i, c in enumerate(a):
-                    if c is None:
-                        pass
-                    elif type(c) is str:
-                        self.labels[i] = c
-                    else:
-                        self.values[i] = c   
-
-                # Check its not too big, too small, or negative
-                # Note that values above max(min)_float would then
-                # be interpreted as infinity (or zero)
-                # if self.value>max_float:
-                #     raise ValueError("Maximum allowed value is %.2e"%max_float)
-                # elif self.value<0:
-                #     raise ValueError("Value should be a positive float")
-                # elif 0<=self.value<min_float:
-                #     raise ValueError("Minimum allowed value is %.2e"%min_float)
-                
->>>>>>> master
 
     def __hash__(self, i):
         if self.labels[i] is None:
@@ -2234,14 +2199,8 @@ class Component(Circuit):
             else:
                 return hash(str(self.values[i])+self.labels[i]+self.unit)
 
-<<<<<<< HEAD
     def _get_value(self, i, **kwargs):
 
-=======
-
-    def _get_value(self, i, **kwargs):
-
->>>>>>> master
         if self.values[i] is not None:
             return self.values[i]
         elif self.values[i] is None and kwargs is not None:
@@ -2249,11 +2208,6 @@ class Component(Circuit):
                 return kwargs[self.labels[i]]
 
         return sp.Symbol(self.labels[i])
-<<<<<<< HEAD
-=======
-    
-    
->>>>>>> master
 
     def _set_component_lists(self):
         for i, c in enumerate(self.labels):
@@ -2661,11 +2615,7 @@ class J(L):
             raise ValueError("Cannot set both use_E and use_I to True")
 
     def _get_Ej(self, i, **kwargs):
-<<<<<<< HEAD
         return (hbar/2./e)**2/(self._get_value(0, **kwargs)*h)*((i+1)%2) #zero if i odd
-=======
-        return (hbar/2./e)**2/(self._get_value(0, **kwargs)*h)*((i+1)%2)
->>>>>>> master
 
     def _set_component_lists(self):
         super(L, self)._set_component_lists()
@@ -2737,139 +2687,6 @@ class J(L):
             return shift(x, self.x_plot_center), shift(y, self.y_plot_center), line_type
         if self.angle%180. == 90.:
             return shift(y, self.x_plot_center), shift(x, self.y_plot_center), line_type
-        
-class D(L):
-    
-
-            
-    def __init__(self, node_minus, node_plus, *args):
-        super(D, self).__init__(node_minus, node_plus, *args)
-        self.unit = 'Hz'
-
-
-
-
-        
-    def _get_value(self, i, **kwargs):
-        value = super(D, self)._get_value(0, **kwargs)
-
-        L = (hbar/2./e)**2/(value*h)  # E is assumed to be provided in Hz
-        return L
-        
-
-    def _get_Ej(self, i, **kwargs):
-        if i%2 == 0:
-            return (-1)**(i//2) * super(D, self)._get_value(i, **kwargs) # to match the cosine developement of a Josephson junction in hamiltonian
-        else:
-            return super(D, self)._get_value(i, **kwargs)
-    
-    def _set_component_lists(self):
-        super(L, self)._set_component_lists()
-        self._circuit.junctions.append(self)
-        
-    
-    
-    @vectorize_kwargs(exclude = ['mode1', 'mode2', 'mode3'])
-    def three_term(self, mode1, mode2, mode3, **kwargs):
-        r'''Returns the contribution of this junction to the three waves-mixing coeeficient of a normal mode
-
-        Returned in units of Hertz, not angular frequency.
-
-        Parameters
-        ----------
-        kwargs:     
-                    Values for un-specified circuit components, 
-                    ex: ``L=1e-9``.
-        
-        mode:           integer
-                        where 0 designates
-                        the lowest frequency mode, and the others
-                        are arranged in order of increasing frequency
-        Returns
-        -------
-        float
-            contribution of this junction to the anharmonicity of a given normal mode
-        
-        Notes
-        -----
-        The quantity returned is the anharmonicity
-        of the mode ``m`` if this junction were the only junction
-        present in the circuit (i.e. if all the 
-        others were replaced by linear inductors).
-
-        The total anharmonicity of a mode (in first order perturbation theory) is obtained
-        by summing these contribution over all modes.
-
-        For more details, see https://arxiv.org/pdf/1908.10342.pdf
-        '''
-        return self._get_Ej(1, **kwargs)/6*np.absolute(self.zpf(mode1,quantity='flux',**kwargs)
-                                                       *self.zpf(mode2,quantity='flux',**kwargs)
-                                                       *self.zpf(mode3,quantity='flux',**kwargs))
-    
-    @vectorize_kwargs(exclude = ['mode'])
-    def anharmonicity(self, mode, **kwargs):
-        r'''Returns the contribution of this junction to the anharmonicity of a given normal mode.
-
-        Returned in units of Hertz, not angular frequency.
-
-        Parameters
-        ----------
-        kwargs:     
-                    Values for un-specified circuit components, 
-                    ex: ``L=1e-9``.
-        
-        mode:           integer
-                        where 0 designates
-                        the lowest frequency mode, and the others
-                        are arranged in order of increasing frequency
-        Returns
-        -------
-        float
-            contribution of this junction to the anharmonicity of a given normal mode
-        
-        Notes
-        -----
-        The quantity returned is the anharmonicity
-        of the mode ``m`` if this junction were the only junction
-        present in the circuit (i.e. if all the 
-        others were replaced by linear inductors).
-
-        The total anharmonicity of a mode (in first order perturbation theory) is obtained
-        by summing these contribution over all modes.
-
-        For more details, see https://arxiv.org/pdf/1908.10342.pdf
-        '''
-        return self._get_Ej(2, **kwargs)/2*np.absolute(self.zpf(mode,quantity='flux',**kwargs))**4
-    
-
-    def _draw(self):
-        pp = self._circuit._pp
-
-        line_type = []
-        x = [
-            np.array([0., 1.]),
-            np.array([(1.-pp['D']['width'])/2.,
-                      (1.+pp['D']['width'])/2.]),
-            np.array([(1.-pp['D']['width'])/2.,
-                      (1.+pp['D']['width'])/2.])
-        ]
-        y = [
-            np.array([0., 0.]),
-            np.array([-1., 1.])*pp['D']['width']/2.,
-            np.array([1., -1.])*pp['D']['width']/2.
-        ]
-        line_type.append('W')
-        line_type.append('D')
-        line_type.append('D')
-
-        # center in x and y
-        x = shift(x, -1./2.)
-
-        if self.angle%180. == 0.:
-            return shift(x, self.x_plot_center), shift(y, self.y_plot_center), line_type
-        if self.angle%180. == 90.:
-            return shift(y, self.x_plot_center), shift(x, self.y_plot_center), line_type
-
 
 
 class D(L):    
