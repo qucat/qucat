@@ -24,14 +24,6 @@ except ImportError:
     
 from sympy.physics.secondquant import Dagger, B, Bd
 
-a = B('a')
-b = B('b')
-p = B('p')
-
-ad = Dagger(a)
-bd = Dagger(b)
-pd = Dagger(p)
-
     
 PROFILING = False
 def timeit(method):
@@ -846,7 +838,7 @@ class Qcircuit(object):
         return H
 
     @refuse_vectorize_kwargs(exclude = ['modes','taylor','excitations','return_ops'])
-    def hamiltonian_sym(self, modes=[-3, -2, -1], ops = [a, b, p], taylor=4, **kwargs):
+    def hamiltonian_sym(self, modes='all', taylor=4, **kwargs):
 
         self.hamiltonian_modes = modes
         self.hamiltonian_taylor = taylor
@@ -855,6 +847,8 @@ class Qcircuit(object):
 
         if modes == 'all':
             modes = range(len(fs))
+        modes = [c%len(fs) for c in modes]
+        ops = [B("m" + str(c)) for c in modes]
         for m in modes:
             try:
                 fs[m]
