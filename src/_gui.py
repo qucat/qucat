@@ -569,6 +569,10 @@ class CircuitEditor(tk.Canvas):
             command=(lambda: self.event_generate('j')), 
             font=menu_font)
         menu.add_command(
+            label=label_template.format("Dipole", "<D>"),
+            command=(lambda: self.event_generate('d')),
+            font=menu_font)
+        menu.add_command(
             label=label_template.format("Inductor", "<L>"), 
             command=(lambda: self.event_generate('l')), 
             font=menu_font)
@@ -1093,6 +1097,8 @@ class CircuitEditor(tk.Canvas):
                 L(self, auto_place_info=el)
             elif el[0] == 'J':
                 J(self, auto_place_info=el)
+            elif el[0] == 'D':
+                D(self, auto_place_info=el)
             elif el[0] == 'C':
                 C(self, auto_place_info=el)
             elif el[0] == 'G':
@@ -1289,6 +1295,7 @@ class CircuitEditor(tk.Canvas):
             ['l', lambda event: L(self, event)],
             ['c', lambda event: C(self, event)],
             ['j', lambda event: J(self, event)],
+            ['d', lambda event: D(self, event)],
             ['w', lambda event: W(self, event)],
             ['g', lambda event: G(self, event)]
         ]
@@ -2856,6 +2863,7 @@ class W(TwoNodeElement):
         self.canvas.bind('l', self.abort_creation)
         self.canvas.bind('c', self.abort_creation)
         self.canvas.bind('j', self.abort_creation)
+        self.canvas.bind('d', self.abort_creation)
         self.canvas.bind('w', self.abort_creation)
         self.canvas.bind('g', self.abort_creation)
 
@@ -3220,6 +3228,7 @@ class Component(TwoNodeElement):
         self.canvas.bind('l', self.abort_creation)
         self.canvas.bind('c', self.abort_creation)
         self.canvas.bind('j', self.abort_creation)
+        self.canvas.bind('d', self.abort_creation)
         self.canvas.bind('w', self.abort_creation)
         self.canvas.bind('g', self.abort_creation)
         self.canvas.bind('<Left>', lambda event: self.init_create_component(event, angle=WEST))
@@ -3435,6 +3444,13 @@ class J(Component):
         self.unit = 'H'
         super(J, self).__init__(canvas, event, auto_place_info)
 
+class D(Component):
+    """docstring for J"""
+
+    def __init__(self, canvas, event=None, auto_place_info=None):
+        self.unit = 'H'
+        super(D, self).__init__(canvas, event, auto_place_info)
+
 class G(Component):
     """docstring for J"""
 
@@ -3513,16 +3529,23 @@ class RequestValueLabelWindow(tk.Toplevel):
         if isinstance(self.component,C):
             info_text = 'Specify label and/or capacitance (in units of Farad)'
             self.value_string = 'Capacitance'
+
         elif isinstance(self.component,J):
             self.value_string = 'Inductance'
             info_text = 'Specify label and/or Josephson inductance (in units of Henry)'
             info_text += '\nNote that L = (hbar/2/e)**2/[Josephson Energy in Joules]'
+
+        elif isinstance(self.component,D):
+            self.value_string = 'Energy'
+            info_text = "Specify at least three labels separated by ',' for the dipole (the 2nd, 3rd and 4th derivatives of the inductance energy)"
+            info_text += '\nDo not specify any value, they have to be passed as kwargs in further computations'
         elif isinstance(self.component,L):
             self.value_string = 'Inductance'
             info_text = 'Specify label and/or inductance (in units of Henry)'
         elif isinstance(self.component,R):
             self.value_string = 'Resistance'
             info_text = 'Specify label and/or resistance (in units of Ohm)'
+
 
         # Entry field strings
         fields = self.value_string, 'Label'
