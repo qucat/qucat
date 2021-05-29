@@ -25,9 +25,10 @@ plotting_parameters_show = {
         "width": 0.22,
         "lw": 6
     },
-    "D": {
-        "width": 0.22,
-        "lw": 6
+    "NonLinearInductor": {
+        "height": 0.35, # of the non-linear symbol
+        "width": 0.12, # of the arms of the non-linear symbol
+        "lw": 4, # of the non-linear symbol
     },
     "L": {
         "width": 0.7,
@@ -71,7 +72,7 @@ pp["figsize_scaling"] = scale
 pp["C"]["gap"] /= scale
 pp["C"]["height"] /= scale
 pp["J"]["width"] /= scale
-pp["D"]["width"] /= scale
+pp["NonLinearInductor"]["width"] /= scale
 pp["L"]["width"] /= scale
 pp["L"]["height"] /= scale
 pp["R"]["width"] /= scale
@@ -124,9 +125,10 @@ plotting_parameters_GUI = {
             "width": 0.25,
             "lw": 6
         },
-        "D": {
-            "width": 0.25,
-            "lw": 6
+        "NonLinearInductor": {
+            "height": 0.35, # of the non-linear symbol
+            "width": 0.12, # of the arms of the non-linear symbol
+            "lw": 4 # of the non-linear symbol
         },
         "L": {
             "width": 0.7,

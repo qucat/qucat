@@ -73,8 +73,8 @@ def string_to_component(s, *arg, **kwarg):
         return L(*arg, **kwarg)
     elif s == 'J':
         return J(*arg, **kwarg)
-    elif s == 'D':
-        return D(*arg, **kwarg)
+    elif s == 'NonLinearInductor':
+        return NonLinearInductor(*arg, **kwarg)
     elif s == 'C':
         return C(*arg, **kwarg)        
     elif s == 'G':
@@ -94,7 +94,7 @@ class Qcircuit(object):
         junctions (list): List of junction objects present in the circuit
         capacitors (list): List of capacitor objects present in the circuit
         netlist (list): List of all components present in the circuit
-        ref_elt (J or L or D): list of junction or inductor component used as a reference for the calculation 
+        ref_elt (J or L or NonLinearInductor): list of junction or inductor component used as a reference for the calculation 
                         of zero-point fluctations, each index of the list corresponds to a different mode
     """
 
@@ -175,10 +175,6 @@ class Qcircuit(object):
         self._char_poly_coeffs = [lambdify(self._no_value_components, c, 'numpy') 
             for c in self._network.compute_char_poly_coeffs(is_lossy = (len(self.resistors)>0))]
         
-#self.no_value_components : array de tous les labels non spécifiés
-#c = expression sympy
-
-
     @property
     def _pp(self):
         '''
@@ -2444,7 +2440,8 @@ class L(Component):
         super(L, self)._set_component_lists()
         self._circuit.inductors.append(self)
 
-    def _draw(self):
+    def _draw_coil(self):
+        
         pp = self._circuit._pp
 
         x = np.linspace(0.5, float(
@@ -2486,6 +2483,12 @@ class L(Component):
         y_list = [y]
         y_list += [np.array([0., 0.])]
         y_list += [np.array([0., 0.])]
+
+        return x_list,y_list,line_type
+
+    def _draw(self):
+
+        x_list,y_list,line_type = self._draw_coil()
 
         if self.angle%180. == 0.:
             return shift(x_list, self.x_plot_center), shift(y_list, self.y_plot_center), line_type
@@ -2689,21 +2692,21 @@ class J(L):
             return shift(y, self.x_plot_center), shift(x, self.y_plot_center), line_type
 
 
-class D(L):    
+class NonLinearInductor(L):    
     def __init__(self, node_minus, node_plus, *args):
-        super(D, self).__init__(node_minus, node_plus, *args)
+        super(NonLinearInductor, self).__init__(node_minus, node_plus, *args)
         self.unit = 'Hz'
 
     def _get_value(self, i, **kwargs):
-        value = super(D, self)._get_value(0, **kwargs)
+        value = super(NonLinearInductor, self)._get_value(0, **kwargs)
         L = (hbar/2./e)**2/(value*h)  # E is assumed to be provided in Hz
         return L
 
     def _get_Ej(self, i, **kwargs):
         if i%2 == 0:
-            return (-1)**((i+2)//2+1) * super(D, self)._get_value(i, **kwargs) # to match the developement of a Josephson junction hamiltonian
+            return (-1)**((i+2)//2+1) * super(NonLinearInductor, self)._get_value(i, **kwargs) # to match the developement of a Josephson junction hamiltonian
         else:
-            return super(D, self)._get_value(i, **kwargs)
+            return super(NonLinearInductor, self)._get_value(i, **kwargs)
 
     def _set_component_lists(self):
         super(L, self)._set_component_lists()
@@ -2782,31 +2785,32 @@ class D(L):
 
     def _draw(self):
         pp = self._circuit._pp
+        x,y,line_type = self._draw_coil()
 
-        line_type = []
-        x = [
-            np.array([0., 1.]),
-            np.array([(1.-pp['D']['width'])/2.,
-                      (1.+pp['D']['width'])/2.,
-                      (1.-pp['D']['width'])/2., 
-                      (1.-pp['D']['width'])/2.]),
-            np.array([(1.-pp['D']['width'])/2.,
-                     (1.+pp['D']['width'])/2.,
-                      (1.-pp['D']['width'])/2., 
-                      (1.-pp['D']['width'])/2.
-                      ])
-        ]
-        y = [
-            np.array([0., 0.]),
-            np.array([0., 0., -1., 0])*pp['D']['width']/2.,
-            np.array([0., 0., 1., 0])*pp['D']['width']/2.
-        ]
+        # Draw non-linear symbol
+        x += [np.array([-pp['L']['width']/2,
+                        -pp['L']['width']/2+pp['NonLinearInductor']['width'],
+                        pp['L']['width']/2-pp['NonLinearInductor']['width'],
+                        pp['L']['width']/2])]
+        y += [np.array([-pp['NonLinearInductor']['height']/2,
+                        -pp['NonLinearInductor']['height']/2,
+                        pp['NonLinearInductor']['height']/2,
+                        pp['NonLinearInductor']['height']/2])]
+        line_type.append('NonLinearInductor')
+
+        # Draw + sign to indicate polarization
+        x += [np.array([pp['L']['width']/2,
+                        pp['L']['width']/2])]
+        y += [np.array([-pp['NonLinearInductor']['height']/2,
+                        -pp['NonLinearInductor']['height']/2+pp['NonLinearInductor']['width']])]
         line_type.append('W')
-        line_type.append('D')
-        line_type.append('D')
+        
+        x += [np.array([pp['L']['width']/2-pp['NonLinearInductor']['width']/2,
+                        pp['L']['width']/2+pp['NonLinearInductor']['width']/2])]
+        y += [np.array([-pp['NonLinearInductor']['height']/2+pp['NonLinearInductor']['width']/2,
+                        -pp['NonLinearInductor']['height']/2+pp['NonLinearInductor']['width']/2])]
+        line_type.append('W')
 
-        # center in x and y
-        x = shift(x, -1./2.)
 
         if self.angle == WEST:
             return shift(x, self.x_plot_center), shift(y, self.y_plot_center), line_type

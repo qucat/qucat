@@ -456,10 +456,10 @@ class CircuitEditor(tk.Canvas):
         menu_label_template = "{:<6}"
 
         # The items appearing in the cascade menu that appears when 
-        # clicking on File for example will have 15 characters width on the 
+        # clicking on File for example will have 20 characters width on the 
         # left where the name of the functionality is provided and
-        # 15 characters on the right where the keyboard shortcut is provided
-        label_template = "{:<15}{:>15}"
+        # 10 characters on the right where the keyboard shortcut is provided
+        label_template = "{:<20}{:>10}"
 
         # The font for the cascading items is defined
         # Note: for everything to be aligned the chosen font should 
@@ -569,8 +569,8 @@ class CircuitEditor(tk.Canvas):
             command=(lambda: self.event_generate('j')), 
             font=menu_font)
         menu.add_command(
-            label=label_template.format("Dipole", "<D>"),
-            command=(lambda: self.event_generate('d')),
+            label=label_template.format("Non Linear Inductor", "<N>"),
+            command=(lambda: self.event_generate('n')),
             font=menu_font)
         menu.add_command(
             label=label_template.format("Inductor", "<L>"), 
@@ -1097,8 +1097,8 @@ class CircuitEditor(tk.Canvas):
                 L(self, auto_place_info=el)
             elif el[0] == 'J':
                 J(self, auto_place_info=el)
-            elif el[0] == 'D':
-                D(self, auto_place_info=el)
+            elif el[0] == 'NonLinearInductor':
+                NonLinearInductor(self, auto_place_info=el)
             elif el[0] == 'C':
                 C(self, auto_place_info=el)
             elif el[0] == 'G':
@@ -1295,7 +1295,7 @@ class CircuitEditor(tk.Canvas):
             ['l', lambda event: L(self, event)],
             ['c', lambda event: C(self, event)],
             ['j', lambda event: J(self, event)],
-            ['d', lambda event: D(self, event)],
+            ['n', lambda event: NonLinearInductor(self, event)],
             ['w', lambda event: W(self, event)],
             ['g', lambda event: G(self, event)]
         ]
@@ -2863,7 +2863,7 @@ class W(TwoNodeElement):
         self.canvas.bind('l', self.abort_creation)
         self.canvas.bind('c', self.abort_creation)
         self.canvas.bind('j', self.abort_creation)
-        self.canvas.bind('d', self.abort_creation)
+        self.canvas.bind('n', self.abort_creation)
         self.canvas.bind('w', self.abort_creation)
         self.canvas.bind('g', self.abort_creation)
 
@@ -3228,7 +3228,7 @@ class Component(TwoNodeElement):
         self.canvas.bind('l', self.abort_creation)
         self.canvas.bind('c', self.abort_creation)
         self.canvas.bind('j', self.abort_creation)
-        self.canvas.bind('d', self.abort_creation)
+        self.canvas.bind('n', self.abort_creation)
         self.canvas.bind('w', self.abort_creation)
         self.canvas.bind('g', self.abort_creation)
         self.canvas.bind('<Left>', lambda event: self.init_create_component(event, angle=WEST))
@@ -3444,12 +3444,12 @@ class J(Component):
         self.unit = 'H'
         super(J, self).__init__(canvas, event, auto_place_info)
 
-class D(Component):
-    """docstring for J"""
+class NonLinearInductor(Component):
+    """docstring for NonLinearInductor"""
 
     def __init__(self, canvas, event=None, auto_place_info=None):
         self.unit = 'H'
-        super(D, self).__init__(canvas, event, auto_place_info)
+        super(NonLinearInductor, self).__init__(canvas, event, auto_place_info)
 
 class G(Component):
     """docstring for J"""
@@ -3535,9 +3535,9 @@ class RequestValueLabelWindow(tk.Toplevel):
             info_text = 'Specify label and/or Josephson inductance (in units of Henry)'
             info_text += '\nNote that L = (hbar/2/e)**2/[Josephson Energy in Joules]'
 
-        elif isinstance(self.component,D):
+        elif isinstance(self.component,NonLinearInductor):
             self.value_string = 'Energy'
-            info_text = "Specify at least three labels separated by ',' for the dipole (the 2nd, 3rd and 4th derivatives of the inductance energy)"
+            info_text = "Specify at least three labels separated by ',' for the non-linear \ninductor (the 2nd, 3rd and 4th order of the inductors Hamiltonian)"
             info_text += '\nDo not specify any value, they have to be passed as kwargs in further computations'
         elif isinstance(self.component,L):
             self.value_string = 'Inductance'
