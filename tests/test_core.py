@@ -1,5 +1,7 @@
 import sys
 import os
+import sympy as sp
+from numpy.testing._private.utils import assert_equal
 sys.path.append(os.path.join(os.path.join(os.path.dirname(os.path.dirname(__file__)),'src')))
 import unittest
 import core
@@ -407,5 +409,51 @@ class TestNetworkAnalysis(TestCaseAppended):
                 core.J(4,5,'Z'),
                 ])
 
+class ArgumentParsing(TestCaseAppended):
+
+    # def test_single_valued_component(self):
+    #     JJ = core.J(0,1,['LJ1'])
+    #     assert_equal(JJ._get_value(),sp.Symbol('LJ1'))
+    #     JJ = core.J(0,1,'LJ2')
+    #     assert_equal(JJ._get_value(),sp.Symbol('LJ2'))
+    #     JJ = core.J(0,1,'LJ',1e-7)
+    #     assert_equal(JJ._get_value(),1e-7)
+    #     JJ = core.J(0,1,1e-7)
+    #     assert_equal(JJ._get_value(),1e-7)
+    #     JJ = core.J(0,1,[1e-7])
+    #     assert_equal(JJ._get_value(),1e-7)
+
+    def test_multi_valued_component(self):
+
+        non_linear_inductor = core.NonLinearInductor(0,1,[1,2,3])
+        self.assertCountEqual(non_linear_inductor.values,[1,2,3])
+
+        non_linear_inductor = core.NonLinearInductor(0,1,['a','b','c'])
+        self.assertCountEqual(non_linear_inductor.labels,['a','b','c'])
+
+        non_linear_inductor = core.NonLinearInductor(0,1,['a','b','c'],[1,2,3])
+        self.assertCountEqual(non_linear_inductor.labels,['a','b','c'])
+        self.assertCountEqual(non_linear_inductor.values,[1,2,3])
+
+        non_linear_inductor = core.NonLinearInductor(0,1,[1,2,3],['a','b','c'])
+        self.assertCountEqual(non_linear_inductor.labels,['a','b','c'])
+        self.assertCountEqual(non_linear_inductor.values,[1,2,3])
+
+        
+        non_linear_inductor = core.NonLinearInductor(0,1,1,['a','b','c'])
+        self.assertCountEqual(non_linear_inductor.labels,['a','b','c'])
+        self.assertCountEqual(non_linear_inductor.values,[1,None,None])
+
+        circuit = self.open_gui_file('multi_valued_component_1.txt', edit = False)
+        non_linear_inductor = circuit.components['a']
+        self.assertCountEqual(non_linear_inductor.labels,['a','b','c'])
+        self.assertCountEqual(non_linear_inductor.values,[None]*3)
+        
+        # circuit = self.open_gui_file('multi_valued_component_2.txt', edit = True)
+        # non_linear_inductor = circuit.nonlinear_inductors[0]
+        # assert_equal(non_linear_inductor.values,[1,2,3])
+        # assert_equal(non_linear_inductor.labels,[None]*3)
+
 if __name__ == "__main__":
-    unittest.main()
+    # unittest.main()
+    unittest.main(ArgumentParsing())

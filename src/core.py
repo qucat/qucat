@@ -57,14 +57,7 @@ def string_to_component(s, *arg, **kwarg):
     Returns
     -------
     A component of type ``s``
-    '''
-    
-    l = [c for c in arg]
-    for i,c in enumerate(arg):
-        if type(c) in [float, int]:
-            l[i] = [c]
-    arg = l
-            
+    '''           
     if s == 'W':
         return W(*arg, **kwarg)
     elif s == 'R':
@@ -125,6 +118,7 @@ class Qcircuit(object):
         self.inductors = []
         self.capacitors = []
         self.junctions = []
+        self.nonlinear_inductors = []
         self.resistors = []
         self._wire = []
         self._grounds = []
@@ -135,7 +129,7 @@ class Qcircuit(object):
 
         # Initialize a list which will contain the labels of the componentns which have
         # no value (these will have to be specified in most methods as a kwarg)
-        self._no_value_components = []
+        self._no_value_labels = []
 
         # For each component of the circuit....
         for elt in netlist:
@@ -146,7 +140,7 @@ class Qcircuit(object):
 
 
         # Check that there is at least one inductive element in the circuit
-        if len(self.junctions) == 0 and len(self.inductors) == 0:
+        if len(self.junctions) == 0 and len(self.inductors) == 0 and len(self.nonlinear_inductors)==0:
             raise ValueError(
                 "There should be at least one junction or inductor in the circuit")
 
@@ -158,7 +152,7 @@ class Qcircuit(object):
                 
         # define the function which returns the inverse of dY
         # where Y is the admittance at the nodes of an inductive element
-        for inductive_element in self.inductors+self.junctions:
+        for inductive_element in self.inductors+self.junctions+self.nonlinear_inductors:
             inductive_element._compute_flux_zpf_r()
 
         # Initialize the flux transformation dictionary,
@@ -172,7 +166,7 @@ class Qcircuit(object):
 
         # define the functions which returns the components of the characteristic polynomial
         # (the roots of which are the eigen-frequencies)
-        self._char_poly_coeffs = [lambdify(self._no_value_components, c, 'numpy') 
+        self._char_poly_coeffs = [lambdify(self._no_value_labels, c, 'numpy') 
             for c in self._network.compute_char_poly_coeffs(is_lossy = (len(self.resistors)>0))]
         
     @property
@@ -202,7 +196,7 @@ class Qcircuit(object):
                     ex: ``L=1e-9``.
         '''
         for key in kwargs:
-            if key in self._no_value_components:
+            if key in self._no_value_labels:
                 kwargs[key]  = kwargs[key]
             else:
                 if key in self.components:
@@ -215,7 +209,7 @@ class Qcircuit(object):
                     raise ValueError(
                         '%s is not the label of a circuit element' % key)
 
-        for label in self._no_value_components:
+        for label in self._no_value_labels:
             try:
                 kwargs[label]
             except Exception:
@@ -324,7 +318,7 @@ class Qcircuit(object):
         # maximize the inverse of dY: we want the reference 
         # element to the element where zero-point fluctuations
         # in flux are most localized.
-        inductive_elements = self.junctions+self.inductors
+        inductive_elements = self.junctions+self.inductors+self.nonlinear_inductors
         ref_elt = []
         zeta_copy = deepcopy(zeta)
         zeta = []
@@ -1440,7 +1434,7 @@ class GUI(Qcircuit):
                 if el[3] == '':
                     v = None
                 else:
-                    v = float(el[3])
+                    v = [float(e) for e in el[3].split(",")]
                 if el[4] == '':
                     l = None
                 else:                    
@@ -2122,7 +2116,7 @@ class Circuit(object):
             va = 'center'
 
         ax.text(x, y,
-                to_string(self.unit, self.label, self.value),
+                to_string(self.unit, self.labels[0], self.values[0]),
                 fontsize=pp['label']['fontsize'],
                 ha=ha, va=va)
 
@@ -2156,35 +2150,39 @@ class Component(Circuit):
 
     def __init__(self, node_minus, node_plus, *args):
         super(Component, self).__init__(node_minus, node_plus)
-        self.label = None
-        self.value = None
         self.__flux = None
-        self.labels = [None for c in range(10)]
-        self.values = [None for c in range(10)]
+        self.labels = [None]
+        self.values = [None]
         
         if len(args)==0:
             raise ValueError("Specify either a value or a label")
         
         for a in args: 
             
-            if a in ["", '', ' ', 'None', None]:
-                pass
-            #checks if a is a list of labels/values
-            elif type(a) in [list, tuple, np.ndarray]:
-                for i, c in enumerate(a):
-                    if c is None:
-                        pass
-                    elif type(c) is str:
-                        self.labels[i] = c
-                    else:
-                        self.values[i] = c
-            else:
+            # Convert non-list arguments into lists
+            try:
+                iter(a)
+                # It's either a list-type or a string
                 if type(a) is str:
-                    self.labels[0] = a
-                    self.label = a
-                else:
-                    self.values[0] = a
-                    self.value = a
+                    a = [a]
+            except TypeError:
+                a=[a]
+            
+            if a[0] is None:
+                # No argument passed for a value/label
+                pass
+            elif type(a[0]) is str:
+                self.labels = a
+            else:
+                self.values = a
+        
+        # Ensure values and labels lists have same length
+        N_values = len(self.values)
+        N_labels = len(self.labels)
+        if N_values>N_labels:
+            self.labels += [None]*(N_values-N_labels)
+        elif N_values<N_labels:
+            self.values += [None]*(N_labels-N_values)
 
     def _get_value(self, **kwargs):
 
@@ -2197,18 +2195,17 @@ class Component(Circuit):
         return sp.Symbol(self.labels[0])
 
     def _set_component_lists(self):
-        for i, c in enumerate(self.labels):
-            if c not in ['', ' ', 'None', None]:
-                self._circuit.components[c] = self
+        for i, l in enumerate(self.labels):
+            if l is not None:
+                self._circuit.components[l] = self
             
-    
-            if self.values[i] is None and c not in ['', ' ', 'None', None]:
-                if c in self._circuit._no_value_components:
-                    # raise ValueError(
-                    #     "Two components may not have the same name %s" % self.label)
-                    pass
-                else:
-                    self._circuit._no_value_components.append(c)
+                if self.values[i] is None:
+                    if l in self._circuit._no_value_labels:
+                        # raise ValueError(
+                        #     "Two components may not have the same name %s" % self.label)
+                        pass
+                    else:
+                        self._circuit._no_value_labels.append(l)
 
 
     def _flux_zpf(self, mode, **kwargs):
@@ -2223,7 +2220,7 @@ class Component(Circuit):
         except KeyError:
             tr_analytical = self._circuit._network.transfer(
                 self._circuit.ref_elt[mode].node_minus, self._circuit.ref_elt[mode].node_plus, self.node_minus, self.node_plus)
-            tr = lambdify(['w']+self._circuit._no_value_components,tr_analytical, "numpy")
+            tr = lambdify(['w']+self._circuit._no_value_labels,tr_analytical, "numpy")
             def tr_minus(w,**kwargs):
                 return -tr(w,**kwargs)
             
@@ -2254,7 +2251,7 @@ class Component(Circuit):
 
 
     def _to_string(self, use_unicode=True):
-        return to_string(self.unit, self.label, self.value, use_unicode=use_unicode)
+        return to_string(self.unit, self.labels[0], self.values[0], use_unicode=use_unicode)
 
 
     @vectorize_kwargs(exclude = ['quantity','mode'])
@@ -2326,10 +2323,10 @@ class W(Component):
     """docstring for Wire"""
 
     def __init__(self, node_minus, node_plus, *args):
-        super(W, self).__init__(node_minus, node_plus, '')
+        super(W, self).__init__(node_minus, node_plus, None)
         self.unit = None
-        self.label = None
-        self.value = None
+        self.labels = [None]
+        self.values = [None]
 
     def _to_string(*args, **kwargs):
         return ' '
@@ -2542,7 +2539,7 @@ class L(Component):
         # Convert the sympy expression for v/du to a function
         # Note the function arguments are the angular frequency 
         # and component values that need to be specified
-        dY = lambdify(['w']+self._circuit._no_value_components,du/v, "numpy")
+        dY = lambdify(['w']+self._circuit._no_value_labels,du/v, "numpy")
 
         def _flux_zpf_r(z,**kwargs):
             return np.sqrt(hbar/np.real(z)/np.imag(dY(z,**kwargs)))
@@ -2701,7 +2698,7 @@ class NonLinearInductor(L):
 
     def _set_component_lists(self):
         super(L, self)._set_component_lists()
-        self._circuit.junctions.append(self)
+        self._circuit.nonlinear_inductors.append(self)
         
     @vectorize_kwargs(exclude = ['mode1', 'mode2', 'mode3'])
     def three_term(self, mode1, mode2, mode3, **kwargs):
