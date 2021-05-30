@@ -2186,15 +2186,15 @@ class Component(Circuit):
         elif N_values<N_labels:
             self.values += [None]*(N_labels-N_values)
 
-    def _get_value(self, **kwargs):
+    def _get_value(self, i, **kwargs):
 
-        if self.values[0] is not None:
-            return self.values[0]
-        elif self.values[0] is None and kwargs is not None:
-            if self.labels[0] in [k for k in kwargs]:
-                return kwargs[self.labels[0]]
+        if self.values[i] is not None:
+            return self.values[i]
+        elif self.values[i] is None and kwargs is not None:
+            if self.labels[i] in [k for k in kwargs]:
+                return kwargs[self.labels[i]]
 
-        return sp.Symbol(self.labels[0])
+        return sp.Symbol(self.labels[i])
 
     def _set_component_lists(self):
         for i, l in enumerate(self.labels):
@@ -2424,7 +2424,7 @@ class L(Component):
         self.unit = 'H'
 
     def _admittance(self):
-        return -sp.I*Mul(1/sp.Symbol('w'), 1/self._get_value())
+        return -sp.I*Mul(1/sp.Symbol('w'), 1/self._get_value(0))
 
     def _set_component_lists(self):
         super(L, self)._set_component_lists()
@@ -2488,7 +2488,7 @@ class L(Component):
     def _get_RLC_matrix_components(self):
         return {
             'R':0,
-            'L':1/self._get_value(),
+            'L':1/self._get_value(0),
             'C':0
         }
 
@@ -2593,9 +2593,9 @@ class J(L):
         else:
             self.unit = 'H'
 
-    def _get_value(self, **kwargs):
+    def _get_value(self, i, **kwargs):
         # Returns the Josephson inductance
-        value = super(J, self)._get_value( **kwargs) #Only 1 value specified
+        value = super(J, self)._get_value(0, **kwargs) #Only 1 value specified
         if (self.use_E == False) and (self.use_I == False):
             return value
         elif (self.use_E == True) and (self.use_I == False):
@@ -2608,7 +2608,7 @@ class J(L):
             raise ValueError("Cannot set both use_E and use_I to True")
 
     def _get_Ej(self, i, **kwargs):
-        return (hbar/2./e)**2/(self._get_value(**kwargs)*h)*((i+1)%2) #zero if i odd
+        return (hbar/2./e)**2/(self._get_value(0, **kwargs)*h)*((i+1)%2) #zero if i odd
 
     def _set_component_lists(self):
         super(L, self)._set_component_lists()
@@ -2687,16 +2687,16 @@ class NonLinearInductor(L):
         super(NonLinearInductor, self).__init__(node_minus, node_plus, *args)
         self.unit = 'Hz'
 
-    def _get_value(self,**kwargs):
-        value = super(NonLinearInductor, self)._get_value(**kwargs)
+    def _get_value(self, i, **kwargs):
+        value = super(NonLinearInductor, self)._get_value(0, **kwargs)
         L = (hbar/2./e)**2/(value*h)  # E is assumed to be provided in Hz
         return L
 
     def _get_Ej(self, i, **kwargs):
         if i%2 == 0:
-            return (-1)**((i+2)//2+1) * super(NonLinearInductor, self)._get_value(**kwargs) # to match the developement of a Josephson junction hamiltonian
+            return (-1)**((i+2)//2+1) * super(NonLinearInductor, self)._get_value(i, **kwargs) # to match the developement of a Josephson junction hamiltonian
         else:
-            return super(NonLinearInductor, self)._get_value(**kwargs)
+            return super(NonLinearInductor, self)._get_value(i, **kwargs)
 
     def _set_component_lists(self):
         super(L, self)._set_component_lists()
@@ -2840,7 +2840,7 @@ class R(Component):
         self.unit = u"\u03A9"
 
     def _admittance(self):
-        return 1/self._get_value()
+        return 1/self._get_value(0)
     
     def _set_component_lists(self):
         super(R, self)._set_component_lists()
@@ -2848,7 +2848,7 @@ class R(Component):
     
     def _get_RLC_matrix_components(self):
         return {
-            'R':1/self._get_value(),
+            'R':1/self._get_value(0),
             'L':0,
             'C':0
         }
@@ -2931,7 +2931,7 @@ class C(Component):
         self.unit = 'F'
 
     def _admittance(self):
-        return sp.I*Mul(sp.Symbol('w'), self._get_value())
+        return sp.I*Mul(sp.Symbol('w'), self._get_value(0))
 
     def _set_component_lists(self):
         super(C, self)._set_component_lists()
@@ -2972,7 +2972,7 @@ class C(Component):
         return {
             'R':0,
             'L':0,
-            'C':self._get_value()
+            'C':self._get_value(0)
         }
 
 class Admittance(Component):
