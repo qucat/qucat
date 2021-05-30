@@ -2186,15 +2186,6 @@ class Component(Circuit):
                     self.values[0] = a
                     self.value = a
 
-    def __hash__(self, i):
-        if self.labels[i] is None:
-            return hash(str(self.values[i])+self.unit)
-        else:
-            if self.values[i] is None:
-                return hash(self.labels[i]+self.unit)
-            else:
-                return hash(str(self.values[i])+self.labels[i]+self.unit)
-
     def _get_value(self, **kwargs):
 
         if self.values[0] is not None:
