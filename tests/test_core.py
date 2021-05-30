@@ -411,17 +411,17 @@ class TestNetworkAnalysis(TestCaseAppended):
 
 class ArgumentParsing(TestCaseAppended):
 
-    # def test_single_valued_component(self):
-    #     JJ = core.J(0,1,['LJ1'])
-    #     assert_equal(JJ._get_value(),sp.Symbol('LJ1'))
-    #     JJ = core.J(0,1,'LJ2')
-    #     assert_equal(JJ._get_value(),sp.Symbol('LJ2'))
-    #     JJ = core.J(0,1,'LJ',1e-7)
-    #     assert_equal(JJ._get_value(),1e-7)
-    #     JJ = core.J(0,1,1e-7)
-    #     assert_equal(JJ._get_value(),1e-7)
-    #     JJ = core.J(0,1,[1e-7])
-    #     assert_equal(JJ._get_value(),1e-7)
+    def test_single_valued_component(self):
+        JJ = core.J(0,1,['LJ1'])
+        assert_equal(JJ._get_value(0),sp.Symbol('LJ1'))
+        JJ = core.J(0,1,'LJ2')
+        assert_equal(JJ._get_value(0),sp.Symbol('LJ2'))
+        JJ = core.J(0,1,'LJ',1e-7)
+        assert_equal(JJ._get_value(0),1e-7)
+        JJ = core.J(0,1,1e-7)
+        assert_equal(JJ._get_value(0),1e-7)
+        JJ = core.J(0,1,[1e-7])
+        assert_equal(JJ._get_value(0),1e-7)
 
     def test_multi_valued_component(self):
 
@@ -444,16 +444,16 @@ class ArgumentParsing(TestCaseAppended):
         self.assertCountEqual(non_linear_inductor.labels,['a','b','c'])
         self.assertCountEqual(non_linear_inductor.values,[1,None,None])
 
-        circuit = self.open_gui_file('multi_valued_component_1.txt', edit = False)
+        circuit = self.open_gui_file('multi_valued_component_1.txt')
         non_linear_inductor = circuit.components['a']
         self.assertCountEqual(non_linear_inductor.labels,['a','b','c'])
         self.assertCountEqual(non_linear_inductor.values,[None]*3)
         
-        # circuit = self.open_gui_file('multi_valued_component_2.txt', edit = True)
-        # non_linear_inductor = circuit.nonlinear_inductors[0]
-        # assert_equal(non_linear_inductor.values,[1,2,3])
-        # assert_equal(non_linear_inductor.labels,[None]*3)
+        circuit = self.open_gui_file('multi_valued_component_2.txt')
+        non_linear_inductor = circuit.nonlinear_inductors[0]
+        assert_equal(non_linear_inductor.values,[1,2,3])
+        assert_equal(non_linear_inductor.labels,[None]*3)
 
 if __name__ == "__main__":
-    # unittest.main()
-    unittest.main(ArgumentParsing())
+    unittest.main()
+    # unittest.main(ArgumentParsing())

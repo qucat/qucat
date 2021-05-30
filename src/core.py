@@ -1440,7 +1440,7 @@ class GUI(Qcircuit):
                 
                 labels = []
                 for l in el[4].split(","):
-                    if el[4] == '':
+                    if l == '':
                         labels.append(None)
                     else:                    
                         labels.append(l)
