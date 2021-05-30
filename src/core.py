@@ -2701,6 +2701,7 @@ class NonLinearInductor(L):
     def _set_component_lists(self):
         super(L, self)._set_component_lists()
         self._circuit.nonlinear_inductors.append(self)
+        self._circuit.junctions.append(self)
         
     @vectorize_kwargs(exclude = ['mode1', 'mode2', 'mode3'])
     def three_term(self, mode1, mode2, mode3, **kwargs):
