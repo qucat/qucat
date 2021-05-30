@@ -1431,20 +1431,22 @@ class GUI(Qcircuit):
             for el in f:
                 el = el.replace('\n', '').replace(' ', '')
                 el = el.split(";")
-                if el[3] == '':
-                    v = None
-                else:
-                    v = [float(e) for e in el[3].split(",")]
-                if el[4] == '':
-                    l = None
-                else:                    
-                    l = el[4].split(",")
-
-
-
+                values = []
+                for v in el[3].split(","):
+                    if v == '':
+                        values.append(None)
+                    else:
+                        values.append(float(v))
+                
+                labels = []
+                for l in el[4].split(","):
+                    if el[4] == '':
+                        labels.append(None)
+                    else:                    
+                        labels.append(l)
 
                 netlist.append(
-                    string_to_component(el[0], el[1], el[2], v, l))
+                    string_to_component(el[0], el[1], el[2], values, labels))
 
         super(GUI, self).__init__(netlist)
         for el in self.netlist:
@@ -2116,7 +2118,7 @@ class Circuit(object):
             va = 'center'
 
         ax.text(x, y,
-                to_string(self.unit, self.labels[0], self.values[0]),
+                to_string(self.unit, self.labels, self.values),
                 fontsize=pp['label']['fontsize'],
                 ha=ha, va=va)
 
