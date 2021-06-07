@@ -2682,7 +2682,68 @@ class J(L):
             return shift(y, self.x_plot_center), shift(x, self.y_plot_center), line_type
 
 
-class NonLinearInductor(L):    
+class NonLinearInductor(L):   
+    r'''A class representing a non-linear inductor
+    
+    Parameters
+    ----------
+    node_minus:     integer
+                    Index corresponding to one node of the inductor
+    node_minus:     integer
+                    Index corresponding to the other node of the inductor
+    args:           List of <float> or list of <str> or <float>,<str>
+                    These arguments characterize the contribution
+                    of this element to the system Hamiltonian (see below).
+                    If only labels are provided, 
+                    a value for every label should be passed
+                    as a keyword argument in subsequent function calls
+                    (ex: `E_1 = 1e9, E_1 = 1e6`).
+                    This is the best way to proceed if one wants to sweep the value of this
+                    element. Indeed, the most computationally expensive part of the 
+                    analysis is performed upon initializing the circuit, subsequently
+                    changing the value of a component and re-calculating a quantity 
+                    such as the frequency or anharmonicity can be performed much faster.
+
+    Notes
+    -----
+
+    A non-linear inductor allows the simulation of an arbitrary contribution to the inductive energy.
+    The element is parametrized by a list of labels or values.
+    For example, if three labels `[a,b,c]` are provided, the contribution :math:`U` of this element to the Hamiltonian is
+
+    :math:`U/h = \frac{a}{2!}\phi^2 + \frac{b}{3!}\phi^3 + \frac{c}{4!}\phi^4`
+
+    The parameters are assumed to be given in units of Herz.
+    To create a Josephson junction, with energy
+
+    :math:`U = E_J(1 - \cos\phi) \simeq \frac{E_J}{2}\phi^2 - \frac{E_J}{4!}\phi^4`
+
+    one should use : :math:`a =E_J/h, b = 0, c = -E_J/h`.
+    Note that this element is polarized, since odd orders are non zero in general. So orientation matters.
+
+    
+    Once the hamiltonian decomposed into eigenmodes, the hamiltonian of the circuit writes :
+
+    :math:` H = \sum_m{\hbar \omega_m \hat{a}^\dagger_m \hat{a}_m} + \sum_j \sum_{n\geq 3}\frac{\partial^{n} U_j}{\partial \phi^{n}}\bigg|_0\hat{\phi}_j^n`
+
+    with :
+    - :math:`\hat{\phi}_j` being the phase across the j-th non linear element
+    - :math:`m` the modes of the circuit
+    - :math:`\omega_m/2\pi` the frequency of the :math:`m`-th mode
+    - :math:`\hat{a}_m` the annihilator of the :math:`m`-th mode
+    - :math:`U_j(\phi)` the inductive energy of the j-th non linear dipole, assuming its minimum is for :math:`\phi = 0`
+
+
+    Using :math:`\hat{\phi}_j =  \sum_m \phi_{zpf, m, j}\hat{\phi}_m = \sum_m \phi_{zpf, m, j}(\hat{a}^\dagger_m + \hat{a}_m)` :
+
+    :math:`H = \sum_m{\hbar \omega_m \hat{a}^\dagger_m \hat{a}_m} + \sum_j \sum_{n\geq 3}\frac{\partial^{n} U_j}{\partial \phi^{n}}[\sum_m \phi_{zpf, m, j}(\hat{a}^\dagger_m + \hat{a}_m)]^n`
+    
+    At fourth order, following the QuCAT formalism (applying rotating wave approximation) and adding the third order terms, we obtain
+
+    :math:`H = \hbar\sum_m \big[( \omega_m - \sum_{n}\frac{\chi_{mn}}{2})\hat{a}_m^\dagger\hat{a}_m-\frac{A_m}{2} \hat{a}_m^\dagger \hat{a}_m^\dagger \hat{a}_m \hat{a}_m -\sum_{n}\chi_{mn}\hat{a}_m^\dagger \hat{a}_m \hat{a}_n^\dagger \hat{a}_n\big] + \sum_{m, n, o}(\gamma_{mno}^* \hat{a}_m^\dagger \hat{a}_n^\dagger \hat{a}_o + \gamma_{mno} \hat{a}_m \hat{a}_n \hat{a}_o^\dagger)`
+
+    the :meth:`qucat.Qcircuit.three_waves` returns the term :math:`\gamma_{mno}`.
+    ''' 
     def __init__(self, node_minus, node_plus, *args):
         super(NonLinearInductor, self).__init__(node_minus, node_plus, *args)
         self.unit = 'Hz'
@@ -2705,39 +2766,36 @@ class NonLinearInductor(L):
     def _set_component_lists(self):
         super(L, self)._set_component_lists()
         self._circuit.nonlinear_inductors.append(self)
-        self._circuit.junctions.append(self)
+        self._circuit.junctions.append(self) # Temporary hack
         
     @vectorize_kwargs(exclude = ['mode1', 'mode2', 'mode3'])
     def three_term(self, mode1, mode2, mode3, **kwargs):
-        r'''Returns the contribution of this junction to the three waves-mixing coeficient of a normal mode
+        r'''Returns the contribution of this non-linear inductor to the three waves-mixing coeficient of a normal mode
 
         Returned in units of Hertz, not angular frequency.
 
         Parameters
         ----------
         kwargs:     
-                    Values for un-specified circuit components, 
+                                Values for un-specified circuit components, 
         
-        mode:           integer
-                        where 0 designates
-                        the lowest frequency mode, and the others
-                        are arranged in order of increasing frequency
+        mode1, mode2, mode3:    integer
+
         Returns
         -------
         float
-            contribution of this junction to the three waves-mixing coeficient of a given normal mode
+            contribution of this non-linear inductor to the three waves-mixing coeficient of a given normal mode
         
         Notes
         -----
         The quantity returned is the three waves-mixing coeficient
-        of the modes ``m_1``, `m_2`` and `m_3`` if this junction were the only junction
+        of the modes ``mode1``, ``mode2`` and ``mode3`` if this inductor were the only inductor
         present in the circuit (i.e. if all the 
-        others were replaced by linear inductors). This is the coefficient for :math: ``a_1 a_2 a^\dagger_3``.
+        others were replaced by linear inductors). This is the coefficient for :math:`a_1 a_2 a^\dagger_3`.
 
         The total three wave coefficient (in first order perturbation theory) is obtained
         by summing these contribution over all modes.
 
-        For more details, see https://arxiv.org/pdf/1908.10342.pdf
         '''
         return self._get_Ej(1, **kwargs)*(self.zpf(mode1,quantity='flux',**kwargs)
                                                        *self.zpf(mode2,quantity='flux',**kwargs)
@@ -2745,7 +2803,8 @@ class NonLinearInductor(L):
 
     @vectorize_kwargs(exclude = ['mode'])
     def anharmonicity(self, mode, **kwargs):
-        r'''Returns the contribution of this junction to the anharmonicity of a given normal mode.
+        r'''Returns the contribution of this non-linear inductor to the (Kerr) 
+        anharmonicity of a given normal mode.
 
         Returned in units of Hertz, not angular frequency.
 
@@ -2762,12 +2821,12 @@ class NonLinearInductor(L):
         Returns
         -------
         float
-            contribution of this junction to the anharmonicity of a given normal mode
+            contribution of this inductor to the anharmonicity of a given normal mode
         
         Notes
         -----
         The quantity returned is the anharmonicity
-        of the mode ``m`` if this junction were the only junction
+        of the mode ``m`` if this inductor were the only inductor
         present in the circuit (i.e. if all the 
         others were replaced by linear inductors).
 
