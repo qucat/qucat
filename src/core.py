@@ -3,6 +3,7 @@ from sympy.utilities.lambdify import lambdify
 import numpy as np
 from numpy.polynomial.polynomial import Polynomial as npPoly
 from sympy.core.mul import Mul, Pow, Add
+import sympy.physics.secondquant as sp_sq
 from copy import deepcopy
 from numbers import Number
 from math import floor, factorial
@@ -21,9 +22,6 @@ except ImportError:
     from _constants import *
     from _utility import *
     from plotting_settings import plotting_parameters_show,plotting_parameters_normal_modes
-    
-from sympy.physics.secondquant import Dagger, B, Bd
-
     
 PROFILING = False
 def timeit(method):
@@ -767,10 +765,6 @@ class Qcircuit(object):
         '''
         from qutip import destroy, qeye, tensor
 
-        self.hamiltonian_modes = modes
-        self.hamiltonian_taylor = taylor
-        self.hamiltonian_excitations = excitations
-
         fs = self.eigenfrequencies(**kwargs)
 
         if modes == 'all':
@@ -830,15 +824,12 @@ class Qcircuit(object):
     @refuse_vectorize_kwargs(exclude = ['modes','taylor','excitations','return_ops'])
     def hamiltonian_sym(self, modes='all', taylor=4, **kwargs):
 
-        self.hamiltonian_modes = modes
-        self.hamiltonian_taylor = taylor
-
         fs = self.eigenfrequencies(**kwargs)
 
         if modes == 'all':
             modes = range(len(fs))
-        modes = [c%len(fs) for c in modes]
-        ops = [B("m" + str(c)) for c in modes]
+        modes = [c % len(fs) for c in modes]
+        ops = [sp_sq.B("m" + str(c)) for c in modes]
         for m in modes:
             try:
                 fs[m]
@@ -850,8 +841,6 @@ class Qcircuit(object):
                 # error_message +="numerical imprecision. Adding a resistance to the circuit may help with this."
                 raise ValueError(error_message)
 
-
-
         H = 0
         operators = []
         phi = [0 for junction in self.junctions]
@@ -860,13 +849,13 @@ class Qcircuit(object):
 
             a = ops[index]
             operators.append(ops)
-            H += fs[mode]*Dagger(a)*a
+            H += fs[mode]*sp_sq.Dagger(a)*a
 
             for j, junction in enumerate(self.junctions):
                 # Note that zpf returns the flux in units of phi_0 = hbar/2./e
-                phi[j] += np.real(junction.zpf(quantity='flux',mode=mode, **kwargs))*(a+Dagger(a)) 
+                phi[j] += np.real(junction.zpf(quantity='flux',mode=mode, **kwargs))*(a+sp_sq.Dagger(a)) 
                 # a = x+iy => -i*(a-a^) = -i(iy+iy) = --1
-                phi[j] += -1j*np.imag(junction.zpf(quantity='flux',mode=mode, **kwargs))*(a-Dagger(a)) 
+                phi[j] += -1j*np.imag(junction.zpf(quantity='flux',mode=mode, **kwargs))*(a-sp_sq.Dagger(a)) 
 
         for j, junction in enumerate(self.junctions):
             n = 2
