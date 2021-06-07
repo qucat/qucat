@@ -15,3 +15,4 @@ If you have additional questions, please ask a question on
     optomechanics.ipynb
     MMUSC.ipynb
     tuneable_coupler.ipynb
+    snail.ipynb
