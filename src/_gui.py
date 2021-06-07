@@ -3596,8 +3596,8 @@ class RequestValueLabelWindow(tk.Toplevel):
 
         elif isinstance(self.component,NonLinearInductor):
             self.value_string = 'Energy'
-            info_text = "Specify at least three labels separated by ',' for the non-linear \ninductor (the 2nd, 3rd and 4th order of the inductors Hamiltonian)"
-            info_text += '\nDo not specify any value, they have to be passed as kwargs in further computations'
+            info_text = "Specify at least three labels or values separated by ',' "
+            info_text += "for the non-linear \ninductor (the 2nd, 3rd and 4th order of the inductors Hamiltonian)"
         elif isinstance(self.component,L):
             self.value_string = 'Inductance'
             info_text = 'Specify label and/or inductance (in units of Henry)'
