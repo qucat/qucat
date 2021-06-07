@@ -2650,7 +2650,7 @@ class J(L):
 
         For more details, see https://arxiv.org/pdf/1908.10342.pdf
         '''
-        return self._get_Ej(0, **kwargs)/2*np.absolute(self.zpf(mode,quantity='flux',**kwargs))**4
+        return self._get_Ej(2, **kwargs)/2*np.absolute(self.zpf(mode,quantity='flux',**kwargs))**4
 
 
     def _draw(self):
@@ -2693,10 +2693,14 @@ class NonLinearInductor(L):
         return L
 
     def _get_Ej(self, i, **kwargs):
-        if i%2 == 0:
-            return (-1)**((i+2)//2+1) * super(NonLinearInductor, self)._get_value(i, **kwargs) # to match the developement of a Josephson junction hamiltonian
-        else:
-            return super(NonLinearInductor, self)._get_value(i, **kwargs)
+        try:
+            if i%2 == 0:
+                # to match the developement of a Josephson junction hamiltonian
+                return (-1)**((i+2)//2+1)*super(NonLinearInductor, self)._get_value(i, **kwargs) 
+            else:
+                return super(NonLinearInductor, self)._get_value(i, **kwargs)
+        except IndexError:
+            return 0
 
     def _set_component_lists(self):
         super(L, self)._set_component_lists()

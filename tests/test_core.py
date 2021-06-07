@@ -454,6 +454,33 @@ class ArgumentParsing(TestCaseAppended):
         assert_equal(non_linear_inductor.values,[1,2,3])
         assert_equal(non_linear_inductor.labels,[None]*3)
 
+
+class NonlinearInductor(TestCaseAppended):
+
+    def test_inductor_with_NL_inductor(self):
+        C = 100e-15
+        Lj = 10e-9
+        Ej = (hbar/2./e)**2/(Lj*h)
+        circuit = core.Network([
+            core.C(0,1,C),
+            core.NonLinearInductor(0,1,Ej)
+        ])
+        w,k,A,chi = circuit.f_k_A_chi()
+        self.assertRelativelyClose(1/(np.sqrt(C*Lj)*2.*pi),w)
+
+    def test_junction_with_NL_inductor(self):
+        C = 100e-15
+        Lj = 10e-9
+        Ej = (hbar/2./e)**2/(Lj*h)
+        circuit = core.Network([
+            core.C(0,1,C),
+            core.NonLinearInductor(0,1,[Ej,0,-Ej])
+        ])
+        w,k,A,chi = circuit.f_k_A_chi()
+        self.assertRelativelyClose(1/(np.sqrt(C*Lj)*2.*pi),w)
+        self.assertRelativelyClose(e**2/2/C/h,A)
+
+
 if __name__ == "__main__":
     unittest.main()
-    # unittest.main(ArgumentParsing())
+    # unittest.main(NonlinearInductor())
