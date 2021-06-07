@@ -7,7 +7,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
-  <title>Josephson junction &mdash; qucat  documentation</title>
+  <title>Non-linear inductor &mdash; qucat  documentation</title>
   
 
   
@@ -43,8 +43,8 @@
     <link rel="author" title="About these documents" href="../../about.html" />
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="Inductor" href="L.html" />
-    <link rel="prev" title="Circuit components" href="../components.html" /> 
+    <link rel="next" title="Contact" href="../../contact.html" />
+    <link rel="prev" title="Resistor" href="R.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -99,11 +99,11 @@
 <li class="toctree-l2"><a class="reference internal" href="../builders.html">Creating a circuit</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../circuit_functions.html">Circuit analysis</a></li>
 <li class="toctree-l2 current"><a class="reference internal" href="../components.html">Circuit components</a><ul class="current">
-<li class="toctree-l3 current"><a class="current reference internal" href="#">Josephson junction</a></li>
+<li class="toctree-l3"><a class="reference internal" href="J.html">Josephson junction</a></li>
 <li class="toctree-l3"><a class="reference internal" href="L.html">Inductor</a></li>
 <li class="toctree-l3"><a class="reference internal" href="C.html">Capacitor</a></li>
 <li class="toctree-l3"><a class="reference internal" href="R.html">Resistor</a></li>
-<li class="toctree-l3"><a class="reference internal" href="NonLinearInductor.html">Non-linear inductor</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">Non-linear inductor</a></li>
 </ul>
 </li>
 </ul>
@@ -163,13 +163,13 @@
         
           <li><a href="../components.html">Circuit components</a> &raquo;</li>
         
-      <li>Josephson junction</li>
+      <li>Non-linear inductor</li>
     
     
       <li class="wy-breadcrumbs-aside">
         
           
-            <a href="../../_sources/API/components/J.rst.txt" rel="nofollow"> View page source</a>
+            <a href="../../_sources/API/components/NonLinearInductor.rst.txt" rel="nofollow"> View page source</a>
           
         
       </li>
@@ -206,43 +206,59 @@
     text-align: unset;
 }
 </style>
-<div class="section" id="josephson-junction">
-<span id="junction"></span><h1>Josephson junction<a class="headerlink" href="#josephson-junction" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="non-linear-inductor">
+<span id="nonlinearinductor"></span><h1>Non-linear inductor<a class="headerlink" href="#non-linear-inductor" title="Permalink to this headline">¶</a></h1>
 <dl class="py class">
-<dt id="qucat.J">
-<em class="property">class </em><code class="sig-prename descclassname">qucat.</code><code class="sig-name descname">J</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">node_minus</span></em>, <em class="sig-param"><span class="n">node_plus</span></em>, <em class="sig-param"><span class="o">*</span><span class="n">args</span></em>, <em class="sig-param"><span class="n">use_E</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">use_I</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qucat/core.html#J"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#qucat.J" title="Permalink to this definition">¶</a></dt>
-<dd><p>A class representing a junction</p>
+<dt id="qucat.NonLinearInductor">
+<em class="property">class </em><code class="sig-prename descclassname">qucat.</code><code class="sig-name descname">NonLinearInductor</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">node_minus</span></em>, <em class="sig-param"><span class="n">node_plus</span></em>, <em class="sig-param"><span class="o">*</span><span class="n">args</span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qucat/core.html#NonLinearInductor"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#qucat.NonLinearInductor" title="Permalink to this definition">¶</a></dt>
+<dd><p>A class representing a non-linear inductor</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>node_minus</strong> (<em>integer</em>) – Index corresponding to one node of junction</p></li>
-<li><p><strong>node_minus</strong> – Index corresponding to the other node of the junction</p></li>
-<li><p><strong>args</strong> (<em>&lt;float&gt;</em><em> or </em><em>&lt;str&gt;</em><em> or </em><em>&lt;float&gt;</em><em>,</em><em>&lt;str&gt;</em>) – Other arguments should be a float which by default
-corresponds to the Josephson inductance of the
-junction, a string corresponding to the
-name of that value (ex: <cite>“L_J”</cite>), or both.
-If only a label is provided,
-a value for this junction should be passed
+<li><p><strong>node_minus</strong> (<em>integer</em>) – Index corresponding to one node of the inductor</p></li>
+<li><p><strong>node_minus</strong> – Index corresponding to the other node of the inductor</p></li>
+<li><p><strong>args</strong> (<em>List of &lt;float&gt;</em><em> or </em><em>list of &lt;str&gt;</em><em> or </em><em>&lt;float&gt;</em><em>,</em><em>&lt;str&gt;</em>) – These arguments characterize the contribution
+of this element to the system Hamiltonian (see below).
+If only labels are provided,
+a value for every label should be passed
 as a keyword argument in subsequent function calls
-(ex: <cite>L_J = 10e-9</cite>).
+(ex: <cite>E_1 = 1e9, E_1 = 1e6</cite>).
 This is the best way to proceed if one wants to sweep the value of this
-junction. Indeed, the most computationally expensive part of the
+element. Indeed, the most computationally expensive part of the
 analysis is performed upon initializing the circuit, subsequently
 changing the value of a component and re-calculating a quantity
 such as the frequency or anharmonicity can be performed much faster.</p></li>
-<li><p><strong>use_E</strong> (<em>Boolean</em>) – If set to True, the junction will be parametrized by
-its Josephson energy, given in units of Hertz, rather
-than its Josephson inductance</p></li>
-<li><p><strong>use_I</strong> (<em>Boolean</em>) – If set to True, the junction will be parametrized by
-its critical current, given in units of Ampere, rather
-than its Josephson inductance</p></li>
 </ul>
 </dd>
 </dl>
+<p class="rubric">Notes</p>
+<p>A non-linear inductor allows the simulation of an arbitrary contribution to the inductive energy.
+The element is parametrized by a list of labels or values.
+For example, if three labels <cite>[a,b,c]</cite> are provided, the contribution <span class="math notranslate nohighlight">\(U\)</span> of this element to the Hamiltonian is</p>
+<p><span class="math notranslate nohighlight">\(U/h = \frac{a}{2!}\phi^2 + \frac{b}{3!}\phi^3 + \frac{c}{4!}\phi^4\)</span></p>
+<p>The parameters are assumed to be given in units of Herz.
+To create a Josephson junction, with energy</p>
+<p><span class="math notranslate nohighlight">\(U = E_J(1 - \cos\phi) \simeq \frac{E_J}{2}\phi^2 - \frac{E_J}{4!}\phi^4\)</span></p>
+<p>one should use : <span class="math notranslate nohighlight">\(a =E_J/h, b = 0, c = -E_J/h\)</span>.
+Note that this element is polarized, since odd orders are non zero in general. So orientation matters.</p>
+<p>Once the hamiltonian decomposed into eigenmodes, the hamiltonian of the circuit writes :</p>
+<p>:math:` H = sum_m{hbar omega_m hat{a}^dagger_m hat{a}_m} + sum_j sum_{ngeq 3}frac{partial^{n} U_j}{partial phi^{n}}bigg|_0hat{phi}_j^n`</p>
+<p>with :
+- <span class="math notranslate nohighlight">\(\hat{\phi}_j\)</span> being the phase across the j-th non linear element
+- <span class="math notranslate nohighlight">\(m\)</span> the modes of the circuit
+- <span class="math notranslate nohighlight">\(\omega_m/2\pi\)</span> the frequency of the <span class="math notranslate nohighlight">\(m\)</span>-th mode
+- <span class="math notranslate nohighlight">\(\hat{a}_m\)</span> the annihilator of the <span class="math notranslate nohighlight">\(m\)</span>-th mode
+- <span class="math notranslate nohighlight">\(U_j(\phi)\)</span> the inductive energy of the j-th non linear dipole, assuming its minimum is for <span class="math notranslate nohighlight">\(\phi = 0\)</span></p>
+<p>Using <span class="math notranslate nohighlight">\(\hat{\phi}_j =  \sum_m \phi_{zpf, m, j}\hat{\phi}_m = \sum_m \phi_{zpf, m, j}(\hat{a}^\dagger_m + \hat{a}_m)\)</span> :</p>
+<p><span class="math notranslate nohighlight">\(H = \sum_m{\hbar \omega_m \hat{a}^\dagger_m \hat{a}_m} + \sum_j \sum_{n\geq 3}\frac{\partial^{n} U_j}{\partial \phi^{n}}[\sum_m \phi_{zpf, m, j}(\hat{a}^\dagger_m + \hat{a}_m)]^n\)</span></p>
+<p>At fourth order, following the QuCAT formalism (applying rotating wave approximation) and adding the third order terms, we obtain</p>
+<p><span class="math notranslate nohighlight">\(H = \hbar\sum_m \big[( \omega_m - \sum_{n}\frac{\chi_{mn}}{2})\hat{a}_m^\dagger\hat{a}_m-\frac{A_m}{2} \hat{a}_m^\dagger \hat{a}_m^\dagger \hat{a}_m \hat{a}_m -\sum_{n}\chi_{mn}\hat{a}_m^\dagger \hat{a}_m \hat{a}_n^\dagger \hat{a}_n\big] + \sum_{m, n, o}(\gamma_{mno}^* \hat{a}_m^\dagger \hat{a}_n^\dagger \hat{a}_o + \gamma_{mno} \hat{a}_m \hat{a}_n \hat{a}_o^\dagger)\)</span></p>
+<p>the <code class="xref py py-meth docutils literal notranslate"><span class="pre">qucat.Qcircuit.three_waves()</span></code> returns the term <span class="math notranslate nohighlight">\(\gamma_{mno}\)</span>.</p>
 <dl class="py method">
-<dt id="qucat.J.anharmonicity">
-<code class="sig-name descname">anharmonicity</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">mode</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qucat/core.html#J.anharmonicity"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#qucat.J.anharmonicity" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns the contribution of this junction to the anharmonicity of a given normal mode.</p>
+<dt id="qucat.NonLinearInductor.anharmonicity">
+<code class="sig-name descname">anharmonicity</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">mode</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qucat/core.html#NonLinearInductor.anharmonicity"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#qucat.NonLinearInductor.anharmonicity" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the contribution of this non-linear inductor to the (Kerr)
+anharmonicity of a given normal mode.</p>
 <p>Returned in units of Hertz, not angular frequency.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -255,7 +271,7 @@ are arranged in order of increasing frequency</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p>contribution of this junction to the anharmonicity of a given normal mode</p>
+<dd class="field-even"><p>contribution of this inductor to the anharmonicity of a given normal mode</p>
 </dd>
 <dt class="field-odd">Return type</dt>
 <dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.9)">float</a></p>
@@ -263,7 +279,7 @@ are arranged in order of increasing frequency</p></li>
 </dl>
 <p class="rubric">Notes</p>
 <p>The quantity returned is the anharmonicity
-of the mode <code class="docutils literal notranslate"><span class="pre">m</span></code> if this junction were the only junction
+of the mode <code class="docutils literal notranslate"><span class="pre">m</span></code> if this inductor were the only inductor
 present in the circuit (i.e. if all the
 others were replaced by linear inductors).</p>
 <p>The total anharmonicity of a mode (in first order perturbation theory) is obtained
@@ -272,8 +288,38 @@ by summing these contribution over all modes.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="qucat.J.zpf">
-<code class="sig-name descname">zpf</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">mode</span></em>, <em class="sig-param"><span class="n">quantity</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#qucat.J.zpf" title="Permalink to this definition">¶</a></dt>
+<dt id="qucat.NonLinearInductor.three_term">
+<code class="sig-name descname">three_term</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">mode1</span></em>, <em class="sig-param"><span class="n">mode2</span></em>, <em class="sig-param"><span class="n">mode3</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qucat/core.html#NonLinearInductor.three_term"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#qucat.NonLinearInductor.three_term" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the contribution of this non-linear inductor to the three waves-mixing coeficient of a normal mode</p>
+<p>Returned in units of Hertz, not angular frequency.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>kwargs</strong> – Values for un-specified circuit components,</p></li>
+<li><p><strong>mode1</strong> (<em>integer</em>) – </p></li>
+<li><p><strong>mode2</strong> (<em>integer</em>) – </p></li>
+<li><p><strong>mode3</strong> (<em>integer</em>) – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>contribution of this non-linear inductor to the three waves-mixing coeficient of a given normal mode</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.9)">float</a></p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>The quantity returned is the three waves-mixing coeficient
+of the modes <code class="docutils literal notranslate"><span class="pre">mode1</span></code>, <code class="docutils literal notranslate"><span class="pre">mode2</span></code> and <code class="docutils literal notranslate"><span class="pre">mode3</span></code> if this inductor were the only inductor
+present in the circuit (i.e. if all the
+others were replaced by linear inductors). This is the coefficient for <span class="math notranslate nohighlight">\(a_1 a_2 a^\dagger_3\)</span>.</p>
+<p>The total three wave coefficient (in first order perturbation theory) is obtained
+by summing these contribution over all modes.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="qucat.NonLinearInductor.zpf">
+<code class="sig-name descname">zpf</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">mode</span></em>, <em class="sig-param"><span class="n">quantity</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#qucat.NonLinearInductor.zpf" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns contribution of a mode to the zero-point fluctuations of a quantity for this component.</p>
 <p>The quantity can be current (in units of Ampere),
 voltage (in Volts),
@@ -316,8 +362,8 @@ and the annotated component  <span class="math notranslate nohighlight">\(c\)</s
           </div>
           <footer>
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-        <a href="L.html" class="btn btn-neutral float-right" title="Inductor" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
-        <a href="../components.html" class="btn btn-neutral float-left" title="Circuit components" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../../contact.html" class="btn btn-neutral float-right" title="Contact" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="R.html" class="btn btn-neutral float-left" title="Resistor" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
     </div>
 
   <hr/>
