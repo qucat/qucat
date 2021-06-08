@@ -25,7 +25,7 @@ class TestAll(TestTutorials):
     def test_TC(self):
         var_dict = self.run_tutorial('tuneable_coupler.ipynb')
     def test_SNAIL(self):
-        var_dict = self.run_tutorial('snail.ipynb')
+        var_dict = self.run_tutorial('SNAIL.ipynb')
         
 if __name__ == "__main__":
     unittest.main()
