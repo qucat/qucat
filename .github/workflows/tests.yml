@@ -27,6 +27,7 @@ jobs:
     - name: Install dependencies
       run: |
         # conda env update --file environment.yml --name base
+        conda install nbdime
         python -m pip install --upgrade pip
         python -m pip install .
         python -m pip install pytest
