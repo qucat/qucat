@@ -27,10 +27,14 @@ jobs:
     - name: Install dependencies
       run: |
         # conda env update --file environment.yml --name base
-        conda install nbdime
+        conda install nbdime qutip
         python -m pip install --upgrade pip
         python -m pip install .
         python -m pip install pytest
     - name: Test with pytest
       run: |
+        # avoid tkinter error
+        # See https://github.com/orgs/community/discussions/62479
+        export DISPLAY=:99
+        Xvfb :99 &
         pytest
