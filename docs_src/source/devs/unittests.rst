@@ -7,7 +7,7 @@ Unit testing
 Tests are setup using pythons default testing framework 
 `unittest <https://docs.python.org/2/library/unittest.html>`_.
 These tests are run each time new code is pushed to our Github repository
-using `Travis <https://travis-ci.com/>`_.
+using `GitHub Actions <https://docs.github.com/en/actions/>`_.
 They can also be edited
 and run on your local machine as explained below.
 

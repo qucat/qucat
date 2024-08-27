@@ -37,4 +37,8 @@ jobs:
         # See https://github.com/orgs/community/discussions/62479
         export DISPLAY=:99
         Xvfb :99 &
-        pytest
+        pytest --cov=src
+    - name: Upload results to Codecov
+      uses: codecov/codecov-action@v4
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}

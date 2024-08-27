@@ -32,6 +32,7 @@ Build status and test coverage
 ------------------------------
 
 Master branch: 
+![Upstream](https://github.com/qucat/qucat/actions/workflows/tests.yml/badge.svg?branch=master)
 [![Build Status](https://travis-ci.com/qucat/qucat.svg?branch=master)](https://travis-ci.com/qucat/qucat)
 [![codecov](https://codecov.io/gh/qucat/qucat/branch/master/graph/badge.svg)](https://codecov.io/gh/qucat/qucat)
 
