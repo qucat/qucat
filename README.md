@@ -45,3 +45,4 @@ Filing bug reports, proposing changes or additional features can be done on our
 [issues page](https://github.com/qucat/qucat/issues/new/choose)
 
 You can also contact Mario at mario.gely@qucat.org
+ 
