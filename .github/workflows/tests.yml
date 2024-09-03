@@ -10,7 +10,7 @@ jobs:
       max-parallel: 5
       matrix:
         ## os: [ubuntu-latest, macOS-12, windows-latest]
-        os: [macOS-12]
+        os: [windows-latest]
         python-version: ["3.7", "3.10", "3.11", "3.12"]
         exclude:
           - os: macOS-12
