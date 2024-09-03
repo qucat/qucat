@@ -31,9 +31,11 @@ jobs:
         echo $CONDA/bin >> $GITHUB_PATH
         echo $CONDA
     - name: Install dependencies
+      shell: bash
       run: |
         conda env update --file test-environment.yml --name base
     - name: Test with pytest
+      shell: bash
       run: |
         # avoid tkinter error
         # See https://github.com/orgs/community/discussions/62479
