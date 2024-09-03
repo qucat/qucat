@@ -36,8 +36,8 @@ jobs:
       run: |
         # avoid tkinter error
         # See https://github.com/orgs/community/discussions/62479
-        export DISPLAY=:99
-        Xvfb :99 &
+        # export DISPLAY=:99
+        # Xvfb :99 &
         pytest --cov=src
     - name: Upload results to Codecov
       uses: codecov/codecov-action@v4
