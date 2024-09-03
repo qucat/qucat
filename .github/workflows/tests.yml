@@ -33,5 +33,6 @@ jobs:
         pytest --cov=src
     - name: Upload results to Codecov
       uses: codecov/codecov-action@v4
+      if: ${{ matrix.python-version == '3.12' }}
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
