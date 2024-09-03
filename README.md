@@ -32,7 +32,8 @@ Build status and test coverage
 ------------------------------
 
 Master branch: 
-[![Build Status](https://travis-ci.com/qucat/qucat.svg?branch=master)](https://travis-ci.com/qucat/qucat)
+[![TEMP](https://github.com/sebranchett/qucat/actions/workflows/tests.yml/badge.svg?branch=master)](https://github.com/sebranchett/qucat/actions)
+[![Build Status](https://github.com/qucat/qucat/actions/workflows/tests.yml/badge.svg?branch=master)](https://github.com/qucat/qucat/actions)
 [![codecov](https://codecov.io/gh/qucat/qucat/branch/master/graph/badge.svg)](https://codecov.io/gh/qucat/qucat)
 
 Contribute
