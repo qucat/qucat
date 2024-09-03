@@ -24,5 +24,10 @@ jobs:
         conda env update --file test-environment.yml --name base
     - name: Test with pytest
       run: |
+        # avoid tkinter error
+        # See https://github.com/orgs/community/discussions/62479
+        export DISPLAY=:99
+        Xvfb :99 &
         pytest --cov=src
-        codecov
+    - name: Upload results to Codecov
+      uses: codecov/codecov-action@v4
