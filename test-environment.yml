@@ -1,0 +1,13 @@
+name: test-environment
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - scipy
+  - matplotlib
+  - sympy
+  - nbdime
+  - pytest
+  - pytest-cov
+  - codecov
+  - qutip
