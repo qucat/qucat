@@ -14,7 +14,7 @@ jobs:
     - name: Set up Python
       uses: actions/setup-python@v5
       with:
-        python-version: 3.7
+        python-version: '3.7'
     - name: Add conda to system path
       run: |
         # $CONDA is an environment variable pointing to the root of the miniconda directory
@@ -24,9 +24,7 @@ jobs:
         conda env update --file docs-environment.yml --name base
     - name: Build documentation
       run: |
-        conda init bash
-        conda activate base
-        python build_docs.py
+        $CONDA/bin/python build_docs.py
     # # Publish built docs
     # # ===============================
     # - name: Commit documentation changes
