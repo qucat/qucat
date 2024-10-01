@@ -1,0 +1,9 @@
+name: docs-environment
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - sphinx
+  - nbsphinx
+  - recommonmark
+  - sphinx_rtd_theme
