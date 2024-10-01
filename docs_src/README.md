@@ -1,2 +1,2 @@
-To generate the documentation (on Windows), run make_html.bat
+To generate the documentation (on Windows), run make.bat
 
