@@ -1,0 +1,35 @@
+name: Documentation
+
+on:
+  push:
+    paths:
+    - docs_src/**  # Only run on changes to the docs_src folder
+  workflow_dispatch:
+
+jobs:
+  docs:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - uses: ammaraskar/sphinx-action@master
+      with:
+        docs-folder: "docs_src/"
+    # Publish built docs
+    # ===============================
+    - name: Commit documentation changes
+      run: |
+        cd docs
+        touch .nojekyll
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+        git add .
+        git commit -m "Update documentation" -a || true
+        # The above command will fail if no changes were present, so we ignore
+        # that.
+    - name: Push changes
+      uses: ad-m/github-push-action@master
+      with:
+        directory: docs
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+    # ===============================
+  

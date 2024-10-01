@@ -83,11 +83,11 @@ The correct location to add this test is in the
 
 The **first time** we run this file,
 an empty GUI will open.
-**Step 1: ** here we set the initial configuration for the
+**Step 1:** here we set the initial configuration for the
 test, in this example we create and place a resistor, then close the GUI.
 This circuit will be saved in the file 
 ``tests/gui_testing_files/test_moving_resistor/initial_netlist.txt``
-**Step 2: **  a second GUI will open in the initial configuration, and we now 
+**Step 2:**  a second GUI will open in the initial configuration, and we now 
 perform the task we are testing. 
 Our actions will be recorded in the file
 ``tests/gui_testing_files/test_moving_resistor/events.txt`` 

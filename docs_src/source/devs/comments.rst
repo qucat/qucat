@@ -9,7 +9,7 @@ Commenting your code should come in two flavors.
 First are inline comments which explain what the code is doing, for example
 
 .. literalinclude:: example_inline_comment.txt
-   :language: pyth
+   :language: python
 
 the more of these, the better!
 

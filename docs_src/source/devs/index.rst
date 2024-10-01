@@ -33,6 +33,4 @@ Tutorials to help in all these tasks can be found below
     Format for docstrings and comments <comments>
     How to write and run unittests <unittests>
     How to edit and build the documentation and website <online_doc>
-    File structure <file>
-    Running qucat code from source (without pip or setup.py installation) <running>
 

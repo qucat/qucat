@@ -56,8 +56,8 @@ a class or function.
 As an example for classes, inserting the following code
 in the reStructuredText file of one of the documentation pages
 
-.. literalinclude:: example_class_autostring.rst
-   :language: rst
+.. literalinclude:: example_class_autostring.txt
+   :language: python
 
 will produce the content of the page 
 :ref:`capacitor`.

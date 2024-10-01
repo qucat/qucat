@@ -7,7 +7,7 @@ Circuit analysis
 **The following methods are available to analyze a Qcircuit built with the GUI or Network**
 
 .. toctree::
-   :maxdepth: 3
+   :maxdepth: 1
 
     Calculating eigen-frequencies <circuit_functions/eigenfrequencies>
     Calculating losses <circuit_functions/loss_rates>
