@@ -7,3 +7,5 @@ dependencies:
   - nbsphinx
   - recommonmark
   - sphinx_rtd_theme
+  - pandoc
+  - jupyter
