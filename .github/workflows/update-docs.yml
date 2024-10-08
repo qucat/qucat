@@ -21,22 +21,9 @@ jobs:
     - name: Build documentation
       run: |
         $CONDA/bin/python build_docs.py
-    # # Publish built docs
-    # # ===============================
-    # - name: Commit documentation changes
-    #   run: |
-    #     cd docs
-    #     touch .nojekyll
-    #     git config --local user.email "action@github.com"
-    #     git config --local user.name "GitHub Action"
-    #     git add .
-    #     git commit -m "Update documentation" -a || true
-    #     # The above command will fail if no changes were present, so we ignore
-    #     # that.
-    # - name: Push changes
-    #   uses: ad-m/github-push-action@master
-    #   with:
-    #     directory: docs
-    #     github_token: ${{ secrets.GITHUB_TOKEN }}
-    # # ===============================
+    - name: Deploy
+      uses: peaceiris/actions-gh-pages@v4
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_dir: ./docs
   
