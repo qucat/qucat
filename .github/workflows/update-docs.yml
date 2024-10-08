@@ -1,10 +1,6 @@
 name: Documentation
 
-on:
-  push:
-    paths:
-    - docs_src/**  # Only run on changes to the docs_src folder
-  workflow_dispatch:
+on: [push, workflow_dispatch]
 
 jobs:
   docs:
