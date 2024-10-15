@@ -26,5 +26,6 @@ jobs:
         python-version: ${{ matrix.python-version }}
     - name: Install QuCAT
       run: |
+        python --version
         pip install .
         python -c "import qucat"
