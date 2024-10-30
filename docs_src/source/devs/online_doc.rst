@@ -20,7 +20,7 @@ In order to edit the documentation/website one should thus follow
 these steps
 
 - edit the reStructuredText files located in ``/docs_src/source``
-- build the documentation by runing the ``build_docs.py`` script
+- build the documentation by running the ``build_docs.py`` script
 - check the changes locally by opening the ``/docs/index.html`` file with a web browser
 - push the code to the github repository
 - Once the code is pulled into the master branch, these changes are automatically applied to the website.
@@ -32,7 +32,7 @@ requires specific instruction given below.
 Building the documentation
 --------------------------
 
-The documentation can be built by runing the ``build_docs.py`` script.
+The documentation can be built by running the ``build_docs.py`` script.
 
 Some details about the build process: 
 we use Sphinx to build the html content for the website
@@ -74,7 +74,7 @@ Since the automatic documentation
 has already been set up for all QuCAT classes,
 **any public modules added to existing classes
 by a contributor, and correctly commented, will thus be automatically
-included in the documentaion website after their pull request
+included in the documentation website after their pull request
 is merged into the master branch**.
 Details about how to write good docstrings 
 which lead to 
@@ -105,7 +105,7 @@ In order to **add a new** tutorial
 
 In **both cases**, subsequently
 
-- Build the documentation by runing the ``build_docs.py`` script
+- Build the documentation by running the ``build_docs.py`` script
 - Preview your changes by opening the ``/docs/index.html`` file with a web browser
 - Make a pull request: your changes will be visible on the website when merged to the master branch
 
