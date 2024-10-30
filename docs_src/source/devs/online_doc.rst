@@ -9,10 +9,10 @@ to your machine.
 
 The source code for the documentation is located in the 
 ``/docs_src/source`` folder.
-The built documentation is stored in the ``/docs/`` folder. 
-Through Github pages, the website (qucat.org) always
-matches the contents of the ``/docs/`` folder of the 
-master branch.
+The built documentation is stored locally in the ``/docs/`` folder. 
+Through GitHub Pages, the website (qucat.org) always
+matches the contents of the ``/(root)/`` folder of the 
+``gh-pages`` branch.
 The website can be previewed locally by opening the ``/docs/index.html`` 
 file with a web browser.
 
@@ -22,8 +22,9 @@ these steps
 - edit the reStructuredText files located in ``/docs_src/source``
 - build the documentation by running the ``build_docs.py`` script
 - check the changes locally by opening the ``/docs/index.html`` file with a web browser
-- push the code to the github repository
-- Once the code is pulled into the master branch, these changes are automatically applied to the website.
+- push the code to the GitHub repository. Note that the ``/docs/`` folder is not pushed to the GitHub repository
+- once the code is pulled into the master branch, a GitHub Action will build the website and push the new ``/docs/`` folder to the root of the ``gh-pages`` branch, which will automatically update the website.
+Do not make changes to the ``gh-pages`` branch directly, as it is automatically updated by the GitHub Action.
 
 Building the documentation,
 and editing the tutorials or the documentation of the functions
@@ -37,7 +38,7 @@ The documentation can be built by running the ``build_docs.py`` script.
 Some details about the build process: 
 we use Sphinx to build the html content for the website
 from the reStructuredText (.rst) files located in ``/docs_src/source``.
-This build process if configured through the ``/docs_src/source/conf.py``.
+This build process is configured through the ``/docs_src/source/conf.py``.
 Information on sphinx, on reStructuredText and the configuration file 
 can be found online, 
 notably `here <http://www.sphinx-doc.org/en/master/>`_.
