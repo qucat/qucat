@@ -1,6 +1,11 @@
 name: Documentation
 
-on: [push, workflow_dispatch]
+on: 
+  workflow_dispatch:
+  push:
+    branches:
+      - master
+      - update-docs*
 
 jobs:
   docs:

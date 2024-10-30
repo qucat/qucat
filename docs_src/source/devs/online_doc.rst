@@ -24,6 +24,7 @@ these steps
 - check the changes locally by opening the ``/docs/index.html`` file with a web browser
 - push the code to the GitHub repository. Note that the ``/docs/`` folder is not pushed to the GitHub repository
 - once the code is pulled into the master branch, a GitHub Action will build the website and push the new ``/docs/`` folder to the root of the ``gh-pages`` branch, which will automatically update the website.
+
 Do not make changes to the ``gh-pages`` branch directly, as it is automatically updated by the GitHub Action.
 
 Building the documentation,
