@@ -1,0 +1,178 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Calculating loss rates &mdash; qucat  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=fa44fd50" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+      <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+      <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="author" title="About these documents" href="../../about.html" />
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Calculating anharmonicities" href="anharmonicities.html" />
+    <link rel="prev" title="Calculating eigen-frequencies" href="eigenfrequencies.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            qucat
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../about.html">About</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../citing.html">Citing this project</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../tutorials/index.html">Tutorials</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../index.html">List of functions</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../builders.html">Creating a circuit</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../circuit_functions.html">Circuit analysis</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="eigenfrequencies.html"> Calculating eigen-frequencies</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#"> Calculating losses</a></li>
+<li class="toctree-l3"><a class="reference internal" href="anharmonicities.html"> Calculating anharmonicities</a></li>
+<li class="toctree-l3"><a class="reference internal" href="kerr.html"> Calculating Kerr couplings</a></li>
+<li class="toctree-l3"><a class="reference internal" href="f_k_A_chi.html"> Combined calculation of all the above</a></li>
+<li class="toctree-l3"><a class="reference internal" href="hamiltonian.html"> Generate a QuTiP Hamiltonian</a></li>
+<li class="toctree-l3"><a class="reference internal" href="show.html"> Plot the circuit</a></li>
+<li class="toctree-l3"><a class="reference internal" href="show_normal_mode.html"> Visualize a normal mode of the circuit</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../components.html">Circuit components</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../contact.html">Contact</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../report_a_bug.html">Report a bug</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../devs/index.html">Developer Guide</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">qucat</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Index of functions</a></li>
+          <li class="breadcrumb-item"><a href="../circuit_functions.html">Circuit analysis</a></li>
+      <li class="breadcrumb-item active">Calculating loss rates</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/API/circuit_functions/loss_rates.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="calculating-loss-rates">
+<h1>Calculating loss rates<a class="headerlink" href="#calculating-loss-rates" title="Link to this heading"></a></h1>
+<dl class="py method">
+<dt class="sig sig-object py" id="qucat.Qcircuit.loss_rates">
+<span class="sig-prename descclassname"><span class="pre">Qcircuit.</span></span><span class="sig-name descname"><span class="pre">loss_rates</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qucat/core.html#Qcircuit.loss_rates"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qucat.Qcircuit.loss_rates" title="Link to this definition"></a></dt>
+<dd><p>Returns the loss rates of the circuit normal modes.</p>
+<p>The array is ordered ordered with increasing normal mode frequencies
+such that the first element of the array corresponds to the loss
+rate of the lowest frequency mode. Losses are provided in units of Hertz,
+<strong>not in angular frequency</strong>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>kwargs</strong> – Values for un-specified circuit components,
+ex: <code class="docutils literal notranslate"><span class="pre">L=1e-9</span></code>.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Normal mode losses of the circuit</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>numpy.array</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>These loss rates <span class="math notranslate nohighlight">\(\kappa_m\)</span> correspond to twice the imaginary parts
+of the complex frequencies which make the conductance matrix
+singular, or equivalently twice the imaginary parts of the poles of the impedance
+calculated between the nodes of an inductor or josephon junction.</p>
+<p>For further details on the underlying theory, see <a class="reference external" href="https://arxiv.org/pdf/1908.10342.pdf">https://arxiv.org/pdf/1908.10342.pdf</a>.</p>
+<p>The dynamics of the circuit can be studied in QuTiP
+by considering collapse operators for the m-th mode
+<span class="math notranslate nohighlight">\(\sqrt{2\pi\kappa_m(n_{th,m}+1)}\hat{a}_m\)</span> and
+<span class="math notranslate nohighlight">\(\sqrt{2\pi\kappa_m(n_{th,m})}\hat{a}_m^\dagger\)</span>
+where <span class="math notranslate nohighlight">\(n_{th,m}\)</span> is the average thermal occupation
+of mode <span class="math notranslate nohighlight">\(m\)</span> and <span class="math notranslate nohighlight">\(\hat{a}_m\)</span> is the annihilation operator of the m-th
+normal mode of the circuit.
+Note that dissipation rates that are obtained from this function
+have to be converted to angular frequencies through the factor <span class="math notranslate nohighlight">\(2\pi\)</span>.
+If you are also using a hamiltonian generated from qucat,
+then it too should be converted to angular frequencies by multiplying
+the entire Hamiltonian by <span class="math notranslate nohighlight">\(2\pi\)</span> when performing time-dependant
+simulations.</p>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="eigenfrequencies.html" class="btn btn-neutral float-left" title="Calculating eigen-frequencies" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="anharmonicities.html" class="btn btn-neutral float-right" title="Calculating anharmonicities" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2019, Mario Gely.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
