@@ -31,18 +31,19 @@ Requirements
 Qucat depends on several open-source libraries. 
 The following packages are currently required:
 
-* Python 3, tested on version 3.7
-* Numpy, tested on version 1.16.2
-* Matplotlib, tested on version 3.0.3
-* Sympy, tested on version 1.3
+* Python 3, tested on version 3.12
+* Numpy, tested on version 2.1.2
+* Scipy, tested on version 1.14.1
+* Matplotlib, tested on version 3.9.2
+* Sympy, tested on version 1.13.3
 
 Generating a Hamiltonian requires
 
-* `QuTiP <http://qutip.org/docs/latest/installation.html>`_, tested on version 4.3
+* `QuTiP <http://qutip.org/docs/latest/installation.html>`_, tested on version 5.0.4
 
 Performance of Sympy and thus QuCAT is enhanced by using
 
-* `gmpy2 <https://gmpy2.readthedocs.io/en/latest/>`_
+* `gmpy2 <https://gmpy2.readthedocs.io/en/latest/>`_, tested on version 2.1.5
 
 We recommend installing python and these packages by 
 downloading and installing 

@@ -7,7 +7,7 @@ Unit testing
 Tests are setup using pythons default testing framework 
 `unittest <https://docs.python.org/2/library/unittest.html>`_.
 These tests are run each time new code is pushed to our Github repository
-using `Travis <https://travis-ci.com/>`_.
+using `GitHub Actions <https://docs.github.com/en/actions/>`_.
 They can also be edited
 and run on your local machine as explained below.
 
@@ -83,11 +83,11 @@ The correct location to add this test is in the
 
 The **first time** we run this file,
 an empty GUI will open.
-**Step 1: ** here we set the initial configuration for the
+**Step 1:** here we set the initial configuration for the
 test, in this example we create and place a resistor, then close the GUI.
 This circuit will be saved in the file 
 ``tests/gui_testing_files/test_moving_resistor/initial_netlist.txt``
-**Step 2: **  a second GUI will open in the initial configuration, and we now 
+**Step 2:**  a second GUI will open in the initial configuration, and we now 
 perform the task we are testing. 
 Our actions will be recorded in the file
 ``tests/gui_testing_files/test_moving_resistor/events.txt`` 

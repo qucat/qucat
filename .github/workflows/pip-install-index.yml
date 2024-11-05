@@ -11,13 +11,6 @@ jobs:
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
         python-version: ["3.10", "3.11", "3.12"]
-        exclude:
-          - os: macOS-latest
-            python-version: "3.7"
-          - os: windows-latest
-            python-version: "3.7"
-          # Python 3.7 gha no longer supported on macOS and Windows
-
     steps:
     - uses: actions/checkout@v4
     - name: Set up Python

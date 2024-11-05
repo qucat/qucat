@@ -3,7 +3,7 @@ Circuit components
 *************************
 
 .. toctree::
-    :maxdepth: 3
+    :maxdepth: 1
    
     components/J.rst  
     components/L.rst  
