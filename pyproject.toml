@@ -1,3 +1,29 @@
 [build-system]
 requires = ["setuptools>=61.0"]
 build-backend = "setuptools.build_meta"
+
+[project]
+name = "test_qucat"
+version = "1.0.3.a"
+requires-python = ">=3.0.0"
+authors = [
+    {name = "Mario Gely", email = "mario.f.gely@gmail.com"},
+]
+description = "QUantum Circuit Analysis Tool"
+readme = "README.md"
+dependencies = [
+    "numpy",
+    "scipy",
+    "matplotlib",
+    "sympy>=1.8",
+    "pillow",
+]
+classifiers=[
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+
+[project.urls]
+Homepage = "https://qucat.org"
+Repository = "https://github.com/qucat/qucat"
