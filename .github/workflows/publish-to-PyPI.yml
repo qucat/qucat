@@ -1,6 +1,10 @@
 name: Publish to PyPI
 
-on: [push]
+on:
+  push:
+    tags:
+      - 'v*'
+      - 'testv*'
 
 jobs:
   release-build:
