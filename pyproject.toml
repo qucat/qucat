@@ -17,6 +17,7 @@ dependencies = [
     "matplotlib",
     "sympy>=1.8",
     "pillow",
+    "nbformat",
 ]
 classifiers=[
     "Programming Language :: Python :: 3",

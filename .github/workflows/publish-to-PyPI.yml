@@ -38,7 +38,7 @@ jobs:
 
     environment:
       name: pypi
-      url: https://pypi.org/p/qucat  
+      url: https://pypi.org/p/qucat
     permissions:
       id-token: write
 
