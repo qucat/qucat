@@ -27,5 +27,5 @@ then
 fi
 
 echo "Using repository: $repository"
-echo tag $version_prefix$(grep version pyproject.toml | awk -F'"' '$0=$2')
-echo push origin --tags
+git tag $version_prefix$(grep version pyproject.toml | awk -F'"' '$0=$2')
+git push origin --tags
