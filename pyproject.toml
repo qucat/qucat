@@ -3,8 +3,8 @@ requires = ["setuptools>=61.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "test_qucat"
-version = "1.0.3.a5"
+name = "qucat"
+version = "1.0.3"
 requires-python = ">=3.0.0"
 authors = [
     {name = "Mario Gely", email = "mario.f.gely@gmail.com"},
