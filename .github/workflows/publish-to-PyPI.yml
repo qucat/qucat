@@ -29,6 +29,7 @@ jobs:
           name: python-package-distributions
           path: dist/
 
+# For a full release, publish to PyPI and create a GitHub release
   pypi-publish:
     name: Publish to PyPI
     if: startsWith(github.ref, 'refs/tags/v')  # publish to PyPI on tag pushes starting with 'v'
@@ -41,6 +42,7 @@ jobs:
       url: https://pypi.org/p/qucat
     permissions:
       id-token: write
+      contents: write
 
     steps:
       - name: download distribution packages
@@ -52,6 +54,12 @@ jobs:
       - name: Publish distributions to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
 
+      - name: Create GitHub Release
+        uses: ncipollo/release-action@v1
+        with:
+          generateReleaseNotes: true
+
+# For a pre-release, publish to TestPyPI and create a GitHub pre-release
   publish-to-testpypi:
     name: Publish to TestPyPI if tagged
     if: startsWith(github.ref, 'refs/tags/testv')  # publish to testPyPI on tag pushes starting with 'testv'
@@ -64,6 +72,7 @@ jobs:
       url: https://test.pypi.org/p/test-qucat
     permissions:
       id-token: write
+      contents: write
 
     steps:
       - name: download distribution packages
@@ -76,3 +85,9 @@ jobs:
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           repository-url: https://test.pypi.org/legacy/
+
+      - name: Create GitHub Pre-release
+        uses: ncipollo/release-action@v1
+        with:
+          prerelease: true
+          generateReleaseNotes: true
