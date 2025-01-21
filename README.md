@@ -26,7 +26,7 @@ Visit https://qucat.org/ for all information about installation, a documented li
 Tutorials
 ---------
 
-A selection of tutorials is available [here](https://qucat.org/tutorials/tutorials.html).
+A selection of tutorials is available [here](https://qucat.org/tutorials/index.html).
 
 Build status and test coverage
 ------------------------------
