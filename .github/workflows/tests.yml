@@ -10,7 +10,7 @@ jobs:
       max-parallel: 5
       matrix:
         os: [ubuntu-latest]
-        python-version: ["3.10", "3.11", "3.12"]
+        python-version: ["3.11", "3.12", "3.13"]
 
     steps:
     - uses: actions/checkout@v4
@@ -21,7 +21,7 @@ jobs:
         conda config --add channels defaults
     - name: Install dependencies
       run: |
-        conda install -y python=${{ matrix.python-version }}
+        conda install -y python=${{ matrix.python-version }} sqlite
         conda env update --file test-environment.yml --name base
     - name: Test with pytest
       run: |
@@ -30,11 +30,11 @@ jobs:
         export DISPLAY=:99
         Xvfb :99 &
         python --version
-        pytest --cov=src
+        python -m pytest --cov=src
     - name: Upload results to Codecov
       uses: codecov/codecov-action@v4
       if: |
-        ${{ matrix.python-version == '3.12' }} &&
+        ${{ matrix.python-version == '3.13' }} &&
         ${{ matrix.os == 'ubuntu-latest' }}
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
