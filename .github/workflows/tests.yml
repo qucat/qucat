@@ -10,7 +10,7 @@ jobs:
       max-parallel: 5
       matrix:
         os: [ubuntu-latest]
-        python-version: ["3.10", "3.11", "3.12", "3.13"]
+        python-version: ["3.11", "3.12", "3.13"]
 
     steps:
     - uses: actions/checkout@v4
@@ -31,10 +31,10 @@ jobs:
         Xvfb :99 &
         python --version
         python -m pytest --cov=src
-    # - name: Upload results to Codecov
-    #   uses: codecov/codecov-action@v4
-    #   if: |
-    #     ${{ matrix.python-version == '3.13' }} &&
-    #     ${{ matrix.os == 'ubuntu-latest' }}
-    #   with:
-    #     token: ${{ secrets.CODECOV_TOKEN }}
+    - name: Upload results to Codecov
+      uses: codecov/codecov-action@v4
+      if: |
+        ${{ matrix.python-version == '3.13' }} &&
+        ${{ matrix.os == 'ubuntu-latest' }}
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
