@@ -9,3 +9,5 @@ Circuit components
     components/L.rst  
     components/C.rst  
     components/R.rst
+    components/NonLinearInductor.rst
+

@@ -1,0 +1,335 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Simulating the SNAIL non-linearity &mdash; qucat  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=03e43079" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../_static/nbsphinx-code-cells.css?v=2aa19091" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+      <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+      <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="author" title="About these documents" href="../about.html" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Index of functions" href="../API/index.html" />
+    <link rel="prev" title="Understanding a tuneable coupler circuit" href="tuneable_coupler.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            qucat
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../about.html">About</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../citing.html">Citing this project</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Tutorials</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="basics.html">Basics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="filter_design.html">Designing a classical microwave filter</a></li>
+<li class="toctree-l2"><a class="reference internal" href="optomechanics.html">Computing an optomechanical coupling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MMUSC.html">Modelling a distributed multi-mode resonator</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tuneable_coupler.html">Understanding a tuneable coupler circuit</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Simulating the SNAIL non-linearity</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../API/index.html">List of functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../contact.html">Contact</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../report_a_bug.html">Report a bug</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../devs/index.html">Developer Guide</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">qucat</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="index.html">Tutorials</a></li>
+      <li class="breadcrumb-item active">Simulating the SNAIL non-linearity</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/tutorials/SNAIL.ipynb.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">scipy.constants</span><span class="w"> </span><span class="kn">import</span> <span class="o">*</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">scipy.optimize</span><span class="w"> </span><span class="kn">import</span> <span class="o">*</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">sympy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">sp</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">qucat</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">qc</span>
+<span class="n">phi_0</span> <span class="o">=</span> <span class="n">h</span><span class="o">/</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">e</span><span class="p">)</span> <span class="c1">#the flux quantum</span>
+</pre></div>
+</div>
+</div>
+<section id="Simulating-the-SNAIL-non-linearity">
+<h1>Simulating the SNAIL non-linearity<a class="headerlink" href="#Simulating-the-SNAIL-non-linearity" title="Link to this heading"></a></h1>
+<p>The goal of this tutorial is to simulate a SNAIL embedded in a superconducting circuit, and eliminate fourth order non-linearities in favor of third-order non-linearities. The SNAIL is a dipole containing three small Josephson juntions on one side, and a large one on the other side :</p>
+<p><img alt="f4564ca26f494b99ad975a17b4c5bb70" class="no-scaled-link" src="../_images/SNAIL_scheme.png" width="350" /></p>
+<p>SNAIL scheme taken from <em>N. E. Frattini, V. V. Sivak, A. Lingenfelter, S. Shankar et M. H. Devoret : Optimizing the Nonlinearity and Dissipation of a SNAIL Parametric Amplifier for Dynamic Range. Physical Review Applied, 10(5):1–17, 2018.</em></p>
+<p>Its inductive energy writes :</p>
+<div class="math notranslate nohighlight">
+\[U_{SNAIL}(\phi) = -E_J\left(\alpha \cos\phi + 3 \cos \frac{\phi_\text{ext}-\phi}{3}\right)\]</div>
+<p>It depends on :</p>
+<ul class="simple">
+<li><p>the flux bias in its loop <span class="math notranslate nohighlight">\(\phi_\text{ext}\)</span></p></li>
+<li><p>a characteristic Josphson energy <span class="math notranslate nohighlight">\(E_J\)</span></p></li>
+<li><p>a characteristic coeeficient <span class="math notranslate nohighlight">\(\alpha\)</span></p></li>
+</ul>
+<p>For a given <span class="math notranslate nohighlight">\(\phi_\text{ext}\)</span>, <span class="math notranslate nohighlight">\(E_J\)</span> and <span class="math notranslate nohighlight">\(\alpha\)</span>, one can find the minimum of this inductive energy <span class="math notranslate nohighlight">\(\phi_{min}\)</span> and develop it around it:</p>
+<div class="math notranslate nohighlight">
+\[U_{SNAIL}|_{\alpha, E, phi_{ext}}(\phi) = \frac{E2}{2}(\phi-\phi_{min})^2 + \frac{E3}{6}(\phi-\phi_{min})^3 + \frac{E4}{24}(\phi-\phi_{min})^4\]</div>
+<p>one can then make use of the <code class="docutils literal notranslate"><span class="pre">NonLinearInductor</span></code> component to define this energy term in a QuCAT circuit as follows</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">circuit</span> <span class="o">=</span> <span class="n">qc</span><span class="o">.</span><span class="n">GUI</span><span class="p">(</span><span class="s2">&quot;circuits/snail.txt&quot;</span><span class="p">,</span> <span class="n">edit</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/tutorials_SNAIL_2_0.png" src="../_images/tutorials_SNAIL_2_0.png" />
+</div>
+</div>
+<p>Where the text file <code class="docutils literal notranslate"><span class="pre">circuits/snail.txt</span></code> contains the following:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>C;-2,-2;-1,-2;1.0e-13;
+W;-2,-3;-2,-2;;
+W;-1,-3;-1,-2;;
+L;-2,-3;-1,-3;1.0e-08;
+C;0,-2;1,-2;1.5e-13;
+W;0,-3;0,-2;;
+W;1,-3;1,-2;;
+L;0,-3;1,-3;1.0e-08;
+C;2,-2;3,-2;2.0e-13;
+W;2,-3;2,-2;;
+W;3,-3;3,-2;;
+L;2,-3;3,-3;1.0e-08;
+G;4,-2;3,-2;;
+W;1,-2;2,-2;;
+G;-3,-2;-2,-2;;
+NonLinearInductor;-1,-2;0,-2;,,;E2,E3,E4
+</pre></div>
+</div>
+<p>The <code class="docutils literal notranslate"><span class="pre">NonLinearInductor</span></code> differs from other components in that it is characterized by multiple parameters (in units of Hertz), such that in this case, its contribution to the Hamiltonian will be</p>
+<div class="math notranslate nohighlight">
+\[U/h = \frac{E2}{2!}\phi^2 + \frac{E3}{3!}\phi^3 + \frac{E4}{4!}\phi^4\]</div>
+<p>These parameters are seperated by commas in the graphical user interface, or entered as a list when creating the circuit programmatically.</p>
+<p>The following code generates the correct parameters for a given <span class="math notranslate nohighlight">\(E_J\)</span> and <span class="math notranslate nohighlight">\(\alpha\)</span>, and allow for sweeping of <span class="math notranslate nohighlight">\(\phi_\text{ext}\)</span></p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1">## Parameters for the circuit</span>
+
+<span class="n">order</span> <span class="o">=</span> <span class="mi">4</span> <span class="c1">#order at which the SNAIL will be expanded</span>
+<span class="n">alpha</span> <span class="o">=</span> <span class="mf">0.12</span>
+<span class="n">L_J</span> <span class="o">=</span> <span class="mf">1e-8</span>
+<span class="n">E_J</span> <span class="o">=</span> <span class="mi">1</span><span class="o">/</span><span class="n">h</span><span class="o">*</span><span class="n">phi_0</span><span class="o">**</span><span class="mi">2</span><span class="o">/</span><span class="p">(</span><span class="mi">4</span><span class="o">*</span><span class="n">pi</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="o">/</span><span class="n">L_J</span> <span class="c1">#the Josephson energy of the small junctions, in Hz</span>
+
+<span class="c1"># We use sympy to create the derivatives of the energy</span>
+<span class="n">phi</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">Symbol</span><span class="p">(</span><span class="s2">&quot;phi&quot;</span><span class="p">)</span>
+<span class="n">a</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">Symbol</span><span class="p">(</span><span class="s2">&quot;a&quot;</span><span class="p">)</span>
+<span class="n">E</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">Symbol</span><span class="p">(</span><span class="s2">&quot;E&quot;</span><span class="p">)</span>
+<span class="n">phi_ext</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">Symbol</span><span class="p">(</span><span class="s2">&quot;phi_ext&quot;</span><span class="p">)</span>
+
+<span class="n">U_sym</span> <span class="o">=</span> <span class="o">-</span><span class="n">E</span><span class="o">*</span><span class="p">(</span><span class="n">a</span><span class="o">*</span><span class="n">sp</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">phi</span><span class="p">)</span> <span class="o">+</span> <span class="mi">3</span><span class="o">*</span><span class="n">sp</span><span class="o">.</span><span class="n">cos</span><span class="p">((</span><span class="n">phi_ext</span><span class="o">-</span><span class="n">phi</span><span class="p">)</span><span class="o">/</span><span class="mi">3</span><span class="p">))</span>
+<span class="n">dnU_sym</span> <span class="o">=</span><span class="p">[</span><span class="n">sp</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">U_sym</span><span class="p">,</span> <span class="n">phi</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">order</span><span class="o">+</span><span class="mi">1</span><span class="p">)]</span> <span class="c1"># Symbolic expression for the derivatives</span>
+<span class="n">dnU</span> <span class="o">=</span> <span class="p">[</span><span class="n">sp</span><span class="o">.</span><span class="n">lambdify</span><span class="p">([</span><span class="n">phi</span><span class="p">,</span> <span class="n">E</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">phi_ext</span><span class="p">],</span> <span class="n">c</span><span class="p">)</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">dnU_sym</span><span class="p">]</span> <span class="c1"># creates the python functions for the derivatives</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">make_dict_vect</span><span class="p">(</span><span class="n">E</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">phi_ext</span><span class="p">):</span>
+    <span class="n">labels</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">c</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">dnU</span><span class="p">[</span><span class="mi">2</span><span class="p">::]):</span> <span class="c1">#initialisation of the lists</span>
+        <span class="n">labels</span><span class="p">[</span><span class="s2">&quot;E&quot;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="o">+</span><span class="mi">2</span><span class="p">)]</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="n">phi_min</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">phi_ext</span><span class="p">:</span>
+        <span class="n">phi_min</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">minimize</span><span class="p">(</span><span class="n">dnU</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">11</span><span class="p">,</span>
+                                 <span class="n">method</span> <span class="o">=</span> <span class="s1">&#39;L-BFGS-B&#39;</span> <span class="p">,</span>
+                                 <span class="n">bounds</span> <span class="o">=</span> <span class="p">[(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">7</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">)],</span><span class="n">args</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">alpha</span><span class="p">,</span> <span class="n">c</span><span class="p">))</span><span class="o">.</span><span class="n">x</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span><span class="o">%</span><span class="p">(</span><span class="mi">6</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">))</span>
+    <span class="n">phi_min</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span><span class="n">c</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">phi_min</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">j</span><span class="p">,</span> <span class="n">d</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">dnU</span><span class="p">[</span><span class="mi">2</span><span class="p">::]):</span>
+            <span class="n">labels</span><span class="p">[</span><span class="s2">&quot;E&quot;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">j</span><span class="o">+</span><span class="mi">2</span><span class="p">)]</span> <span class="o">=</span> <span class="n">labels</span><span class="p">[</span><span class="s2">&quot;E&quot;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">j</span><span class="o">+</span><span class="mi">2</span><span class="p">)]</span><span class="o">+</span><span class="p">[</span><span class="n">d</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">E</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">phi_ext</span><span class="p">[</span><span class="n">i</span><span class="p">])]</span>
+    <span class="k">return</span> <span class="n">labels</span>
+</pre></div>
+</div>
+</div>
+<p>Let’s check the evolution of the derivatives at the minimum as a function of <span class="math notranslate nohighlight">\(\phi_{ext}\)</span> :</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">phi_exts</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">6</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">,</span> <span class="mi">1000</span><span class="p">)</span>
+
+<span class="n">labels</span> <span class="o">=</span> <span class="n">make_dict_vect</span><span class="p">(</span><span class="n">E_J</span><span class="p">,</span> <span class="n">alpha</span><span class="p">,</span> <span class="n">phi_exts</span><span class="p">)</span> <span class="c1">#labels is a dictionnary where each key corresponds to a list of values</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">phi_exts</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">labels</span><span class="p">[</span><span class="s2">&quot;E2&quot;</span><span class="p">])</span><span class="o">/</span><span class="mf">1e9</span><span class="p">,</span> <span class="n">label</span> <span class="o">=</span> <span class="s2">&quot;E2&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">phi_exts</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">labels</span><span class="p">[</span><span class="s2">&quot;E3&quot;</span><span class="p">])</span><span class="o">/</span><span class="mf">1e9</span><span class="p">,</span>  <span class="n">label</span> <span class="o">=</span> <span class="s2">&quot;E3&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">phi_exts</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">labels</span><span class="p">[</span><span class="s2">&quot;E4&quot;</span><span class="p">])</span><span class="o">/</span><span class="mf">1e9</span><span class="p">,</span>  <span class="n">label</span> <span class="o">=</span> <span class="s2">&quot;E4&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;$\phi/_</span><span class="si">{ext}</span><span class="s2">/\pi\phi_0}$&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;Hamiltonian energy terms&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/tutorials_SNAIL_6_0.png" src="../_images/tutorials_SNAIL_6_0.png" />
+</div>
+</div>
+<p>The unbiased SNAIL has no third order term since it’s has a parity in the flux. Let’s look at the frequencies, given by E2 :</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">freqs</span> <span class="o">=</span> <span class="n">circuit</span><span class="o">.</span><span class="n">eigenfrequencies</span><span class="p">(</span><span class="o">**</span><span class="n">labels</span><span class="p">)</span><span class="o">/</span><span class="mf">1e9</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;$\phi/_</span><span class="si">{ext}</span><span class="s2">/\pi\phi_0}$&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s2">&quot;Eigenfrequencies (GHz)&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s2">&quot;Eigenfrequencies as a function of $\phi_</span><span class="si">{ext}</span><span class="s2">$&quot;</span><span class="p">)</span>
+<span class="p">[</span><span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">phi_exts</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">c</span><span class="p">))</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">freqs</span><span class="p">]</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/tutorials_SNAIL_8_0.png" src="../_images/tutorials_SNAIL_8_0.png" />
+</div>
+</div>
+<p>They follow the evolution of E2, which is expected.</p>
+<p>Let’s look at the three waves mixing term :</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">three_waves</span> <span class="o">=</span> <span class="n">circuit</span><span class="o">.</span><span class="n">three_waves</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="o">**</span><span class="n">labels</span><span class="p">)</span><span class="o">/</span><span class="mf">1e6</span> <span class="c1"># In MHz</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;$\phi/\pi\phi_0}$&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s2">&quot;Three waves mixing term (MHz)&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s2">&quot;Three waves mixing term (MHz) as a function of the imposed phase&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">phi_exts</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">three_waves</span><span class="p">))</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/tutorials_SNAIL_10_0.png" src="../_images/tutorials_SNAIL_10_0.png" />
+</div>
+</div>
+<p>It has the same shape as the E3 term.</p>
+<p>And now, the self-Kerr terms :</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">kerr_coeffs</span> <span class="o">=</span> <span class="n">circuit</span><span class="o">.</span><span class="n">kerr</span><span class="p">(</span><span class="o">**</span><span class="n">labels</span><span class="p">)</span><span class="o">/</span><span class="mf">1e6</span> <span class="c1"># in MHz</span>
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">kerr_coeffs</span><span class="p">)):</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">phi_exts</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">kerr_coeffs</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">i</span><span class="p">]),</span> <span class="n">label</span> <span class="o">=</span> <span class="s2">&quot;Mode &quot;</span><span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">))</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;$\phi/\pi}$&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s2">&quot;Self Kerr coefficient (MHz)&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s2">&quot;Self Kerr coefficients as a function of the exterior phase&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/tutorials_SNAIL_12_0.png" src="../_images/tutorials_SNAIL_12_0.png" />
+</div>
+</div>
+<p>We can clearly see the existence of the sweet spot, point where all the Kerr terms vanish, but the three waves mixing term still exists, allowing to make a parametric amplifier without beeing limited by the Kerr terms, see <em>N. E. Frattini, V. V. Sivak, A. Lingenfelter, S. Shankar et M. H. Devoret : Optimizing the Nonlinearity and Dissipation of a SNAIL Parametric Amplifier for Dynamic Range. Physical Review Applied, 10(5):1–17, 2018.</em></p>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="tuneable_coupler.html" class="btn btn-neutral float-left" title="Understanding a tuneable coupler circuit" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../API/index.html" class="btn btn-neutral float-right" title="Index of functions" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2019, Mario Gely.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
