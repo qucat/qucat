@@ -16,11 +16,13 @@ try:
     from ._constants import *
     from ._utility import *
     from .plotting_settings import plotting_parameters_show,plotting_parameters_normal_modes
+    from ._web_gui import web_gui
 except ImportError:
     # When running from source without pip installation
     from _constants import *
     from _utility import *
     from plotting_settings import plotting_parameters_show,plotting_parameters_normal_modes
+    from _web_gui import web_gui
 
 PROFILING = False
 

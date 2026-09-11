@@ -45,6 +45,13 @@ Performance of Sympy and thus QuCAT is enhanced by using
 
 * `gmpy2 <https://gmpy2.readthedocs.io/en/latest/>`_, tested on version 2.1.5
 
+Using the browser-based circuit editor (:func:`qucat.web_gui`) inside a Jupyter notebook requires
+
+* `ipywidgets <https://ipywidgets.readthedocs.io/en/stable/user_install.html>`_
+
+which can be installed together with QuCAT by running
+``pip install qucat[notebook]``
+
 We recommend installing python and these packages by 
 downloading and installing 
 `Anaconda <https://www.anaconda.com/distribution/>`_.

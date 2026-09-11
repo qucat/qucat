@@ -19,11 +19,15 @@ dependencies = [
     "pillow",
     "nbformat",
 ]
+
 classifiers=[
     "Programming Language :: Python :: 3",
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
 ]
+
+[project.optional-dependencies]
+notebook = ["ipywidgets"]
 
 [project.urls]
 Homepage = "https://qucat.org"
