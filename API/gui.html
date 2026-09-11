@@ -7,15 +7,15 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Graphical user interface &mdash; qucat  documentation</title>
-      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b76e3c8a" />
-      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=03e43079" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
 
   
       <script src="../_static/jquery.js?v=5d32c60e"></script>
       <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
       <script src="../_static/documentation_options.js?v=5929fcd5"></script>
-      <script src="../_static/doctools.js?v=9a2dae69"></script>
-      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
     <script src="../_static/js/theme.js"></script>
     <link rel="author" title="About these documents" href="../about.html" />
@@ -95,7 +95,7 @@
 <h1>Graphical user interface<a class="headerlink" href="#graphical-user-interface" title="Link to this heading"></a></h1>
 <dl class="py class">
 <dt class="sig sig-object py" id="qucat.GUI">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">qucat.</span></span><span class="sig-name descname"><span class="pre">GUI</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">edit</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plot</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">print_network</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/qucat/core.html#GUI"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qucat.GUI" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">qucat.</span></span><span class="sig-name descname"><span class="pre">GUI</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">edit</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plot</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">print_network</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/qucat/core.html#GUI"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qucat.GUI" title="Link to this definition"></a></dt>
 <dd><p>Opens a graphical user interface to constructs a circuit.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -141,6 +141,62 @@ Negative value are allowed and components have a length of 1 unit.</p>
 <img alt="../_images/Network_example_circuit.png" src="../_images/Network_example_circuit.png" />
 </dd></dl>
 
+<section id="browser-based-editor-for-use-in-jupyter-notebooks">
+<h2>Browser-based editor (for use in Jupyter notebooks)<a class="headerlink" href="#browser-based-editor-for-use-in-jupyter-notebooks" title="Link to this heading"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="qucat.web_gui">
+<span class="sig-prename descclassname"><span class="pre">qucat.</span></span><span class="sig-name descname"><span class="pre">web_gui</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">width</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">700</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">height</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">500</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/qucat/_web_gui.html#web_gui"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qucat.web_gui" title="Link to this definition"></a></dt>
+<dd><p>Opens a browser-based circuit editor inside a Jupyter notebook cell.</p>
+<p>This is an alternative to <a class="reference internal" href="#qucat.GUI" title="qucat.GUI"><code class="xref py py-class docutils literal notranslate"><span class="pre">qucat.GUI</span></code></a> for situations where the
+native tkinter interface is unavailable or impractical, for example
+when working on a remote server or inside JupyterHub. It embeds
+<a class="reference external" href="https://github.com/qucat/jscircuit">jscircuit</a>, a browser-based
+circuit editor, together with a small text editor used to save the
+resulting netlist to a file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>filename</strong> (<em>string</em><em>, </em><em>optional</em>) – Path to the file the netlist will be saved to. If the
+file already exists, its contents are loaded into the
+text editor, and the circuit is also loaded into the
+jscircuit editor itself. If not given, the file name
+can instead be typed into the text editor once the
+cell has been run.</p></li>
+<li><p><strong>width</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><em>int</em></a><em>, </em><em>optional</em>) – Width in pixels of the jscircuit editor (default 700).
+The editor can also be resized by dragging its
+bottom-right corner.</p></li>
+<li><p><strong>height</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><em>int</em></a><em>, </em><em>optional</em>) – Height in pixels of the jscircuit editor (default 500).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>This function does not return a <code class="xref py py-class docutils literal notranslate"><span class="pre">qucat.Qcircuit</span></code>: since the
+circuit is drawn in the browser, the netlist only becomes available
+once the user has saved it, which happens after this function
+returns. The typical workflow is thus split over two cells:</p>
+<ol class="arabic simple">
+<li><p>Call <code class="docutils literal notranslate"><span class="pre">qucat.web_gui(filename)</span></code> in one cell, draw the circuit in
+the jscircuit editor, copy the resulting netlist, paste it into
+the text box below the editor, then click “Save”.</p></li>
+<li><p>In a later cell, load the saved netlist with
+<code class="docutils literal notranslate"><span class="pre">circuit</span> <span class="pre">=</span> <span class="pre">qucat.GUI(filename,</span> <span class="pre">edit=False)</span></code>.</p></li>
+</ol>
+<p>Loading an existing netlist into the jscircuit editor relies on
+jscircuit only accepting such requests from a same-origin,
+<code class="docutils literal notranslate"><span class="pre">localhost</span></code>, or <code class="docutils literal notranslate"><span class="pre">*.github.io</span></code> parent page (a restriction of
+jscircuit itself, for security). This holds for a notebook running
+on your own machine, but on a remote JupyterHub reached through a
+different domain, the circuit will not auto-load: the netlist is
+still pre-filled in the text box below the editor, from where it
+can be pasted into jscircuit manually (Ctrl+V).</p>
+<p>Requires the optional <code class="docutils literal notranslate"><span class="pre">ipywidgets</span></code> dependency, install it with
+<code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">ipywidgets</span></code> or <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">qucat[notebook]</span></code>.</p>
+</dd></dl>
+
+</section>
 </section>
 
 

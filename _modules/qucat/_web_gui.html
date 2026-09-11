@@ -1,0 +1,296 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>qucat._web_gui &mdash; qucat  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=03e43079" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="author" title="About these documents" href="../../about.html" />
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            qucat
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../about.html">About</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../citing.html">Citing this project</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../tutorials/index.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../API/index.html">List of functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../contact.html">Contact</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../report_a_bug.html">Report a bug</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../devs/index.html">Developer Guide</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">qucat</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">qucat._web_gui</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for qucat._web_gui</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">uuid</span>
+
+<span class="c1"># jscircuit: a browser-based circuit editor producing netlists in the</span>
+<span class="c1"># same format as qucat&#39;s native tkinter GUI (see qucat.GUI).</span>
+<span class="c1"># https://github.com/qucat/jscircuit</span>
+<span class="n">JSCIRCUIT_URL</span> <span class="o">=</span> <span class="s2">&quot;https://qucat.github.io/jscircuit/app/jscircuit.html&quot;</span>
+
+
+<div class="viewcode-block" id="web_gui">
+<a class="viewcode-back" href="../../API/gui.html#qucat.web_gui">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">web_gui</span><span class="p">(</span><span class="n">filename</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mi">700</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mi">500</span><span class="p">):</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&#39;&#39;&#39;Opens a browser-based circuit editor inside a Jupyter notebook cell.</span>
+
+<span class="sd">    This is an alternative to :class:`qucat.GUI` for situations where the</span>
+<span class="sd">    native tkinter interface is unavailable or impractical, for example</span>
+<span class="sd">    when working on a remote server or inside JupyterHub. It embeds</span>
+<span class="sd">    `jscircuit &lt;https://github.com/qucat/jscircuit&gt;`_, a browser-based</span>
+<span class="sd">    circuit editor, together with a small text editor used to save the</span>
+<span class="sd">    resulting netlist to a file.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    filename:   string, optional</span>
+<span class="sd">                Path to the file the netlist will be saved to. If the</span>
+<span class="sd">                file already exists, its contents are loaded into the</span>
+<span class="sd">                text editor, and the circuit is also loaded into the</span>
+<span class="sd">                jscircuit editor itself. If not given, the file name</span>
+<span class="sd">                can instead be typed into the text editor once the</span>
+<span class="sd">                cell has been run.</span>
+<span class="sd">    width:      int, optional</span>
+<span class="sd">                Width in pixels of the jscircuit editor (default 700).</span>
+<span class="sd">                The editor can also be resized by dragging its</span>
+<span class="sd">                bottom-right corner.</span>
+<span class="sd">    height:     int, optional</span>
+<span class="sd">                Height in pixels of the jscircuit editor (default 500).</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    None</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+
+<span class="sd">    This function does not return a :class:`qucat.Qcircuit`: since the</span>
+<span class="sd">    circuit is drawn in the browser, the netlist only becomes available</span>
+<span class="sd">    once the user has saved it, which happens after this function</span>
+<span class="sd">    returns. The typical workflow is thus split over two cells:</span>
+
+<span class="sd">    1. Call ``qucat.web_gui(filename)`` in one cell, draw the circuit in</span>
+<span class="sd">       the jscircuit editor, copy the resulting netlist, paste it into</span>
+<span class="sd">       the text box below the editor, then click &quot;Save&quot;.</span>
+<span class="sd">    2. In a later cell, load the saved netlist with</span>
+<span class="sd">       ``circuit = qucat.GUI(filename, edit=False)``.</span>
+
+<span class="sd">    Loading an existing netlist into the jscircuit editor relies on</span>
+<span class="sd">    jscircuit only accepting such requests from a same-origin,</span>
+<span class="sd">    ``localhost``, or ``*.github.io`` parent page (a restriction of</span>
+<span class="sd">    jscircuit itself, for security). This holds for a notebook running</span>
+<span class="sd">    on your own machine, but on a remote JupyterHub reached through a</span>
+<span class="sd">    different domain, the circuit will not auto-load: the netlist is</span>
+<span class="sd">    still pre-filled in the text box below the editor, from where it</span>
+<span class="sd">    can be pasted into jscircuit manually (Ctrl+V).</span>
+
+<span class="sd">    Requires the optional ``ipywidgets`` dependency, install it with</span>
+<span class="sd">    ``pip install ipywidgets`` or ``pip install qucat[notebook]``.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="kn">import</span><span class="w"> </span><span class="nn">ipywidgets</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">widgets</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">IPython.display</span><span class="w"> </span><span class="kn">import</span> <span class="n">display</span><span class="p">,</span> <span class="n">HTML</span>
+    <span class="k">except</span> <span class="ne">ImportError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span>
+            <span class="s2">&quot;qucat.web_gui requires the &#39;ipywidgets&#39; package, which is &quot;</span>
+            <span class="s2">&quot;not installed.</span><span class="se">\n</span><span class="s2">Install it with:</span><span class="se">\n\n</span><span class="s2">&quot;</span>
+            <span class="s2">&quot;    pip install ipywidgets</span><span class="se">\n\n</span><span class="s2">&quot;</span>
+            <span class="s2">&quot;or install qucat with the &#39;notebook&#39; extra:</span><span class="se">\n\n</span><span class="s2">&quot;</span>
+            <span class="s2">&quot;    pip install qucat[notebook]&quot;</span>
+        <span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">e</span>
+
+    <span class="c1"># Disable the native drag-to-resize handle on the textarea, it is</span>
+    <span class="c1"># redundant with the resize handle of the jscircuit editor below.</span>
+    <span class="n">display</span><span class="p">(</span><span class="n">HTML</span><span class="p">(</span><span class="s2">&quot;&lt;style&gt;textarea { resize: none !important; }&lt;/style&gt;&quot;</span><span class="p">))</span>
+
+    <span class="n">initial_text</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">filename</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">filename</span><span class="p">):</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">initial_text</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+
+    <span class="n">container_id</span> <span class="o">=</span> <span class="s2">&quot;qucat-web-gui-</span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">uuid</span><span class="o">.</span><span class="n">uuid4</span><span class="p">()</span><span class="o">.</span><span class="n">hex</span>
+
+    <span class="c1"># jscircuit posts {type: &#39;appReady&#39;} to its parent window once loaded,</span>
+    <span class="c1"># and after that accepts {type: &#39;loadCircuit&#39;, netlist: &lt;string&gt;} to</span>
+    <span class="c1"># populate the editor. We instead trigger on the iframe&#39;s own &#39;load&#39;</span>
+    <span class="c1"># event, which (since main.js is a module script) only fires after</span>
+    <span class="c1"># jscircuit has already sent &#39;appReady&#39;, so the app is guaranteed to</span>
+    <span class="c1"># be ready to receive the netlist by then.</span>
+    <span class="n">autoload_script</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">initial_text</span><span class="p">:</span>
+        <span class="c1"># Escape &quot;&lt;/&quot; so the embedded JSON can&#39;t prematurely close the</span>
+        <span class="c1"># surrounding &lt;script&gt; tag if the netlist ever contained it.</span>
+        <span class="n">netlist_json</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">initial_text</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;&lt;/&quot;</span><span class="p">,</span> <span class="s2">&quot;&lt;</span><span class="se">\\</span><span class="s2">/&quot;</span><span class="p">)</span>
+        <span class="n">autoload_script</span> <span class="o">=</span> <span class="s1">&#39;&#39;&#39;</span>
+<span class="s1">        &lt;script&gt;</span>
+<span class="s1">        (function() {</span>
+<span class="s1">            var iframe = document.getElementById(&quot;</span><span class="si">%s</span><span class="s1">&quot;).querySelector(&quot;iframe&quot;);</span>
+<span class="s1">            iframe.addEventListener(&quot;load&quot;, function() {</span>
+<span class="s1">                iframe.contentWindow.postMessage(</span>
+<span class="s1">                    {type: &quot;loadCircuit&quot;, netlist: </span><span class="si">%s</span><span class="s1">}, &quot;*&quot;);</span>
+<span class="s1">            });</span>
+<span class="s1">        })();</span>
+<span class="s1">        &lt;/script&gt;</span>
+<span class="s1">        &#39;&#39;&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">container_id</span><span class="p">,</span> <span class="n">netlist_json</span><span class="p">)</span>
+
+    <span class="n">display</span><span class="p">(</span><span class="n">HTML</span><span class="p">(</span><span class="s1">&#39;&#39;&#39;</span>
+<span class="s1">    &lt;div id=&quot;</span><span class="si">{container_id}</span><span class="s1">&quot; style=&quot;</span>
+<span class="s1">        resize: both;</span>
+<span class="s1">        overflow: hidden;</span>
+<span class="s1">        width: </span><span class="si">{width}</span><span class="s1">px;</span>
+<span class="s1">        height: </span><span class="si">{height}</span><span class="s1">px;</span>
+<span class="s1">        min-width: 200px;</span>
+<span class="s1">        min-height: 150px;</span>
+<span class="s1">        border: 1px solid #ccc;</span>
+<span class="s1">        box-sizing: border-box;</span>
+<span class="s1">    &quot;&gt;</span>
+<span class="s1">      &lt;iframe</span>
+<span class="s1">        src=&quot;</span><span class="si">{url}</span><span class="s1">&quot;</span>
+<span class="s1">        allow=&quot;clipboard-write; clipboard-read&quot;</span>
+<span class="s1">        width=&quot;100%&quot; height=&quot;100%&quot;</span>
+<span class="s1">        style=&quot;border: none; display: block;&quot;&gt;</span>
+<span class="s1">      &lt;/iframe&gt;</span>
+<span class="s1">    &lt;/div&gt;</span>
+<span class="s1">    </span><span class="si">{autoload_script}</span>
+<span class="s1">    &#39;&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">container_id</span><span class="o">=</span><span class="n">container_id</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="n">width</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="n">height</span><span class="p">,</span>
+               <span class="n">url</span><span class="o">=</span><span class="n">JSCIRCUIT_URL</span><span class="p">,</span> <span class="n">autoload_script</span><span class="o">=</span><span class="n">autoload_script</span><span class="p">)))</span>
+
+    <span class="n">text_area</span> <span class="o">=</span> <span class="n">widgets</span><span class="o">.</span><span class="n">Textarea</span><span class="p">(</span>
+        <span class="n">value</span><span class="o">=</span><span class="n">initial_text</span><span class="p">,</span>
+        <span class="n">placeholder</span><span class="o">=</span><span class="s2">&quot;Paste the netlist copied from jscircuit here...&quot;</span><span class="p">,</span>
+        <span class="n">layout</span><span class="o">=</span><span class="n">widgets</span><span class="o">.</span><span class="n">Layout</span><span class="p">(</span><span class="n">width</span><span class="o">=</span><span class="s2">&quot;500px&quot;</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="s2">&quot;200px&quot;</span><span class="p">),</span>
+    <span class="p">)</span>
+
+    <span class="n">filename_input</span> <span class="o">=</span> <span class="n">widgets</span><span class="o">.</span><span class="n">Text</span><span class="p">(</span>
+        <span class="n">value</span><span class="o">=</span><span class="n">filename</span> <span class="ow">or</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
+        <span class="n">placeholder</span><span class="o">=</span><span class="s2">&quot;e.g. netlist.txt&quot;</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">&quot;File name:&quot;</span><span class="p">,</span>
+        <span class="n">layout</span><span class="o">=</span><span class="n">widgets</span><span class="o">.</span><span class="n">Layout</span><span class="p">(</span><span class="n">width</span><span class="o">=</span><span class="s2">&quot;300px&quot;</span><span class="p">),</span>
+    <span class="p">)</span>
+
+    <span class="n">save_button</span> <span class="o">=</span> <span class="n">widgets</span><span class="o">.</span><span class="n">Button</span><span class="p">(</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Save&quot;</span><span class="p">,</span>
+        <span class="n">button_style</span><span class="o">=</span><span class="s2">&quot;primary&quot;</span><span class="p">,</span>
+        <span class="n">icon</span><span class="o">=</span><span class="s2">&quot;save&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="n">status_label</span> <span class="o">=</span> <span class="n">widgets</span><span class="o">.</span><span class="n">Label</span><span class="p">(</span><span class="n">value</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">on_save_clicked</span><span class="p">(</span><span class="n">b</span><span class="p">):</span>
+        <span class="n">fname</span> <span class="o">=</span> <span class="n">filename_input</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+        <span class="n">content</span> <span class="o">=</span> <span class="n">text_area</span><span class="o">.</span><span class="n">value</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">fname</span><span class="p">:</span>
+            <span class="n">status_label</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="s2">&quot;Please enter a file name.&quot;</span>
+            <span class="k">return</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">directory</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">fname</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">directory</span><span class="p">:</span>
+                <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">directory</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">fname</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+                <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">content</span><span class="p">)</span>
+            <span class="n">status_label</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="s2">&quot;Saved to &#39;</span><span class="si">%s</span><span class="s2">&#39; (</span><span class="si">%d</span><span class="s2"> chars)&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">fname</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">content</span><span class="p">))</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">status_label</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="s2">&quot;Error: </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">e</span>
+
+    <span class="n">save_button</span><span class="o">.</span><span class="n">on_click</span><span class="p">(</span><span class="n">on_save_clicked</span><span class="p">)</span>
+
+    <span class="n">ui</span> <span class="o">=</span> <span class="n">widgets</span><span class="o">.</span><span class="n">VBox</span><span class="p">([</span>
+        <span class="n">widgets</span><span class="o">.</span><span class="n">Label</span><span class="p">(</span><span class="s2">&quot;Netlist&quot;</span><span class="p">),</span>
+        <span class="n">text_area</span><span class="p">,</span>
+        <span class="n">widgets</span><span class="o">.</span><span class="n">HBox</span><span class="p">([</span><span class="n">filename_input</span><span class="p">,</span> <span class="n">save_button</span><span class="p">]),</span>
+        <span class="n">status_label</span><span class="p">,</span>
+    <span class="p">])</span>
+
+    <span class="n">display</span><span class="p">(</span><span class="n">ui</span><span class="p">)</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2019, Mario Gely.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -7,15 +7,15 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Unit testing &mdash; qucat  documentation</title>
-      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b76e3c8a" />
-      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=03e43079" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
 
   
       <script src="../_static/jquery.js?v=5d32c60e"></script>
       <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
       <script src="../_static/documentation_options.js?v=5929fcd5"></script>
-      <script src="../_static/doctools.js?v=9a2dae69"></script>
-      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
     <script src="../_static/js/theme.js"></script>
     <link rel="author" title="About these documents" href="../about.html" />
@@ -131,7 +131,7 @@ when tested manually.</p>
 which contains a function <code class="docutils literal notranslate"><span class="pre">f</span></code> which adds two numbers</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="o">...</span>
 
-<span class="k">def</span> <span class="nf">f</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">f</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Adds two numbers and returns the result.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -144,20 +144,20 @@ which contains a function <code class="docutils literal notranslate"><span class
 function works as expected.
 This is one way of doing it</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Import python test framework</span>
-<span class="kn">import</span> <span class="nn">unittest</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">unittest</span>
 
-<span class="kn">import</span> <span class="nn">os</span>
-<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
 
 <span class="c1"># Add the ./src/ folder to the system path</span>
 <span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="vm">__file__</span><span class="p">)),</span><span class="s1">&#39;src&#39;</span><span class="p">)))</span>
 
 <span class="c1"># Import function to be tested</span>
-<span class="kn">from</span> <span class="nn">new</span> <span class="kn">import</span> <span class="n">f</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">new</span><span class="w"> </span><span class="kn">import</span> <span class="n">f</span>
 
-<span class="k">class</span> <span class="nc">TestCase</span><span class="p">(</span><span class="n">unittest</span><span class="o">.</span><span class="n">TestCase</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">TestCase</span><span class="p">(</span><span class="n">unittest</span><span class="o">.</span><span class="n">TestCase</span><span class="p">):</span>
 
-    <span class="k">def</span> <span class="nf">test_f_function</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">test_f_function</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="c1"># Check if f(1,2) is indeed equal to 3</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">f</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">),</span><span class="mi">3</span><span class="p">)</span>
 
@@ -180,9 +180,9 @@ here a short tutorial on how to do so.</p>
 then dropping.</p>
 <p>The correct location to add this test is in the
 <code class="docutils literal notranslate"><span class="pre">test/test_gui.py</span></code> file, with the following code</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">TestMovingComponentsAround</span><span class="p">(</span><span class="n">AutomaticTesting</span><span class="p">):</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">TestMovingComponentsAround</span><span class="p">(</span><span class="n">AutomaticTesting</span><span class="p">):</span>
 
-    <span class="k">def</span> <span class="nf">test_moving_resistor</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">test_moving_resistor</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">launch_gui_testing</span><span class="p">(</span><span class="n">force_build</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span><span class="n">run_slower</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -231,15 +231,15 @@ These tests are located in <code class="docutils literal notranslate"><span clas
 <p>If one adds a new notebook, for example <code class="docutils literal notranslate"><span class="pre">new_tutorial.ipynb</span></code>
 in the tutorials folder, one can test it by adding the following code
 to the <code class="docutils literal notranslate"><span class="pre">test/test_tutorials.py</span></code> script</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">TestNewTutorial</span><span class="p">(</span><span class="n">TestTutorials</span><span class="p">):</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">TestNewTutorial</span><span class="p">(</span><span class="n">TestTutorials</span><span class="p">):</span>
 
-    <span class="k">def</span> <span class="nf">test_if_it_runs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">test_if_it_runs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&#39;&#39;&#39;Runs the notebook new_tutorial.ipynb.</span>
 <span class="sd">            If an error is encountered the test fails</span>
 <span class="sd">        &#39;&#39;&#39;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">run_tutorial</span><span class="p">(</span><span class="s1">&#39;new_tutorial.ipynb&#39;</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">test_if_it_produces_the_right_answer</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">test_if_it_produces_the_right_answer</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&#39;&#39;&#39;Runs the notebook new_tutorial.ipynb</span>
 <span class="sd">            and stores all the variables defined in the notebook</span>
 <span class="sd">            as a dictionary called variables.</span>

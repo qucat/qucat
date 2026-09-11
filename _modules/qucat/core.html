@@ -6,15 +6,15 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>qucat.core &mdash; qucat  documentation</title>
-      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b76e3c8a" />
-      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=03e43079" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
 
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
       <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
-      <script src="../../_static/doctools.js?v=9a2dae69"></script>
-      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
     <script src="../../_static/js/theme.js"></script>
     <link rel="author" title="About these documents" href="../../about.html" />
@@ -78,39 +78,41 @@
            <div itemprop="articleBody">
              
   <h1>Source code for qucat.core</h1><div class="highlight"><pre>
-<span></span><span class="kn">import</span> <span class="nn">sympy</span> <span class="k">as</span> <span class="nn">sp</span>
-<span class="kn">from</span> <span class="nn">sympy.utilities.lambdify</span> <span class="kn">import</span> <span class="n">lambdify</span>
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">from</span> <span class="nn">numpy.polynomial.polynomial</span> <span class="kn">import</span> <span class="n">Polynomial</span> <span class="k">as</span> <span class="n">npPoly</span>
-<span class="kn">from</span> <span class="nn">sympy.core.mul</span> <span class="kn">import</span> <span class="n">Mul</span><span class="p">,</span> <span class="n">Pow</span><span class="p">,</span> <span class="n">Add</span>
-<span class="kn">from</span> <span class="nn">copy</span> <span class="kn">import</span> <span class="n">deepcopy</span>
-<span class="kn">from</span> <span class="nn">numbers</span> <span class="kn">import</span> <span class="n">Number</span>
-<span class="kn">from</span> <span class="nn">math</span> <span class="kn">import</span> <span class="n">floor</span><span class="p">,</span> <span class="n">factorial</span>
-<span class="kn">import</span> <span class="nn">os</span>
-<span class="kn">from</span> <span class="nn">subprocess</span> <span class="kn">import</span> <span class="n">run</span>
-<span class="kn">import</span> <span class="nn">inspect</span>
-<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
-<span class="kn">import</span> <span class="nn">time</span>
-<span class="kn">from</span> <span class="nn">warnings</span> <span class="kn">import</span> <span class="n">warn</span>
+<span></span><span class="kn">import</span><span class="w"> </span><span class="nn">sympy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">sp</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">sympy.utilities.lambdify</span><span class="w"> </span><span class="kn">import</span> <span class="n">lambdify</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">numpy.polynomial.polynomial</span><span class="w"> </span><span class="kn">import</span> <span class="n">Polynomial</span> <span class="k">as</span> <span class="n">npPoly</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">sympy.core.mul</span><span class="w"> </span><span class="kn">import</span> <span class="n">Mul</span><span class="p">,</span> <span class="n">Pow</span><span class="p">,</span> <span class="n">Add</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">copy</span><span class="w"> </span><span class="kn">import</span> <span class="n">deepcopy</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">numbers</span><span class="w"> </span><span class="kn">import</span> <span class="n">Number</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">math</span><span class="w"> </span><span class="kn">import</span> <span class="n">floor</span><span class="p">,</span> <span class="n">factorial</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">subprocess</span><span class="w"> </span><span class="kn">import</span> <span class="n">run</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">inspect</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">time</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">warnings</span><span class="w"> </span><span class="kn">import</span> <span class="n">warn</span>
 <span class="k">try</span><span class="p">:</span>
-    <span class="kn">from</span> <span class="nn">._constants</span> <span class="kn">import</span> <span class="o">*</span>
-    <span class="kn">from</span> <span class="nn">._utility</span> <span class="kn">import</span> <span class="o">*</span>
-    <span class="kn">from</span> <span class="nn">.plotting_settings</span> <span class="kn">import</span> <span class="n">plotting_parameters_show</span><span class="p">,</span><span class="n">plotting_parameters_normal_modes</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">._constants</span><span class="w"> </span><span class="kn">import</span> <span class="o">*</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">._utility</span><span class="w"> </span><span class="kn">import</span> <span class="o">*</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">.plotting_settings</span><span class="w"> </span><span class="kn">import</span> <span class="n">plotting_parameters_show</span><span class="p">,</span><span class="n">plotting_parameters_normal_modes</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">._web_gui</span><span class="w"> </span><span class="kn">import</span> <span class="n">web_gui</span>
 <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
     <span class="c1"># When running from source without pip installation</span>
-    <span class="kn">from</span> <span class="nn">_constants</span> <span class="kn">import</span> <span class="o">*</span>
-    <span class="kn">from</span> <span class="nn">_utility</span> <span class="kn">import</span> <span class="o">*</span>
-    <span class="kn">from</span> <span class="nn">plotting_settings</span> <span class="kn">import</span> <span class="n">plotting_parameters_show</span><span class="p">,</span><span class="n">plotting_parameters_normal_modes</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">_constants</span><span class="w"> </span><span class="kn">import</span> <span class="o">*</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">_utility</span><span class="w"> </span><span class="kn">import</span> <span class="o">*</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">plotting_settings</span><span class="w"> </span><span class="kn">import</span> <span class="n">plotting_parameters_show</span><span class="p">,</span><span class="n">plotting_parameters_normal_modes</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">_web_gui</span><span class="w"> </span><span class="kn">import</span> <span class="n">web_gui</span>
 
 <span class="n">PROFILING</span> <span class="o">=</span> <span class="kc">False</span>
 
-<span class="k">def</span> <span class="nf">timeit</span><span class="p">(</span><span class="n">method</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">timeit</span><span class="p">(</span><span class="n">method</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    Decorator which prints the time </span>
 <span class="sd">    a function took to execute.</span>
 <span class="sd">    Only works the global variable PROFILING is set to True.</span>
 <span class="sd">    &#39;&#39;&#39;</span>
-    <span class="k">def</span> <span class="nf">timed</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">timed</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">):</span>
         <span class="n">ts</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
         <span class="n">result</span> <span class="o">=</span> <span class="n">method</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">)</span>
         <span class="n">te</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
@@ -120,7 +122,7 @@
         <span class="k">return</span> <span class="n">result</span>
     <span class="k">return</span> <span class="n">timed</span>
 
-<span class="k">def</span> <span class="nf">string_to_component</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="o">*</span><span class="n">arg</span><span class="p">,</span> <span class="o">**</span><span class="n">kwarg</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">string_to_component</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="o">*</span><span class="n">arg</span><span class="p">,</span> <span class="o">**</span><span class="n">kwarg</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    Allows the creation of a Component object using a string.</span>
 
@@ -149,7 +151,7 @@
     <span class="k">elif</span> <span class="n">s</span> <span class="o">==</span> <span class="s1">&#39;G&#39;</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">G</span><span class="p">(</span><span class="o">*</span><span class="n">arg</span><span class="p">,</span> <span class="o">**</span><span class="n">kwarg</span><span class="p">)</span>
 
-<span class="k">class</span> <span class="nc">Qcircuit</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">Qcircuit</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;A class representing a quantum circuit.</span>
 
 <span class="sd">    Attributes:</span>
@@ -165,7 +167,7 @@
 <span class="sd">                        of zero-point fluctations, each index of the list corresponds to a different mode</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">netlist</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">netlist</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">Q_min</span> <span class="o">=</span> <span class="mi">1</span> <span class="c1"># Modes with have a quality factor below Q_min will not ignored</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">warn_discarded_mode</span> <span class="o">=</span> <span class="kc">True</span> <span class="c1"># If this is set to True, the user will be notified when a mode is discarded.</span>
@@ -243,7 +245,7 @@
             <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_network</span><span class="o">.</span><span class="n">compute_char_poly_coeffs</span><span class="p">(</span><span class="n">is_lossy</span> <span class="o">=</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">resistors</span><span class="p">)</span><span class="o">&gt;</span><span class="mi">0</span><span class="p">))]</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">_pp</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_pp</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">        Returns the plotting parameters used </span>
 <span class="sd">            * in the Qcircuit.show method (if self._plotting_normal_mode is False)</span>
@@ -254,7 +256,7 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">plotting_parameters_show</span>
 
-    <span class="k">def</span> <span class="nf">_parse_kwargs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_parse_kwargs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">        Raises a ValueError </span>
 <span class="sd">        * if one of the kwargs is not the label of a circuit element</span>
@@ -290,7 +292,7 @@
                     <span class="s1">&#39;The value of </span><span class="si">%s</span><span class="s1"> should be specified with the keyword argument </span><span class="si">%s</span><span class="s1">=... &#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">label</span><span class="p">,</span> <span class="n">label</span><span class="p">))</span>
 
     <span class="nd">@timeit</span>
-    <span class="k">def</span> <span class="nf">_set_zeta</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_set_zeta</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">        Sets the Qcircuit.zeta to the circuit eigenfrequencies</span>
 <span class="sd">        (including the imaginary part due to losses).</span>
@@ -428,7 +430,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">zeta</span> <span class="o">=</span> <span class="n">zeta</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">ref_elt</span> <span class="o">=</span> <span class="n">ref_elt</span>
 
-    <span class="k">def</span> <span class="nf">_anharmonicities_per_junction</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_anharmonicities_per_junction</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">        Returns the contribution of each junction to the anharmonicity of each mode.</span>
 <span class="sd">        For more details, see the documentation of J.anharmonicity.</span>
@@ -453,7 +455,7 @@
 <div class="viewcode-block" id="Qcircuit.eigenfrequencies">
 <a class="viewcode-back" href="../../API/circuit_functions/eigenfrequencies.html#qucat.Qcircuit.eigenfrequencies">[docs]</a>
     <span class="nd">@vectorize_kwargs</span>
-    <span class="k">def</span> <span class="nf">eigenfrequencies</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">eigenfrequencies</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&#39;&#39;&#39;Returns the normal mode frequencies of the circuit.</span>
 
 <span class="sd">        Frequencies are provided in units of Hertz, </span>
@@ -501,7 +503,7 @@
 <div class="viewcode-block" id="Qcircuit.loss_rates">
 <a class="viewcode-back" href="../../API/circuit_functions/loss_rates.html#qucat.Qcircuit.loss_rates">[docs]</a>
     <span class="nd">@vectorize_kwargs</span>
-    <span class="k">def</span> <span class="nf">loss_rates</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">loss_rates</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&#39;&#39;&#39;Returns the loss rates of the circuit normal modes.</span>
 
 <span class="sd">        The array is ordered ordered with increasing normal mode frequencies</span>
@@ -551,7 +553,7 @@
 <div class="viewcode-block" id="Qcircuit.anharmonicities">
 <a class="viewcode-back" href="../../API/circuit_functions/anharmonicities.html#qucat.Qcircuit.anharmonicities">[docs]</a>
     <span class="nd">@vectorize_kwargs</span>
-    <span class="k">def</span> <span class="nf">anharmonicities</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">anharmonicities</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 <span class="w">        </span><span class="sa">r</span><span class="sd">&#39;&#39;&#39;Returns the anharmonicity of the circuit normal modes.</span>
 
 <span class="sd">        The array is ordered ordered with increasing normal mode frequencies</span>
@@ -599,7 +601,7 @@
 <div class="viewcode-block" id="Qcircuit.kerr">
 <a class="viewcode-back" href="../../API/circuit_functions/kerr.html#qucat.Qcircuit.kerr">[docs]</a>
     <span class="nd">@vectorize_kwargs</span>
-    <span class="k">def</span> <span class="nf">kerr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">kerr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 <span class="w">        </span><span class="sa">r</span><span class="sd">&#39;&#39;&#39;Returns the Kerr parameters for the circuit normal modes.</span>
 
 <span class="sd">        The diagonal component ``K[m,m]`` of the returned matrix correspond to the</span>
@@ -675,7 +677,7 @@
 
 <div class="viewcode-block" id="Qcircuit.f_k_A_chi">
 <a class="viewcode-back" href="../../API/circuit_functions/f_k_A_chi.html#qucat.Qcircuit.f_k_A_chi">[docs]</a>
-    <span class="k">def</span> <span class="nf">f_k_A_chi</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pretty_print</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">f_k_A_chi</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pretty_print</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 <span class="w">        </span><span class="sa">r</span><span class="sd">&#39;&#39;&#39;Returns the eigenfrequency, loss-rates, anharmonicity, and Kerr parameters of the circuit. </span>
 
 <span class="sd">        Returns these quantities in the form ``[[f_0,f_1,..],[k_0,k_1,..],[A_0,A_1,..],[[A_0,chi_01,..],[chi_10,A_1,..]..]]``</span>
@@ -777,7 +779,7 @@
 <div class="viewcode-block" id="Qcircuit.hamiltonian">
 <a class="viewcode-back" href="../../API/circuit_functions/hamiltonian.html#qucat.Qcircuit.hamiltonian">[docs]</a>
     <span class="nd">@refuse_vectorize_kwargs</span><span class="p">(</span><span class="n">exclude</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;modes&#39;</span><span class="p">,</span><span class="s1">&#39;taylor&#39;</span><span class="p">,</span><span class="s1">&#39;excitations&#39;</span><span class="p">,</span><span class="s1">&#39;return_ops&#39;</span><span class="p">])</span>
-    <span class="k">def</span> <span class="nf">hamiltonian</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">modes</span><span class="o">=</span><span class="s1">&#39;all&#39;</span><span class="p">,</span> <span class="n">taylor</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">excitations</span><span class="o">=</span><span class="mi">6</span><span class="p">,</span> <span class="n">return_ops</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">hamiltonian</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">modes</span><span class="o">=</span><span class="s1">&#39;all&#39;</span><span class="p">,</span> <span class="n">taylor</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">excitations</span><span class="o">=</span><span class="mi">6</span><span class="p">,</span> <span class="n">return_ops</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 <span class="w">        </span><span class="sa">r</span><span class="sd">&#39;&#39;&#39;Returns the circuits Hamiltonian for further analysis with QuTiP.</span>
 <span class="sd">        The Hamiltonian is provided in units of frequency (not angular frequency), </span>
 <span class="sd">        such that :math:`h=1`.</span>
@@ -837,7 +839,7 @@
 
 <span class="sd">        For more details on the underlying theory, see https://arxiv.org/pdf/1908.10342.pdf</span>
 <span class="sd">        &#39;&#39;&#39;</span>
-        <span class="kn">from</span> <span class="nn">qutip</span> <span class="kn">import</span> <span class="n">destroy</span><span class="p">,</span> <span class="n">qeye</span><span class="p">,</span> <span class="n">tensor</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">qutip</span><span class="w"> </span><span class="kn">import</span> <span class="n">destroy</span><span class="p">,</span> <span class="n">qeye</span><span class="p">,</span> <span class="n">tensor</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">hamiltonian_modes</span> <span class="o">=</span> <span class="n">modes</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">hamiltonian_taylor</span> <span class="o">=</span> <span class="n">taylor</span>
@@ -898,7 +900,7 @@
 <div class="viewcode-block" id="Qcircuit.show">
 <a class="viewcode-back" href="../../API/circuit_functions/show.html#qucat.Qcircuit.show">[docs]</a>
     <span class="nd">@refuse_vectorize_kwargs</span><span class="p">(</span><span class="n">exclude</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;plot&#39;</span><span class="p">,</span><span class="s1">&#39;return_fig_ax&#39;</span><span class="p">])</span>
-    <span class="k">def</span> <span class="nf">show</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">show</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
              <span class="n">plot</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
              <span class="n">return_fig_ax</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
              <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
@@ -977,7 +979,7 @@
 <div class="viewcode-block" id="Qcircuit.show_normal_mode">
 <a class="viewcode-back" href="../../API/circuit_functions/show_normal_mode.html#qucat.Qcircuit.show_normal_mode">[docs]</a>
     <span class="nd">@refuse_vectorize_kwargs</span><span class="p">(</span><span class="n">exclude</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;quantity&#39;</span><span class="p">])</span>
-    <span class="k">def</span> <span class="nf">show_normal_mode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> 
+    <span class="k">def</span><span class="w"> </span><span class="nf">show_normal_mode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> 
         <span class="n">mode</span><span class="p">,</span> 
         <span class="n">quantity</span><span class="o">=</span><span class="s1">&#39;current&#39;</span><span class="p">,</span>
         <span class="n">plot</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
@@ -1062,7 +1064,7 @@
 <span class="s1">            using the GUI.</span>
 <span class="s1">            &#39;&#39;&#39;</span><span class="p">)</span>
 
-        <span class="k">def</span> <span class="nf">pretty</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">quantity</span><span class="p">):</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">pretty</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">quantity</span><span class="p">):</span>
             <span class="c1"># Utility function to print a pretty </span>
             <span class="c1"># value for the phasor</span>
             <span class="k">if</span> <span class="n">quantity</span> <span class="o">==</span> <span class="s1">&#39;flux&#39;</span><span class="p">:</span>
@@ -1092,7 +1094,7 @@
         <span class="n">max_value</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">amax</span><span class="p">(</span><span class="n">all_values</span><span class="p">)</span>
         <span class="n">min_value</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">amin</span><span class="p">(</span><span class="n">all_values</span><span class="p">)</span>
 
-        <span class="k">def</span> <span class="nf">value_to_01_range</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">value_to_01_range</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
             <span class="c1"># Returns a number between 0 and 1</span>
             <span class="c1"># where 0 corresponds to the smallest</span>
             <span class="c1"># phasor and 1 to the largest</span>
@@ -1104,7 +1106,7 @@
             <span class="k">else</span><span class="p">:</span>
                 <span class="k">return</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">absolute</span><span class="p">(</span><span class="n">value</span><span class="p">)</span><span class="o">-</span><span class="n">min_value</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="n">max_value</span><span class="o">-</span><span class="n">min_value</span><span class="p">)</span>
 
-        <span class="k">def</span> <span class="nf">arrow_width</span><span class="p">(</span><span class="n">value</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span><span class="n">value_01</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">arrow_width</span><span class="p">(</span><span class="n">value</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span><span class="n">value_01</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
             <span class="c1"># Converts value between 0 and 1</span>
             <span class="c1"># to an arrow width where 0 will</span>
             <span class="c1"># get the ``min_width`` and</span>
@@ -1119,7 +1121,7 @@
 
             <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">absolute</span><span class="p">(</span><span class="n">ppnm</span><span class="p">[</span><span class="s1">&#39;min_width&#39;</span><span class="p">]</span><span class="o">+</span><span class="n">value_01</span><span class="o">*</span><span class="p">(</span><span class="n">ppnm</span><span class="p">[</span><span class="s1">&#39;max_width&#39;</span><span class="p">]</span><span class="o">-</span><span class="n">ppnm</span><span class="p">[</span><span class="s1">&#39;min_width&#39;</span><span class="p">]))</span>
 
-        <span class="k">def</span> <span class="nf">arrow_kwargs</span><span class="p">(</span><span class="n">value</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span><span class="n">value_01</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">arrow_kwargs</span><span class="p">(</span><span class="n">value</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span><span class="n">value_01</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
             <span class="c1"># Constructs the keyword arguments to be passed </span>
             <span class="c1"># in the construction of an arrow based on the </span>
             <span class="c1"># zpf value</span>
@@ -1298,7 +1300,7 @@
 
 <div class="viewcode-block" id="Network">
 <a class="viewcode-back" href="../../API/network.html#qucat.Network">[docs]</a>
-<span class="k">class</span> <span class="nc">Network</span><span class="p">(</span><span class="n">Qcircuit</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">Network</span><span class="p">(</span><span class="n">Qcircuit</span><span class="p">):</span>
 <span class="w">    </span><span class="sa">r</span><span class="sd">&#39;&#39;&#39;Constructs a Qcircuit object from a list of components without resorting to a graphical user interface.</span>
 
 <span class="sd">    The list can be composed of instances of the :class:`qucat.L`, :class:`qucat.C`, </span>
@@ -1360,13 +1362,13 @@
 
 <span class="sd">    &#39;&#39;&#39;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">netlist</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">netlist</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">(</span><span class="n">Network</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">netlist</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="GUI">
 <a class="viewcode-back" href="../../API/gui.html#qucat.GUI">[docs]</a>
-<span class="k">class</span> <span class="nc">GUI</span><span class="p">(</span><span class="n">Qcircuit</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">GUI</span><span class="p">(</span><span class="n">Qcircuit</span><span class="p">):</span>
 <span class="w">    </span><span class="sa">r</span><span class="sd">&#39;&#39;&#39;Opens a graphical user interface to constructs a circuit.</span>
 
 <span class="sd">    Parameters</span>
@@ -1428,7 +1430,7 @@
 
 <span class="sd">    &#39;&#39;&#39;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="p">,</span> <span class="n">edit</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">plot</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">print_network</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span><span class="n">_unittesting</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="p">,</span> <span class="n">edit</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">plot</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">print_network</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span><span class="n">_unittesting</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 
         <span class="c1"># Note: this will also give a valid path if filename was specified using </span>
         <span class="c1"># an absolute path</span>
@@ -1484,7 +1486,7 @@
             <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span></div>
 
 
-<span class="k">class</span> <span class="nc">_Network</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">_Network</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    The _Network class parses network arrays generated by the GUI</span>
 <span class="sd">    or written manually by the user. </span>
@@ -1500,7 +1502,7 @@
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="nd">@timeit</span>
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">netlist</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">netlist</span><span class="p">):</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">netlist</span> <span class="o">=</span> <span class="n">netlist</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">parse_netlist</span><span class="p">()</span>
@@ -1514,7 +1516,7 @@
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Your circuit appears to be open or shorted making the analysis impossible&quot;</span><span class="p">)</span>
 
     <span class="nd">@timeit</span>
-    <span class="k">def</span> <span class="nf">is_connected</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> 
+    <span class="k">def</span><span class="w"> </span><span class="nf">is_connected</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> 
         <span class="n">nodes_encountered</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> 
         <span class="n">start_node</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
@@ -1535,7 +1537,7 @@
         <span class="n">start_node</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">net_dict</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> <span class="c1"># Starting point of the algo</span>
         
 
-        <span class="k">def</span> <span class="nf">add_neighboors_to_encountered_nodes</span><span class="p">(</span><span class="n">node</span><span class="p">):</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">add_neighboors_to_encountered_nodes</span><span class="p">(</span><span class="n">node</span><span class="p">):</span>
             <span class="k">if</span> <span class="n">node</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">encountered_nodes</span><span class="p">:</span>
                 <span class="n">encountered_nodes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
                 <span class="k">for</span> <span class="n">neighboor</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">net_dict</span><span class="p">[</span><span class="n">node</span><span class="p">]:</span>
@@ -1548,7 +1550,7 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="k">return</span> <span class="kc">True</span>
 
-    <span class="k">def</span> <span class="nf">has_shorts</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">has_shorts</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">        Determines if there is an short circuit. </span>
 
@@ -1575,7 +1577,7 @@
         <span class="c1"># No shorts were found</span>
         <span class="k">return</span> <span class="kc">False</span>
         
-    <span class="k">def</span> <span class="nf">has_opens</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">has_opens</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">        Determines if there is an open connection in the </span>
 <span class="sd">        circuit. </span>
@@ -1593,9 +1595,9 @@
                 <span class="k">return</span> <span class="kc">True</span>
         <span class="k">return</span> <span class="kc">False</span>
 
-    <span class="k">def</span> <span class="nf">parse_netlist</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">parse_netlist</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 
-        <span class="k">def</span> <span class="nf">merge_chains</span><span class="p">(</span><span class="n">chains</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">):</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">merge_chains</span><span class="p">(</span><span class="n">chains</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">):</span>
 <span class="w">            </span><span class="sd">&#39;&#39;&#39;Merges two chains (two arrays)&#39;&#39;&#39;</span>
             <span class="n">to_add</span> <span class="o">=</span> <span class="n">chains</span><span class="p">[</span><span class="n">j</span><span class="p">]</span>
             <span class="k">del</span> <span class="n">chains</span><span class="p">[</span><span class="n">j</span><span class="p">]</span>
@@ -1663,7 +1665,7 @@
                 <span class="k">if</span> <span class="n">added</span> <span class="o">==</span> <span class="kc">False</span><span class="p">:</span>
                     <span class="n">chains</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">nm</span><span class="p">,</span> <span class="n">np</span><span class="p">])</span>
 
-        <span class="k">def</span> <span class="nf">plot_node_to_new_node</span><span class="p">(</span><span class="n">plot_node</span><span class="p">):</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">plot_node_to_new_node</span><span class="p">(</span><span class="n">plot_node</span><span class="p">):</span>
 <span class="w">            </span><span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">            Transforms the node ``plot_node``` to a new node.</span>
 
@@ -1726,10 +1728,10 @@
                 <span class="bp">self</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">el</span><span class="p">,</span> <span class="n">el</span><span class="o">.</span><span class="n">node_minus</span><span class="p">,</span> <span class="n">el</span><span class="o">.</span><span class="n">node_plus</span><span class="p">)</span>
 
     <span class="nd">@timeit</span>
-    <span class="k">def</span> <span class="nf">compute_char_poly_coeffs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">is_lossy</span> <span class="o">=</span> <span class="kc">True</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">compute_char_poly_coeffs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">is_lossy</span> <span class="o">=</span> <span class="kc">True</span><span class="p">):</span>
         
         <span class="nd">@timeit</span>
-        <span class="k">def</span> <span class="nf">determinant</span><span class="p">(</span><span class="n">matrix</span><span class="p">):</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">determinant</span><span class="p">(</span><span class="n">matrix</span><span class="p">):</span>
             <span class="k">return</span> <span class="n">matrix</span><span class="o">.</span><span class="n">berkowitz_det</span><span class="p">()</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">is_lossy</span> <span class="o">=</span> <span class="n">is_lossy</span>
@@ -1765,7 +1767,7 @@
 
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">char_poly_coeffs_analytical</span>
 
-    <span class="k">def</span> <span class="nf">compute_RLC_matrices</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">compute_RLC_matrices</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">N_nodes</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">net_dict</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">RLC_matrices</span> <span class="o">=</span> <span class="p">{</span>
             <span class="s1">&#39;R&#39;</span><span class="p">:</span><span class="n">sp</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">N_nodes</span><span class="p">),</span>
@@ -1798,7 +1800,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">RLC_matrices</span><span class="p">[</span><span class="n">k</span><span class="p">]</span><span class="o">.</span><span class="n">row_del</span><span class="p">(</span><span class="n">ground_node</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">RLC_matrices</span><span class="p">[</span><span class="n">k</span><span class="p">]</span><span class="o">.</span><span class="n">col_del</span><span class="p">(</span><span class="n">ground_node</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">connect</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">element</span><span class="p">,</span> <span class="n">node_minus</span><span class="p">,</span> <span class="n">node_plus</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">connect</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">element</span><span class="p">,</span> <span class="n">node_minus</span><span class="p">,</span> <span class="n">node_plus</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">        Modifies the ``net_dict`` variable such that ``node_minus``</span>
 <span class="sd">        and ``node_plus`` are marked as connected in future calculations.</span>
@@ -1831,7 +1833,7 @@
         <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">net_dict</span><span class="p">[</span><span class="n">node_plus</span><span class="p">][</span><span class="n">node_minus</span><span class="p">]</span> <span class="o">=</span> <span class="n">element</span>
 
-    <span class="k">def</span> <span class="nf">remove_node</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node_to_remove</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">remove_node</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node_to_remove</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">        Makes use of the star-mesh transform to remove the ``node_to_remove`` from the network.</span>
 <span class="sd">        A node N=``node_to_remove`` connected to nodes A,B,C,.. through impedances </span>
@@ -1873,7 +1875,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="o">*</span><span class="n">mesh_branch</span><span class="p">)</span>
 
     <span class="nd">@timeit</span>
-    <span class="k">def</span> <span class="nf">admittance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node_minus</span><span class="p">,</span> <span class="n">node_plus</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">admittance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node_minus</span><span class="p">,</span> <span class="n">node_plus</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">        Compute the admittance of the network between two nodes </span>
 <span class="sd">        ``node_plus`` and ``node_minus`` </span>
@@ -1907,7 +1909,7 @@
         <span class="n">Y</span> <span class="o">=</span> <span class="n">ntr</span><span class="o">.</span><span class="n">net_dict</span><span class="p">[</span><span class="n">node_minus</span><span class="p">][</span><span class="n">node_plus</span><span class="p">]</span><span class="o">.</span><span class="n">_admittance</span><span class="p">()</span>
         <span class="k">return</span> <span class="n">Y</span>
 
-    <span class="k">def</span> <span class="nf">branch_admittance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node_1</span><span class="p">,</span> <span class="n">node_2</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">branch_admittance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node_1</span><span class="p">,</span> <span class="n">node_2</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">        Returns the admittance in the branch connecting ``node_1`` and ``node_2``.</span>
 <span class="sd">        If they are not directly connected through a single Component, this function</span>
@@ -1928,7 +1930,7 @@
         <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
             <span class="k">return</span> <span class="mf">0.</span>
 
-    <span class="k">def</span> <span class="nf">transfer</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node_left_minus</span><span class="p">,</span> <span class="n">node_left_plus</span><span class="p">,</span> <span class="n">node_right_minus</span><span class="p">,</span> <span class="n">node_right_plus</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">transfer</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node_left_minus</span><span class="p">,</span> <span class="n">node_left_plus</span><span class="p">,</span> <span class="n">node_right_minus</span><span class="p">,</span> <span class="n">node_right_plus</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">        Returns the transfer function V_right/V_left relating the voltage on </span>
 <span class="sd">        a port &#39;right&#39; defined by ``node_right_minus`` and ``node_right_plus``</span>
@@ -2090,18 +2092,18 @@
 
             <span class="k">return</span>  <span class="mi">1</span><span class="o">/</span><span class="n">A</span>
 
-<span class="k">class</span> <span class="nc">Circuit</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">Circuit</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;docstring for Circuit&quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node_minus</span><span class="p">,</span> <span class="n">node_plus</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node_minus</span><span class="p">,</span> <span class="n">node_plus</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">node_minus</span> <span class="o">=</span> <span class="n">node_minus</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">node_plus</span> <span class="o">=</span> <span class="n">node_plus</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_circuit</span> <span class="o">=</span> <span class="kc">None</span>
 
-    <span class="k">def</span> <span class="fm">__or__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other_circuit</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__or__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other_circuit</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">Parallel</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other_circuit</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">_set_plot_coordinates</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_set_plot_coordinates</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">x_plot_node_minus</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_node_minus_plot</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;,&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">x_plot_node_plus</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_node_plus_plot</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;,&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span>
@@ -2123,7 +2125,7 @@
             <span class="k">else</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">angle</span> <span class="o">=</span> <span class="n">EAST</span>
 
-    <span class="k">def</span> <span class="nf">_draw_label</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ax</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_draw_label</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ax</span><span class="p">):</span>
         <span class="n">pp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_circuit</span><span class="o">.</span><span class="n">_pp</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">angle</span><span class="o">%</span><span class="mf">180.</span> <span class="o">==</span> <span class="mf">0.</span><span class="p">:</span>
             <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">x_plot_center</span><span class="o">+</span><span class="n">pp</span><span class="p">[</span><span class="s1">&#39;label&#39;</span><span class="p">][</span><span class="s1">&#39;text_position_horizontal&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
@@ -2142,21 +2144,21 @@
                 <span class="n">fontsize</span><span class="o">=</span><span class="n">pp</span><span class="p">[</span><span class="s1">&#39;label&#39;</span><span class="p">][</span><span class="s1">&#39;fontsize&#39;</span><span class="p">],</span>
                 <span class="n">ha</span><span class="o">=</span><span class="n">ha</span><span class="p">,</span> <span class="n">va</span><span class="o">=</span><span class="n">va</span><span class="p">)</span>
 
-<span class="k">class</span> <span class="nc">Parallel</span><span class="p">(</span><span class="n">Circuit</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">Parallel</span><span class="p">(</span><span class="n">Circuit</span><span class="p">):</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">left</span><span class="p">,</span> <span class="n">right</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">left</span><span class="p">,</span> <span class="n">right</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">(</span><span class="n">Parallel</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">node_minus</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">node_plus</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
 
         <span class="c1"># sets the two children circuit elements</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">left</span> <span class="o">=</span> <span class="n">left</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">right</span> <span class="o">=</span> <span class="n">right</span>
 
-    <span class="k">def</span> <span class="nf">_admittance</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_admittance</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">Add</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">left</span><span class="o">.</span><span class="n">_admittance</span><span class="p">(),</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">right</span><span class="o">.</span><span class="n">_admittance</span><span class="p">())</span>
     
-    <span class="k">def</span> <span class="nf">_get_RLC_matrix_components</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_RLC_matrix_components</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">RLC_matrix_components</span> <span class="o">=</span> <span class="p">{</span>
             <span class="s1">&#39;R&#39;</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span>
             <span class="s1">&#39;L&#39;</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span>
@@ -2168,9 +2170,9 @@
                 <span class="n">RLC_matrix_components</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">+=</span> <span class="n">values_to_add</span><span class="p">[</span><span class="n">k</span><span class="p">]</span>
         <span class="k">return</span> <span class="n">RLC_matrix_components</span>
 
-<span class="k">class</span> <span class="nc">Component</span><span class="p">(</span><span class="n">Circuit</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">Component</span><span class="p">(</span><span class="n">Circuit</span><span class="p">):</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node_minus</span><span class="p">,</span> <span class="n">node_plus</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node_minus</span><span class="p">,</span> <span class="n">node_plus</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">(</span><span class="n">Component</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">node_minus</span><span class="p">,</span> <span class="n">node_plus</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">label</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="kc">None</span>
@@ -2196,7 +2198,7 @@
                 <span class="k">elif</span> <span class="mi">0</span><span class="o">&lt;=</span><span class="bp">self</span><span class="o">.</span><span class="n">value</span><span class="o">&lt;</span><span class="n">min_float</span><span class="p">:</span>
                     <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Minimum allowed value is </span><span class="si">%.2e</span><span class="s2">&quot;</span><span class="o">%</span><span class="n">min_float</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="fm">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">label</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">return</span> <span class="nb">hash</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">value</span><span class="p">)</span><span class="o">+</span><span class="bp">self</span><span class="o">.</span><span class="n">unit</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
@@ -2205,7 +2207,7 @@
             <span class="k">else</span><span class="p">:</span>
                 <span class="k">return</span> <span class="nb">hash</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">value</span><span class="p">)</span><span class="o">+</span><span class="bp">self</span><span class="o">.</span><span class="n">label</span><span class="o">+</span><span class="bp">self</span><span class="o">.</span><span class="n">unit</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">_get_value</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_value</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span>
         <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">kwargs</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
@@ -2214,7 +2216,7 @@
 
         <span class="k">return</span> <span class="n">sp</span><span class="o">.</span><span class="n">Symbol</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">label</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">_set_component_lists</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_set_component_lists</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">label</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="s1">&#39; &#39;</span><span class="p">,</span> <span class="s1">&#39;None&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">]:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_circuit</span><span class="o">.</span><span class="n">components</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">label</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span>
 
@@ -2226,7 +2228,7 @@
             <span class="k">else</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_circuit</span><span class="o">.</span><span class="n">_no_value_components</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">label</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">_flux_zpf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mode</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_flux_zpf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mode</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_circuit</span><span class="o">.</span><span class="n">_set_zeta</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
         <span class="n">w</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_circuit</span><span class="o">.</span><span class="n">zeta</span><span class="p">[</span><span class="n">mode</span><span class="p">]</span>
         <span class="k">try</span><span class="p">:</span>
@@ -2239,7 +2241,7 @@
             <span class="n">tr_analytical</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_circuit</span><span class="o">.</span><span class="n">_network</span><span class="o">.</span><span class="n">transfer</span><span class="p">(</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_circuit</span><span class="o">.</span><span class="n">ref_elt</span><span class="p">[</span><span class="n">mode</span><span class="p">]</span><span class="o">.</span><span class="n">node_minus</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_circuit</span><span class="o">.</span><span class="n">ref_elt</span><span class="p">[</span><span class="n">mode</span><span class="p">]</span><span class="o">.</span><span class="n">node_plus</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">node_minus</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">node_plus</span><span class="p">)</span>
             <span class="n">tr</span> <span class="o">=</span> <span class="n">lambdify</span><span class="p">([</span><span class="s1">&#39;w&#39;</span><span class="p">]</span><span class="o">+</span><span class="bp">self</span><span class="o">.</span><span class="n">_circuit</span><span class="o">.</span><span class="n">_no_value_components</span><span class="p">,</span><span class="n">tr_analytical</span><span class="p">,</span> <span class="s2">&quot;numpy&quot;</span><span class="p">)</span>
-            <span class="k">def</span> <span class="nf">tr_minus</span><span class="p">(</span><span class="n">w</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+            <span class="k">def</span><span class="w"> </span><span class="nf">tr_minus</span><span class="p">(</span><span class="n">w</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
                 <span class="k">return</span> <span class="o">-</span><span class="n">tr</span><span class="p">(</span><span class="n">w</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
             
             <span class="bp">self</span><span class="o">.</span><span class="n">_circuit</span><span class="o">.</span><span class="n">_flux_transformation_dict</span><span class="p">[</span>
@@ -2268,12 +2270,12 @@
         <span class="k">return</span> <span class="n">phi</span>
 
 
-    <span class="k">def</span> <span class="nf">_to_string</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">use_unicode</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_to_string</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">use_unicode</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">to_string</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">unit</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">label</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="n">use_unicode</span><span class="o">=</span><span class="n">use_unicode</span><span class="p">)</span>
 
 
     <span class="nd">@vectorize_kwargs</span><span class="p">(</span><span class="n">exclude</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;quantity&#39;</span><span class="p">,</span><span class="s1">&#39;mode&#39;</span><span class="p">])</span>
-    <span class="k">def</span> <span class="nf">zpf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mode</span><span class="p">,</span> <span class="n">quantity</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">zpf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mode</span><span class="p">,</span> <span class="n">quantity</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 <span class="w">        </span><span class="sa">r</span><span class="sd">&#39;&#39;&#39;Returns contribution of a mode to the zero-point fluctuations of a quantity for this component.</span>
 
 <span class="sd">        The quantity can be current (in units of Ampere), </span>
@@ -2337,23 +2339,23 @@
             <span class="n">w</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_circuit</span><span class="o">.</span><span class="n">zeta</span><span class="p">)[</span><span class="n">mode</span><span class="p">]</span>
             <span class="k">return</span> <span class="n">Izpf</span><span class="o">/</span><span class="mi">1</span><span class="n">j</span><span class="o">/</span><span class="n">w</span><span class="o">/</span><span class="n">e</span>
 
-<span class="k">class</span> <span class="nc">W</span><span class="p">(</span><span class="n">Component</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">W</span><span class="p">(</span><span class="n">Component</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;docstring for Wire&quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node_minus</span><span class="p">,</span> <span class="n">node_plus</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node_minus</span><span class="p">,</span> <span class="n">node_plus</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">(</span><span class="n">W</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">node_minus</span><span class="p">,</span> <span class="n">node_plus</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">unit</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">label</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="kc">None</span>
 
-    <span class="k">def</span> <span class="nf">_to_string</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_to_string</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="k">return</span> <span class="s1">&#39; &#39;</span>
 
-    <span class="k">def</span> <span class="nf">_set_component_lists</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_set_component_lists</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">(</span><span class="n">W</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">_set_component_lists</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_circuit</span><span class="o">.</span><span class="n">_wire</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">_draw</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_draw</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">pp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_circuit</span><span class="o">.</span><span class="n">_pp</span>
 
         <span class="n">x</span> <span class="o">=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">x_plot_node_minus</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">x_plot_node_plus</span><span class="p">]),</span>
@@ -2370,19 +2372,19 @@
 
         <span class="k">return</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">line_type</span>
 
-<span class="k">class</span> <span class="nc">G</span><span class="p">(</span><span class="n">W</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">G</span><span class="p">(</span><span class="n">W</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    From a network perspective, a ground element is a wire that connects</span>
 <span class="sd">    node_plus to a node called &#39;__ground&#39;</span>
 <span class="sd">    &#39;&#39;&#39;</span>
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node_minus</span><span class="p">,</span> <span class="n">node_plus</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node_minus</span><span class="p">,</span> <span class="n">node_plus</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">node_minus</span><span class="p">,</span> <span class="n">node_plus</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">_set_component_lists</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_set_component_lists</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">_set_component_lists</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_circuit</span><span class="o">.</span><span class="n">_grounds</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">_draw</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_draw</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">pp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_circuit</span><span class="o">.</span><span class="n">_pp</span>
         <span class="c1"># Defined for EAST</span>
         <span class="n">line_type</span> <span class="o">=</span> <span class="p">[]</span>
@@ -2414,7 +2416,7 @@
 
 <div class="viewcode-block" id="L">
 <a class="viewcode-back" href="../../API/components/L.html#qucat.L">[docs]</a>
-<span class="k">class</span> <span class="nc">L</span><span class="p">(</span><span class="n">Component</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">L</span><span class="p">(</span><span class="n">Component</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;A class representing an inductor</span>
 <span class="sd">    </span>
 <span class="sd">    Parameters</span>
@@ -2437,18 +2439,18 @@
 <span class="sd">                    changing the value of a component and re-calculating a quantity </span>
 <span class="sd">                    such as the frequency or anharmonicity can be performed much faster.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node_minus</span><span class="p">,</span> <span class="n">node_plus</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node_minus</span><span class="p">,</span> <span class="n">node_plus</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">(</span><span class="n">L</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">node_minus</span><span class="p">,</span> <span class="n">node_plus</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">unit</span> <span class="o">=</span> <span class="s1">&#39;H&#39;</span>
 
-    <span class="k">def</span> <span class="nf">_admittance</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_admittance</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="o">-</span><span class="n">sp</span><span class="o">.</span><span class="n">I</span><span class="o">*</span><span class="n">Mul</span><span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="n">sp</span><span class="o">.</span><span class="n">Symbol</span><span class="p">(</span><span class="s1">&#39;w&#39;</span><span class="p">),</span> <span class="mi">1</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_value</span><span class="p">())</span>
 
-    <span class="k">def</span> <span class="nf">_set_component_lists</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_set_component_lists</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">(</span><span class="n">L</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">_set_component_lists</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_circuit</span><span class="o">.</span><span class="n">inductors</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">_draw</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_draw</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">pp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_circuit</span><span class="o">.</span><span class="n">_pp</span>
 
         <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mf">0.5</span><span class="p">,</span> <span class="nb">float</span><span class="p">(</span>
@@ -2496,7 +2498,7 @@
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">angle</span><span class="o">%</span><span class="mf">180.</span> <span class="o">==</span> <span class="mf">90.</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">shift</span><span class="p">(</span><span class="n">y_list</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">x_plot_center</span><span class="p">),</span> <span class="n">shift</span><span class="p">(</span><span class="n">x_list</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">y_plot_center</span><span class="p">),</span> <span class="n">line_type</span>
 
-    <span class="k">def</span> <span class="nf">_get_RLC_matrix_components</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_RLC_matrix_components</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="p">{</span>
             <span class="s1">&#39;R&#39;</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span>
             <span class="s1">&#39;L&#39;</span><span class="p">:</span><span class="mi">1</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_value</span><span class="p">(),</span>
@@ -2504,7 +2506,7 @@
         <span class="p">}</span>
 
     <span class="nd">@timeit</span>
-    <span class="k">def</span> <span class="nf">_compute_flux_zpf_r</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_compute_flux_zpf_r</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">        Generate the L._flux_zpf_r function which</span>
 <span class="sd">        takes as an argument an angular frequency (and keyword arguments </span>
@@ -2554,7 +2556,7 @@
         <span class="c1"># and component values that need to be specified</span>
         <span class="n">dY</span> <span class="o">=</span> <span class="n">lambdify</span><span class="p">([</span><span class="s1">&#39;w&#39;</span><span class="p">]</span><span class="o">+</span><span class="bp">self</span><span class="o">.</span><span class="n">_circuit</span><span class="o">.</span><span class="n">_no_value_components</span><span class="p">,</span><span class="n">du</span><span class="o">/</span><span class="n">v</span><span class="p">,</span> <span class="s2">&quot;numpy&quot;</span><span class="p">)</span>
 
-        <span class="k">def</span> <span class="nf">_flux_zpf_r</span><span class="p">(</span><span class="n">z</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">_flux_zpf_r</span><span class="p">(</span><span class="n">z</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
             <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">hbar</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">z</span><span class="p">)</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">imag</span><span class="p">(</span><span class="n">dY</span><span class="p">(</span><span class="n">z</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)))</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_flux_zpf_r</span> <span class="o">=</span> <span class="n">_flux_zpf_r</span></div>
@@ -2563,7 +2565,7 @@
 
 <div class="viewcode-block" id="J">
 <a class="viewcode-back" href="../../API/components/J.html#qucat.J">[docs]</a>
-<span class="k">class</span> <span class="nc">J</span><span class="p">(</span><span class="n">L</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">J</span><span class="p">(</span><span class="n">L</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;A class representing a junction</span>
 <span class="sd">    </span>
 <span class="sd">    Parameters</span>
@@ -2595,7 +2597,7 @@
 <span class="sd">                    its critical current, given in units of Ampere, rather</span>
 <span class="sd">                    than its Josephson inductance</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node_minus</span><span class="p">,</span> <span class="n">node_plus</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">use_E</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">use_I</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node_minus</span><span class="p">,</span> <span class="n">node_plus</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">use_E</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">use_I</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">(</span><span class="n">J</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">node_minus</span><span class="p">,</span> <span class="n">node_plus</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">use_E</span> <span class="o">=</span> <span class="n">use_E</span>
@@ -2607,7 +2609,7 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">unit</span> <span class="o">=</span> <span class="s1">&#39;H&#39;</span>
 
-    <span class="k">def</span> <span class="nf">_get_value</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_value</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="c1"># Returns the Josephson inductance</span>
         <span class="n">value</span> <span class="o">=</span> <span class="nb">super</span><span class="p">(</span><span class="n">J</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">_get_value</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
         <span class="k">if</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">use_E</span> <span class="o">==</span> <span class="kc">False</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">use_I</span> <span class="o">==</span> <span class="kc">False</span><span class="p">):</span>
@@ -2621,17 +2623,17 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Cannot set both use_E and use_I to True&quot;</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">_get_Ej</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_Ej</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="k">return</span> <span class="p">(</span><span class="n">hbar</span><span class="o">/</span><span class="mf">2.</span><span class="o">/</span><span class="n">e</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="o">/</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_value</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span><span class="o">*</span><span class="n">h</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">_set_component_lists</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_set_component_lists</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">(</span><span class="n">L</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">_set_component_lists</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_circuit</span><span class="o">.</span><span class="n">junctions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
     
 <div class="viewcode-block" id="J.anharmonicity">
 <a class="viewcode-back" href="../../API/components/J.html#qucat.J.anharmonicity">[docs]</a>
     <span class="nd">@vectorize_kwargs</span><span class="p">(</span><span class="n">exclude</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;mode&#39;</span><span class="p">])</span>
-    <span class="k">def</span> <span class="nf">anharmonicity</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mode</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">anharmonicity</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mode</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 <span class="w">        </span><span class="sa">r</span><span class="sd">&#39;&#39;&#39;Returns the contribution of this junction to the anharmonicity of a given normal mode.</span>
 
 <span class="sd">        Returned in units of Hertz, not angular frequency.</span>
@@ -2667,7 +2669,7 @@
 
 
 
-    <span class="k">def</span> <span class="nf">_draw</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_draw</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">pp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_circuit</span><span class="o">.</span><span class="n">_pp</span>
 
         <span class="n">line_type</span> <span class="o">=</span> <span class="p">[]</span>
@@ -2698,7 +2700,7 @@
 
 <div class="viewcode-block" id="R">
 <a class="viewcode-back" href="../../API/components/R.html#qucat.R">[docs]</a>
-<span class="k">class</span> <span class="nc">R</span><span class="p">(</span><span class="n">Component</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">R</span><span class="p">(</span><span class="n">Component</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;A class representing a resistor</span>
 <span class="sd">    </span>
 <span class="sd">    Parameters</span>
@@ -2721,25 +2723,25 @@
 <span class="sd">                    changing the value of a component and re-calculating a quantity </span>
 <span class="sd">                    such as the dissipation rate can be performed much faster.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node_minus</span><span class="p">,</span> <span class="n">node_plus</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node_minus</span><span class="p">,</span> <span class="n">node_plus</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">(</span><span class="n">R</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">node_minus</span><span class="p">,</span> <span class="n">node_plus</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">unit</span> <span class="o">=</span> <span class="sa">u</span><span class="s2">&quot;</span><span class="se">\u03A9</span><span class="s2">&quot;</span>
 
-    <span class="k">def</span> <span class="nf">_admittance</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_admittance</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="mi">1</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_value</span><span class="p">()</span>
     
-    <span class="k">def</span> <span class="nf">_set_component_lists</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_set_component_lists</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">(</span><span class="n">R</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">_set_component_lists</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_circuit</span><span class="o">.</span><span class="n">resistors</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
     
-    <span class="k">def</span> <span class="nf">_get_RLC_matrix_components</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_RLC_matrix_components</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="p">{</span>
             <span class="s1">&#39;R&#39;</span><span class="p">:</span><span class="mi">1</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_value</span><span class="p">(),</span>
             <span class="s1">&#39;L&#39;</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span>
             <span class="s1">&#39;C&#39;</span><span class="p">:</span><span class="mi">0</span>
         <span class="p">}</span>
     
-    <span class="k">def</span> <span class="nf">_draw</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_draw</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">pp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_circuit</span><span class="o">.</span><span class="n">_pp</span>
 
         <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="o">-</span><span class="mf">0.25</span><span class="p">,</span> <span class="mf">0.25</span> <span class="o">+</span><span class="nb">float</span><span class="p">(</span><span class="n">pp</span><span class="p">[</span><span class="s1">&#39;R&#39;</span><span class="p">][</span><span class="s1">&#39;N_ridges&#39;</span><span class="p">]),</span> <span class="n">pp</span><span class="p">[</span><span class="s1">&#39;R&#39;</span><span class="p">][</span><span class="s1">&#39;N_points&#39;</span><span class="p">])</span>
@@ -2792,7 +2794,7 @@
 
 <div class="viewcode-block" id="C">
 <a class="viewcode-back" href="../../API/components/C.html#qucat.C">[docs]</a>
-<span class="k">class</span> <span class="nc">C</span><span class="p">(</span><span class="n">Component</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">C</span><span class="p">(</span><span class="n">Component</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;A class representing a capacitor</span>
 <span class="sd">    </span>
 <span class="sd">    Parameters</span>
@@ -2815,18 +2817,18 @@
 <span class="sd">                    changing the value of a component and re-calculating a quantity </span>
 <span class="sd">                    such as the anharmonicity can be performed much faster.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node_minus</span><span class="p">,</span> <span class="n">node_plus</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node_minus</span><span class="p">,</span> <span class="n">node_plus</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">(</span><span class="n">C</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">node_minus</span><span class="p">,</span> <span class="n">node_plus</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">unit</span> <span class="o">=</span> <span class="s1">&#39;F&#39;</span>
 
-    <span class="k">def</span> <span class="nf">_admittance</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_admittance</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">sp</span><span class="o">.</span><span class="n">I</span><span class="o">*</span><span class="n">Mul</span><span class="p">(</span><span class="n">sp</span><span class="o">.</span><span class="n">Symbol</span><span class="p">(</span><span class="s1">&#39;w&#39;</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_value</span><span class="p">())</span>
 
-    <span class="k">def</span> <span class="nf">_set_component_lists</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_set_component_lists</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">(</span><span class="n">C</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">_set_component_lists</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_circuit</span><span class="o">.</span><span class="n">capacitors</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">_draw</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_draw</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">pp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_circuit</span><span class="o">.</span><span class="n">_pp</span>
         <span class="n">line_type</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="n">x</span> <span class="o">=</span> <span class="p">[</span>
@@ -2857,7 +2859,7 @@
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">angle</span><span class="o">%</span><span class="mf">180.</span> <span class="o">==</span> <span class="mf">90.</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">shift</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">x_plot_center</span><span class="p">),</span> <span class="n">shift</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">y_plot_center</span><span class="p">),</span> <span class="n">line_type</span>
 
-    <span class="k">def</span> <span class="nf">_get_RLC_matrix_components</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_RLC_matrix_components</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="p">{</span>
             <span class="s1">&#39;R&#39;</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span>
             <span class="s1">&#39;L&#39;</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span>
@@ -2865,13 +2867,13 @@
         <span class="p">}</span></div>
 
 
-<span class="k">class</span> <span class="nc">Admittance</span><span class="p">(</span><span class="n">Component</span><span class="p">):</span>
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node_minus</span><span class="p">,</span> <span class="n">node_plus</span><span class="p">,</span> <span class="n">Y</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">Admittance</span><span class="p">(</span><span class="n">Component</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node_minus</span><span class="p">,</span> <span class="n">node_plus</span><span class="p">,</span> <span class="n">Y</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">node_minus</span> <span class="o">=</span> <span class="n">node_minus</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">node_plus</span> <span class="o">=</span> <span class="n">node_plus</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">Y</span> <span class="o">=</span> <span class="n">Y</span>
 
-    <span class="k">def</span> <span class="nf">_admittance</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_admittance</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">Y</span>
 </pre></div>
 

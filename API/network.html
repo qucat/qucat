@@ -7,15 +7,15 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Building a circuit programmatically &mdash; qucat  documentation</title>
-      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b76e3c8a" />
-      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=03e43079" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
 
   
       <script src="../_static/jquery.js?v=5d32c60e"></script>
       <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
       <script src="../_static/documentation_options.js?v=5929fcd5"></script>
-      <script src="../_static/doctools.js?v=9a2dae69"></script>
-      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
     <script src="../_static/js/theme.js"></script>
     <link rel="author" title="About these documents" href="../about.html" />
@@ -95,7 +95,7 @@
 <h1>Building a circuit programmatically<a class="headerlink" href="#building-a-circuit-programmatically" title="Link to this heading"></a></h1>
 <dl class="py class">
 <dt class="sig sig-object py" id="qucat.Network">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">qucat.</span></span><span class="sig-name descname"><span class="pre">Network</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">netlist</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/qucat/core.html#Network"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qucat.Network" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">qucat.</span></span><span class="sig-name descname"><span class="pre">Network</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">netlist</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/qucat/core.html#Network"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qucat.Network" title="Link to this definition"></a></dt>
 <dd><p>Constructs a Qcircuit object from a list of components without resorting to a graphical user interface.</p>
 <p>The list can be composed of instances of the <a class="reference internal" href="components/L.html#qucat.L" title="qucat.L"><code class="xref py py-class docutils literal notranslate"><span class="pre">qucat.L</span></code></a>, <a class="reference internal" href="components/C.html#qucat.C" title="qucat.C"><code class="xref py py-class docutils literal notranslate"><span class="pre">qucat.C</span></code></a>,
 <a class="reference internal" href="components/R.html#qucat.R" title="qucat.R"><code class="xref py py-class docutils literal notranslate"><span class="pre">qucat.R</span></code></a> or <a class="reference internal" href="components/J.html#qucat.J" title="qucat.J"><code class="xref py py-class docutils literal notranslate"><span class="pre">qucat.J</span></code></a> classes
@@ -122,7 +122,7 @@ The disadvantage is that one cannot use the plotting tools <code class="xref py 
 on one end and connected at the other end through a capacitor to a 50 Ohm resistor to ground.</p>
 <img alt="../_images/Network_example_circuit.png" src="../_images/Network_example_circuit.png" />
 <p>Import the Network class, and the components we will need</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">qucat</span> <span class="kn">import</span> <span class="n">Network</span><span class="p">,</span> <span class="n">R</span><span class="p">,</span><span class="n">L</span><span class="p">,</span><span class="n">C</span><span class="p">,</span><span class="n">J</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">qucat</span><span class="w"> </span><span class="kn">import</span> <span class="n">Network</span><span class="p">,</span> <span class="n">R</span><span class="p">,</span><span class="n">L</span><span class="p">,</span><span class="n">C</span><span class="p">,</span><span class="n">J</span>
 </pre></div>
 </div>
 <p>Note that the components (R,L,C,J) accept node indexes as their two first arguments,
