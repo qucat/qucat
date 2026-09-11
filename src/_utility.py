@@ -113,6 +113,7 @@ def vectorize_kwargs(func_to_evaluate = None,*,exclude = []):
                     non_iterables[kw] = arg
                 else:
                     if np.any(np.array([arg]) == 0):
+                        pass
                         raise ValueError("Cannot set value of element %s to zero"%kw)
                     try:
                         iter(arg)
@@ -257,23 +258,31 @@ def shift(to_shift,shift):
         to_shift[i]+= shift
     return to_shift
 
-def to_string(unit,label,value, use_unicode=True, maximum_info = False):
+def to_string(unit,labels,values, use_unicode=True, maximum_info = False):
 
-    if unit is not None:
-        if not use_unicode:
-            unit = unit.replace(u"\u03A9", 'Ohm')
-            unit = unit.replace(u'\u03bc', 'u')
-                
-    if label is None:
-        s = ''
-    else:
-        s = label
-        if value is not None:
-            s+='='
-
-    if value is not None:
-        s+= pretty_value(value, use_unicode=use_unicode,maximum_info=maximum_info)
+    string=''
+    for i,label in enumerate(labels):
+        value = values[i]
 
         if unit is not None:
-            s+=unit
-    return s
+            if not use_unicode:
+                unit = unit.replace(u"\u03A9", 'Ohm')
+                unit = unit.replace(u'\u03bc', 'u')
+                    
+        if label is None:
+            s = ''
+        else:
+            s = label
+            if value is not None:
+                s+='='
+
+        if value is not None:
+            s+= pretty_value(value, use_unicode=use_unicode,maximum_info=maximum_info)
+
+            if unit is not None:
+                s+=unit
+        string += s+'\n'
+
+    # remove last comma
+    string = string[:-1]
+    return string

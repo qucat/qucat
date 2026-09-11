@@ -456,10 +456,10 @@ class CircuitEditor(tk.Canvas):
         menu_label_template = "{:<6}"
 
         # The items appearing in the cascade menu that appears when 
-        # clicking on File for example will have 15 characters width on the 
+        # clicking on File for example will have 20 characters width on the 
         # left where the name of the functionality is provided and
-        # 15 characters on the right where the keyboard shortcut is provided
-        label_template = "{:<15}{:>15}"
+        # 10 characters on the right where the keyboard shortcut is provided
+        label_template = "{:<20}{:>10}"
 
         # The font for the cascading items is defined
         # Note: for everything to be aligned the chosen font should 
@@ -567,6 +567,10 @@ class CircuitEditor(tk.Canvas):
         menu.add_command(
             label=label_template.format("Junction", "<J>"), 
             command=(lambda: self.event_generate('j')), 
+            font=menu_font)
+        menu.add_command(
+            label=label_template.format("Non Linear Inductor", "<N>"),
+            command=(lambda: self.event_generate('n')),
             font=menu_font)
         menu.add_command(
             label=label_template.format("Inductor", "<L>"), 
@@ -988,25 +992,37 @@ class CircuitEditor(tk.Canvas):
         '''
         netlist_string = ""
         for el in self.elements:
-            v, l = el.prop
-            if v is None:
-                v = ''
-            else:
-                decimals = 1
-                v_string = '0'
-                while float(v_string)-v != 0 and decimals<15:
-                    v_string = f"%.{decimals}e" % v
-                    decimals += 1
-                v = v_string
+            values, labels = el.prop
+            
+            v_string = ''
+            for v in values:
+                if v is None:
+                    v_string_to_add = ''
+                else:
+                    decimals = 1
+                    v_string_to_add = '0'
+                    while float(v_string_to_add)-v != 0 and decimals<15:
+                        v_string_to_add = f"%.{decimals}e" % v
+                        decimals += 1
+                v_string+=v_string_to_add+','
+                
+            # remove last comma
+            v_string = v_string[:-1]
 
-            if l is None:
-                l = ''
+            l_string = ''
+            for l_string_to_add in labels:
+                if l_string_to_add is None:
+                    l_string_to_add = ''
+                l_string += str(l_string_to_add)+','
+                
+            # remove last comma
+            l_string = l_string[:-1]
 
             netlist_string += ("%s;%s;%s;%s;%s\n" % (
                 type(el).__name__,
                 el.grid_to_node_string(el.x_minus, el.y_minus),
                 el.grid_to_node_string(el.x_plus, el.y_plus),
-                v, l))
+                v_string, l_string))
         return netlist_string
 
     def save(self, event=None, force_display_message = False):
@@ -1093,6 +1109,8 @@ class CircuitEditor(tk.Canvas):
                 L(self, auto_place_info=el)
             elif el[0] == 'J':
                 J(self, auto_place_info=el)
+            elif el[0] == 'NonLinearInductor':
+                NonLinearInductor(self, auto_place_info=el)
             elif el[0] == 'C':
                 C(self, auto_place_info=el)
             elif el[0] == 'G':
@@ -1289,6 +1307,7 @@ class CircuitEditor(tk.Canvas):
             ['l', lambda event: L(self, event)],
             ['c', lambda event: C(self, event)],
             ['j', lambda event: J(self, event)],
+            ['n', lambda event: NonLinearInductor(self, event)],
             ['w', lambda event: W(self, event)],
             ['g', lambda event: G(self, event)]
         ]
@@ -2341,7 +2360,7 @@ class TwoNodeElement(object):
     @property
     def prop(self):
         # only defined for components
-        return [None, None]
+        return [[None], [None]]
 
     @prop.setter
     def prop(self, prop):
@@ -2371,17 +2390,24 @@ class TwoNodeElement(object):
         auto_place_info = [<type>, <minus_coords>, <plus_coords>, <value>, <label>]
         '''
 
-        v = auto_place_info[3]
-        l = auto_place_info[4]
-        if l == '':
-            l = None
+        values_string = auto_place_info[3].replace(' ','')
+        labels_string = auto_place_info[4].replace(' ','')
 
-        if v == '':
-            v = None
-        else:
-            v = float(v)
+        labels=[]
+        for l in labels_string.split(','):
+            if l=='':
+                labels.append(None)
+            else:
+                labels.append(l)
 
-        self.prop = [v, l]
+        values = []
+        for v in values_string.split(','):
+            if v == '':
+                values.append(None)
+            else:
+                values.append(float(v))
+
+        self.prop = [values,labels]
         self.pos = self.node_string_to_grid(auto_place_info[1])+self.node_string_to_grid(auto_place_info[2])
         self.create()
     
@@ -2856,6 +2882,7 @@ class W(TwoNodeElement):
         self.canvas.bind('l', self.abort_creation)
         self.canvas.bind('c', self.abort_creation)
         self.canvas.bind('j', self.abort_creation)
+        self.canvas.bind('n', self.abort_creation)
         self.canvas.bind('w', self.abort_creation)
         self.canvas.bind('g', self.abort_creation)
 
@@ -3073,15 +3100,23 @@ class W(TwoNodeElement):
 
 class Component(TwoNodeElement):
     def __init__(self, canvas, event=None, auto_place_info=None):
+        self.accept_multiple_values = False
         self.image = None
-        self._value = None
-        self._label = None
+        self._value = [None]
+        self._label = [None]
         self.text = None
         self._x_center = None
         self._y_center = None
         self._angle = None
         super(Component, self).__init__(canvas, event, auto_place_info)
     
+    def accept_negative_value(self,index):
+        """Example, for and inductor, the first (and only) value
+        provided by the user (index=0) should not be negative, 
+        and this function should return False
+        """
+        return False
+
     def delete(self, event=None):
         self.canvas.delete(self.image)
         if self.text is not None:
@@ -3220,6 +3255,7 @@ class Component(TwoNodeElement):
         self.canvas.bind('l', self.abort_creation)
         self.canvas.bind('c', self.abort_creation)
         self.canvas.bind('j', self.abort_creation)
+        self.canvas.bind('n', self.abort_creation)
         self.canvas.bind('w', self.abort_creation)
         self.canvas.bind('g', self.abort_creation)
         self.canvas.bind('<Left>', lambda event: self.init_create_component(event, angle=WEST))
@@ -3242,7 +3278,7 @@ class Component(TwoNodeElement):
         self.canvas.in_creation = None
 
         # Case where the user clicks cancel in the popup window
-        if self.prop[0] is None and self.prop[1] is None:
+        if self.prop[0] == [None] and self.prop[1] == [None] and not isinstance(self,G):
             self.abort_creation(rerun_command = False)
             return
 
@@ -3393,7 +3429,7 @@ class Component(TwoNodeElement):
     def modify_values(self, event=None):
         old_prop = self.prop
         self.request_value_label()
-        if self.prop[0] is None and self.prop[1] is None:
+        if self.prop[0] == [None] and self.prop[1] == [None]:
             self.prop = old_prop
         else:
             self.add_or_replace_label()
@@ -3405,7 +3441,7 @@ class Component(TwoNodeElement):
             self.canvas.master.wait_window(window)
             self.canvas.exit_state(2)
         else:
-            self.prop = [1, 'X']
+            self.prop = [[1], ['X']]
 
 class R(Component):
     """docstring for R"""
@@ -3435,8 +3471,26 @@ class J(Component):
         self.unit = 'H'
         super(J, self).__init__(canvas, event, auto_place_info)
 
+class NonLinearInductor(Component):
+    """docstring for NonLinearInductor"""
+
+    def __init__(self, canvas, event=None, auto_place_info=None):
+        self.unit = 'H'
+        super(NonLinearInductor, self).__init__(canvas, event, auto_place_info)
+        self.accept_multiple_values = True
+    
+    def accept_negative_value(self,index):
+        """Example, for and inductor, the first (and only) value
+        provided by the user (index=0) should not be negative, 
+        and this function should return False
+        """
+        if index == 0:
+            return False
+        else:
+            return True
+
 class G(Component):
-    """docstring for J"""
+    """docstring for G"""
 
     def __init__(self, canvas, event=None, auto_place_info=None):
         self.unit = ''
@@ -3448,7 +3502,7 @@ class G(Component):
     ###########################################
     @property
     def prop(self):
-        return [None, '']
+        return [[None], [None]]
 
     @prop.setter
     def prop(self, prop):
@@ -3485,44 +3539,72 @@ class RequestValueLabelWindow(tk.Toplevel):
         tk.Toplevel.__init__(self, master)
         self.component = component
 
-        # Determine values v(value) and l(label) fields
-        v, l = self.component.prop
+        # Determine values and labels fields
+        values, labels = self.component.prop
 
         # if we are creating this component 
         # we want to re-direct the events away from the editor and onto 
         # this widget
         # This will be cancelled upon exiting state 4
-        if v is None and l is None and self.component.canvas.force_grab_set:
+        if values == [None] and labels == [None] and self.component.canvas.force_grab_set:
             self.grab_set()
 
-        if v is None:
-            v = ''
-        else:
-            decimals = 1
-            v_string = '0'
-            while float(v_string)-v != 0 and decimals<15:
-                v_string = f"%.{decimals}e" % v
-                decimals += 1
-            v = v_string
+        
+        v_string = ''
+        for v in values:
+            if v is None:
+                v_string_to_add=''
+            else:
+                decimals = 1
+                v_string_to_add = '0'
+                while float(v_string_to_add)-v != 0 and decimals<15:
+                    v_string_to_add = f"%.{decimals}e" % v
+                    decimals += 1
+            v_string += v_string_to_add+','
+        # remove last commma
+        v_string = v_string[:-1]
 
-        if l is None:
-            l = ''
-        field_values = [v, l]
+        # If only commas, just show nothing
+        if v_string.replace(',','')=='':
+            v_string=''
+
+        l_string=''
+        for l in labels:
+            if l is None:
+                l_string_do_add = ''
+            else:
+                l_string_do_add = l
+            l_string += l_string_do_add+','
+        # remove last commma
+        l_string = l_string[:-1]
+        
+        # If only commas, just show nothing
+        if l_string.replace(',','')=='':
+            l_string=''
+
+        field_values = [v_string, l_string]
 
         # Information to be displayed
         if isinstance(self.component,C):
             info_text = 'Specify label and/or capacitance (in units of Farad)'
             self.value_string = 'Capacitance'
+
         elif isinstance(self.component,J):
             self.value_string = 'Inductance'
             info_text = 'Specify label and/or Josephson inductance (in units of Henry)'
             info_text += '\nNote that L = (hbar/2/e)**2/[Josephson Energy in Joules]'
+
+        elif isinstance(self.component,NonLinearInductor):
+            self.value_string = 'Energy'
+            info_text = "Specify at least three labels or values separated by ',' "
+            info_text += "for the non-linear \ninductor (the 2nd, 3rd and 4th order of the inductors Hamiltonian)"
         elif isinstance(self.component,L):
             self.value_string = 'Inductance'
             info_text = 'Specify label and/or inductance (in units of Henry)'
         elif isinstance(self.component,R):
             self.value_string = 'Resistance'
             info_text = 'Specify label and/or resistance (in units of Ohm)'
+
 
         # Entry field strings
         fields = self.value_string, 'Label'
@@ -3560,62 +3642,87 @@ class RequestValueLabelWindow(tk.Toplevel):
 
     def ok(self):
 
-        # Extract value and label
-        value = self.entries[0][1].get()
-        label = self.entries[1][1].get()
+        # Extract values and labels
+        values_string = self.entries[0][1].get().replace(' ', '')
+        labels_string = self.entries[1][1].get().replace(' ', '')
 
-        # Remove spaces from value and check if it is empty
-        if value.replace(' ', '') == "":
-            v = None
+        values = []
+        for i,v in enumerate(values_string.split(',')):
+            if i>1 and not self.component.accept_multiple_values:
+                    messagebox.showinfo(
+                        "Multiple values","Multiple values have been entered, seperated by commas. Enter only one.")
+                    self.focus_force()
+                    return None
 
-        else:
-
-            # Check if value is a float
-            try:
-                v = float(value)
-            except ValueError:
-                messagebox.showinfo(
-                    "Incorrect %s"%self.value_string.lower(), "%s should be a python style float, for example: 1e-2 or 0.01"%self.value_string)
-                self.focus_force()
-                return None
-                
-            # Check its not too big, too small, or negative
-            # Note that values above max(min)_float would then
-            # be interpreted as infinity (or zero)
-            if v>max_float:
-                messagebox.showinfo(
-                    "Too large %s"%self.value_string.lower(), "Maximum allowed %s is %.2e"%(self.value_string.lower(),max_float))
-                self.focus_force()
-                return None
-            elif v<0:
-                messagebox.showinfo(
-                    "Negative %s"%self.value_string.lower(), "%s should be a positive float"%self.value_string)
-                self.focus_force()
-                return None
-            elif 0<=v<min_float:
-                messagebox.showinfo(
-                    "Too small %s"%self.value_string.lower(), "Minimum allowed %s is %.2e"%(self.value_string.lower(),min_float))
-                self.focus_force()
-                return None
+            if v =='':
+                values.append(None)
+            else:
+                # Check if value is a float
+                try:
+                    v = float(v)
+                except ValueError:
+                    messagebox.showinfo(
+                        "Incorrect %s"%self.value_string.lower(), "%s should be a python style float, for example: 1e-2 or 0.01"%self.value_string)
+                    self.focus_force()
+                    return None
+                    
+                # Check its not too big, too small, or negative
+                # Note that values above max(min)_float would then
+                # be interpreted as infinity (or zero)
+                if v>max_float:
+                    messagebox.showinfo(
+                        "Too large %s"%self.value_string.lower(), "Maximum allowed %s is %.2e"%(self.value_string.lower(),max_float))
+                    self.focus_force()
+                    return None
+                elif v<0 and not self.component.accept_negative_value(i):
+                    messagebox.showinfo(
+                        "Negative %s"%self.value_string.lower(), "%s should be a positive float"%self.value_string)
+                    self.focus_force()
+                    return None
+                elif 0<=v<min_float:
+                    messagebox.showinfo(
+                        "Too small %s"%self.value_string.lower(), "Minimum allowed %s is %.2e"%(self.value_string.lower(),min_float))
+                    self.focus_force()
+                    return None
+                values.append(float(v))
+                    
 
         # Remove spaces in the label
-        if label.replace(' ', '') == "":
-            l = None
-        else:
-            l = label
+        labels = []
+        for i,l in enumerate(labels_string.split(',')):
+            if i>1 and not self.component.accept_multiple_values:
+                    messagebox.showinfo(
+                        "Multiple labels","Multiple labels have been entered, seperated by commas. Enter only one.")
+                    self.focus_force()
+                    return None
+
+            if l == '':
+                labels.append(None)
+            else:
+                labels.append(l)
+
 
         # Make sure at least one label or one value was 
         # provided
-        if l is None and v is None:
+        if labels == [None] and v == [None]:
             messagebox.showinfo(
                 "No inputs", "Enter a %s or a label or both"%self.value_string.lower())
             self.focus_force()
             return None
         else:
+            
+            
+            # Ensure values and labels lists have same length
+            N_values = len(values)
+            N_labels = len(labels)
+            if N_values>N_labels:
+                labels += [None]*(N_values-N_labels)
+            elif N_values<N_labels:
+                values += [None]*(N_labels-N_values)
 
-            # Set the value and label for the component
+            # Set the values and labels for the component
             # and close down window
-            self.component.prop = [v, l]
+            self.component.prop = [values,labels]
             self.destroy()
 
     def cancel(self):

@@ -3,6 +3,7 @@ from sympy.utilities.lambdify import lambdify
 import numpy as np
 from numpy.polynomial.polynomial import Polynomial as npPoly
 from sympy.core.mul import Mul, Pow, Add
+import sympy.physics.secondquant as sp_sq
 from copy import deepcopy
 from numbers import Number
 from math import floor, factorial
@@ -25,7 +26,6 @@ except ImportError:
     from _web_gui import web_gui
 
 PROFILING = False
-
 def timeit(method):
     '''
     Decorator which prints the time 
@@ -57,7 +57,7 @@ def string_to_component(s, *arg, **kwarg):
     Returns
     -------
     A component of type ``s``
-    '''
+    '''           
     if s == 'W':
         return W(*arg, **kwarg)
     elif s == 'R':
@@ -66,10 +66,14 @@ def string_to_component(s, *arg, **kwarg):
         return L(*arg, **kwarg)
     elif s == 'J':
         return J(*arg, **kwarg)
+    elif s == 'NonLinearInductor':
+        return NonLinearInductor(*arg, **kwarg)
     elif s == 'C':
-        return C(*arg, **kwarg)
+        return C(*arg, **kwarg)        
     elif s == 'G':
         return G(*arg, **kwarg)
+
+              
 
 class Qcircuit(object):
     """A class representing a quantum circuit.
@@ -83,7 +87,7 @@ class Qcircuit(object):
         junctions (list): List of junction objects present in the circuit
         capacitors (list): List of capacitor objects present in the circuit
         netlist (list): List of all components present in the circuit
-        ref_elt (J or L): list of junction or inductor component used as a reference for the calculation 
+        ref_elt (J or L or NonLinearInductor): list of junction or inductor component used as a reference for the calculation 
                         of zero-point fluctations, each index of the list corresponds to a different mode
     """
 
@@ -114,6 +118,7 @@ class Qcircuit(object):
         self.inductors = []
         self.capacitors = []
         self.junctions = []
+        self.nonlinear_inductors = []
         self.resistors = []
         self._wire = []
         self._grounds = []
@@ -124,7 +129,7 @@ class Qcircuit(object):
 
         # Initialize a list which will contain the labels of the componentns which have
         # no value (these will have to be specified in most methods as a kwarg)
-        self._no_value_components = []
+        self._no_value_labels = []
 
         # For each component of the circuit....
         for elt in netlist:
@@ -135,7 +140,7 @@ class Qcircuit(object):
 
 
         # Check that there is at least one inductive element in the circuit
-        if len(self.junctions) == 0 and len(self.inductors) == 0:
+        if len(self.junctions) == 0 and len(self.inductors) == 0 and len(self.nonlinear_inductors)==0:
             raise ValueError(
                 "There should be at least one junction or inductor in the circuit")
 
@@ -147,7 +152,7 @@ class Qcircuit(object):
                 
         # define the function which returns the inverse of dY
         # where Y is the admittance at the nodes of an inductive element
-        for inductive_element in self.inductors+self.junctions:
+        for inductive_element in self.inductors+self.junctions+self.nonlinear_inductors:
             inductive_element._compute_flux_zpf_r()
 
         # Initialize the flux transformation dictionary,
@@ -161,9 +166,9 @@ class Qcircuit(object):
 
         # define the functions which returns the components of the characteristic polynomial
         # (the roots of which are the eigen-frequencies)
-        self._char_poly_coeffs = [lambdify(self._no_value_components, c, 'numpy') 
+        self._char_poly_coeffs = [lambdify(self._no_value_labels, c, 'numpy') 
             for c in self._network.compute_char_poly_coeffs(is_lossy = (len(self.resistors)>0))]
-
+        
     @property
     def _pp(self):
         '''
@@ -191,7 +196,7 @@ class Qcircuit(object):
                     ex: ``L=1e-9``.
         '''
         for key in kwargs:
-            if key in self._no_value_components:
+            if key in self._no_value_labels:
                 kwargs[key]  = kwargs[key]
             else:
                 if key in self.components:
@@ -204,7 +209,7 @@ class Qcircuit(object):
                     raise ValueError(
                         '%s is not the label of a circuit element' % key)
 
-        for label in self._no_value_components:
+        for label in self._no_value_labels:
             try:
                 kwargs[label]
             except Exception:
@@ -241,7 +246,7 @@ class Qcircuit(object):
             # Compute the coefficients of the characteristic polynomial.
             # The roots of this polynomial will provide the complex eigenfrequencies
             char_poly = npPoly([np.real(coeff(**kwargs)) for coeff in self._char_poly_coeffs])
-            
+
             # char_poly = remove_multiplicity(char_poly)
         
             # In this case, the variable of the characteristic polynomial is \omega^2
@@ -313,7 +318,7 @@ class Qcircuit(object):
         # maximize the inverse of dY: we want the reference 
         # element to the element where zero-point fluctuations
         # in flux are most localized.
-        inductive_elements = self.junctions+self.inductors
+        inductive_elements = self.junctions+self.inductors+self.nonlinear_inductors
         ref_elt = []
         zeta_copy = deepcopy(zeta)
         zeta = []
@@ -371,6 +376,7 @@ class Qcircuit(object):
         '''
         self._set_zeta(**kwargs)
         return [[j.anharmonicity(mode, **kwargs) for mode in range(len(self.zeta))] for j in self.junctions]
+    
     
     @vectorize_kwargs
     def eigenfrequencies(self, **kwargs):
@@ -580,8 +586,25 @@ class Qcircuit(object):
                         # Note that taking the square root here is fine
                         # since Ks[i, j]~phi_ki^2*phi_kj^2 is necessarily a positive real
                         # since phi_ki,phi_kj are real numbers
-                        Ks[i, j] += 2. * np.sqrt(As[k][i]*As[k][j])
+                        Ks[i, j] += 2. * np.sqrt(As[k][i]*As[k][j]) * (np.sign(self.junctions[k]._get_Ej(2, **kwargs)))
         return Ks
+
+    @vectorize_kwargs(exclude = ['mode1', 'mode2', 'mode3'] )
+    def three_waves(self, mode1, mode2, mode3, **kwargs):
+        # Compute three terms per junction ``As``
+        # where ``As[j,m1, m2, m3]`` corresponds to the contribution of junction ``j``
+        # to the three_wave mixing term of modes m1, m2, m3
+        self._set_zeta(**kwargs)
+        
+        # Number of junctions in the circuit
+        N_junctions = len(self.junctions)
+
+        # initialize the vector of Kerr coefficients
+        Tw = 0
+        for j in self.junctions:
+            Tw += j.three_term(mode1, mode2, mode3, **kwargs)
+        return Tw
+        
 
     def f_k_A_chi(self, pretty_print=False, **kwargs):
         r'''Returns the eigenfrequency, loss-rates, anharmonicity, and Kerr parameters of the circuit. 
@@ -744,10 +767,6 @@ class Qcircuit(object):
         '''
         from qutip import destroy, qeye, tensor
 
-        self.hamiltonian_modes = modes
-        self.hamiltonian_taylor = taylor
-        self.hamiltonian_excitations = excitations
-
         fs = self.eigenfrequencies(**kwargs)
 
         if modes == 'all':
@@ -790,13 +809,67 @@ class Qcircuit(object):
 
         for j, junction in enumerate(self.junctions):
             n = 2
-            EJ = (hbar/2./e)**2/(junction._get_value(**kwargs)*h)
             while 2*n <= taylor:
+                EJ = junction._get_Ej(2*n-2, **kwargs)
                 H += (-1)**(n+1)*EJ/factorial(2*n)*phi[j]**(2*n)
+                n += 1
+            n = 1
+            while 2*n+1 <= taylor:
+                EJ = junction._get_Ej(2*n-1, **kwargs)
+                H += EJ/factorial(2*n+1)*phi[j]**(2*n+1)
                 n += 1
 
         if return_ops:
             return H, operators
+        return H
+
+    @refuse_vectorize_kwargs(exclude = ['modes','taylor','excitations','return_ops'])
+    def hamiltonian_sym(self, modes='all', taylor=4, **kwargs):
+
+        fs = self.eigenfrequencies(**kwargs)
+
+        if modes == 'all':
+            modes = range(len(fs))
+        modes = [c % len(fs) for c in modes]
+        ops = [sp_sq.B("m" + str(c)) for c in modes]
+        for m in modes:
+            try:
+                fs[m]
+            except IndexError:
+                error_message ="There are only %d modes in the circuit, and you specified mode index %d "%(len(fs),m)
+                error_message +="corresponding to the %d-th mode."%(m+1)
+                # error_message +="\nNote that the numer of modes may change as one sweeps a parameter"
+                # error_message +=" for example if a 0 frequency, spurious mode becomes negative due to "
+                # error_message +="numerical imprecision. Adding a resistance to the circuit may help with this."
+                raise ValueError(error_message)
+
+        H = 0
+        operators = []
+        phi = [0 for junction in self.junctions]
+        
+        for index,mode in enumerate(modes):
+
+            a = ops[index]
+            operators.append(ops)
+            H += fs[mode]*sp_sq.Dagger(a)*a
+
+            for j, junction in enumerate(self.junctions):
+                # Note that zpf returns the flux in units of phi_0 = hbar/2./e
+                phi[j] += np.real(junction.zpf(quantity='flux',mode=mode, **kwargs))*(a+sp_sq.Dagger(a)) 
+                # a = x+iy => -i*(a-a^) = -i(iy+iy) = --1
+                phi[j] += -1j*np.imag(junction.zpf(quantity='flux',mode=mode, **kwargs))*(a-sp_sq.Dagger(a)) 
+
+        for j, junction in enumerate(self.junctions):
+            n = 2
+            while 2*n <= taylor:
+                EJ = junction._get_Ej(2*n-2, **kwargs)
+                H += (-1)**(n+1)*EJ/factorial(2*n)*phi[j]**(2*n)
+                n += 1
+            n = 1
+            while 2*n+1 <= taylor:
+                EJ = junction._get_Ej(2*n-1, **kwargs)
+                H += EJ/factorial(2*n+1)*phi[j]**(2*n+1)
+                n += 1
         return H
 
     @refuse_vectorize_kwargs(exclude = ['plot','return_fig_ax'])
@@ -1347,18 +1420,24 @@ class GUI(Qcircuit):
         netlist = []
         with open(filename, 'r') as f:
             for el in f:
-                el = el.replace('\n', '')
+                el = el.replace('\n', '').replace(' ', '')
                 el = el.split(";")
-                if el[3] == '':
-                    v = None
-                else:
-                    v = float(el[3])
-                if el[4] == '':
-                    l = None
-                else:
-                    l = el[4]
+                values = []
+                for v in el[3].split(","):
+                    if v == '':
+                        values.append(None)
+                    else:
+                        values.append(float(v))
+                
+                labels = []
+                for l in el[4].split(","):
+                    if l == '':
+                        labels.append(None)
+                    else:                    
+                        labels.append(l)
+
                 netlist.append(
-                    string_to_component(el[0], el[1], el[2], v, l))
+                    string_to_component(el[0], el[1], el[2], values, labels))
 
         super(GUI, self).__init__(netlist)
         for el in self.netlist:
@@ -2030,7 +2109,7 @@ class Circuit(object):
             va = 'center'
 
         ax.text(x, y,
-                to_string(self.unit, self.label, self.value),
+                to_string(self.unit, self.labels, self.values),
                 fontsize=pp['label']['fontsize'],
                 ha=ha, va=va)
 
@@ -2064,59 +2143,63 @@ class Component(Circuit):
 
     def __init__(self, node_minus, node_plus, *args):
         super(Component, self).__init__(node_minus, node_plus)
-        self.label = None
-        self.value = None
         self.__flux = None
-
+        self.labels = [None]
+        self.values = [None]
+        
         if len(args)==0:
             raise ValueError("Specify either a value or a label")
-        for a in args:
-            if a is None:
+        
+        for a in args: 
+            
+            # Convert non-list arguments into lists
+            try:
+                iter(a)
+                # It's either a list-type or a string
+                if type(a) is str:
+                    a = [a]
+            except TypeError:
+                a=[a]
+            
+            if a[0] is None:
+                # No argument passed for a value/label
                 pass
-            elif type(a) is str:
-                self.label = a
+            elif type(a[0]) is str:
+                self.labels = a
             else:
-                self.value = a
+                self.values = a
+        
+        # Ensure values and labels lists have same length
+        N_values = len(self.values)
+        N_labels = len(self.labels)
+        if N_values>N_labels:
+            self.labels += [None]*(N_values-N_labels)
+        elif N_values<N_labels:
+            self.values += [None]*(N_labels-N_values)
 
-                # Check its not too big, too small, or negative
-                # Note that values above max(min)_float would then
-                # be interpreted as infinity (or zero)
-                if self.value>max_float:
-                    raise ValueError("Maximum allowed value is %.2e"%max_float)
-                elif self.value<0:
-                    raise ValueError("Value should be a positive float")
-                elif 0<=self.value<min_float:
-                    raise ValueError("Minimum allowed value is %.2e"%min_float)
+    def _get_value(self, i, **kwargs):
 
-    def __hash__(self):
-        if self.label is None:
-            return hash(str(self.value)+self.unit)
-        else:
-            if self.value is None:
-                return hash(self.label+self.unit)
-            else:
-                return hash(str(self.value)+self.label+self.unit)
+        if self.values[i] is not None:
+            return self.values[i]
+        elif self.values[i] is None and kwargs is not None:
+            if self.labels[i] in [k for k in kwargs]:
+                return kwargs[self.labels[i]]
 
-    def _get_value(self, **kwargs):
-        if self.value is not None:
-            return self.value
-        elif self.value is None and kwargs is not None:
-            if self.label in [k for k in kwargs]:
-                return kwargs[self.label]
-
-        return sp.Symbol(self.label)
+        return sp.Symbol(self.labels[i])
 
     def _set_component_lists(self):
-        if self.label not in ['', ' ', 'None', None]:
-            self._circuit.components[self.label] = self
+        for i, l in enumerate(self.labels):
+            if l is not None:
+                self._circuit.components[l] = self
+            
+                if self.values[i] is None:
+                    if l in self._circuit._no_value_labels:
+                        # raise ValueError(
+                        #     "Two components may not have the same name %s" % self.label)
+                        pass
+                    else:
+                        self._circuit._no_value_labels.append(l)
 
-        if self.value is None and self.label not in ['', ' ', 'None', None]:
-            if self.label in self._circuit._no_value_components:
-                # raise ValueError(
-                #     "Two components may not have the same name %s" % self.label)
-                pass
-            else:
-                self._circuit._no_value_components.append(self.label)
 
     def _flux_zpf(self, mode, **kwargs):
         self._circuit._set_zeta(**kwargs)
@@ -2130,7 +2213,7 @@ class Component(Circuit):
         except KeyError:
             tr_analytical = self._circuit._network.transfer(
                 self._circuit.ref_elt[mode].node_minus, self._circuit.ref_elt[mode].node_plus, self.node_minus, self.node_plus)
-            tr = lambdify(['w']+self._circuit._no_value_components,tr_analytical, "numpy")
+            tr = lambdify(['w']+self._circuit._no_value_labels,tr_analytical, "numpy")
             def tr_minus(w,**kwargs):
                 return -tr(w,**kwargs)
             
@@ -2161,7 +2244,7 @@ class Component(Circuit):
 
 
     def _to_string(self, use_unicode=True):
-        return to_string(self.unit, self.label, self.value, use_unicode=use_unicode)
+        return to_string(self.unit, self.labels[0], self.values[0], use_unicode=use_unicode)
 
 
     @vectorize_kwargs(exclude = ['quantity','mode'])
@@ -2233,10 +2316,10 @@ class W(Component):
     """docstring for Wire"""
 
     def __init__(self, node_minus, node_plus, *args):
-        super(W, self).__init__(node_minus, node_plus, '')
+        super(W, self).__init__(node_minus, node_plus, None)
         self.unit = None
-        self.label = None
-        self.value = None
+        self.labels = [None]
+        self.values = [None]
 
     def _to_string(*args, **kwargs):
         return ' '
@@ -2332,13 +2415,14 @@ class L(Component):
         self.unit = 'H'
 
     def _admittance(self):
-        return -sp.I*Mul(1/sp.Symbol('w'), 1/self._get_value())
+        return -sp.I*Mul(1/sp.Symbol('w'), 1/self._get_value(0))
 
     def _set_component_lists(self):
         super(L, self)._set_component_lists()
         self._circuit.inductors.append(self)
 
-    def _draw(self):
+    def _draw_coil(self):
+        
         pp = self._circuit._pp
 
         x = np.linspace(0.5, float(
@@ -2381,6 +2465,12 @@ class L(Component):
         y_list += [np.array([0., 0.])]
         y_list += [np.array([0., 0.])]
 
+        return x_list,y_list,line_type
+
+    def _draw(self):
+
+        x_list,y_list,line_type = self._draw_coil()
+
         if self.angle%180. == 0.:
             return shift(x_list, self.x_plot_center), shift(y_list, self.y_plot_center), line_type
         if self.angle%180. == 90.:
@@ -2389,7 +2479,7 @@ class L(Component):
     def _get_RLC_matrix_components(self):
         return {
             'R':0,
-            'L':1/self._get_value(),
+            'L':1/self._get_value(0),
             'C':0
         }
 
@@ -2442,7 +2532,7 @@ class L(Component):
         # Convert the sympy expression for v/du to a function
         # Note the function arguments are the angular frequency 
         # and component values that need to be specified
-        dY = lambdify(['w']+self._circuit._no_value_components,du/v, "numpy")
+        dY = lambdify(['w']+self._circuit._no_value_labels,du/v, "numpy")
 
         def _flux_zpf_r(z,**kwargs):
             return np.sqrt(hbar/np.real(z)/np.imag(dY(z,**kwargs)))
@@ -2494,9 +2584,9 @@ class J(L):
         else:
             self.unit = 'H'
 
-    def _get_value(self, **kwargs):
+    def _get_value(self, i, **kwargs):
         # Returns the Josephson inductance
-        value = super(J, self)._get_value(**kwargs)
+        value = super(J, self)._get_value(0, **kwargs) #Only 1 value specified
         if (self.use_E == False) and (self.use_I == False):
             return value
         elif (self.use_E == True) and (self.use_I == False):
@@ -2508,13 +2598,16 @@ class J(L):
         else:
             raise ValueError("Cannot set both use_E and use_I to True")
 
-    def _get_Ej(self, **kwargs):
-        return (hbar/2./e)**2/(self._get_value(**kwargs)*h)
+    def _get_Ej(self, i, **kwargs):
+        return (hbar/2./e)**2/(self._get_value(0, **kwargs)*h)*((i+1)%2) #zero if i odd
 
     def _set_component_lists(self):
         super(L, self)._set_component_lists()
         self._circuit.junctions.append(self)
-    
+        
+    def three_term(self, mode1, mode2, mode3, **kwargs):
+        return 0
+        
     @vectorize_kwargs(exclude = ['mode'])
     def anharmonicity(self, mode, **kwargs):
         r'''Returns the contribution of this junction to the anharmonicity of a given normal mode.
@@ -2548,7 +2641,7 @@ class J(L):
 
         For more details, see https://arxiv.org/pdf/1908.10342.pdf
         '''
-        return self._get_Ej(**kwargs)/2*np.absolute(self.zpf(mode,quantity='flux',**kwargs))**4
+        return self._get_Ej(2, **kwargs)/2*np.absolute(self.zpf(mode,quantity='flux',**kwargs))**4
 
 
     def _draw(self):
@@ -2579,6 +2672,201 @@ class J(L):
         if self.angle%180. == 90.:
             return shift(y, self.x_plot_center), shift(x, self.y_plot_center), line_type
 
+
+class NonLinearInductor(L):   
+    r'''A class representing a non-linear inductor
+    
+    Parameters
+    ----------
+    node_minus:     integer
+                    Index corresponding to one node of the inductor
+    node_minus:     integer
+                    Index corresponding to the other node of the inductor
+    args:           List of <float> or list of <str> or <float>,<str>
+                    These arguments characterize the contribution
+                    of this element to the system Hamiltonian (see below).
+                    If only labels are provided, 
+                    a value for every label should be passed
+                    as a keyword argument in subsequent function calls
+                    (ex: `E_1 = 1e9, E_1 = 1e6`).
+                    This is the best way to proceed if one wants to sweep the value of this
+                    element. Indeed, the most computationally expensive part of the 
+                    analysis is performed upon initializing the circuit, subsequently
+                    changing the value of a component and re-calculating a quantity 
+                    such as the frequency or anharmonicity can be performed much faster.
+
+    Notes
+    -----
+
+    A non-linear inductor allows the simulation of an arbitrary contribution to the inductive energy.
+    The element is parametrized by a list of labels or values.
+    For example, if three labels `[a,b,c]` are provided, the contribution :math:`U` of this element to the Hamiltonian is
+
+    :math:`U/h = \frac{a}{2!}\phi^2 + \frac{b}{3!}\phi^3 + \frac{c}{4!}\phi^4`
+
+    The parameters are assumed to be given in units of Herz.
+    To create a Josephson junction, with energy
+
+    :math:`U = E_J(1 - \cos\phi) \simeq \frac{E_J}{2}\phi^2 - \frac{E_J}{4!}\phi^4`
+
+    one should use : :math:`a =E_J/h, b = 0, c = -E_J/h`.
+    Note that this element is polarized, since odd orders are non zero in general. So orientation matters.
+
+    
+    Once the hamiltonian decomposed into eigenmodes, the hamiltonian of the circuit writes :
+
+    :math:` H = \sum_m{\hbar \omega_m \hat{a}^\dagger_m \hat{a}_m} + \sum_j \sum_{n\geq 3}\frac{\partial^{n} U_j}{\partial \phi^{n}}\bigg|_0\hat{\phi}_j^n`
+
+    with :
+    - :math:`\hat{\phi}_j` being the phase across the j-th non linear element
+    - :math:`m` the modes of the circuit
+    - :math:`\omega_m/2\pi` the frequency of the :math:`m`-th mode
+    - :math:`\hat{a}_m` the annihilator of the :math:`m`-th mode
+    - :math:`U_j(\phi)` the inductive energy of the j-th non linear dipole, assuming its minimum is for :math:`\phi = 0`
+
+
+    Using :math:`\hat{\phi}_j =  \sum_m \phi_{zpf, m, j}\hat{\phi}_m = \sum_m \phi_{zpf, m, j}(\hat{a}^\dagger_m + \hat{a}_m)` :
+
+    :math:`H = \sum_m{\hbar \omega_m \hat{a}^\dagger_m \hat{a}_m} + \sum_j \sum_{n\geq 3}\frac{\partial^{n} U_j}{\partial \phi^{n}}[\sum_m \phi_{zpf, m, j}(\hat{a}^\dagger_m + \hat{a}_m)]^n`
+    
+    At fourth order, following the QuCAT formalism (applying rotating wave approximation) and adding the third order terms, we obtain
+
+    :math:`H = \hbar\sum_m \big[( \omega_m - \sum_{n}\frac{\chi_{mn}}{2})\hat{a}_m^\dagger\hat{a}_m-\frac{A_m}{2} \hat{a}_m^\dagger \hat{a}_m^\dagger \hat{a}_m \hat{a}_m -\sum_{n}\chi_{mn}\hat{a}_m^\dagger \hat{a}_m \hat{a}_n^\dagger \hat{a}_n\big] + \sum_{m, n, o}(\gamma_{mno}^* \hat{a}_m^\dagger \hat{a}_n^\dagger \hat{a}_o + \gamma_{mno} \hat{a}_m \hat{a}_n \hat{a}_o^\dagger)`
+
+    the :meth:`qucat.Qcircuit.three_waves` returns the term :math:`\gamma_{mno}`.
+    ''' 
+    def __init__(self, node_minus, node_plus, *args):
+        super(NonLinearInductor, self).__init__(node_minus, node_plus, *args)
+        self.unit = 'Hz'
+
+    def _get_value(self, i, **kwargs):
+        value = super(NonLinearInductor, self)._get_value(0, **kwargs)
+        L = (hbar/2./e)**2/(value*h)  # E is assumed to be provided in Hz
+        return L
+
+    def _get_Ej(self, i, **kwargs):
+        try:
+            if i%2 == 0:
+                # to match the developement of a Josephson junction hamiltonian
+                return (-1)**((i+2)//2+1)*super(NonLinearInductor, self)._get_value(i, **kwargs) 
+            else:
+                return super(NonLinearInductor, self)._get_value(i, **kwargs)
+        except IndexError:
+            return 0
+
+    def _set_component_lists(self):
+        super(L, self)._set_component_lists()
+        self._circuit.nonlinear_inductors.append(self)
+        self._circuit.junctions.append(self) # Temporary hack
+        
+    @vectorize_kwargs(exclude = ['mode1', 'mode2', 'mode3'])
+    def three_term(self, mode1, mode2, mode3, **kwargs):
+        r'''Returns the contribution of this non-linear inductor to the three waves-mixing coeficient of a normal mode
+
+        Returned in units of Hertz, not angular frequency.
+
+        Parameters
+        ----------
+        kwargs:     
+                                Values for un-specified circuit components, 
+        
+        mode1, mode2, mode3:    integer
+
+        Returns
+        -------
+        float
+            contribution of this non-linear inductor to the three waves-mixing coeficient of a given normal mode
+        
+        Notes
+        -----
+        The quantity returned is the three waves-mixing coeficient
+        of the modes ``mode1``, ``mode2`` and ``mode3`` if this inductor were the only inductor
+        present in the circuit (i.e. if all the 
+        others were replaced by linear inductors). This is the coefficient for :math:`a_1 a_2 a^\dagger_3`.
+
+        The total three wave coefficient (in first order perturbation theory) is obtained
+        by summing these contribution over all modes.
+
+        '''
+        return self._get_Ej(1, **kwargs)*(self.zpf(mode1,quantity='flux',**kwargs)
+                                                       *self.zpf(mode2,quantity='flux',**kwargs)
+                                                       *np.conj(self.zpf(mode3,quantity='flux',**kwargs)))
+
+    @vectorize_kwargs(exclude = ['mode'])
+    def anharmonicity(self, mode, **kwargs):
+        r'''Returns the contribution of this non-linear inductor to the (Kerr) 
+        anharmonicity of a given normal mode.
+
+        Returned in units of Hertz, not angular frequency.
+
+        Parameters
+        ----------
+        kwargs:     
+                    Values for un-specified circuit components, 
+                    ex: ``L=1e-9``.
+        
+        mode:           integer
+                        where 0 designates
+                        the lowest frequency mode, and the others
+                        are arranged in order of increasing frequency
+        Returns
+        -------
+        float
+            contribution of this inductor to the anharmonicity of a given normal mode
+        
+        Notes
+        -----
+        The quantity returned is the anharmonicity
+        of the mode ``m`` if this inductor were the only inductor
+        present in the circuit (i.e. if all the 
+        others were replaced by linear inductors).
+
+        The total anharmonicity of a mode (in first order perturbation theory) is obtained
+        by summing these contribution over all modes.
+
+        For more details, see https://arxiv.org/pdf/1908.10342.pdf
+        '''
+        return self._get_Ej(2, **kwargs)/2*np.absolute(self.zpf(mode,quantity='flux',**kwargs))**4
+
+    def _draw(self):
+        pp = self._circuit._pp
+        x,y,line_type = self._draw_coil()
+
+        # Draw non-linear symbol
+        x += [np.array([-pp['L']['width']/2,
+                        -pp['L']['width']/2+pp['NonLinearInductor']['width'],
+                        pp['L']['width']/2-pp['NonLinearInductor']['width'],
+                        pp['L']['width']/2])]
+        y += [np.array([-pp['NonLinearInductor']['height']/2,
+                        -pp['NonLinearInductor']['height']/2,
+                        pp['NonLinearInductor']['height']/2,
+                        pp['NonLinearInductor']['height']/2])]
+        line_type.append('NonLinearInductor')
+
+        # Draw + sign to indicate polarization
+        x += [np.array([pp['L']['width']/2,
+                        pp['L']['width']/2])]
+        y += [np.array([-pp['NonLinearInductor']['height']/2,
+                        -pp['NonLinearInductor']['height']/2+pp['NonLinearInductor']['width']])]
+        line_type.append('W')
+        
+        x += [np.array([pp['L']['width']/2-pp['NonLinearInductor']['width']/2,
+                        pp['L']['width']/2+pp['NonLinearInductor']['width']/2])]
+        y += [np.array([-pp['NonLinearInductor']['height']/2+pp['NonLinearInductor']['width']/2,
+                        -pp['NonLinearInductor']['height']/2+pp['NonLinearInductor']['width']/2])]
+        line_type.append('W')
+
+
+        if self.angle == WEST:
+            return shift(x, self.x_plot_center), shift(y, self.y_plot_center), line_type
+        elif self.angle == NORTH:
+            return shift(y, self.x_plot_center), shift([-xx for xx in x], self.y_plot_center), line_type
+        elif self.angle == EAST:
+            return shift([-xx for xx in x], self.x_plot_center), shift(y, self.y_plot_center), line_type
+        elif self.angle == SOUTH:
+            return shift(y, self.x_plot_center), shift(x, self.y_plot_center), line_type
+
+
 class R(Component):
     """A class representing a resistor
     
@@ -2607,7 +2895,7 @@ class R(Component):
         self.unit = u"\u03A9"
 
     def _admittance(self):
-        return 1/self._get_value()
+        return 1/self._get_value(0)
     
     def _set_component_lists(self):
         super(R, self)._set_component_lists()
@@ -2615,7 +2903,7 @@ class R(Component):
     
     def _get_RLC_matrix_components(self):
         return {
-            'R':1/self._get_value(),
+            'R':1/self._get_value(0),
             'L':0,
             'C':0
         }
@@ -2698,7 +2986,7 @@ class C(Component):
         self.unit = 'F'
 
     def _admittance(self):
-        return sp.I*Mul(sp.Symbol('w'), self._get_value())
+        return sp.I*Mul(sp.Symbol('w'), self._get_value(0))
 
     def _set_component_lists(self):
         super(C, self)._set_component_lists()
@@ -2739,7 +3027,7 @@ class C(Component):
         return {
             'R':0,
             'L':0,
-            'C':self._get_value()
+            'C':self._get_value(0)
         }
 
 class Admittance(Component):
